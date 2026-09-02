@@ -8,18 +8,19 @@ class DaySummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
+          Text(
             'Workday Snapshot',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+            style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Appears after work begins; never shown as empty pre-work clutter.',
-            style: TextStyle(color: AppColors.muted),
+            style: TextStyle(color: colors.onSurfaceVariant),
           ),
           const SizedBox(height: 14),
           const Wrap(
@@ -69,18 +70,19 @@ class _Metric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Container(
       width: 150,
       constraints: const BoxConstraints(minHeight: 74),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.blueSoft,
-        border: Border.all(color: AppColors.blue),
-        borderRadius: BorderRadius.circular(10),
+        color: colors.primaryContainer,
+        border: Border.all(color: colors.outline),
+        borderRadius: BorderRadius.circular(AppRadii.control),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.blue),
+          Icon(icon, color: colors.primary),
           const SizedBox(width: 9),
           Expanded(
             child: Column(
@@ -91,12 +93,15 @@ class _Metric extends StatelessWidget {
                   value,
                   style: const TextStyle(
                     fontSize: 17,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   label,
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),

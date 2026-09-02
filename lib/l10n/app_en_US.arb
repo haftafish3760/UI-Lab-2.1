@@ -1,0 +1,36 @@
+{
+  "@@locale": "en_US",
+  "appTitle": "Maintainiac UI Lab 2.1",
+  "navDashboard": "Dashboard",
+  "navWork": "Work",
+  "navExpenses": "Expenses",
+  "navInventory": "Materials",
+  "navMaintenance": "Maintenance",
+  "fieldRecords": "Field records",
+  "offlineRecordsAvailable": "Records stay available offline.",
+  "advertisementPlaceholder": "Advertisement placeholder",
+  "advertisement": "ADVERTISEMENT",
+  "sampleAdSpace": "Sample ad space",
+  "demo": "Demo",
+  "calendarMonthView": "Month",
+  "calendarWeekView": "Week",
+  "calendarPreviousMonth": "Previous month",
+  "calendarNextMonth": "Next month",
+  "calendarPreviousWeek": "Previous week",
+  "calendarNextWeek": "Next week",
+  "calendarChooseWorkDate": "Choose a work date",
+  "calendarTodayState": "Today.",
+  "calendarOutsideMonthState": "Outside the selected month.",
+  "calendarNeedsApprovalState": "Needs approval.",
+  "calendarNoRecords": "No {recordLabel}.",
+  "@calendarNoRecords": {
+    "placeholders": {"recordLabel": {"type": "String"}}
+  },
+  "calendarRecordCount": "{count} {recordLabel}.",
+  "@calendarRecordCount": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "recordLabel": {"type": "String"}
+    }
+  }
+}

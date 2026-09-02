@@ -1,0 +1,51 @@
+# UI Lab 2.1 Working Contract
+
+Read these before changing UI:
+
+1. `docs/ui_foundation_blueprint.md`
+2. `docs/maintainiac_app_blueprint.md`
+3. `docs/product_control_blueprint.md`
+4. `docs/operations_screen_blueprint.md`
+5. `docs/work_lifecycle_blueprint.md` for any Work change
+6. `docs/calendar_system_blueprint.md` for any calendar or dated-projection change
+7. the relevant screen-specific blueprint under `docs/`
+
+## Repository boundary
+
+- This repository is the active UI/UX blueprint and test bed.
+- Maintainiac 5.7 Active is the production master and protected reference until
+  the owner explicitly starts a bounded integration slice.
+- Do not edit, clean, reset, delete, or commit 5.7 from a UI Lab task.
+- Do not take computer screenshots unless the owner explicitly reauthorizes it.
+
+## Required implementation behavior
+
+- Consistency is mandatory. Use `AppTheme`, `AppLayoutEngine`, and shared
+  primitives; never create a private global breakpoint system inside a screen.
+- Base layout on local post-navigation logical constraints and `TextScaler`, not
+  OS, device name, orientation label, physical pixels, or monitor size.
+- Preserve system accessibility scaling. Reflow instead of globally clamping.
+- Do not use ellipsis for primary controls, record names, dates, money, or state.
+- Light mode uses blue-gray tinted surfaces. Pure-white working panels and
+  black content sections are prohibited; the charcoal operational header is an
+  intentional exception.
+- Normal phone action controls must not stack early. The dashboard header has a
+  tested side-by-side contract at 320 LP.
+- Keep record, form, and supporting-calendar lanes bounded; desktop is not an
+  enlarged phone. On Dashboard the Month calendar occupies one 400-LP maximum
+  lane and its day route remains separate.
+- Security and privacy enforcement must exist at navigation, query/count, route,
+  action, export, and sync boundaries. Hiding a widget alone is not permission.
+- AI, OCR, GPS, and inferred data remain proposals until user-confirmed.
+
+## Change discipline
+
+- Inspect branch and dirty state before editing; preserve unrelated work.
+- Update code, blueprint, and regression test together when a shared UI rule
+  changes.
+- Keep production Dart files at or below 500 lines. Split only at cohesive
+  responsibility boundaries and run focused regression tests after each split.
+  If a safe split genuinely cannot preserve behavior, document the constraint
+  before allowing an exception.
+- Use `dart format`, `flutter analyze`, `flutter test`, and the relevant platform
+  build. A green test is not owner visual acceptance.
