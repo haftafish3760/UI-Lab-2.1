@@ -1,304 +1,140 @@
 import 'package:flutter/material.dart';
 
-import 'app_semantic_colors.dart';
-
-/// Product color tokens. Routine screens should use [ColorScheme] rather than
-/// introducing one-off colors. The dark header is intentionally shared by both
-/// modes so it remains a stable orientation landmark.
-abstract final class AppColors {
-  static const ink = Color(0xFF172A33);
-  static const muted = Color(0xFF526771);
-
-  static const canvas = Color(0xFFC9D8DF);
-  static const surface = Color(0xFFE2EBEF);
-  static const surfaceMuted = Color(0xFFD5E2E8);
-  static const surfaceStrong = Color(0xFFBED1DA);
-  static const border = Color(0xFF91A8B3);
-  static const strongBorder = Color(0xFF8298A2);
-
-  static const blue = Color(0xFF285F78);
-  static const blueSoft = Color(0xFFD5E5ED);
-  static const green = Color(0xFF0B6B50);
-  static const greenSoft = Color(0xFFD5E9E1);
-  static const warning = Color(0xFF8B5A12);
-  static const warningSoft = Color(0xFFF2E5CC);
-
-  static const header = Color(0xFF162326);
-  static const headerControl = Color(0xFF24353A);
-  static const headerControlAlt = Color(0xFF162529);
-  static const headerBorder = Color(0xFF607B82);
-  static const onHeader = Color(0xFFF2F5F4);
-  static const onHeaderMuted = Color(0xFFD0D9DA);
-
-  // Maintainiac 5.7 dark palette. These are intentionally warmer and more
-  // layered than a flat near-black Material dark scheme.
-  static const darkCanvas = Color(0xFF202422);
-  static const darkCanvasDeep = Color(0xFF101312);
-  static const darkSurface = Color(0xFF303532);
-  static const darkSurfaceMuted = Color(0xFF1B1F1D);
-  static const darkSurfaceStrong = Color(0xFF555C56);
-  static const darkField = Color(0xFFAAB4B9);
-  static const darkFieldAlt = Color(0xFF8F9BA1);
-  static const darkInk = Color(0xFFF3F0E6);
-  static const darkLabel = Color(0xFFE9E4D6);
-  static const darkBorder = Color(0xFF858176);
-  static const darkBlue = Color(0xFF1976B9);
-  static const darkGreen = Color(0xFF28A745);
-  static const darkRed = Color(0xFFE3342F);
-  static const darkYellow = Color(0xFFE0B42D);
-  static const darkOrange = Color(0xFFF47C20);
-}
-
-abstract final class AppRadii {
-  static const control = 7.0;
-  static const surface = 8.0;
-  static const overlay = 10.0;
-}
-
-/// Stable module colors used as a scanning aid, never as the only carrier of
-/// meaning. Each tone is deliberately subdued and has a light/dark counterpart.
 @immutable
-class AppModuleColors extends ThemeExtension<AppModuleColors> {
-  const AppModuleColors({
-    required this.dashboard,
-    required this.work,
-    required this.expenses,
-    required this.inventory,
-    required this.maintenance,
+class DashboardColors extends ThemeExtension<DashboardColors> {
+  const DashboardColors({
+    required this.canvasTop,
+    required this.canvasBottom,
+    required this.surface,
+    required this.surfaceRaised,
+    required this.surfaceMuted,
+    required this.ink,
+    required this.inkMuted,
+    required this.border,
+    required this.header,
+    required this.headerControl,
+    required this.onHeader,
+    required this.attention,
+    required this.attentionSurface,
+    required this.plan,
+    required this.planSurface,
+    required this.entries,
+    required this.entriesSurface,
+    required this.calendar,
+    required this.calendarSurface,
   });
 
-  final Color dashboard;
-  final Color work;
-  final Color expenses;
-  final Color inventory;
-  final Color maintenance;
-
-  static const light = AppModuleColors(
-    dashboard: Color(0xFF2F6572),
-    work: Color(0xFF355F7A),
-    expenses: Color(0xFF765923),
-    inventory: Color(0xFF356759),
-    maintenance: Color(0xFF625B75),
-  );
-
-  static const dark = AppModuleColors(
-    dashboard: AppColors.darkGreen,
-    work: AppColors.darkBlue,
-    expenses: AppColors.darkYellow,
-    inventory: AppColors.darkOrange,
-    maintenance: AppColors.darkRed,
-  );
+  final Color canvasTop;
+  final Color canvasBottom;
+  final Color surface;
+  final Color surfaceRaised;
+  final Color surfaceMuted;
+  final Color ink;
+  final Color inkMuted;
+  final Color border;
+  final Color header;
+  final Color headerControl;
+  final Color onHeader;
+  final Color attention;
+  final Color attentionSurface;
+  final Color plan;
+  final Color planSurface;
+  final Color entries;
+  final Color entriesSurface;
+  final Color calendar;
+  final Color calendarSurface;
 
   @override
-  AppModuleColors copyWith({
-    Color? dashboard,
-    Color? work,
-    Color? expenses,
-    Color? inventory,
-    Color? maintenance,
-  }) => AppModuleColors(
-    dashboard: dashboard ?? this.dashboard,
-    work: work ?? this.work,
-    expenses: expenses ?? this.expenses,
-    inventory: inventory ?? this.inventory,
-    maintenance: maintenance ?? this.maintenance,
-  );
+  DashboardColors copyWith() => this;
 
   @override
-  AppModuleColors lerp(covariant AppModuleColors? other, double t) {
-    if (other == null) return this;
-    return AppModuleColors(
-      dashboard: Color.lerp(dashboard, other.dashboard, t)!,
-      work: Color.lerp(work, other.work, t)!,
-      expenses: Color.lerp(expenses, other.expenses, t)!,
-      inventory: Color.lerp(inventory, other.inventory, t)!,
-      maintenance: Color.lerp(maintenance, other.maintenance, t)!,
-    );
-  }
+  DashboardColors lerp(covariant DashboardColors? other, double t) =>
+      other ?? this;
+
+  static const light = DashboardColors(
+    canvasTop: Color(0xFFD7E5EA),
+    canvasBottom: Color(0xFFC4D6DE),
+    surface: Color(0xFFDCE9ED),
+    surfaceRaised: Color(0xFFE6EFF2),
+    surfaceMuted: Color(0xFFCADCE3),
+    ink: Color(0xFF172A33),
+    inkMuted: Color(0xFF536871),
+    border: Color(0xFF8EA7B2),
+    header: Color(0xFF173038),
+    headerControl: Color(0xFF29464F),
+    onHeader: Color(0xFFF3F7F7),
+    attention: Color(0xFFB43D2D),
+    attentionSurface: Color(0xFFEECFC5),
+    plan: Color(0xFF2E6FA8),
+    planSurface: Color(0xFFC9E0F0),
+    entries: Color(0xFF28A745),
+    entriesSurface: Color(0xFFCBE4D1),
+    calendar: Color(0xFF4B5F73),
+    calendarSurface: Color(0xFFDCE4EB),
+  );
+
+  static const dark = DashboardColors(
+    canvasTop: Color(0xFF182126),
+    canvasBottom: Color(0xFF101619),
+    surface: Color(0xFF202B30),
+    surfaceRaised: Color(0xFF29363C),
+    surfaceMuted: Color(0xFF1B2529),
+    ink: Color(0xFFEAF0F1),
+    inkMuted: Color(0xFFB5C1C5),
+    border: Color(0xFF50636B),
+    header: Color(0xFF10252C),
+    headerControl: Color(0xFF29444D),
+    onHeader: Color(0xFFF2F7F7),
+    attention: Color(0xFFFF8F78),
+    attentionSurface: Color(0xFF4A2B25),
+    plan: Color(0xFF62A9DC),
+    planSurface: Color(0xFF243D50),
+    entries: Color(0xFF46C76A),
+    entriesSurface: Color(0xFF23443A),
+    calendar: Color(0xFFA7C1D6),
+    calendarSurface: Color(0xFF2B3945),
+  );
 }
 
 abstract final class AppTheme {
-  static final ThemeData light = _build(
-    brightness: Brightness.light,
-    canvas: AppColors.canvas,
-    surface: AppColors.surface,
-    surfaceMuted: AppColors.surfaceMuted,
-    surfaceStrong: AppColors.surfaceStrong,
-    ink: AppColors.ink,
-    muted: AppColors.muted,
-    border: AppColors.border,
-    strongBorder: AppColors.strongBorder,
-    blue: AppColors.blue,
-    blueSoft: AppColors.blueSoft,
-    green: AppColors.green,
-    greenSoft: AppColors.greenSoft,
-    moduleColors: AppModuleColors.light,
-    semanticColors: AppSemanticColors.light,
-  );
+  static ThemeData light = _theme(Brightness.light, DashboardColors.light);
+  static ThemeData dark = _theme(Brightness.dark, DashboardColors.dark);
 
-  static final ThemeData dark = _build(
-    brightness: Brightness.dark,
-    canvas: AppColors.darkCanvas,
-    surface: AppColors.darkSurface,
-    surfaceMuted: AppColors.darkSurfaceMuted,
-    surfaceStrong: AppColors.darkSurfaceStrong,
-    ink: AppColors.darkInk,
-    muted: AppColors.darkLabel,
-    border: AppColors.darkBorder,
-    strongBorder: AppColors.darkFieldAlt,
-    blue: AppColors.darkBlue,
-    blueSoft: const Color(0xFF173C5D),
-    green: AppColors.darkGreen,
-    greenSoft: const Color(0xFF1D4A2A),
-    moduleColors: AppModuleColors.dark,
-    semanticColors: AppSemanticColors.dark,
-  );
-
-  static ThemeData _build({
-    required Brightness brightness,
-    required Color canvas,
-    required Color surface,
-    required Color surfaceMuted,
-    required Color surfaceStrong,
-    required Color ink,
-    required Color muted,
-    required Color border,
-    required Color strongBorder,
-    required Color blue,
-    required Color blueSoft,
-    required Color green,
-    required Color greenSoft,
-    required AppModuleColors moduleColors,
-    required AppSemanticColors semanticColors,
-  }) {
-    final scheme = ColorScheme.fromSeed(seedColor: blue, brightness: brightness)
-        .copyWith(
-          primary: blue,
-          onPrimary: brightness == Brightness.light
-              ? const Color(0xFFF7FAFB)
-              : const Color(0xFF10232C),
-          primaryContainer: blueSoft,
-          onPrimaryContainer: brightness == Brightness.light ? ink : blue,
-          secondary: green,
-          onSecondary: brightness == Brightness.light
-              ? const Color(0xFFF7FAFB)
-              : const Color(0xFF10271F),
-          secondaryContainer: greenSoft,
-          onSecondaryContainer: brightness == Brightness.light ? ink : green,
-          surface: surface,
-          surfaceContainerLowest: canvas,
-          surfaceContainerLow: surfaceMuted,
-          surfaceContainer: surface,
-          surfaceContainerHigh: surfaceStrong,
-          surfaceContainerHighest: surfaceStrong,
-          onSurface: ink,
-          onSurfaceVariant: muted,
-          outline: border,
-          outlineVariant: strongBorder,
-        );
-
-    final base = ThemeData(
+  static ThemeData _theme(Brightness brightness, DashboardColors palette) {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: palette.plan,
+      brightness: brightness,
+      surface: palette.surface,
+    );
+    return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      colorScheme: scheme,
-      scaffoldBackgroundColor: canvas,
-      dividerColor: border,
-    );
-    final textTheme = base.textTheme.apply(bodyColor: ink, displayColor: ink);
-
-    return base.copyWith(
-      extensions: <ThemeExtension<dynamic>>[moduleColors, semanticColors],
-      textTheme: textTheme.copyWith(
-        headlineSmall: textTheme.headlineSmall?.copyWith(
-          fontSize: 21,
-          fontWeight: FontWeight.w600,
-          height: 1.15,
-        ),
-        titleLarge: textTheme.titleLarge?.copyWith(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          height: 1.2,
-        ),
-        titleMedium: textTheme.titleMedium?.copyWith(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          height: 1.2,
-        ),
-        bodyMedium: textTheme.bodyMedium?.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          height: 1.3,
-        ),
-        labelLarge: textTheme.labelLarge?.copyWith(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
+      colorScheme: scheme.copyWith(
+        primary: palette.plan,
+        surface: palette.surface,
+        onSurface: palette.ink,
+        outline: palette.border,
       ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: canvas,
-        foregroundColor: ink,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        titleTextStyle: TextStyle(
-          color: ink,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      scaffoldBackgroundColor: palette.canvasBottom,
+      extensions: [palette],
+      dividerColor: palette.border,
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: surface,
-        indicatorColor: blueSoft,
-        surfaceTintColor: Colors.transparent,
-        height: 66,
+        backgroundColor: palette.surface,
+        indicatorColor: palette.planSurface,
         labelTextStyle: WidgetStatePropertyAll(
-          TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w600),
-        ),
-      ),
-      popupMenuTheme: PopupMenuThemeData(
-        color: surface,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: border),
-          borderRadius: BorderRadius.circular(AppRadii.overlay),
-        ),
-      ),
-      bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: surface,
-        modalBackgroundColor: surface,
-        surfaceTintColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(AppRadii.overlay),
-          ),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: surfaceMuted,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadii.control),
+          TextStyle(color: palette.ink, fontWeight: FontWeight.w600),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.control),
-          ),
-          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          backgroundColor: palette.entries,
+          foregroundColor: const Color(0xFF07130F),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          minimumSize: const Size(0, 44),
         ),
       ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: ink,
-          side: BorderSide(color: strongBorder),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.control),
-          ),
-          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        ),
-      ),
-      iconTheme: IconThemeData(color: ink, size: 22),
+      textTheme: ThemeData(brightness: brightness).textTheme
+          .apply(bodyColor: palette.ink, displayColor: palette.ink),
     );
   }
 }

@@ -6,12 +6,6 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleLocalizations</key>
-	<array>
-		<string>en</string>
-		<string>es</string>
-		<string>fr</string>
-	</array>
 	<key>CFBundleDisplayName</key>
 	<string>Ui Lab 2 1</string>
 	<key>CFBundleExecutable</key>
@@ -32,10 +26,6 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>Maintainiac uses the camera only when you choose to photograph receipt evidence.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Maintainiac opens your photo library only when you choose existing receipt evidence.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
