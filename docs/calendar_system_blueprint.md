@@ -14,6 +14,20 @@ other business record.
 This distinction keeps the front end easy to understand while preventing the
 Dashboard and calendar from becoming competing databases.
 
+The detailed scheduling calculation, staffing, recurrence, history-assistance,
+confirmation and parallel-build contract is `scheduling_system_blueprint.md`.
+Scheduling and this calendar form one connected user experience: Work owns
+commitments; Calendar displays them alongside historical activity. The separate
+scheduling assignment must preserve existing past-day records and calendar routes.
+
+Owner clarification: daily actual entries are protected on **all dates, including
+today**. Scheduling must not edit, delete, move, recreate or reattribute them.
+Only authorized planned commitments may change through the scheduling boundary;
+existing corrections remain separate owning-module workflows. Mixed Plan/Entries
+day objects must not be replaced from scheduling snapshots. See scheduling
+blueprint section 12 and SCH-46 through SCH-50 for required preservation and
+concurrent-entry tests before any shared-store/calendar integration.
+
 ## Plain-language model
 
 - The module owns the record.

@@ -694,3 +694,103 @@ The receipt camera/review flow is a separate integration slice because it crosse
 native capture, file durability, OCR, expenses, jobs, materials, inventory, sync,
 and confirmation. It must be designed and tested independently from the job
 workspace presentation.
+
+
+## Owner-confirmed scheduling, staffing, and capacity planning — 2026-09-04
+
+The following requirements are expanded by `scheduling_system_blueprint.md`,
+including recurring service, actual-time history, calendar preservation,
+permissions, local/cloud boundaries and the company-configurable Finish Job
+handoff to invoice review/signature/delivery where permitted. The parallel
+builder's initial scope is in `scheduling_engine_codex_assignment.md`. These
+documents specify planned work; their existence does not mean it is implemented.
+
+### Product goal
+
+Schedule is not a passive appointment calendar. Maintainiac must help a contractor or small business determine whether proposed work can actually fit into the available workday without overbooking people or assigning the wrong people. The scheduling engine uses labor requirements from the Estimate/Job together with employee availability and employee skill profiles. It may recommend a plan, but it never silently commits, moves, cancels, or reassigns work.
+
+### Required planning inputs
+
+Each schedulable Job needs structured planning data rather than display-text scraping:
+
+- estimated total labor hours from the accepted Estimate, or an explicitly reviewed Job planning value when no Estimate exists;
+- labor requirements by skill or work type when known, such as electrical, plumbing, drywall, HVAC, general labor, equipment operation, or company-defined specialties;
+- minimum crew size and preferred crew size when applicable;
+- whether the work can be parallelized, so the engine never assumes that doubling the crew always halves elapsed time;
+- required qualifications, licenses, certifications, or company-defined eligibility restrictions where applicable;
+- proposed appointment window, service location, expected setup/cleanup time, and planner-defined travel or buffer allowance;
+- existing Job assignments and other schedule commitments for the same people;
+- employee working availability, time off, and company-defined working hours.
+
+An Estimate labor total is planning evidence, not a guaranteed duration. The planner may revise the Job planning estimate without rewriting the accepted customer Estimate. The Job retains the source Estimate value, current planning value, actor, time, and reason for the change.
+
+### Employee skill profile
+
+An employee is not modeled as one generic unit of labor. Each employee may have multiple company-defined skills. A skill assignment includes at minimum:
+
+- stable skill ID and display name;
+- proficiency level using a small deterministic scale such as learning, capable, advanced, or expert;
+- whether the employee is eligible to perform that work independently;
+- optional qualification/certification references and expiration when the business chooses to track them;
+- effective dates and audit history for changes.
+
+Job title or role may provide defaults, but scheduling eligibility comes from the employee's current skill/qualification profile and authorization, not a display title alone. Future performance history may produce advisory evidence, but the first production scheduler must not automatically rank or penalize employees from sparse completion data.
+
+### Deterministic capacity engine
+
+Release-one scheduling must be deterministic and testable. It does not require machine learning. For a proposed Job or appointment window, the engine:
+
+1. loads the exact Job planning requirements and proposed time window;
+2. loads only employees the authorized planner may schedule;
+3. removes employees who are unavailable, already committed, on leave, or otherwise ineligible for the relevant part of the window;
+4. evaluates required skills and qualifications for each remaining employee;
+5. calculates available labor capacity for the window in minutes or another exact duration representation rather than binary floating-point hours;
+6. compares total available labor capacity with estimated labor demand;
+7. separately compares skill-specific capacity with skill-specific demand, so excess general labor cannot hide a shortage of a required specialty;
+8. applies minimum-crew, preferred-crew, parallelization, travel, setup, cleanup, and buffer rules before determining fit;
+9. returns a planning result with reasons and alternatives instead of changing the schedule itself.
+
+### Planning result states
+
+At minimum the engine can return:
+
+- `comfortable`: requirements fit with meaningful remaining capacity;
+- `tight`: requirements fit but leave little buffer or rely on near-full utilization;
+- `understaffed`: enough time may exist but not enough eligible people or required crew size;
+- `skill_blocked`: total labor capacity exists but required skilled capacity does not;
+- `overbooked`: existing commitments leave insufficient usable labor capacity;
+- `schedule_conflict`: one or more proposed assignments overlap incompatible commitments;
+- `insufficient_planning_data`: required hours, skills, availability, or other critical inputs are missing and the system cannot make a trustworthy claim.
+
+Every result includes human-readable reasons based on stored inputs. The UI must never display a green or available state when critical planning data is missing.
+
+### Recommendations, not authority
+
+When a proposed slot does not fit, Maintainiac may recommend alternatives supported by actual availability data:
+
+- use a different employee or crew with the required skills;
+- move the appointment to a later available window;
+- extend the job across multiple days;
+- increase crew size only when the Job's parallelization rules say additional people can reduce elapsed time;
+- split separately schedulable work phases when the Job plan allows it;
+- flag the Estimate/Job planning hours for owner review when the work cannot fit a reasonable available window.
+
+The recommendation identifies the constraint it is solving. AI may later turn deterministic results into conversational explanations, but AI is not the source of schedule truth and cannot confirm, move, assign, or cancel work without an authorized user action.
+
+### Overbooking and conflict rules
+
+- One person cannot contribute the same minute of labor capacity to two Jobs.
+- A person assigned to sequential Jobs retains the planner-defined travel/buffer allowance between locations unless an authorized user overrides it with a recorded reason.
+- A Job requiring two qualified workers is not schedulable merely because one qualified worker has enough total hours.
+- A Job requiring a specialty cannot consume unqualified general-labor capacity to satisfy that specialty requirement.
+- Company-wide available hours and specialty available hours are separate metrics.
+- The engine may show theoretical capacity and recommended capacity separately; theoretical capacity must not be presented as a confirmed feasible schedule.
+- Schedule confirmation writes an audited Work-owned schedule commitment. The calculation result remains a derived planning artifact and never becomes a second Job or Calendar record.
+
+### Example planning behavior
+
+If a Job is planned for 24 labor-hours and three eligible employees each have eight genuinely available hours, the engine may report 24 theoretical labor-hours of capacity. It still checks required skills, minimum crew, parallelization, travel/buffer time, and other commitments before calling the day feasible. If the same Job requires ten electrical labor-hours but only six qualified electrical hours remain, the result is `skill_blocked` even when total company labor capacity exceeds 24 hours.
+
+### Required QA coverage
+
+Focused tests cover at least exact-fit, comfortable-fit, tight-fit, overbooked, overlapping appointments, unavailable employee, time off, missing hours, missing skill data, specialty shortage with excess general capacity, minimum-crew failure, non-parallelizable work, parallelizable work, multi-day recommendation, travel/buffer conflict, qualification expiration, permission-scoped employee visibility, schedule edit, cancellation/reschedule recovery, and offline/restart reproduction of the same confirmed schedule commitments.

@@ -19,6 +19,11 @@ The shared Month/Week presentation, module record projections, combined
 Dashboard day, Trips/Workday projection, and future vehicle/equipment
 maintenance and repair calendar rules are maintained in
 `calendar_system_blueprint.md`.
+The detailed non-AI scheduling engine, employee planning inputs, recurrence,
+company-history suggestions and phased verification contract is
+`scheduling_system_blueprint.md`. The isolated first build assignment is
+`scheduling_engine_codex_assignment.md`; it does not authorize UI redesign or
+replace the calendar's historical-record function.
 The receipt photo, long-receipt, OCR-line, package, allocation, job-cost, and
 inventory-catalog handoff is `receipt_material_intake_blueprint.md`; no module
 may implement a smaller competing receipt flow.
@@ -652,3 +657,15 @@ Compilation or a green unit test alone is not acceptance.
 6. Define inventory confidence and stock-adjustment workflows for teams that do
    not maintain exact truck counts.
 7. Approve the permission matrix before redesigning the production dashboard.
+
+
+## Owner-confirmed direction update — 2026-09-04
+
+This section records current product-owner decisions and overrides conflicting older AI-authored documentation.
+
+- Historical Maintainiac documentation was AI-authored. It is discovery evidence only unless the product owner explicitly confirms the requirement during current review. Existing documentation must never be presented as proof that the owner previously approved a product decision.
+- Maintainiac's primary market is contractors and small businesses. Service technicians are a primary field-user type within that market.
+- Gig drivers, rideshare drivers, delivery drivers, and other vehicle-based workers may still use applicable Maintainiac features, but they are secondary audiences. Their workflows must not drive the core product architecture or weaken contractor and small-business operational workflows.
+- Scheduling is an operational planning system, not merely a calendar. Maintainiac must help an authorized planner compare estimated labor requirements with employee availability, existing commitments, and employee skills before confirming work.
+- Schedule assistance is advisory. Maintainiac may identify overbooking, understaffing, skill shortages, and better alternatives, but an authorized user confirms assignments and schedule changes.
+- When the product owner describes a desired outcome or implementation idea, the design/build process must challenge weak, risky, unnecessarily complex, or non-standard implementation approaches and explain a stronger production pattern before Codex is instructed to build it. The owner's desired business outcome remains authoritative; implementation mechanics are open to professional review.
