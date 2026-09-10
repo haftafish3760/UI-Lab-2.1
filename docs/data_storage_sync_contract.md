@@ -7,6 +7,11 @@ SQLite with Drift is now selected (D31). This document does not claim deployment
 or migration completion. Read `current_product_blueprint.md` and the dated
 database handoff for current owner decisions and observed implementation limits.
 
+Current implementation and verification status is maintained in the top gate matrix
+of [SQLite remaining-work audit](sqlite_remaining_work_audit.md). The dated
+implementation entries below retain historical evidence and may describe gaps
+that later checkpoints resolved; they are not a declaration of current completion.
+
 ## Active SQLite implementation checkpoint — 2026-09-09
 
 This is progress evidence, not completion or production-security acceptance.

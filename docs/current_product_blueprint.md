@@ -1,6 +1,6 @@
 # Maintainiac — current owner blueprint
 
-Reconciled 2026-09-09 from the owner conversation in UI-Lab-2.1.
+Owner direction reconciled 2026-09-09; implementation status refreshed 2026-09-10.
 This is the fresh current-direction entry point, indexed by `README.md`.
 It supersedes conflicting earlier product directions, not compatible detailed
 engineering requirements. Detailed owners remain linked below; do not create
@@ -171,23 +171,35 @@ Work owns these lifecycles; Dashboard and Calendar are projections, not new stor
 
 ## 7. Current implementation evidence and limits
 
-Verified in this task before this documentation pass: normal app rebuilt from
-`lib/main.dart`, installed on S24 Ultra, Dashboard/navigation visibly restored.
-Color/preview tests do not establish storage or complete workflow correctness.
-Source inspection found file-based durable expense-related repositories, but
-Work/financial prototype lists in memory and separately generated demo dates.
-No Hive or Drift dependency/initialization was found in 2.1 at that inspection.
-Firebase CLI 15.29.0 installed under `tooling/firebase`, version command succeeded;
-login list reported no authorized accounts. No new Firebase project, rules
-deployment or connected cloud backup/sync was established by this task.
-Recheck these facts before the next implementation; another task may change them.
+Normal startup now opens SQLite/Drift and injects the implemented Work, directory,
+expense/receipt, notification, workday/day-note and preference persistence services.
+The earlier observation of no Drift and in-memory Work predates this migration.
+Durable drafts and recovery use workflow/controller/repository boundaries; visual
+composition changes must not require schema changes merely because layouts change.
+The current UI remains unfinished, and existing app data is disposable demo data.
+No current screen design or visual test is automatic owner acceptance.
+
+The normal build was installed and launched wirelessly on the S25 Ultra on
+2026-09-10; foreground activity was verified, not visual or full-workflow acceptance.
+The GitHub WIP checkpoint is `48822818b3c1cc9e21799eb1b97a705362aaff6d` on
+`codex/sqlite-migration-checkpoint-20260910`; it is not a release/completion claim.
+
+For exact test checkpoints, remaining integration, platform limitations and
+unresolved failures, use the current gate matrix at the top of
+[SQLite remaining-work audit](sqlite_remaining_work_audit.md). Historical dated
+entries in storage documents are provenance, not the latest completion state.
+Local migration is unfinished: whole-installation restore is not wired into the
+normal Settings flow, and physical/platform and final acceptance gates remain.
+Inventory migration has not started. Firebase cloud backup/sync and production
+identity are not connected; local operation does not require Firebase.
 
 ## 8. Collaboration and remaining work
 
 Owner requires full contextual handoffs, visible separate sidebar tasks when
 delegating, and no hidden-agent substitution. No sidebar task was created here;
-the available tool search did not expose a task-creation tool. Owner will open
-the next task with `storage_database_codex_handoff.md`.
+the available tool search did not expose a task-creation tool. The existing migration task owns the local-storage completion stage before
+inventory. `storage_database_codex_handoff.md` is historical handoff material;
+consult the current gate matrix before treating any remaining-work list as current.
 
 Scope now: documentation only. Next storage task must assess existing systems,
 map dependencies, propose bounded slices, and test throughout; no unsupported

@@ -4,6 +4,11 @@ Updated 2026-09-09. This is the canonical documentation entry point, not a
 claim that the application is implemented or that every inherited rule was
 approved. Read [the decision register](application_decision_register.md) first.
 
+Current storage implementation, verification and remaining gates:
+[SQLite migration completion checklist](sqlite_remaining_work_audit.md).
+The product blueprint describes required behavior; this checklist distinguishes
+implemented and tested behavior from unfinished work.
+
 ## Authority and how to use this corpus
 
 Start with [Current owner blueprint](current_product_blueprint.md), reconciled
