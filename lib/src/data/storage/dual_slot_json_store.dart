@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 
+import 'domain_snapshot_store.dart';
+
 typedef DualSlotSnapshotWriter =
     Future<void> Function(File target, List<int> bytes);
 
@@ -14,7 +16,7 @@ typedef DualSlotPayloadDecoder<T> = T Function(Map<String, Object?> payload);
 /// Business repositories retain their own validation, authorization, audit,
 /// and mutation rules. This class owns only the two-slot write/recovery
 /// mechanics so every offline module does not grow a private copy.
-class DualSlotJsonStore<T> {
+class DualSlotJsonStore<T> implements DomainSnapshotStore<T> {
   DualSlotJsonStore._({
     required this._directory,
     required this._fileStem,
@@ -35,9 +37,11 @@ class DualSlotJsonStore<T> {
   final DualSlotPayloadDecoder<T> _decodePayload;
   final DualSlotSnapshotWriter _snapshotWriter;
 
+  @override
   T value;
   int _generation;
   int _activeSlot;
+  @override
   final bool recoveredFromDamagedSnapshot;
 
   static Future<DualSlotJsonStore<T>> open<T>({
@@ -102,6 +106,7 @@ class DualSlotJsonStore<T> {
     );
   }
 
+  @override
   Future<void> persist(T next) async {
     final nextGeneration = _generation + 1;
     final nextSlot = _activeSlot == 0 ? 1 : 0;

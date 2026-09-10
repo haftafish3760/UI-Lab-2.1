@@ -2,7 +2,8 @@
 
 Status: implemented foundation draft 0.2  
 Last verified: 2026-08-30  
-Applies to: every UI Lab 2.1 screen and every later UI port into Maintainiac 5.7
+Applies to: every UI Lab 2.1 screen and later approved production integration.
+Authority/status: `README.md` and `application_decision_register.md`.
 
 This is the visual and responsive source of truth. Product and data ownership
 remain in `maintainiac_app_blueprint.md`. A screen-specific blueprint may add
@@ -46,27 +47,101 @@ simple because labels, hierarchy, ownership, and next actions are explicit.
    accent colors must not become entire competing page themes.
 8. Controls and surfaces use modest radii. This is a utility application, not a
    social-feed card system.
-9. Before a UI slice moves to 5.7, its blueprint, tests, semantics, permission
+9. Before a UI slice enters approved production integration, its blueprint, tests, semantics, permission
    behavior, and visual acceptance must agree.
 
 ## 3. Semantic Color Contract
+
+### Owner correction — September 8, 2026: meaning-based whole-card color
+
+Consistency is mandatory, not optional styling. Plan uses the same blue family
+on every screen; Entries uses the same jade-green family on every screen.
+Employee/company context changes labels and queried records, never the palette.
+Color covers the ENTIRE outer card: title background and body have exactly one
+solid fill, without a gradient or different header shade. Individual record rows
+are lighter neutral surfaces, NOT the same shade as the outer card. Preserve
+clear boundaries between nested rows. Labels, icons and readable contrast must
+also communicate meaning; color alone is insufficient.
+
+The following shared `OperationalCardPalette` tokens are a Dashboard VISUAL
+TRIAL, not owner-approved exact shades. This supersedes the pale header-only
+Plan/Entries treatment below. Reuse the shared components; do not privately
+recolor other instances of the same component.
+
+| Meaning | Gradient start → end | Record-row surface |
+| --- | --- | --- |
+| Plan | Solid `#1976B2`, based on the latest menu-button reference | Light blue `#AFCFE1` |
+| Entries | Solid medium jade `#72AE88` | Slightly lighter `#AEC8B7` |
+| Needs attention / Needs approval | Solid muted orange `#C8955B` | Same `#C8955B` fill for pending approval rows |
+| Payments | Money green `#2F7D32` → `#246529` | — |
+| Expenses | Brick red `#B94A46` → `#943833` | — |
+| Miles | Violet `#6954A0` → `#51407F` | — |
+| Work | Teal `#146C70` → `#10585B` (trial, distinct from violet Miles; no peach) | — |
+
+Dark fills use `#F7F6EF` foregrounds; jade/orange and lighter inner rows
+use `#172A33`. Verify contrast throughout summary gradients,
+on nested rows, and in their menus. Owner update: pending approval receives a
+full muted-orange fill matching the Needs attention summary card, not only a
+thin outline. Retain the explicit Needs approval label; ordinary entry rows
+remain green-tinted. Approved/denied status retains its separate label/accent.
+This changes presentation, not approval permissions or state transitions.
+FABs use shared charcoal `#303B40`, distinct from
+Plan blue. Start Workday remains `#6AD39B`. Do not change the approved status-bar
+background or page geometry during this trial. Canvas/navigation remain neutral;
+this is not permission to give every page an unrelated color theme.
+
+Recorded-activity sections use `RecordedEntriesSection` from `shared/`: it owns
+the solid outer fill and the scoped row/text/menu treatment. Dashboard,
+Calendar Day and the admin projection reuse `TodayEntries` within that wrapper;
+Expenses and Payments supply their domain-specific content to the same wrapper.
+Do not map an Expense or Payment into a Dashboard-owned record merely to reuse
+its appearance. Preserve permissions, amounts, IDs, expansion and destinations.
+Future recorded-entry sections must adopt this wrapper rather than copy its
+colors. Different record fields may use different row-content widgets.
+
+Plan and entry-section titles use `OperationalSectionHeading`: 48 LP minimum
+content height plus 8 LP top and 2 LP bottom padding and a 1 LP divider.
+This places the divider approximately 16 LP below the normal title text box,
+not below an additional oversized header gap. Preserve record container sizes.
+The empty Show all slot does not collapse the title row and change the spacing.
+Larger/localized text may grow naturally. The divider separates title from
+records without changing the title's background. Dashboard Plan/Entries,
+Expense entries and Payment entries reuse this heading rather than copy it.
+Today's Entries uses the entry-row light green for its title divider; this
+color adjustment does not change divider position, padding, or record sizes.
+
+Gradient comparison, pending owner selection: `lib/gradient_preview.dart` is an
+isolated visual entry point using the real Plan/Entries widgets and unchanged
+inner rows. It does not write records or replace the normal app entry point.
+The pronounced Plan gradient uses the protected 5.7 menu `_ScreenButton` colors
+from `lib/screens/settings/system_settings.dart`: `#1976B9` to `#0F4068`, top to
+bottom. Subtle uses the same top with 30% of that endpoint change. Entries tries
+`#89C49E` to `#59966C`, likewise at full or 30% strength. Headers are transparent
+over one continuous section gradient, never separately colored. These green
+endpoints are proposals, not accepted owner colors.
+
+The selected Entries green remains unchanged by the September 8 shared-widget
+pass. Dark-mode visual acceptance is still open. Opaque outer/row fills must
+be verified over a contrasting canvas; translucent icons/borders do not prove
+background bleed. A passing opacity test is not proof that an earlier reported
+device artifact was reproduced or fixed.
 
 ### Light mode
 
 | Token | Value | Use |
 | --- | --- | --- |
 | Canvas | `#C9D8DF` | Page background; muted blue-gray, never ghost white |
-| Surface | `#E2EBEF` | Primary cards, sheets, and bottom navigation |
-| Muted surface | `#D5E2E8` | Rows, fields, and secondary regions |
+| Surface | `#C5D6DE` | Primary cards, sheets, and bottom navigation |
+| Muted surface | `#B6CDD7` | Rows, fields, and secondary regions |
 | Strong surface | `#BED1DA` | Section headers, selected navigation, compact controls |
 | Ink | `#172A33` | Primary text and icons |
-| Muted ink | `#526771` | Secondary descriptions and metadata |
+| Muted ink | `#3D535E` | Secondary descriptions and metadata |
 | Border | `#91A8B3` | Routine separators and surface outlines |
 | Strong border | `#8298A2` | Interactive outlines and stronger separation |
 | Primary blue | `#285F78` | Primary action/selection; not a page background |
-| Blue tint | `#D5E5ED` | Plan and selection surfaces |
+| Blue tint | `#91B8CD` | Legacy general accent; NOT the Plan fill |
 | Success green | `#0B6B50` | Confirmed/success state |
-| Green tint | `#D5E9E1` | Entry/status header surfaces |
+| Green tint | `#95BFA8` | Legacy general accent; NOT the Entries fill |
 | Warning | `#8B5A12` | Needs-attention state |
 | Warning tint | `#F2E5CC` | Warning background |
 
@@ -76,7 +151,7 @@ an equivalent record elsewhere. `AppSemanticColors` owns these shared states:
 
 | State | Light foreground | Light surface | Meaning |
 | --- | --- | --- | --- |
-| Current | `#1E607C` | `#CFE5EF` | Selected/current-day information and Today's Entries |
+| Current | `#1E607C` | `#CFE5EF` | Selected/current-day information; not the Entries identity fill |
 | Planned | `#5D4B83` | `#E1D9EF` | Upcoming and recurring planned activity |
 | Success | `#126A4B` | `#D3E9DE` | Approved, saved, completed, or otherwise confirmed |
 | Attention | `#944509` | `#F3D8C2` | Action is required but is not destructive failure |
@@ -112,7 +187,8 @@ and strong border `#53646C`. Muted blue and green remain semantic
 action/status accents, not page undertones. Hard-coded light surfaces are
 prohibited in a dark-mode screen.
 
-Dashboard Plan and Entries headers, job-workspace section headers, borders, and
+Except for the owner-approved Dashboard blue Plan and green Entries section
+fills described in section 9, job-workspace section headers, borders, and
 routine rows use the neutral dark surface tokens. Blue and green may remain on
 small icons, selected state, status labels, and explicit actions, but must not
 form a colored edge or undertone around a charcoal working panel.
@@ -164,11 +240,44 @@ preserving contrast. Avoid weight 800/900 for routine page, row, and button text
 
 ## 6. Navigation Contract
 
+### Owner requirement: secondary-screen return navigation
+
+Added September 5, 2026. This is a required implementation and acceptance
+contract, not a claim that every existing route already complies.
+
+- Every secondary screen outside the top-level navigation destinations must
+  provide a visible, accessible Back control on phones, tablets, and desktop,
+  including wide layouts. Do not rely solely on a gesture, system button,
+  keyboard shortcut, or the bottom navigation to leave a secondary screen.
+- Back returns to the actual originating screen and preserves its selected
+  date, filters, and scroll position where applicable. A deep-linked screen
+  without an existing back stack provides a predictable owning-screen fallback.
+- Preserve supported native back navigation, including iOS edge-swipe back and
+  Android system back/button or gesture behavior. The iOS home gesture is not
+  in-app Back. Do not invent an app-wide swipe gesture that conflicts with
+  calendars, horizontal lists, or other controls.
+- Visible Back, native back gestures, and keyboard back actions must share the
+  same navigation and unsaved-change policy. Protect unsaved edits with a
+  recoverable draft or an explicit user choice; never silently discard work.
+  If a dirty form must interrupt native back, explain why and keep visible Back
+  available. The assistant must not choose a consequential confirmation for
+  the owner during validation.
+- During each screen's implementation, verify return navigation on narrow and
+  wide layouts, supported native gestures, keyboard/accessibility access,
+  unsaved edits, and deep-link fallback. Record actual verification separately
+  from this requirement. Do not mark all platforms verified from widget tests.
+
+### Existing shell rules
+
 - Dashboard may use the 220-LP labeled rail when the full window is at least
   1000 LP wide and 600 LP high, because its two compact lanes still fit after
   the rail and page insets. Other modules retain the 1338-LP shared threshold
   until their complete-screen repair verifies an earlier transition. The shell
   reevaluates navigation when the selected top-level module changes.
+- Work's repaired landing screen uses the rail from 1000 LP of shell width,
+  independent of height. Its existing scrollable destination list handles short
+  windows; resizing height does not move navigation to another edge. Other
+  modules retain their existing transition until reviewed separately.
 - Otherwise use bottom navigation. Its height interpolates from 62 LP on a
   narrow phone to 66 LP on wider windows.
 - Show every destination name at every mobile width. A user must not select a
@@ -201,6 +310,12 @@ preserving contrast. Avoid weight 800/900 for routine page, row, and button text
 
 ## 7. Workspace and Lane Contract
 
+The numeric modes below describe an existing shared composition, not a universal
+phone/tablet/desktop or one/two/three-column design requirement. Each workflow
+must justify information/action priority, bounded components and reflow through
+the shared engine using local logical constraints and TextScaler. Current
+layouts remain redesign candidates; no private global breakpoint system.
+
 The lane calculation receives the remaining width after rail and page insets.
 That value is normalized to a nonnegative local width before any lane, detail,
 or compact-action geometry is emitted, so startup and resize transitions cannot
@@ -218,9 +333,10 @@ presentation from rail presence or the surrounding global window.
 | Three lanes | at least 1086 LP | three lanes, minimum 350 LP, responsive 18-48-LP gaps |
 
 Each record/form lane stops growing at 500 LP. Surplus width first increases
-inter-lane breathing room, capped at 48 LP. The shared Month calendar is the
-intentional exception: after those bounded content lanes it fills the owning
-module workspace, preserving the 5.7-style seven-column month grid. At increased
+inter-lane breathing room, capped at 48 LP. Dashboard's supporting Month calendar
+occupies one lane capped at 400 LP; it must not expand across the workspace.
+Other module calendar composition requires an explicit shared-engine contract,
+not a blanket full-width exception. At increased
 text scale the engine raises the two- and three-lane requirements so record
 columns collapse before content crowds.
 
@@ -282,9 +398,11 @@ constraints or accessibility text reflow the metadata without truncation.
 
 Work's top-level directory is a distinct compact-navigation pattern based on the
 accepted 5.7 invoice-home language. `AppLayoutEngine.workShortcutsFor` lays out
-six labeled destinations around 62-LP icon surfaces: three columns on a normal
-phone, six when a wide workspace supports them, and fewer columns when large
-accessibility text needs more width. The icon does not replace its label.
+six labeled destinations around 62-LP icon surfaces: up to four columns on a
+normal phone, six when a wide workspace supports them, and fewer columns when
+measured words or accessibility text need more width. The icon does not replace
+its label. Existing action directories retain their three/six-column calculation;
+the Work destination grid supplies its measured label width to the shared engine.
 Dashboard, Workday, Expense, Inventory, Job, and Work action directories reuse
 that same calculation rather than declaring screen-private column thresholds.
 Action labels and any visible detail copy have no fixed line cap; tiles grow
@@ -321,10 +439,17 @@ calendar-width contract.
 4. View selector;
 5. settings for the exact screen currently shown.
 
-Dashboard includes Start Workday and technician vehicle context. While a
-workday is active, Start Workday leaves the header; it is not replaced by a
-misleading Open Workday control. The Dashboard body then shows the compact
-active-day summary and the FAB becomes the labeled Actions entry. Work omits
+Owner Dashboard presentation supersedes the legacy Start/View header below:
+compact title/navigation/settings row, vehicle and separate odometer beneath,
+no role selector, and Start Workday in the body. The background fills the phone
+content width and is capped by the shared dashboard workspace plus its gutters
+on wide windows; inner controls remain bounded. No status-bar/safe-area change.
+Normal vertical padding is 0 LP above and 6 LP below, with a 2-LP row gap;
+required text can grow rather than being clipped. The chevron sits 4 LP beside
+the selected name, not at the far end of an expanded empty row.
+While active, the body shows the workday summary and labeled Actions entry.
+Both Start Workday actions use shared `#6AD39B` with dark readable text.
+Legacy non-owner variants remain staged migration work. Work omits
 the Start action and uses Company Overview/employee context. The settings
 button is contextual; it does not open one undifferentiated settings warehouse
 for the entire product.
@@ -333,6 +458,9 @@ The notification bell is not part of this control distribution. It lives beside
 the selected date immediately below the header.
 
 ### Sizing and reflow
+
+The Start/View split-control rules below describe the retained legacy variant,
+not the current owner Dashboard or Start Workday presentation.
 
 - Header internal horizontal padding is 8 LP below 420 LP and 12 LP otherwise.
 - Menu and settings each occupy a 42-LP control extent. A route without a
@@ -392,14 +520,14 @@ strip measures the longest authorized name and status at the active
 
 - The full selected date is the section orientation label.
 - Dashboard does not show a notification bell beside the date. `Needs
-  attention` is the Dashboard's single action queue and appears directly above
-  Today's Plan in the priority lane. Reminder and delivery infrastructure may
+  attention` is the Dashboard's single action queue and is FIRST in its five-card
+  horizontal summary strip, without a duplicate banner. Reminder infrastructure may
   remain available through an explicit global route elsewhere; it does not
   compete with the Dashboard queue.
 
 ### Today's Plan
 
-- Blue-tinted header with title, schedule icon, and Show All.
+- Whole blue card family from section 3, with title, schedule icon, and Show All.
 - Up to three operational stops in the collapsed view.
 - Rows use compact metadata, a status marker, one clear title, and a menu.
 - Normal rows are 56-60 LP. Narrow rows reorganize title and time rather than
@@ -407,8 +535,10 @@ strip measures the longest authorized name and status at the active
 
 ### Today's Entries
 
-- Green-tinted header with title and record count.
+- Solid jade-green outer card from section 3, with title and record count.
 - Confirmed activity is chronological and opens its owning record.
+- Omit the section and its spacing only when the selected day's entries are
+  empty. Workday-start state is not a visibility gate.
 - Entry titles use medium weight; details use high-contrast muted ink.
 - The section is a projection. It does not duplicate source records.
 
@@ -501,8 +631,8 @@ machine-verifiable instead of depending on remembered conversation.
 3. Add a regression test for every repaired width, text scale, or state.
 4. If a design decision changes, update code, this blueprint, and tests in the
    same change.
-5. Demo data stays outside layout decisions. Production adapters in 5.7 provide
-   permissions and records.
+5. Demo data stays outside layout decisions. Approved production adapters provide
+   permissions and records; their destination/source is not chosen by this file.
 6. AI/OCR/GPS suggestions are visibly proposals until user-confirmed. No AI
    surface receives broader customer, financial, employee, or location data
    merely because it can improve a suggestion.
@@ -527,8 +657,8 @@ For each relevant screen verify:
   slices.
 
 Static analysis and widget tests are necessary but not visual acceptance. The
-owner must review the running UI Lab build before a presentation slice is ported
-to Maintainiac 5.7.
+owner must review the running UI Lab build before a presentation slice enters
+approved production integration.
 
 ## 14. File Ownership and Size
 

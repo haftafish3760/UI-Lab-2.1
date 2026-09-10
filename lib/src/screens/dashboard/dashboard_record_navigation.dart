@@ -9,9 +9,13 @@ import '../work/estimate_models.dart';
 import '../work/invoice_detail_screen.dart';
 import '../work/invoice_permissions.dart';
 import '../work/job_workspace_screen.dart';
+import '../work/job_schedule_editor_sheet.dart';
 import '../work/work_models.dart';
 import 'dashboard_models.dart';
 import 'day_entry_details_screen.dart';
+import 'day_note_editor_dialog.dart';
+import 'saved_day_note_details_screen.dart';
+import 'saved_workday_event_details_screen.dart';
 
 /// Routes Dashboard projections back to the record-owning module.
 ///
@@ -19,6 +23,67 @@ import 'day_entry_details_screen.dart';
 /// entries without an owning module use the Dashboard detail screen.
 class DashboardRecordNavigation {
   const DashboardRecordNavigation._();
+
+  /// Returns false only for the fixture-only app, which has no note session.
+  static Future<bool> openStoredDayNoteEditor(
+    BuildContext context,
+    DateTime date,
+  ) async {
+    final notes = PrototypeOperationsScope.of(context).dayNoteSession;
+    if (notes == null) return false;
+    final employeeId =
+        OperationalScope.of(context).selectedEmployeeId ??
+        notes.access.actorEmployeeId;
+    if (!notes.access.canCreate ||
+        !notes.access.employeeIds.contains(employeeId)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You cannot add a day record for this employee.'),
+        ),
+      );
+      return true;
+    }
+    final employee = demoEmployees
+        .where((employee) => employee.id == employeeId)
+        .firstOrNull;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => DayNoteEditorDialog(
+        session: notes,
+        date: date,
+        employeeId: employeeId,
+        employeeLabel: employee?.name ?? employeeId,
+      ),
+    );
+    return true;
+  }
+
+  static Future<void> rescheduleJob(BuildContext context, PlanItem item) async {
+    final store = PrototypeOperationsScope.of(context);
+    final work = store.workSession;
+    final id = item.sourceRecordId ?? item.id;
+    final record = store.workRecords
+        .where((record) => record.id == id)
+        .firstOrNull;
+    if (work == null ||
+        record == null ||
+        record.kind != WorkRecordKind.job ||
+        !work.permissions.canEdit(record)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This job is unavailable for rescheduling.'),
+        ),
+      );
+      return;
+    }
+    await showModalBottomSheet<WorkRecord>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => JobScheduleEditorSheet(record: record, work: work),
+    );
+  }
 
   static Future<void> openPlan(
     BuildContext context,
@@ -85,6 +150,52 @@ class DashboardRecordNavigation {
   }) async {
     final store = PrototypeOperationsScope.of(context);
     final sourceId = entry.sourceRecordId;
+    if (entry.kind == DayEntryKind.jobActivity &&
+        !store.workRecords.any(
+          (record) =>
+              record.id == sourceId && record.kind == WorkRecordKind.job,
+        )) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This job activity is unavailable.')),
+      );
+      return;
+    }
+    if (sourceId != null && entry.kind == DayEntryKind.workday) {
+      final workday = store.workdaySession;
+      if (workday == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This workday event is unavailable.')),
+        );
+        return;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => SavedWorkdayEventDetailsScreen(
+            workdayId: sourceId,
+            eventId: entry.id,
+            session: workday,
+            showOdometer: showOdometer,
+          ),
+        ),
+      );
+      return;
+    }
+    if (sourceId != null && entry.kind == DayEntryKind.note) {
+      final notes = store.dayNoteSession;
+      if (notes == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This day record is unavailable.')),
+        );
+        return;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) =>
+              SavedDayNoteDetailsScreen(noteId: sourceId, session: notes),
+        ),
+      );
+      return;
+    }
     if (sourceId != null && entry.kind == DayEntryKind.expense) {
       if (store.expenses.any((candidate) => candidate.id == sourceId)) {
         await Navigator.of(context).push(

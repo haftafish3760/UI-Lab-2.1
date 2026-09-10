@@ -24,6 +24,10 @@ Future<void> _pumpAt(
 }
 
 Future<void> _openStartWorkday(WidgetTester tester) async {
+  await tester.ensureVisible(
+    find.byKey(const ValueKey('start-workday-button')),
+  );
+  await tester.pumpAndSettle();
   await tester.tap(find.byKey(const ValueKey('start-workday-button')));
   await tester.pumpAndSettle();
   expect(
@@ -59,7 +63,7 @@ void main() {
 
       await _openStartWorkday(tester);
       expect(find.text('Service Van 4'), findsWidgets);
-      expect(find.text('Work context'), findsOneWidget);
+      expect(find.text('Select vehicle'), findsOneWidget);
       expect(find.text('Starting odometer'), findsOneWidget);
       expect(find.text('Trip assistance'), findsOneWidget);
 
@@ -131,6 +135,7 @@ void main() {
     await tester.tap(
       find.byKey(const ValueKey('dashboard-action-setting-pauseOrResume')),
     );
+    await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey('save-dashboard-settings-button')),
     );
@@ -188,7 +193,9 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('confirm-end-workday-button')));
     await tester.pumpAndSettle();
     expect(
-      find.text('Enter an ending odometer at or above the starting reading.'),
+      find.text(
+        'Enter an ending odometer at or above the last confirmed reading.',
+      ),
       findsOneWidget,
     );
     expect(

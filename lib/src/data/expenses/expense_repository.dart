@@ -1,4 +1,5 @@
 import 'expense_record.dart';
+import '../storage/local_draft_checkpoint.dart';
 
 enum ExpenseReadScope { own, team, company }
 
@@ -116,18 +117,26 @@ abstract interface class ExpenseRepository {
   Future<int> approvedTotalMinorUnits(ExpenseQuery query);
 }
 
+/// Capability checked before accepting a command that consumes a local draft.
+abstract interface class ExpenseDraftConfirmationRepository
+    implements ExpenseRepository {
+  bool get supportsDraftConfirmation;
+}
+
 class ExpenseMutationContext {
   ExpenseMutationContext({
     required this.actorEmployeeId,
     required DateTime occurredAtUtc,
     required this.permissionRevision,
     this.note,
+    this.draftCheckpoint,
   }) : occurredAtUtc = occurredAtUtc.toUtc();
 
   final String actorEmployeeId;
   final DateTime occurredAtUtc;
   final String permissionRevision;
   final String? note;
+  final LocalDraftCheckpoint? draftCheckpoint;
 
   ExpenseAuditEvent auditEvent({
     required ExpenseAuditAction action,

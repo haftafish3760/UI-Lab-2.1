@@ -4,6 +4,9 @@ import '../../data/prototype_operations_store.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/operations_workspace.dart';
 import '../../shared/section_card.dart';
+import '../../shared/recorded_entries_section.dart';
+import '../../shared/operational_section_heading.dart';
+import '../../theme/operational_card_palette.dart';
 import '../../theme/app_semantic_colors.dart';
 import 'invoice_detail_screen.dart';
 import 'invoice_payment_entry_screen.dart';
@@ -198,10 +201,16 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       ),
     );
     if (!mounted || entry == null) return;
-    _store.addFinancialEntry(entry);
-    if (_balanceCentsFor(invoice) == 0) {
-      _store.updateWorkRecord(invoice.copyWith(status: WorkRecordStatus.paid));
-    }
+    final saved = await _store.recordInvoicePayment(invoice, entry);
+    if (!mounted || saved) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _store.workSession?.failureMessage ??
+              'The payment was not saved. Please try again.',
+        ),
+      ),
+    );
   }
 
   int _balanceCentsFor(WorkRecord invoice) {
@@ -330,15 +339,20 @@ class _PaymentList extends StatelessWidget {
   final InvoicePermissions permissions;
 
   @override
-  Widget build(BuildContext context) => SectionCard(
-    padding: EdgeInsets.zero,
-    child: Column(
+  Widget build(BuildContext context) => RecordedEntriesSection(
+    builder: (context) => Column(
       children: [
-        ListTile(
-          tileColor: Theme.of(context).colorScheme.surfaceContainerHigh,
-          leading: const Icon(Icons.receipt_long_outlined),
-          title: const Text('Payment entries'),
-          trailing: Text('${payments.length}'),
+        OperationalSectionHeading(
+          background: OperationalCardPalette.entries.start,
+          foreground: OperationalCardPalette.entries.foreground,
+          child: Row(
+            children: [
+              const Icon(Icons.receipt_long_outlined),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('Payment entries')),
+              Text('${payments.length}'),
+            ],
+          ),
         ),
         if (payments.isEmpty)
           const Padding(

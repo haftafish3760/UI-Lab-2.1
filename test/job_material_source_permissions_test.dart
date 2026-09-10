@@ -5,6 +5,7 @@ import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_workspace_models.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_workspace_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
+import 'package:ui_lab_2_1/src/screens/work/work_items_editor.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
 
@@ -131,6 +132,12 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('link-receipt-expense')));
     await tester.pumpAndSettle();
+    await tester.dragUntilVisible(
+      find.text('Regional Materials Order'),
+      find.byType(ListView).first,
+      const Offset(0, -200),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Regional Materials Order'));
     await tester.pumpAndSettle();
 
@@ -253,7 +260,7 @@ void main() {
       find.textContaining('is no longer available. No stock was changed.'),
       findsOneWidget,
     );
-    expect(find.text('Job details'), findsOneWidget);
+    expect(find.byType(WorkItemsEditor), findsOneWidget);
     expect(
       store.workRecords
           .firstWhere((item) => item.id == 'job-1038')

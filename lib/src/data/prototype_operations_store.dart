@@ -3,11 +3,18 @@ import 'dart:collection';
 import 'package:flutter/widgets.dart';
 
 import '../screens/dashboard/dashboard_models.dart';
-import '../screens/expenses/expense_models.dart';
+import 'expenses/expense_workflow_models.dart';
 import '../screens/inventory/inventory_models.dart';
-import '../screens/work/work_contact_models.dart';
-import '../screens/work/work_models.dart';
+import 'work/models/work_contact_models.dart';
+import 'work/models/work_models.dart';
 import 'expense_prototype_store.dart';
+import 'work/work_persistence_session.dart';
+import '../screens/dashboard/work_dashboard_projection.dart';
+import 'work/directory_persistence_session.dart';
+import 'workday/workday_persistence_session.dart';
+import 'day_notes/day_note_persistence_session.dart';
+import 'day_notes/day_note_dashboard_projection.dart';
+import 'workday/workday_dashboard_projection.dart';
 import 'expenses/expense_ui_repository_controller.dart';
 import 'expenses/expense_ui_projection.dart';
 import 'operational_attention.dart';
@@ -19,8 +26,14 @@ import 'prototype_report_projection.dart';
 export 'prototype_financial_models.dart';
 export 'prototype_report_models.dart';
 
+part 'prototype_expense_dashboard_projection.dart';
+
 class PrototypeOperationsStore extends ChangeNotifier {
   PrototypeOperationsStore({
+    this.workSession,
+    this.workdaySession,
+    this.dayNoteSession,
+    this.directorySession,
     List<ExpenseRecord>? expenses,
     List<ScheduledExpenseRecord>? scheduledExpenses,
     List<ScheduledExpenseOccurrence>? scheduledExpenseOccurrences,
@@ -37,23 +50,37 @@ class PrototypeOperationsStore extends ChangeNotifier {
          scheduledExpenseOccurrences: scheduledExpenseOccurrences,
        ),
        _financialEntries = [
-         ...(financialEntries ?? prototypeDemoFinancialEntries()),
+         ...(financialEntries ??
+             (workSession == null
+                 ? prototypeDemoFinancialEntries()
+                 : const [])),
        ],
-       _workRecords = [...(workRecords ?? prototypeDemoWorkRecords())],
+       _workRecords = [
+         ...(workRecords ??
+             (workSession == null ? prototypeDemoWorkRecords() : const [])),
+       ],
        _materialCosts = [...(materialCosts ?? demoMaterialCosts)],
        _inventoryStock = [...(inventoryStock ?? demoInventoryStock)],
        _dashboardDays = {...?dashboardDays},
        _companyProfile = companyProfile ?? demoWorkCompany,
        _customers = [...(customers ?? demoWorkCustomers)] {
     attentionCenter = PrototypeAttentionCenter(
-      workRecords: () => _workRecords,
+      workRecords: () => this.workRecords,
       expenses: () => this.expenses,
       inventoryStock: () => _inventoryStock,
       onChanged: notifyListeners,
     );
     _expenseStore.addListener(notifyListeners);
+    workSession?.addListener(notifyListeners);
+    workdaySession?.addListener(notifyListeners);
+    dayNoteSession?.addListener(notifyListeners);
+    directorySession?.addListener(notifyListeners);
   }
 
+  final WorkPersistenceSession? workSession;
+  final WorkdayPersistenceSession? workdaySession;
+  final DayNotePersistenceSession? dayNoteSession;
+  final DirectoryPersistenceSession? directorySession;
   final ExpensePrototypeStore _expenseStore;
   ExpenseUiRepositoryController? _authorizedExpenseController;
   final List<PrototypeFinancialEntry> _financialEntries;
@@ -75,16 +102,17 @@ class PrototypeOperationsStore extends ChangeNotifier {
             _expenseStore.deletedExpenses,
       );
   UnmodifiableListView<PrototypeFinancialEntry> get financialEntries =>
-      UnmodifiableListView(_financialEntries);
+      UnmodifiableListView(workSession?.financialEntries ?? _financialEntries);
   UnmodifiableListView<WorkRecord> get workRecords =>
-      UnmodifiableListView(_workRecords);
+      UnmodifiableListView(workSession?.records ?? _workRecords);
   UnmodifiableListView<MaterialCostRecord> get materialCosts =>
       UnmodifiableListView(_materialCosts);
   UnmodifiableListView<InventoryStockRecord> get inventoryStock =>
       UnmodifiableListView(_inventoryStock);
-  WorkCompanyProfile get companyProfile => _companyProfile;
+  WorkCompanyProfile get companyProfile =>
+      directorySession?.company ?? _companyProfile;
   UnmodifiableListView<WorkCustomerProfile> get customers =>
-      UnmodifiableListView(_customers);
+      directorySession?.customers ?? UnmodifiableListView(_customers);
 
   DashboardDayData dashboardDay({
     required DateTime day,
@@ -94,7 +122,42 @@ class PrototypeOperationsStore extends ChangeNotifier {
     final stored =
         _dashboardDays[_dashboardDayKey(day, contextId)] ??
         demoDataFor(day, employeeId: employeeId);
-    return _withExpenseProjections(stored, day, employeeId);
+    final work = workSession;
+    final planned = work == null
+        ? stored
+        : withWorkPlanProjections(
+            data: stored,
+            records: work.records,
+            day: day,
+            employeeId: employeeId,
+          );
+    final activity = work == null
+        ? planned
+        : withWorkStatusProjections(
+            data: planned,
+            events: work.statusEvents,
+            day: day,
+            employeeId: employeeId,
+          );
+    final data = _withExpenseProjections(activity, day, employeeId);
+    final workday = workdaySession;
+    final workdayData = workday == null
+        ? data
+        : withWorkdayProjections(
+            data: data,
+            session: workday,
+            day: day,
+            employeeId: employeeId,
+          );
+    final notes = dayNoteSession;
+    return notes == null
+        ? workdayData
+        : withDayNoteProjections(
+            data: workdayData,
+            session: notes,
+            day: day,
+            employeeId: employeeId,
+          );
   }
 
   void updateDashboardDay({
@@ -103,101 +166,45 @@ class PrototypeOperationsStore extends ChangeNotifier {
     required DashboardDayData data,
   }) {
     _dashboardDays[_dashboardDayKey(day, contextId)] = DashboardDayData(
-      plan: data.plan,
+      plan: workSession == null
+          ? data.plan
+          : data.plan
+                .where((item) => item.kind != PlanItemKind.jobStop)
+                .toList(growable: false),
       entries: data.entries
           .where(
             (entry) =>
-                entry.kind != DayEntryKind.expense ||
-                entry.sourceRecordId == null,
+                (workSession == null ||
+                    entry.kind != DayEntryKind.jobActivity) &&
+                (entry.kind != DayEntryKind.expense ||
+                    entry.sourceRecordId == null) &&
+                (workdaySession == null ||
+                    entry.kind != DayEntryKind.workday) &&
+                (dayNoteSession == null ||
+                    entry.kind != DayEntryKind.note ||
+                    entry.sourceRecordId == null),
           )
           .toList(growable: false),
     );
     notifyListeners();
   }
 
-  DashboardDayData _withExpenseProjections(
-    DashboardDayData stored,
-    DateTime day,
-    String? employeeId,
-  ) {
-    final matching = <String, ExpenseRecord>{
-      for (final record in expenses)
-        if (_expenseOccursFor(record, day, employeeId)) record.id: record,
-    };
-    final projectedIds = <String>{};
-    final entries = <DayEntry>[];
-    for (final entry in stored.entries) {
-      final sourceId = entry.sourceRecordId;
-      if (entry.kind != DayEntryKind.expense || sourceId == null) {
-        entries.add(entry);
-        continue;
-      }
-      final record = matching[sourceId];
-      if (record == null) continue;
-      entries.add(_expenseDayEntry(record, previous: entry));
-      projectedIds.add(sourceId);
-    }
-    for (final record in matching.values) {
-      if (projectedIds.add(record.id)) entries.add(_expenseDayEntry(record));
-    }
-    return DashboardDayData(plan: stored.plan, entries: entries);
-  }
-
-  bool _expenseOccursFor(
-    ExpenseRecord record,
-    DateTime day,
-    String? employeeId,
-  ) {
-    final date = record.resolvedDate;
-    if (date == null ||
-        date.year != day.year ||
-        date.month != day.month ||
-        date.day != day.day) {
-      return false;
-    }
-    return employeeId == null || record.paidByEmployeeId == employeeId;
-  }
-
-  DayEntry _expenseDayEntry(ExpenseRecord record, {DayEntry? previous}) {
-    final projection = _authorizedExpenseController?.projection.projectionById(
-      record.id,
-    );
-    return DayEntry(
-      id: previous?.id ?? 'dashboard-${record.id}',
-      time:
-          _expenseTimeLabel(projection?.expenseTimeMinutes) ??
-          previous?.time ??
-          'Time not recorded',
-      title: record.vendor,
-      detail: [record.category.label, ?record.job].join(' · '),
-      kind: DayEntryKind.expense,
-      color: previous?.color ?? const Color(0xFFA55B00),
-      amount: expenseMoney(record.amount),
-      reviewStatus: switch (record.approvalStatus) {
-        ExpenseApprovalStatus.pending => DayEntryReviewStatus.needsApproval,
-        ExpenseApprovalStatus.approved => DayEntryReviewStatus.approved,
-        ExpenseApprovalStatus.declined => DayEntryReviewStatus.denied,
-        ExpenseApprovalStatus.notRequired => DayEntryReviewStatus.none,
-      },
-      approvalReason: record.approvalReason,
-      approvalExpectedAmount: previous?.approvalExpectedAmount,
-      approvalDifference: previous?.approvalDifference,
-      linkedRecord: record.job,
-      sourceRecordId: record.id,
-      submittedBy: record.owner,
-    );
-  }
-
-  void updateCompanyProfile(WorkCompanyProfile profile) {
+  Future<bool> updateCompanyProfile(WorkCompanyProfile profile) {
+    if (directorySession != null) return directorySession!.saveCompany(profile);
     _companyProfile = profile;
     notifyListeners();
+    return Future.value(true);
   }
 
-  void replaceCustomers(List<WorkCustomerProfile> customers) {
+  Future<bool> replaceCustomers(List<WorkCustomerProfile> customers) {
+    if (directorySession != null) {
+      return directorySession!.saveCustomers(customers);
+    }
     _customers
       ..clear()
       ..addAll(customers);
     notifyListeners();
+    return Future.value(true);
   }
 
   void bindAuthorizedExpenseController(
@@ -265,25 +272,88 @@ class PrototypeOperationsStore extends ChangeNotifier {
     );
   }
 
-  void addFinancialEntry(PrototypeFinancialEntry entry) {
-    if (_financialEntries.any((candidate) => candidate.id == entry.id)) return;
+  Future<bool> addFinancialEntry(PrototypeFinancialEntry entry) {
+    final session = workSession;
+    if (session != null) return session.save(financialEntries: [entry]);
+    if (_financialEntries.any((candidate) => candidate.id == entry.id)) {
+      return Future.value(true);
+    }
     _financialEntries.add(entry);
     notifyListeners();
+    return Future.value(true);
   }
 
-  void addWorkRecord(WorkRecord record) {
-    if (_workRecords.any((candidate) => candidate.id == record.id)) return;
+  Future<bool> addWorkRecord(WorkRecord record) {
+    final session = workSession;
+    if (session != null) return session.create(record);
+    if (_workRecords.any((candidate) => candidate.id == record.id)) {
+      return Future.value(true);
+    }
     _workRecords.add(record);
     notifyListeners();
+    return Future.value(true);
   }
 
-  void updateWorkRecord(WorkRecord record) {
+  Future<bool> updateWorkRecord(WorkRecord record) {
+    final session = workSession;
+    if (session != null) return session.update(record);
     final index = _workRecords.indexWhere(
       (candidate) => candidate.id == record.id,
     );
-    if (index < 0) return;
+    if (index < 0) return Future.value(false);
     _workRecords[index] = record;
     notifyListeners();
+    return Future.value(true);
+  }
+
+  Future<bool> saveWorkAndFinancial({
+    required List<WorkRecord> records,
+    required List<PrototypeFinancialEntry> entries,
+  }) {
+    final session = workSession;
+    if (session != null) {
+      return session.save(records: records, financialEntries: entries);
+    }
+    for (final record in records) {
+      final index = _workRecords.indexWhere((item) => item.id == record.id);
+      if (index < 0) {
+        _workRecords.add(record);
+      } else {
+        _workRecords[index] = record;
+      }
+    }
+    for (final entry in entries) {
+      if (!_financialEntries.any((item) => item.id == entry.id)) {
+        _financialEntries.add(entry);
+      }
+    }
+    notifyListeners();
+    return Future.value(true);
+  }
+
+  Future<bool> recordInvoicePayment(
+    WorkRecord invoice,
+    PrototypeFinancialEntry entry,
+  ) {
+    final session = workSession;
+    if (session != null) return session.save(financialEntries: [entry]);
+    final paid =
+        financialEntries
+            .where(
+              (item) =>
+                  item.kind == PrototypeFinancialKind.paymentReceived &&
+                  item.sourceId == invoice.number &&
+                  item.id != entry.id,
+            )
+            .fold(0, (sum, item) => sum + item.amountCents) +
+        entry.amountCents;
+    return saveWorkAndFinancial(
+      records: [
+        if (paid == (invoice.total * 100).round())
+          invoice.copyWith(status: WorkRecordStatus.paid),
+      ],
+      entries: [entry],
+    );
   }
 
   void addMaterialCost(MaterialCostRecord record) {
@@ -308,7 +378,7 @@ class PrototypeOperationsStore extends ChangeNotifier {
     required DateTime fromInclusive,
     required DateTime toExclusive,
   }) {
-    final ledger = _financialEntries.where(
+    final ledger = financialEntries.where(
       (entry) =>
           !entry.occurredOn.isBefore(fromInclusive) &&
           entry.occurredOn.isBefore(toExclusive),
@@ -352,14 +422,14 @@ class PrototypeOperationsStore extends ChangeNotifier {
     String? employeeName,
     DateTime? asOf,
   }) => PrototypeReportProjection.build(
-    financialEntries: _financialEntries,
+    financialEntries: financialEntries,
     expenses: expenses,
     expenseMinorUnitsById: {
       for (final projection
           in _authorizedExpenseController?.projection.active ?? const [])
         projection.record.id: projection.exactTotal.minorUnits,
     },
-    workRecords: _workRecords,
+    workRecords: workRecords,
     fromInclusive: fromInclusive,
     toExclusive: toExclusive,
     employeeId: employeeId,
@@ -369,6 +439,10 @@ class PrototypeOperationsStore extends ChangeNotifier {
 
   @override
   void dispose() {
+    workSession?.removeListener(notifyListeners);
+    workdaySession?.removeListener(notifyListeners);
+    dayNoteSession?.removeListener(notifyListeners);
+    directorySession?.removeListener(notifyListeners);
     _expenseStore.removeListener(notifyListeners);
     _authorizedExpenseController?.removeListener(notifyListeners);
     _expenseStore.dispose();

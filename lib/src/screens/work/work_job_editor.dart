@@ -1,4 +1,13 @@
+import '../../data/work/work_items_draft_input.dart';
+import '../../data/work/job_confirmation.dart';
+import '../../data/work/job_draft_workflow.dart';
+import '../../data/work/job_draft_controller.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../data/storage/draft_autosave_session.dart';
+import '../../shared/editor_draft_status.dart';
+import '../../data/storage/local_record_identity.dart';
+import '../../shared/draft_navigation_guard.dart';
 
 import '../../data/prototype_operations_store.dart';
 import '../../layout/app_layout_engine.dart';
@@ -6,26 +15,51 @@ import '../../shared/section_card.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../dashboard/dashboard_models.dart';
 import 'customer_edit_screen.dart';
-import 'estimate_models.dart';
 import 'work_contact_models.dart';
 import 'work_detail_header.dart';
 import 'work_items_editor.dart';
 import 'work_models.dart';
 
 part 'work_job_editor_sections.dart';
+part 'work_job_draft_recovery.dart';
+part 'work_job_confirmation.dart';
 
 class WorkJobEditor extends StatefulWidget {
-  const WorkJobEditor({this.sourceEstimate, this.initialDay, super.key});
+  const WorkJobEditor({
+    this.sourceEstimate,
+    this.initialDay,
+    this.recoveredWorkflow,
+    super.key,
+  });
 
   final WorkRecord? sourceEstimate;
+
+  /// This editor owns closing the already-selected workflow on exit.
+  final JobDraftController? recoveredWorkflow;
   final DateTime? initialDay;
 
   @override
   State<WorkJobEditor> createState() => _WorkJobEditorState();
 }
 
-class _WorkJobEditorState extends State<WorkJobEditor> {
-  late final String _number;
+class _WorkJobEditorState extends State<WorkJobEditor>
+    with DraftNavigationGuard {
+  bool _saving = false;
+  int _sourceStorageRevision = 0;
+  late String _jobId = newLocalRecordIdentity('job');
+  late JobDraftController? _workflow = widget.recoveredWorkflow;
+  DraftAutosaveSession? get _draft => _workflow?.session;
+  StreamSubscription<DraftSaveState>? _draftSubscription;
+  bool _draftReady = false;
+  WorkRecord? _sourceEstimate;
+  WorkItemsDraftInput? _itemDraftInput;
+  void _refresh(VoidCallback change) => setState(change);
+  @override
+  bool get blockDraftNavigation => _saving;
+  @override
+  DraftAutosaveSession? get navigationDraft => _draft;
+
+  late String _number;
   late final TextEditingController _title;
   late final TextEditingController _scope;
   late final TextEditingController _notes;
@@ -43,12 +77,13 @@ class _WorkJobEditorState extends State<WorkJobEditor> {
   var _didInitializeLocation = false;
 
   PrototypeOperationsStore get _store => PrototypeOperationsScope.of(context);
-  bool get _fromApprovedEstimate => widget.sourceEstimate != null;
+  bool get _fromApprovedEstimate => _sourceEstimate != null;
 
   @override
   void initState() {
     super.initState();
     final source = widget.sourceEstimate;
+    _sourceEstimate = source;
     _number =
         'JOB-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
     _title = TextEditingController(text: source?.title ?? '');
@@ -67,10 +102,18 @@ class _WorkJobEditorState extends State<WorkJobEditor> {
     if (_didInitializeLocation) return;
     _didInitializeLocation = true;
     _location = _locationsFor(_client).firstOrNull?.address;
+    _sourceStorageRevision =
+        _store.workSession?.storageRevisionFor(
+          widget.sourceEstimate?.id ?? '',
+        ) ??
+        0;
+    unawaited(_openJobDraft());
   }
 
   @override
   void dispose() {
+    unawaited(_draftSubscription?.cancel());
+    unawaited(_draft?.close().catchError((Object _) {}));
     _title.dispose();
     _scope.dispose();
     _notes.dispose();
@@ -79,130 +122,145 @@ class _WorkJobEditorState extends State<WorkJobEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: const ValueKey('job-editor-screen'),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
-            final available = constraints.maxWidth - insets.horizontal;
-            final width = AppLayoutEngine.formWorkspaceWidthFor(available);
-            return ListView(
-              padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
-              children: [
-                Center(
-                  child: SizedBox(
-                    width: width,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        WorkDetailHeader(
-                          label: _fromApprovedEstimate
-                              ? 'Create Job'
-                              : 'New Job',
-                          selectedDay: _startDay,
-                          onBack: () => Navigator.of(context).pop(),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _fromApprovedEstimate
-                              ? 'Create and plan the approved work'
-                              : 'Create and plan a job',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Confirm the customer, location, schedule, assignment, and work scope before saving.',
-                        ),
-                        if (_formError case final error?) ...[
-                          const SizedBox(height: 10),
-                          _JobFormError(message: error),
-                        ],
-                        if (widget.sourceEstimate case final source?) ...[
-                          const SizedBox(height: 12),
-                          _SourceEstimateBanner(record: source),
-                        ],
-                        const SizedBox(height: 12),
-                        _JobIdentitySection(
-                          number: _number,
-                          title: _title,
-                          scope: _scope,
-                          customers: _store.customers,
-                          selectedClient: _client,
-                          selectedLocation: _location,
-                          locations: _locationsFor(_client),
-                          pricing: _pricing,
-                          onClientChanged: _selectClient,
-                          onLocationChanged: (value) =>
-                              setState(() => _location = value),
-                          onAddClient: _addClient,
-                          onPricingChanged: _fromApprovedEstimate
-                              ? null
-                              : (value) => setState(() => _pricing = value),
-                        ),
-                        const SizedBox(height: 12),
-                        _JobScheduleSection(
-                          start: _startDateTime,
-                          end: _endDateTime,
-                          onStartDay: () => _pickDay(start: true),
-                          onStartTime: () => _pickTime(start: true),
-                          onEndDay: () => _pickDay(start: false),
-                          onEndTime: () => _pickTime(start: false),
-                        ),
-                        const SizedBox(height: 12),
-                        _JobAssignmentSection(
-                          assignee: _assignee,
-                          vehicle: _vehicle,
-                          onAssigneeChanged: (value) =>
-                              setState(() => _assignee = value),
-                          onVehicleChanged: (value) =>
-                              setState(() => _vehicle = value),
-                        ),
-                        const SizedBox(height: 12),
-                        _JobItemsSection(
-                          itemCount: _items.length,
-                          total: _items.fold(
-                            0,
-                            (sum, item) => sum + item.total,
+    return guardDraftNavigation(
+      Scaffold(
+        key: const ValueKey('job-editor-screen'),
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final insets = AppLayoutEngine.pageInsetsFor(
+                constraints.maxWidth,
+              );
+              final available = constraints.maxWidth - insets.horizontal;
+              final width = AppLayoutEngine.formWorkspaceWidthFor(available);
+              return ListView(
+                padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
+                children: [
+                  Center(
+                    child: SizedBox(
+                      width: width,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          WorkDetailHeader(
+                            label: _fromApprovedEstimate
+                                ? 'Create Job'
+                                : 'New Job',
+                            selectedDay: _startDay,
+                            onBack: () => leaveDraftRoute(),
                           ),
-                          lockedToEstimate: _fromApprovedEstimate,
-                          onOpen: _editItems,
-                        ),
-                        const SizedBox(height: 12),
-                        SectionCard(
-                          child: TextField(
-                            key: const ValueKey('job-notes-field'),
-                            controller: _notes,
-                            minLines: 3,
-                            maxLines: 5,
-                            decoration: const InputDecoration(
-                              labelText: 'Internal job notes',
-                              helperText:
-                                  'Instructions for the assigned team. These are not customer-facing terms.',
+                          if (_draft != null)
+                            EditorDraftStatus(
+                              state: _draft!.state,
+                              onRetry: _draft!.retry,
+                              onDiscard: _discardJobDraft,
                             ),
-                          ),
-                        ),
-                      ],
+                          if (!_draftReady)
+                            Text(_formError ?? 'Opening saved input…'),
+                          if (_draftReady) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              _fromApprovedEstimate
+                                  ? 'Create and plan the approved work'
+                                  : 'Create and plan a job',
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Confirm the customer, location, schedule, assignment, and work scope before saving.',
+                            ),
+                            if (_formError case final error?) ...[
+                              const SizedBox(height: 10),
+                              _JobFormError(message: error),
+                            ],
+                            if (_sourceEstimate case final source?) ...[
+                              const SizedBox(height: 12),
+                              _SourceEstimateBanner(record: source),
+                            ],
+                            const SizedBox(height: 12),
+                            _JobIdentitySection(
+                              number: _number,
+                              title: _title,
+                              scope: _scope,
+                              customers: _store.customers,
+                              selectedClient: _client,
+                              selectedLocation: _location,
+                              locations: _locationsFor(_client),
+                              pricing: _pricing,
+                              onClientChanged: _selectClient,
+                              onLocationChanged: (value) =>
+                                  _changeJobInput(() => _location = value),
+                              onAddClient: _addClient,
+                              onPricingChanged: _fromApprovedEstimate
+                                  ? null
+                                  : (value) =>
+                                        _changeJobInput(() => _pricing = value),
+                            ),
+                            const SizedBox(height: 12),
+                            _JobScheduleSection(
+                              start: _startDateTime,
+                              end: _endDateTime,
+                              onStartDay: () => _pickDay(start: true),
+                              onStartTime: () => _pickTime(start: true),
+                              onEndDay: () => _pickDay(start: false),
+                              onEndTime: () => _pickTime(start: false),
+                            ),
+                            const SizedBox(height: 12),
+                            _JobAssignmentSection(
+                              assignee: _assignee,
+                              vehicle: _vehicle,
+                              onAssigneeChanged: (value) =>
+                                  _changeJobInput(() => _assignee = value),
+                              onVehicleChanged: (value) =>
+                                  _changeJobInput(() => _vehicle = value),
+                            ),
+                            const SizedBox(height: 12),
+                            _JobItemsSection(
+                              itemCount: _items.length,
+                              total: _items.fold(
+                                0,
+                                (sum, item) => sum + item.total,
+                              ),
+                              lockedToEstimate: _fromApprovedEstimate,
+                              onOpen: _editItems,
+                            ),
+                            const SizedBox(height: 12),
+                            SectionCard(
+                              child: TextField(
+                                key: const ValueKey('job-notes-field'),
+                                controller: _notes,
+                                minLines: 3,
+                                maxLines: 5,
+                                decoration: const InputDecoration(
+                                  labelText: 'Internal job notes',
+                                  helperText:
+                                      'Instructions for the assigned team. These are not customer-facing terms.',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(12),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: FilledButton.icon(
-              key: const ValueKey('save-job'),
-              onPressed: _save,
-              icon: const Icon(Icons.save_outlined),
-              label: Text(
-                _fromApprovedEstimate ? 'Create Linked Job' : 'Save Job',
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.all(12),
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 620),
+              child: FilledButton.icon(
+                key: const ValueKey('save-job'),
+                onPressed: _draftReady && !_saving ? _save : null,
+                icon: const Icon(Icons.save_outlined),
+                label: Text(
+                  _fromApprovedEstimate ? 'Create Linked Job' : 'Save Job',
+                ),
               ),
             ),
           ),
@@ -237,7 +295,7 @@ class _WorkJobEditorState extends State<WorkJobEditor> {
 
   void _selectClient(String? value) {
     final locations = _locationsFor(value);
-    setState(() {
+    _changeJobInput(() {
       _client = value;
       _location = locations.firstOrNull?.address;
     });
@@ -250,8 +308,10 @@ class _WorkJobEditorState extends State<WorkJobEditor> {
       ),
     );
     if (!mounted || customer == null) return;
-    _store.replaceCustomers([..._store.customers, customer]);
-    setState(() {
+    if (_store.directorySession == null) {
+      _store.replaceCustomers([..._store.customers, customer]);
+    }
+    _changeJobInput(() {
       _client = customer.name;
       _location = customer.locations.firstOrNull?.address;
     });
@@ -267,7 +327,7 @@ class _WorkJobEditorState extends State<WorkJobEditor> {
       helpText: start ? 'Choose job start date' : 'Choose job end date',
     );
     if (!mounted || picked == null) return;
-    setState(() {
+    _changeJobInput(() {
       if (start) {
         _startDay = DateUtils.dateOnly(picked);
         if (_endDay.isBefore(_startDay)) _endDay = _startDay;
@@ -284,7 +344,7 @@ class _WorkJobEditorState extends State<WorkJobEditor> {
       helpText: start ? 'Choose start time' : 'Choose expected end time',
     );
     if (!mounted || picked == null) return;
-    setState(() => start ? _startTime = picked : _endTime = picked);
+    _changeJobInput(() => start ? _startTime = picked : _endTime = picked);
   }
 
   Future<void> _editItems() async {
@@ -295,57 +355,20 @@ class _WorkJobEditorState extends State<WorkJobEditor> {
           initialItems: _items,
           pricing: _pricing,
           workspaceLabel: 'Job Items',
+          draftSession: _draft,
+          recoveryInput: _itemDraftInput,
+          onDraftChanged: (input) =>
+              _changeJobInput(() => _itemDraftInput = input),
           allowTruckStock: true,
           selectedDay: _startDay,
         ),
       ),
     );
-    if (mounted && items != null) setState(() => _items = items);
-  }
-
-  void _save() {
-    final source = widget.sourceEstimate;
-    if (source != null &&
-        (source.resolvedEstimateStage != EstimateStage.approved ||
-            !source.hasCurrentCustomerSignature)) {
-      setState(
-        () => _formError =
-            'This estimate revision is not currently customer-approved.',
-      );
-      return;
+    if (mounted && items != null) {
+      _changeJobInput(() {
+        _items = items;
+        _itemDraftInput = null;
+      });
     }
-    if (_title.text.trim().isEmpty || _client == null || _location == null) {
-      setState(
-        () => _formError =
-            'Enter a job title, choose a client, and choose a service location.',
-      );
-      return;
-    }
-    if (!_endDateTime.isAfter(_startDateTime)) {
-      setState(() => _formError = 'Expected end must be after the job start.');
-      return;
-    }
-    Navigator.of(context).pop(
-      WorkRecord(
-        id: 'job-${DateTime.now().microsecondsSinceEpoch}',
-        kind: WorkRecordKind.job,
-        number: _number,
-        title: _title.text.trim(),
-        client: _client!,
-        detail: _scope.text.trim(),
-        pricing: _pricing,
-        sourceId: source?.id,
-        assignee: _assignee,
-        vehicle: _vehicle,
-        serviceLocation: _location!,
-        jobNotes: _notes.text.trim(),
-        createdOn: DateUtils.dateOnly(DateTime.now()),
-        scheduledStart: _startDateTime,
-        scheduledEnd: _endDateTime,
-        status: WorkRecordStatus.scheduled,
-        items: List.unmodifiable(_items),
-        total: source?.total ?? _items.fold(0, (sum, item) => sum + item.total),
-      ),
-    );
   }
 }

@@ -7,6 +7,12 @@ documents, reports, search, storage, import/export, and later 5.7 integration
 
 ## 1. First-run contract
 
+Authority clarification: multilingual operation, regional variants and metric/
+U.S. measurements including parsing are ACCEPTED/CANONICAL (D11). The exact
+launch locale list, onboarding order and fallback below are an existing PLANNED
+configuration pending evidence/decision U06; current catalog implementation is
+not owner approval or full translation coverage.
+
 The first onboarding question is:
 
 > Choose a language

@@ -1,0 +1,10 @@
+{
+  "name": "maintainiac-firebase-tooling",
+  "private": true,
+  "scripts": {
+    "firebase": "firebase"
+  },
+  "devDependencies": {
+    "firebase-tools": "15.29.0"
+  }
+}

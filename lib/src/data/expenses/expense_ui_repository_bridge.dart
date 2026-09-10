@@ -1,4 +1,5 @@
-import '../../screens/expenses/expense_models.dart';
+import 'expense_workflow_models.dart';
+import '../storage/local_draft_checkpoint.dart';
 import 'authorized_expense_service.dart';
 import 'expense_record.dart';
 import 'expense_record_adapter.dart';
@@ -37,10 +38,7 @@ class ExpenseUiBridgeException implements Exception {
 /// commands without allowing presentation labels or receipt claims to become
 /// authorization or evidence identities.
 ///
-/// This bridge supports manually confirmed totals and reviewed line facts.
-/// Receipt evidence, recognition proposals, submitter review, and material
-/// proposals remain owned by later bounded slices and are rejected rather than
-/// dropped.
+/// Receipt evidence and proposals retain their separate workflow ownership.
 class ExpenseUiRepositoryBridge {
   factory ExpenseUiRepositoryBridge({
     required AuthorizedExpenseService service,
@@ -58,6 +56,17 @@ class ExpenseUiRepositoryBridge {
   final ExpenseEmployeeLabelResolver _employeeLabelForId;
   final ExpenseJobLabelResolver _jobLabelForId;
   final Map<String, StoredExpenseRecord> _loadedById = {};
+
+  Future<ExpenseUiProjectionRecord?> readCurrent(
+    String id,
+    ExpenseCommandPermissions permissions,
+  ) async {
+    final record = await _service.findCurrent(
+      expenseId: id,
+      permissions: permissions,
+    );
+    return record == null ? null : _toProjectionRecord(record);
+  }
 
   Future<ExpenseUiProjectionSnapshot> loadProjection({
     required ExpenseCommandPermissions permissions,
@@ -120,16 +129,21 @@ class ExpenseUiRepositoryBridge {
 
   String? receiptIdForId(String expenseId) => _loadedById[expenseId]?.receiptId;
 
+  int? revisionForId(String expenseId) =>
+      _loadedById[expenseId]?.lifecycle.revision;
+
   Future<ExpenseRecord> create({
     required ExpenseRecord record,
     required ExpenseCommandPermissions permissions,
     required String paidByEmployeeId,
     required DateTime occurredAtUtc,
+    LocalDraftCheckpoint? draftCheckpoint,
   }) => _create(
     record: record,
     permissions: permissions,
     paidByEmployeeId: paidByEmployeeId,
     occurredAtUtc: occurredAtUtc,
+    draftCheckpoint: draftCheckpoint,
   );
 
   Future<ExpenseRecord> createFromReceiptDraft({
@@ -167,6 +181,7 @@ class ExpenseUiRepositoryBridge {
     required String paidByEmployeeId,
     required DateTime occurredAtUtc,
     String? receiptDraftId,
+    LocalDraftCheckpoint? draftCheckpoint,
   }) async {
     if (receiptDraftId == null) _requireSupportedCreateRecord(record);
     if (record.paidByEmployeeId != null &&
@@ -197,6 +212,7 @@ class ExpenseUiRepositoryBridge {
         record: stored,
         permissions: permissions,
         occurredAtUtc: occurredAtUtc,
+        draftCheckpoint: draftCheckpoint,
       );
       _loadedById[created.expenseId] = created;
       return _toUiRecord(created);
@@ -210,9 +226,22 @@ class ExpenseUiRepositoryBridge {
     required ExpenseCommandPermissions permissions,
     required DateTime occurredAtUtc,
     String? auditNote,
+    int? expectedRevision,
+    LocalDraftCheckpoint? draftCheckpoint,
   }) async {
     try {
       final current = await _findLoadedRecord(record.id, permissions);
+      if (draftCheckpoint != null && expectedRevision == null) {
+        throw const ExpenseRevisionConflictException(
+          'The saved expense revision is required to confirm this draft.',
+        );
+      }
+      if (expectedRevision != null &&
+          current.lifecycle.revision != expectedRevision) {
+        throw const ExpenseRevisionConflictException(
+          'This expense changed after the draft was started.',
+        );
+      }
       _requireSupportedUpdateRecord(record, current);
       if (record.paidByEmployeeId != current.paidByEmployeeId) {
         throw const ExpenseUiBridgeException(
@@ -228,6 +257,7 @@ class ExpenseUiRepositoryBridge {
         paidByEmployeeId: current.paidByEmployeeId,
         nowUtc: current.lifecycle.createdAtUtc,
         receiptId: current.receiptId,
+        receiptImageCountOverride: current.receiptImageCount,
         expenseTimeMinutes: current.expenseTimeMinutes,
         vehicleId: current.vehicleId,
         revision: current.lifecycle.revision,
@@ -250,6 +280,7 @@ class ExpenseUiRepositoryBridge {
         permissions: permissions,
         occurredAtUtc: occurredAtUtc,
         note: auditNote,
+        draftCheckpoint: draftCheckpoint,
       );
       _loadedById[updated.expenseId] = updated;
       return _toUiRecord(updated);
@@ -372,7 +403,7 @@ void _requireSupportedUpdateRecord(
           'receipt storage yet. Nothing was saved or discarded.',
     );
   }
-  final existingImageCount = current.receiptId == null ? 0 : 1;
+  final existingImageCount = current.receiptImageCount ?? 0;
   if (record.receiptImageCount != existingImageCount) {
     throw const ExpenseUiBridgeException(
       kind: ExpenseUiBridgeFailureKind.unsupportedReceiptData,

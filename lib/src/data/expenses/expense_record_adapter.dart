@@ -1,5 +1,7 @@
-import '../../screens/expenses/expense_models.dart';
+import 'expense_workflow_models.dart';
 import 'expense_record.dart';
+
+const _unspecifiedReceiptCount = Object();
 
 class ExpenseRecordAdapter {
   const ExpenseRecordAdapter._();
@@ -11,6 +13,7 @@ class ExpenseRecordAdapter {
     required String paidByEmployeeId,
     required DateTime nowUtc,
     String? receiptId,
+    Object? receiptImageCountOverride = _unspecifiedReceiptCount,
     int? expenseTimeMinutes,
     String? vehicleId,
     int revision = 1,
@@ -34,6 +37,10 @@ class ExpenseRecordAdapter {
       total: total,
       expenseTimeMinutes: expenseTimeMinutes,
       receiptId: receiptId,
+      receiptImageCount:
+          identical(receiptImageCountOverride, _unspecifiedReceiptCount)
+          ? (receiptId == null ? 0 : record.receiptImageCount)
+          : receiptImageCountOverride as int?,
       jobId: record.jobId,
       vehicleId: vehicleId,
       approval: _approvalFromUi(
@@ -65,8 +72,14 @@ class ExpenseRecordAdapter {
       paidByEmployeeId: record.paidByEmployeeId,
       job: jobDisplayName,
       jobId: record.jobId,
-      receiptStatus: record.receiptId == null ? null : 'Receipt attached',
-      receiptImageCount: record.receiptId == null ? 0 : 1,
+      receiptStatus: record.receiptId == null
+          ? null
+          : record.receiptImageCount == null
+          ? 'Receipt linked; image count unavailable'
+          : record.receiptImageCount == 0
+          ? 'Receipt recorded without an image'
+          : 'Receipt attached',
+      receiptImageCount: record.receiptImageCount ?? 0,
       receiptType: itemization.mode == ExpenseItemizationMode.itemized
           ? ExpenseReceiptType.detailed
           : ExpenseReceiptType.basic,

@@ -2,7 +2,8 @@
 
 Status: collaborative implementation draft 0.1  
 Last updated: 2026-08-30  
-Applies to: UI Lab 2.1 and later bounded presentation ports into 5.7 Active
+Applies to: UI Lab 2.1 and later approved production integration (U01 unresolved).
+Authority/status: `README.md` and `application_decision_register.md`.
 
 This is the screen-by-screen contract for what each operating surface does,
 where its records live, and what a technician, administrator, or owner-technician
@@ -125,6 +126,9 @@ Without these answers, a screen is not ready to port into 5.7.
 Dashboard answers: What vehicle am I using, what is planned, and what needs my
 attention? It shows active vehicle, selected date, notifications, plan, entries,
 calendar, Start Workday, permission-derived add actions, and sync/offline state.
+Owner presentation updates are owned by `technician_dashboard_blueprint.md`:
+no View switch on Dashboard/Start Workday; Entries appears only when records
+exist, independently of workday state; five summary cards replace the banner.
 
 ### Start Workday
 
@@ -156,9 +160,16 @@ Read-only 5.7 discovery on 2026-08-29 established the reusable behavior:
 - require another physical odometer review before End Workday.
 
 UI Lab expresses that contract as one responsive full-screen workflow, not a
-chain of compact bottom sheets. Phone stacks Work context, Starting odometer,
+chain of compact bottom sheets. Phone stacks Select vehicle, Starting odometer,
 and Trip assistance. Medium width uses two bounded lanes. Wide width uses three
-bounded lanes. Back or Cancel creates no record and preserves no partial state.
+bounded lanes. Under the owner's newer automatic-draft requirement, Back retains unfinished
+input; explicit discard removes it. Neither action creates a confirmed workday.
+Start Workday now retains raw input through the shared draft store and consumes
+it atomically with the SQLite start command. Dashboard actions and confirmed
+state now use the shared SQLite session. End Workday also retains raw input on
+Back and consumes its exact draft in the closing transaction. Physical-device
+interruption validation and broader recovery presentation remain unfinished. See the storage contract
+for the tested checkpoint and limitations.
 
 After confirmation, the Dashboard header removes `Start workday`; it does not
 replace it with a misleading second `Open workday` action. The selected vehicle
@@ -279,7 +290,8 @@ least one authorized record requires review.
 - The shared charcoal header comes first. It shows `Employee` plus the signed-in
   technician, the selected employee, or `Company Overview`, and the shared View
   selector. Work does not contain Start Workday in this header.
-- The complete localized selected date is the first body heading. The selected
+- The six destination icons sit immediately below the shared header. The complete
+  localized selected date follows the directory as the first records heading. The selected
   employee is not repeated as a large body heading. A person must never infer
   the active date or employee scope from the calendar alone.
 - Authorized records that genuinely require action appear directly below the
@@ -304,12 +316,15 @@ least one authorized record requires review.
   scrolling Employees status strip after Needs Attention. Selecting an employee
   updates the header and narrows the same screen/date; it does not create a
   second Work instance or force a user to read helper copy before seeing Work.
-- The compact Work directory follows the useful 5.7 invoice-home pattern: six
-  labeled 62-LP icon tiles for My Info, Saved Clients, Payments, Jobs,
-  Estimates, and Invoices. Normal phone width uses three columns and two rows;
-  wider workspaces may show all six in one row. Labels are visible before
-  selection and grow/reflow with accessibility text. Workday actions use this
-  same shared layout instead of a second screen-specific column threshold.
+- The compact Work directory follows the useful 5.7 invoice-home pattern:
+  Jobs, Payments, Scheduling, Quotes, Estimates, and Invoices, in that order.
+  The 62-LP icon surfaces contain 32-LP symbols and readable labels. Four fit
+  across a normal SE-sized workspace; six fit in a wide workspace. The shared
+  engine measures label requirements and reduces columns for larger text rather
+  than cutting words. Customers and Company Profile are in the Business menu,
+  backed by the same existing company/customer records used by documents.
+  Quotes and Scheduling are explicitly marked Not connected in this layout-only
+  build; tapping explains the missing system and does not open an unrelated route.
 - Jobs, Estimates, and Invoices are distinct destinations and record lists.
   Tapping one opens that workspace, never a create form. Each workspace offers
   a separate labeled New action.
@@ -340,12 +355,18 @@ least one authorized record requires review.
   scoped to the selected date; it never ends in a message telling the user to
   navigate there manually.
 - One lane: Jobs summary, Estimates summary, Invoices summary, calendar.
-- Two lanes: bounded Jobs and document summaries, followed by the full-width
-  Work Calendar.
-- Three lanes: Jobs plus separate Estimates and Invoices summaries, followed
-  by the full-width Work Calendar. Record lanes remain at most 480 LP.
+- Two lanes: dated attention, employee context, Jobs, Estimates, and Invoices
+  form the left working area; the readable Work Calendar occupies the right.
+  `AppLayoutEngine.workLandingFor` opens two lanes at 724 local LP at normal
+  text size; each lane is capped at 400 LP and separated by 24 LP. Larger text
+  raises the transition. The landing screen never grows a third lane.
   Estimates and Invoices may share a vertical lane,
   but never a record list, heading, create action, filter, route, or state.
+- Narrow layouts retain Add work as a FAB. Wide layouts expose the same action
+  directory beside the date, in addition to the existing labeled New actions.
+- Work reserves a labeled demo advertisement above bottom navigation, or below
+  the content when side navigation is active. Its width is capped at 728 LP;
+  it does not cover records, calendar, or navigation. No ad SDK is connected.
 - Work Calendar copies the presentation/interaction language from read-only 5.7.
   UI Lab may adapt theme/accessibility, not replace it with a private calendar.
 - Calendar counts/rows are authorized projections that open Work records.
@@ -876,6 +897,11 @@ Navigation, direct routes, search, counts, exports, offline caches, and sync
 payloads enforce the same permission and scope.
 
 ## 11. UI Lab to 5.7 Boundary
+
+The prototype description below is historical, not a current all-module storage
+audit. Expense/notification checkpoints have separate owning documents. Use the
+decision register and `data_storage_sync_contract.md`; a prototype repository
+is not automatically the entire application's production store.
 
 UI Lab owns a small offline prototype repository, fixtures, view models, layout,
 semantics, and widget tests. Screens query and mutate that shared prototype

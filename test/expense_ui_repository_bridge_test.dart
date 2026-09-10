@@ -176,6 +176,7 @@ void main() {
           categoryLabelSnapshot: ExpenseCategory.materials.label,
           total: const ExpenseMoney(minorUnits: 1603),
           receiptId: 'receipt-1',
+          receiptImageCount: 1,
           approval: const ExpenseApproval.pending(),
           itemization: ExpenseItemization(
             mode: ExpenseItemizationMode.itemized,

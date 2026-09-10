@@ -3,8 +3,9 @@
 Status: collaborative draft 0.1  
 Purpose: product, information-architecture, permission, data-ownership, and
 migration contract for the service-business version of Maintainiac  
-Authority: decisions marked **Confirmed** came directly from the product owner;
-items marked **Recommended** remain proposals until reviewed together
+Authority: `README.md` and `application_decision_register.md`. Inherited
+Confirmed headings require owner evidence, not automatic acceptance.
+Cross-module storage policy: `data_storage_sync_contract.md`.
 
 This document covers the whole product. The existing
 `technician_dashboard_blueprint.md` is useful dashboard evidence, but it is not
@@ -48,25 +49,45 @@ commands, mappings, and a durable outbox preserve the future seam.
 
 ### Non-negotiable product rules
 
-1. Accuracy, privacy, security, dependability, and auditability.
+1. User safety first; dependability, accuracy, privacy, security and auditability
+   outrank release speed. January 2027 is preferred, mid-2027 acceptable if
+   necessary; neither is a verified delivery estimate (D03–D04).
 2. Consistency: every screen uses the shared layout, typography, spacing, and
    responsive-constraint engine. No screen may invent its own breakpoint rules.
 3. Enterprise-grade safeguards with consumer-grade usability for field-service
    workers; no IT expertise should be required for ordinary work.
-4. Readability: 500-800 lines is the preferred working range. Review a file
-   before it exceeds 500 lines and look for a safe, responsibility-based split
-   above 800. Do not split a cohesive feature merely to satisfy a number when
-   that would reduce functionality, reliability, or findability; keep any file
-   below 2,000 lines unless there is a documented technical reason not to.
+4. Authored production files target 500 lines. Split by responsibility, not
+   mechanically; document technical exceptions when splitting would reduce
+   reliability or cohesion. See UI foundation §14 and D08.
 
 ### Confirmed
 
-- Maintainiac is a field-service operations app comparable in broad category to
-  ServiceTitan and Jobber, intentionally designed first for small businesses.
-- It must be approachable for a solo operator or small crew and scale without a
+- Account creation and manual vehicle-profile setup are not prerequisites.
+  A ready-to-use single vehicle context is supplied; two tracked vehicles require
+  distinct profiles. See D24–D25 and Product control §7.
+- Ordinary workflows operate offline; backend purpose is storage. Current
+  release-one storage modes and commercial updates are governed by D30–D34 and
+  `current_product_blueprint.md`; receipt-only payment scope is superseded.
+- Basic/Detailed receipts, optional categories/assistance and actual compressed
+  image previews are specified in Receipt/material intake (D27–D29).
+
+- Maintainiac is a general small-business operations system. It must support the
+  connected work required to run a business rather than being architected around
+  one worker type, trade, vehicle workflow, or narrow industry persona.
+- Contractors, field-service companies, and skilled trades such as plumbing,
+  electrical, HVAC, construction, repair, maintenance, and landscaping are strong
+  target users, but they are not an exclusive market boundary. Other small
+  businesses may use Maintainiac wherever its capabilities fit their operation.
+- It must be approachable for a solo owner or small crew and scale without a
   structural redesign from roughly five users to at least fifty.
-- The main field user is a service technician. Owners and authorized office or
-  administrative users need broader operational and business capabilities.
+- Owners, office staff, managers, technicians, helpers, bookkeepers, inventory
+  staff, and other authorized workers are user types within the same business
+  system. No single employee type defines the product architecture.
+- Gig-driver, rideshare, delivery-driver, and other gig-platform-specific product
+  modes, personas, terminology, navigation, and workflows are out of scope for
+  Maintainiac. General business capabilities such as vehicles, mileage, trips,
+  expenses, and maintenance may remain when they serve the business system, but
+  they must not reintroduce gig-driver product architecture.
 - Features and navigation that a user cannot access should not be shown.
 - Permissions are the primary authority. Roles help provide starting defaults,
   but a role name alone must not decide access.
@@ -87,19 +108,51 @@ changes are auditable, and derived views never corrupt source records.
 
 ### Confirmed working boundary
 
-UI Lab 2.1 defines and proves the new responsive shell, screen contracts, shared
-components, typed prototype records, and regression behavior. Maintainiac 5.7
-Active remains protected and read-only during this phase. No third Flutter app
-is needed: another shell would create a third source of truth without reducing
-the migration risk.
+Accepted owner decisions captured in UI Lab define the new product contracts.
+Neither prototype records nor current layouts prove production readiness.
+Maintainiac 5.7 Active remains protected and read-only. The final production
+destination is UI Lab 2.1 under D30. Production readiness is not established;
+this pass creates no third application. Read `current_product_blueprint.md`.
 
 ### Recommended production path: controlled replacement
 
-Treat UI Lab as the clean replacement shell and 5.7 as the protected capability
-source. This is neither a blank-slate rewrite nor a whole-app copy. Proven 5.7
-capabilities move behind explicit interfaces in bounded slices only after their
-behavior, data ownership, error states, and tests are inventoried. Unused or
-duplicate code is never deleted merely because a scan suggests it is unused.
+The owner selected the UI Lab replacement. Assess the existing systems in both
+repositories; reuse, repair or replace according to independent
+correctness and integration evidence, not age or sunk cost. The existing
+`maintainiac_5_7_capability_migration_map.md` owns build dependencies and gates.
+No migration is authorized here; suspected unused code requires actual evidence.
+
+### Required reuse assessment before substantial system work
+
+Owner clarification, September 5, 2026: before building or replacing any
+substantial subsystem, inspect the relevant current 5.7 implementation first.
+This applies to new development as well as ports, particularly storage, OCR,
+document processing, inventory, and other costly existing capabilities.
+
+- Read the existing migration inventory, then verify the relevant source,
+  dependencies, schemas, callers, and failure handling. An older inventory is
+  a starting point, not proof of current behavior. If source is unavailable,
+  report the assessment as incomplete rather than claiming nothing exists.
+- Report what exists and classify it as reuse, adapt/repair, replace with
+  reasons, or genuinely absent. Prefer reuse of suitable validated components;
+  neither prior investment nor passing legacy tests establishes dependability.
+- Assess the intended business behavior and applicable interrupted-save,
+  restart, corruption/recovery, migration, privacy, permission, and consistency
+  risks. State what was inspected, independently exercised, and still unverified.
+  Any executable validation requiring writes belongs in an explicitly scoped
+  disposable working copy with synthetic data, not the protected original.
+- Keep 5.7 Active read-only. Copying or integration requires a bounded approved
+  slice; this rule does not authorize extraction, a new checkout, or destructive
+  work. A preservation backup must not double as a disposable extraction copy.
+- Every delegated subsystem assignment must carry this gate and the relevant
+  blueprint references, owner requirements, permitted files, dependencies,
+  protected records, integration boundaries, and acceptance scenarios. The
+  builder must report unresolved requirements rather than inventing decisions.
+- For substantial systems, separate builder regression work from independent
+  validation against business requirements. Reviewers must not merely rerun or
+  mirror the builder's assertions. Connected multi-device acceptance must use
+  normal installation, accounts, invitations, and permitted user workflows in
+  a private test environment. Additional review is evidence, not a guarantee.
 
 The sequence is:
 
@@ -132,7 +185,8 @@ The first local Expense repository foundation is isolated beneath
 bind to it only through the explicit record adapter after the UI, authorization,
 save-error, recovery, and audit behavior pass their E1 gates. Platform binding
 uses Application Support/app data, never Documents; cloud sync remains a later
-optional mirror rather than the local source of truth.
+candidate mirror in this local checkpoint, not an app-wide authority decision.
+Future category policy is owned by `data_storage_sync_contract.md` (U02).
 
 Expense screens must receive `AuthorizedExpenseService`, not the file
 repository. The service applies organization, employee, permission revision,
@@ -228,7 +282,8 @@ action for that capability. Merely hiding a widget is not sufficient protection.
 Use roles as editable permission templates, not permanent security identities.
 An authorization decision should combine:
 
-1. active organization and membership;
+1. valid local owner context, or authenticated membership when accessing shared
+   organization/cloud resources; account-free local use must remain available;
 2. explicit capability;
 3. allowed scope: own, assigned, team, company, or selected records;
 4. resource identity and ownership;
@@ -299,6 +354,7 @@ Keep **Work** as the primary destination instead of renaming the whole area
 only permitted sections:
 
 - Estimates
+- Quotes (required capability; independent lifecycle remains U04)
 - Jobs
 - Schedule
 - Invoices
@@ -332,13 +388,13 @@ an open usability decision, not a separate data model.
 | Area | Owns | Must not own |
 | --- | --- | --- |
 | Dashboard | authorized projections, selected date/context, operational queues | duplicate job, expense, invoice, inventory, trip, or maintenance records |
-| Work | estimates, approvals, jobs, assignments, schedule commitments, invoices, payments | receipt OCR internals, truck stock balances, vehicle maintenance history |
+| Work | quotes, estimates, approvals, jobs, assignments, schedule commitments, invoices, payments | receipt OCR internals, truck stock balances, vehicle maintenance history |
 | Customers | customer identity, sites, contacts, communication preferences | invoice truth or job execution state |
-| Expenses | expenses, receipt attachments, classification, reimbursement/approval state | inventory quantities or invoice income |
+| Expenses | expenses, receipt evidence links, classification, reimbursement/approval state | Document Intake evidence/proposals, inventory quantities or invoice income |
 | Materials / Inventory engine | catalog, vendor cost history, truck/warehouse stock, transfers, adjustments, material usage | estimate price policy or expense ledger truth |
 | Maintenance | vehicles/equipment, maintenance records, service schedules, related odometer references | trip truth or unrelated inventory stock |
 | Mileage and trips | confirmed trips, odometer events, evidence proposals, workday mileage sessions | silent job completion or financial posting |
-| Calendar | dated projections and explicit schedule records | copied parallel versions of source records |
+| Calendar | dated projections, selection and presentation | Work-owned commitments or copied source records |
 | Document intake | images/files, extraction proposals, confidence and review state | confirmed financial or inventory records before user review |
 | Audit and sync | immutable change evidence, version/conflict metadata, transport state | business decisions or silent conflict resolution |
 
@@ -371,7 +427,8 @@ The common full workflow is:
 
 ### Estimate, job, and invoice linkage
 
-- An accepted estimate creates a linked job. It never deletes, replaces, or
+- An accepted estimate permits explicit authorized linked-job creation, not
+  automatic creation. It never deletes, replaces, or
   mutates the accepted estimate into a different record.
 - A job can also be created directly for urgent or non-quoted work. Jobs own
   schedule, assignment, field status, time, materials used, customer notes,
@@ -444,6 +501,8 @@ stock control with locations, counts, adjustments, transfers, and auditable
 material-use transactions. A label must never overstate the certainty of
 unmaintained truck quantities.
 
+Storage-class choices below are PLANNED, subordinate to U02 and
+`data_storage_sync_contract.md`, not settled global entitlements or guarantees.
 Job-site photos and receipt evidence have different storage policy. Job photos
 may be captured through Maintainiac but remain device-owned and may be exported
 to the user's photo library/provider for its own backup. Receipt evidence is the
@@ -569,9 +628,10 @@ legal review before release.
 - Build a route, controller/store, native integration, schema, and test inventory.
 - Map each UI Lab screen to existing production sources and missing contracts.
 
-### Phase 1: create the protected production integration lane
+### Phase 1: select and prove the production integration boundary
 
-- Start from an explicitly approved 5.7 snapshot in a separate branch/worktree.
+- D30 resolves the destination to 2.1; prove its durable foundation and each
+  bounded integration before calling it production-ready.
 - Add a feature flag or alternate shell so old and new flows can be compared.
 - Introduce central navigation, operational context, and authorization contracts
   before moving business screens.
@@ -624,15 +684,22 @@ Compilation or a green unit test alone is not acceptance.
 
 ## 14. Decision Register
 
+The maintained register is `application_decision_register.md`. These older lists
+are navigation aids subordinate to its evidence/status entries, not independent
+proof of owner acceptance or implementation.
+
 ### Confirmed now
 
-- Primary market: service technicians and small service businesses.
+- Primary product: a general small-business operations system.
+- Strong target fit includes contractors, field-service businesses, skilled
+  trades, and other small businesses whose operations match Maintainiac.
+- Gig-driver-specific product modes and workflows are excluded from Maintainiac.
 - Scale target: small teams first, with no structural ceiling at five users.
 - Primary destinations: Dashboard, Work, Expenses, Materials, Maintenance.
 - Permission-denied administrative UI should not appear.
 - Current UI Lab view label: Technician.
 - Responsive behavior uses Flutter logical constraints.
-- Option A with a separate, protected 5.7-derived integration lane.
+- Production destination is 2.1 (D30); implementation/readiness gates remain.
 
 ### Recommended for review
 
@@ -648,8 +715,7 @@ Compilation or a green unit test alone is not acceptance.
    explicit denials, temporary access, and who may grant access to whom.
 2. Approve the Work lifecycle and decide which office users need a top-level
    Schedule surface.
-3. Decide whether gig-driver mode remains a supported product profile or becomes
-   legacy migration scope only.
+3. CLOSED by D02: no gig-driver product mode; retain general business trips.
 4. Complete the release-one document portal security policy: opaque QR/link
    tokens, recipient verification, expiry/revocation, signatures, and audit.
 5. Define estimate pricing, markup visibility, change orders, deposits, taxes,
@@ -665,7 +731,23 @@ This section records current product-owner decisions and overrides conflicting o
 
 - Historical Maintainiac documentation was AI-authored. It is discovery evidence only unless the product owner explicitly confirms the requirement during current review. Existing documentation must never be presented as proof that the owner previously approved a product decision.
 - Maintainiac's primary market is contractors and small businesses. Service technicians are a primary field-user type within that market.
-- Gig drivers, rideshare drivers, delivery drivers, and other vehicle-based workers may still use applicable Maintainiac features, but they are secondary audiences. Their workflows must not drive the core product architecture or weaken contractor and small-business operational workflows.
+- The audience wording in this dated update is superseded by D02 and the
+  September 7 direction below; it must not preserve a separate gig-driver mode.
 - Scheduling is an operational planning system, not merely a calendar. Maintainiac must help an authorized planner compare estimated labor requirements with employee availability, existing commitments, and employee skills before confirming work.
 - Schedule assistance is advisory. Maintainiac may identify overbooking, understaffing, skill shortages, and better alternatives, but an authorized user confirms assignments and schedule changes.
 - When the product owner describes a desired outcome or implementation idea, the design/build process must challenge weak, risky, unnecessarily complex, or non-standard implementation approaches and explain a stronger production pattern before Codex is instructed to build it. The owner's desired business outcome remains authoritative; implementation mechanics are open to professional review.
+
+
+## Owner-confirmed product direction update — 2026-09-07
+
+This section supersedes conflicting audience or product-positioning language elsewhere in this blueprint and in older AI-authored documentation.
+
+- Maintainiac is a general small-business operations system. It must support the connected work required to operate a business rather than being architected around one worker type, trade, vehicle workflow, or narrow industry persona.
+- Contractors, field-service companies, and skilled trades such as plumbing, electrical, HVAC, construction, repair, maintenance, landscaping, and similar businesses are especially strong use cases because Maintainiac's operational modules fit their work well. They are not an exclusive market boundary. Other small businesses may use Maintainiac wherever its capabilities fit their operation.
+- Owners, office staff, managers, technicians, helpers, bookkeepers, inventory staff, and other authorized workers are user types within the same business system. No single employee type defines the product architecture.
+- Gig-driver, rideshare, delivery-driver, and other gig-platform-specific product modes, personas, terminology, navigation, and workflows are out of scope for this application. They are not an open product-direction decision for Maintainiac.
+- General business capabilities such as vehicles, mileage, trips, expenses, receipts, maintenance, and route-related records may remain when they serve legitimate business operations. Their presence must not reintroduce gig-driver-specific architecture or product positioning.
+- Historical AI-authored documents and existing source code remain discovery evidence only. They do not establish owner approval of a product requirement. Current explicit owner decisions override conflicting historical material.
+- The blueprint is the product contract used to determine what Maintainiac must do. Codex implementation assignments should be derived from approved blueprint requirements rather than asking the product owner to enumerate every technical implementation dependency.
+- Before substantial implementation, the architecture/build process must inspect the affected blueprint requirements, relevant existing source and reusable systems, cross-module ownership, persistence, permissions, responsive behavior, failure and recovery paths, and regression surface. Genuine unresolved product decisions return to the owner; ordinary engineering requirements are investigated and handled professionally.
+- New owner messages during an active implementation normally add requirements, context, or clarification to the existing assignment. They do not erase previous compatible requirements unless the owner explicitly corrects, replaces, cancels, or redirects them.

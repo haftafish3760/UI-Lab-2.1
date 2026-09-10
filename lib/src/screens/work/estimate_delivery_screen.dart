@@ -1,157 +1,198 @@
+import '../../data/work/models/work_contact_models.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../data/prototype_operations_store.dart';
+import '../../data/work/work_persistence_session.dart';
+import '../../data/work/estimate_delivery_draft_workflow.dart';
+import '../../data/storage/draft_autosave_session.dart';
+import '../../shared/draft_navigation_guard.dart';
+import '../../shared/editor_draft_status.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
 import 'estimate_models.dart';
-import 'work_contact_models.dart';
 import 'work_detail_header.dart';
 import 'work_models.dart';
 
-class EstimateDeliveryChoice {
-  const EstimateDeliveryChoice({required this.method, required this.recipient});
-  final EstimateDeliveryMethod method;
-  final String recipient;
-}
+part 'estimate_delivery_draft_recovery.dart';
 
 class EstimateDeliveryScreen extends StatefulWidget {
-  const EstimateDeliveryScreen({required this.record, super.key});
+  const EstimateDeliveryScreen({
+    required this.record,
+    this.recoveredWorkflow,
+    super.key,
+  });
   final WorkRecord record;
+  final EstimateDeliveryDraftController? recoveredWorkflow;
 
   @override
   State<EstimateDeliveryScreen> createState() => _EstimateDeliveryScreenState();
 }
 
-class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen> {
+class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
+    with DraftNavigationGuard {
   var _method = EstimateDeliveryMethod.email;
   final _recipient = TextEditingController();
   var _reviewed = false;
   var _initialized = false;
+  late WorkRecord _base = widget.record;
+  WorkPersistenceSession? _work;
+  late EstimateDeliveryDraftController? _workflow = widget.recoveredWorkflow;
+  EstimateDeliveryInput? _previewInput;
+  DraftAutosaveSession? get _draft => _workflow?.session;
+  bool _bindingRecipient = false;
+  StreamSubscription<DraftSaveState>? _subscription;
+  bool _ready = false, _saving = false;
+  String? _error;
+  @override
+  DraftAutosaveSession? get navigationDraft => _draft;
+  @override
+  bool get blockDraftNavigation => _saving;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_initialized) return;
-    final store = PrototypeOperationsScope.of(context);
-    WorkCustomerProfile? customer;
-    for (final candidate in store.customers) {
-      if (candidate.name == widget.record.client) customer = candidate;
-    }
-    _recipient.text = customer?.email ?? '';
     _initialized = true;
+    unawaited(_openDeliveryDraft());
   }
 
   @override
   void dispose() {
+    unawaited(_subscription?.cancel());
+    unawaited(_draft?.close().catchError((Object _) {}));
     _recipient.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    key: const ValueKey('estimate-delivery-screen'),
-    body: SafeArea(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
-          final layout = AppLayoutEngine.detailWorkspaceFor(
-            constraints.maxWidth - insets.horizontal,
-            textScaler: MediaQuery.textScalerOf(context),
-          );
-          return ListView(
-            padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 28),
-            children: [
-              Center(
-                child: SizedBox(
-                  width: layout.columns == 1
-                      ? layout.columnWidth
-                      : layout.workspaceWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      WorkDetailHeader(
-                        label: 'Send estimate',
-                        selectedDay:
-                            widget.record.estimateDates?.createdOn ??
-                            DateTime.now(),
-                        onBack: () => Navigator.of(context).pop(),
-                        showDateContext: true,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Choose delivery method',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${widget.record.number} · Revision ${widget.record.revision} · ${widget.record.client}',
-                      ),
-                      const SizedBox(height: 14),
-                      _DeliveryMethodCard(
-                        selected: _method,
-                        onSelected: _selectMethod,
-                      ),
-                      const SizedBox(height: 12),
-                      SectionCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              'Recipient and approval copy',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            TextField(
-                              key: const ValueKey(
-                                'estimate-delivery-recipient',
-                              ),
-                              controller: _recipient,
-                              decoration: InputDecoration(
-                                labelText: _recipientLabel,
-                                helperText:
-                                    'Confirm this before any customer document leaves the app.',
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            CheckboxListTile(
-                              value: _reviewed,
-                              contentPadding: EdgeInsets.zero,
-                              controlAffinity: ListTileControlAffinity.leading,
-                              title: const Text(
-                                'I reviewed the customer copy and recipient',
-                              ),
-                              subtitle: Text(
-                                'Approval will apply only to revision ${widget.record.revision}.',
-                              ),
-                              onChanged: (value) =>
-                                  setState(() => _reviewed = value ?? false),
-                            ),
-                          ],
+  Widget build(BuildContext context) => guardDraftNavigation(
+    Scaffold(
+      key: const ValueKey('estimate-delivery-screen'),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
+            final layout = AppLayoutEngine.detailWorkspaceFor(
+              constraints.maxWidth - insets.horizontal,
+              textScaler: MediaQuery.textScalerOf(context),
+            );
+            return ListView(
+              padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 28),
+              children: [
+                Center(
+                  child: SizedBox(
+                    width: layout.columns == 1
+                        ? layout.columnWidth
+                        : layout.workspaceWidth,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        WorkDetailHeader(
+                          label: 'Send estimate',
+                          selectedDay:
+                              _base.estimateDates?.createdOn ?? DateTime.now(),
+                          onBack: () => leaveDraftRoute(),
+                          showDateContext: true,
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      SectionCard(
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.secondaryContainer.withValues(alpha: .55),
-                        child: const Text(
-                          'UI Lab records and verifies this delivery workflow. The production app must connect Email or Text to an expiring secure approval link, and Device Share, Save, or Print to the generated PDF. This screen does not pretend a network message was sent.',
+                        const SizedBox(height: 16),
+                        Text(
+                          'Choose delivery method',
+                          style: Theme.of(context).textTheme.headlineSmall,
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        key: const ValueKey('confirm-estimate-delivery'),
-                        onPressed: _reviewed ? _confirm : null,
-                        icon: const Icon(Icons.task_alt_outlined),
-                        label: const Text('Prepare and record delivery'),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          '${_base.number} · Revision ${_base.revision} · ${_base.client}',
+                        ),
+                        const SizedBox(height: 14),
+                        _DeliveryMethodCard(
+                          selected: _method,
+                          onSelected: (method) {
+                            if (_ready) _selectMethod(method);
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        if (_draft != null)
+                          EditorDraftStatus(
+                            state: _draft!.state,
+                            onRetry: _draft!.retry,
+                            onDiscard: _discardDelivery,
+                          ),
+                        if (_error != null) Text(_error!),
+                        if (!_ready && _error == null)
+                          const Text('Opening saved delivery…'),
+                        SectionCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'Recipient and approval copy',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                key: const ValueKey(
+                                  'estimate-delivery-recipient',
+                                ),
+                                controller: _recipient,
+                                enabled: _ready,
+                                decoration: InputDecoration(
+                                  labelText: _recipientLabel,
+                                  helperText:
+                                      'Confirm this before any customer document leaves the app.',
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              CheckboxListTile(
+                                value: _reviewed,
+                                contentPadding: EdgeInsets.zero,
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                                title: const Text(
+                                  'I reviewed the customer copy and recipient',
+                                ),
+                                subtitle: Text(
+                                  'Approval will apply only to revision ${_base.revision}.',
+                                ),
+                                onChanged: !_ready
+                                    ? null
+                                    : (value) {
+                                        setState(
+                                          () => _reviewed = value ?? false,
+                                        );
+                                        _captureDelivery();
+                                      },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SectionCard(
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .secondaryContainer
+                              .withValues(alpha: .55),
+                          child: const Text(
+                            'UI Lab records and verifies this delivery workflow. The production app must connect Email or Text to an expiring secure approval link, and Device Share, Save, or Print to the generated PDF. This screen does not pretend a network message was sent.',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          key: const ValueKey('confirm-estimate-delivery'),
+                          onPressed: _ready && _reviewed && !_saving
+                              ? _confirm
+                              : null,
+                          icon: const Icon(Icons.task_alt_outlined),
+                          label: const Text('Prepare and record delivery'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     ),
   );
@@ -166,34 +207,28 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen> {
   };
 
   void _selectMethod(EstimateDeliveryMethod method) {
-    final store = PrototypeOperationsScope.of(context);
-    WorkCustomerProfile? customer;
-    for (final candidate in store.customers) {
-      if (candidate.name == widget.record.client) customer = candidate;
-    }
-    setState(() {
-      _method = method;
-      _recipient.text = switch (method) {
-        EstimateDeliveryMethod.email => customer?.email ?? '',
-        EstimateDeliveryMethod.textMessage => customer?.phone ?? '',
-        _ => widget.record.client,
-      };
-    });
-  }
-
-  void _confirm() {
-    if (_recipient.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter or confirm the recipient.')),
+    if (!_ready || _saving) return;
+    if (_workflow != null) {
+      _workflow!.selectMethod(method);
+    } else {
+      _previewInput = _previewInput!.withMethod(
+        method,
+        estimateDeliveryRecipient(
+          _base,
+          method,
+          PrototypeOperationsScope.maybeOf(context)?.customers ??
+              const <WorkCustomerProfile>[],
+        ),
       );
-      return;
     }
-    Navigator.of(context).pop(
-      EstimateDeliveryChoice(
-        method: _method,
-        recipient: _recipient.text.trim(),
-      ),
-    );
+    final input = _workflow?.input ?? _previewInput!;
+    _bindingRecipient = true;
+    _recipient.text = input.recipient;
+    _bindingRecipient = false;
+    setState(() {
+      _method = input.method;
+      _reviewed = input.reviewed;
+    });
   }
 }
 

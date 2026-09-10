@@ -15,12 +15,13 @@ class ExpenseMoney {
         'Money must be a positive amount with no more than two decimals.',
       );
     }
-    final whole = int.parse(match.group(1)!);
+    final whole = BigInt.parse(match.group(1)!);
     final decimal = (match.group(2) ?? '').padRight(2, '0');
-    return ExpenseMoney(
-      minorUnits: whole * 100 + int.parse(decimal.isEmpty ? '0' : decimal),
-      currencyCode: currencyCode,
-    );
+    final units = whole * BigInt.from(100) + BigInt.parse(decimal);
+    if (units > BigInt.parse('9223372036854775807')) {
+      throw const FormatException('Money exceeds the supported integer range.');
+    }
+    return ExpenseMoney(minorUnits: units.toInt(), currencyCode: currencyCode);
   }
 
   final int minorUnits;

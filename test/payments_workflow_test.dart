@@ -5,6 +5,7 @@ import 'package:ui_lab_2_1/src/screens/work/invoice_permissions.dart';
 import 'package:ui_lab_2_1/src/screens/work/payments_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
+import 'package:ui_lab_2_1/src/shared/recorded_entries_section.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
 
 void main() {
@@ -60,6 +61,13 @@ void main() {
       );
       addTearDown(store.dispose);
       await _pumpPayments(tester, store, today);
+      expect(
+        find.ancestor(
+          of: find.text('Payment entries'),
+          matching: find.byType(RecordedEntriesSection),
+        ),
+        findsOneWidget,
+      );
 
       await tester.tap(find.text('Record payment').first);
       await tester.pumpAndSettle();

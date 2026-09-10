@@ -1,0 +1,69 @@
+CREATE TABLE local_records (
+  organization_id TEXT NOT NULL CHECK (length(organization_id) > 0),
+  domain TEXT NOT NULL CHECK (length(domain) > 0),
+  record_id TEXT NOT NULL CHECK (length(record_id) > 0),
+  owner_id TEXT NOT NULL CHECK (length(owner_id) > 0),
+  revision INTEGER NOT NULL CHECK (revision > 0),
+  payload_version INTEGER NOT NULL CHECK (payload_version > 0),
+  payload TEXT NOT NULL CHECK (json_valid(payload)),
+  updated_at_us INTEGER NOT NULL,
+  PRIMARY KEY (organization_id, domain, record_id)
+);
+
+CREATE INDEX local_records_owner ON local_records
+  (organization_id, domain, owner_id, updated_at_us);
+
+CREATE TABLE local_commands (
+  organization_id TEXT NOT NULL,
+  command_id TEXT NOT NULL CHECK (length(command_id) > 0),
+  request_hash TEXT NOT NULL,
+  committed_at_us INTEGER NOT NULL,
+  PRIMARY KEY (organization_id, command_id)
+);
+
+CREATE TABLE local_record_revisions (
+  organization_id TEXT NOT NULL,
+  domain TEXT NOT NULL,
+  record_id TEXT NOT NULL,
+  revision INTEGER NOT NULL CHECK (revision > 0),
+  command_id TEXT NOT NULL,
+  owner_id TEXT NOT NULL,
+  payload_version INTEGER NOT NULL CHECK (payload_version > 0),
+  payload TEXT NOT NULL CHECK (json_valid(payload)),
+  payload_hash TEXT NOT NULL,
+  updated_at_us INTEGER NOT NULL,
+  PRIMARY KEY (organization_id, domain, record_id, revision),
+  FOREIGN KEY (organization_id, domain, record_id)
+    REFERENCES local_records (organization_id, domain, record_id),
+  FOREIGN KEY (organization_id, command_id)
+    REFERENCES local_commands (organization_id, command_id)
+);
+
+-- A local change journal, not evidence of consent to upload or remote success.
+CREATE TABLE local_change_outbox (
+  sequence INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  organization_id TEXT NOT NULL,
+  command_id TEXT NOT NULL,
+  state TEXT NOT NULL DEFAULT 'local' CHECK
+    (state IN ('local', 'pending', 'acknowledged', 'conflict', 'rejected')),
+  UNIQUE (organization_id, command_id),
+  FOREIGN KEY (organization_id, command_id)
+    REFERENCES local_commands (organization_id, command_id)
+);
+
+CREATE TABLE local_drafts (
+  organization_id TEXT NOT NULL,
+  domain TEXT NOT NULL,
+  draft_id TEXT NOT NULL,
+  owner_id TEXT NOT NULL,
+  revision INTEGER NOT NULL CHECK (revision > 0),
+  payload_version INTEGER NOT NULL CHECK (payload_version > 0),
+  payload TEXT NOT NULL CHECK (json_valid(payload)),
+  updated_at_us INTEGER NOT NULL,
+  PRIMARY KEY (organization_id, domain, draft_id)
+);
+
+CREATE TABLE local_metadata (
+  metadata_key TEXT NOT NULL PRIMARY KEY,
+  value TEXT NOT NULL
+);

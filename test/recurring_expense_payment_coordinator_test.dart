@@ -100,6 +100,52 @@ void main() {
       );
     },
   );
+  for (final mismatch in ['organization', 'actor', 'denied']) {
+    test(
+      'payment preflight rejects $mismatch before creating an expense',
+      () async {
+        final root = await Directory.systemTemp.createTemp(
+          'payment-preflight-',
+        );
+        addTearDown(() => root.delete(recursive: true));
+        final recurring = _recurringController(
+          await FileRecurringExpenseRepository.open(
+            Directory('${root.path}/recurring'),
+          ),
+          organizationId: mismatch == 'organization'
+              ? 'other-company'
+              : 'organization-1',
+          actorEmployeeId: mismatch == 'actor'
+              ? 'other-actor'
+              : 'employee-alex',
+          canRecordPayment: mismatch != 'denied',
+        );
+        final expenses = _expenseController(
+          await FileExpenseRepository.open(Directory('${root.path}/expenses')),
+        );
+        addTearDown(recurring.dispose);
+        addTearDown(expenses.dispose);
+        await recurring.load();
+        await expenses.load();
+        final template = (await recurring.create(_template()))!;
+        final occurrence = recurring.currentOccurrenceFor(template.id)!;
+        final result =
+            await RecurringExpensePaymentCoordinator(
+              expenses: expenses,
+              recurringExpenses: recurring,
+            ).markPaid(
+              template: template,
+              occurrence: occurrence,
+              actualAmount: 100,
+              paidOn: DateTime(2030),
+            );
+        expect(result.succeeded, isFalse);
+        expect(expenses.records, isEmpty);
+        expect(recurring.currentOccurrenceFor(template.id)!.id, occurrence.id);
+        expect(recurring.currentOccurrenceFor(template.id)!.isOpen, isTrue);
+      },
+    );
+  }
 }
 
 ExpenseUiRepositoryController _expenseController(
@@ -125,16 +171,19 @@ ExpenseUiRepositoryController _expenseController(
 );
 
 RecurringExpenseUiController _recurringController(
-  RecurringExpenseRepository repository,
-) => RecurringExpenseUiController(
+  RecurringExpenseRepository repository, {
+  String organizationId = 'organization-1',
+  String actorEmployeeId = 'employee-alex',
+  bool canRecordPayment = true,
+}) => RecurringExpenseUiController(
   AuthorizedRecurringExpenseService(repository),
   RecurringExpenseCommandPermissions(
-    organizationId: 'organization-1',
-    actorEmployeeId: 'employee-alex',
+    organizationId: organizationId,
+    actorEmployeeId: actorEmployeeId,
     permissionRevision: 'permissions-1',
     readScope: RecurringExpenseReadScope.company,
     canManage: true,
-    canRecordPayment: true,
+    canRecordPayment: canRecordPayment,
     canManageOtherEmployees: true,
   ),
   (_) => 'Alex Morgan',

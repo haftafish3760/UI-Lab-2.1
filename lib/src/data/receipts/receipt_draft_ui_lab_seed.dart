@@ -1,4 +1,4 @@
-import '../../screens/expenses/expense_models.dart';
+import '../expenses/expense_workflow_models.dart';
 import 'authorized_receipt_draft_service.dart';
 import 'receipt_draft_record.dart';
 import 'receipt_draft_repository.dart';

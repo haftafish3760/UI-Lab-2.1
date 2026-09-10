@@ -154,6 +154,10 @@ previews, exports, or sync payloads.
 
 ## 7. Offline storage and recovery
 
+This is a historical local implementation checkpoint, not a global cloud-authority
+decision. `data_storage_sync_contract.md` owns future category policy; U02 must
+distinguish recipient-local read state, team events and backup.
+
 The local repository uses serialized mutations and a checksummed two-slot JSON
 snapshot in private Application Support/app data. It never writes business data
 into Documents.

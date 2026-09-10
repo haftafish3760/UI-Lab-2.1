@@ -1,25 +1,71 @@
+import '../../data/work/directory_draft_handoff.dart';
+import '../../data/work/customer_confirmation.dart';
+import '../../data/work/customer_draft_workflow.dart';
+import '../../data/work/customer_draft_controller.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../layout/app_layout_engine.dart';
+import '../../data/prototype_operations_store.dart';
+import '../../data/storage/draft_autosave_session.dart';
+import '../../data/storage/local_record_identity.dart';
+import '../../data/work/directory_persistence_session.dart';
+import '../../shared/draft_navigation_guard.dart';
+import '../../shared/editor_draft_status.dart';
 import '../../shared/section_card.dart';
 import 'work_contact_models.dart';
 import 'work_detail_header.dart';
+
+part 'customer_editor_persistence.dart';
 
 class CustomerEditScreen extends StatefulWidget {
   const CustomerEditScreen({
     required this.selectedDay,
     this.initialCustomer,
+    this.recoveredWorkflow,
     super.key,
   });
 
   final DateTime selectedDay;
   final WorkCustomerProfile? initialCustomer;
+  final CustomerDraftController? recoveredWorkflow;
 
   @override
   State<CustomerEditScreen> createState() => _CustomerEditScreenState();
 }
 
-class _CustomerEditScreenState extends State<CustomerEditScreen> {
+class _CustomerEditScreenState extends State<CustomerEditScreen>
+    with DraftNavigationGuard {
+  DirectoryPersistenceSession? _directory;
+  late CustomerDraftController? _workflow = widget.recoveredWorkflow;
+  DraftAutosaveSession? get _draft => _workflow?.session;
+  StreamSubscription<DraftSaveState>? _draftSubscription;
+  WorkCustomerProfile? _recoveredCustomer;
+  WorkCustomerProfile? get _editingCustomer =>
+      _recoveredCustomer ?? widget.initialCustomer;
+  late String _customerId =
+      widget.initialCustomer?.id ?? newLocalRecordIdentity('customer');
+  bool _draftStarted = false;
+  bool _draftReady = false;
+  bool _saving = false;
+  String? _saveError;
+  int _baseRevision = 0;
+  @override
+  DraftAutosaveSession? get navigationDraft => _draft;
+  @override
+  bool get blockDraftNavigation => _saving;
+  void _refresh(VoidCallback change) => setState(change);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_draftStarted) {
+      _draftStarted = true;
+      _directory = PrototypeOperationsScope.maybeOf(context)?.directorySession;
+      unawaited(_openCustomerDraft());
+    }
+  }
+
   late final _name = TextEditingController(
     text: widget.initialCustomer?.name ?? '',
   );
@@ -56,6 +102,8 @@ class _CustomerEditScreenState extends State<CustomerEditScreen> {
 
   @override
   void dispose() {
+    unawaited(_draftSubscription?.cancel());
+    unawaited(_draft?.close().catchError((Object _) {}));
     for (final controller in [
       _name,
       _company,
@@ -75,133 +123,131 @@ class _CustomerEditScreenState extends State<CustomerEditScreen> {
   @override
   Widget build(BuildContext context) {
     final editing = widget.initialCustomer != null;
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
-            return ListView(
-              padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 28),
-              children: [
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 760),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        WorkDetailHeader(
-                          label: editing ? 'Edit Client' : 'Add Client',
-                          selectedDay: widget.selectedDay,
-                          onBack: () => Navigator.of(context).pop(),
-                        ),
-                        const SizedBox(height: 18),
-                        Text(
-                          editing
-                              ? 'Edit client information'
-                              : 'Add a new saved client',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          editing
-                              ? 'The existing confirmed information is prefilled. Cancel or Back discards changes.'
-                              : 'Save contact, billing, and service-location information once, then reuse it in Work records.',
-                        ),
-                        const SizedBox(height: 14),
-                        _IdentityForm(
-                          name: _name,
-                          company: _company,
-                          phone: _phone,
-                          email: _email,
-                          preferredContact: _preferredContact,
-                          nameError: _nameError,
-                          onPreferredContactChanged: (value) =>
-                              setState(() => _preferredContact = value),
-                        ),
-                        const SizedBox(height: 14),
-                        _AddressForm(
-                          billing: _billing,
-                          locationLabel: _locationLabel,
-                          locationAddress: _locationAddress,
-                          accessNotes: _accessNotes,
-                          additionalLocationCount: mathMax(
-                            0,
-                            (widget.initialCustomer?.locations.length ?? 0) - 1,
+    return guardDraftNavigation(
+      Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final insets = AppLayoutEngine.pageInsetsFor(
+                constraints.maxWidth,
+              );
+              return ListView(
+                padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 28),
+                children: [
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 760),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          WorkDetailHeader(
+                            label: editing ? 'Edit Client' : 'Add Client',
+                            selectedDay: widget.selectedDay,
+                            onBack: () => leaveDraftRoute(),
                           ),
-                        ),
-                        const SizedBox(height: 14),
-                        SectionCard(
-                          child: TextField(
-                            controller: _notes,
-                            maxLines: 4,
-                            decoration: const InputDecoration(
-                              labelText: 'Client notes',
-                              helperText:
-                                  'Keep sensitive notes to the minimum needed for service.',
+                          if (_draft != null)
+                            EditorDraftStatus(
+                              state: _draft!.state,
+                              onRetry: _draft!.retry,
+                              onDiscard: _discardCustomerDraft,
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Wrap(
-                          alignment: WrapAlignment.end,
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: [
-                            OutlinedButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Cancel'),
+                          if (_saveError != null) Text(_saveError!),
+                          if (!_draftReady && _saveError == null)
+                            const Text('Opening saved input…'),
+                          if (_draftReady) ...[
+                            const SizedBox(height: 18),
+                            Text(
+                              editing
+                                  ? 'Edit client information'
+                                  : 'Add a new saved client',
+                              style: Theme.of(context).textTheme.headlineSmall,
                             ),
-                            FilledButton.icon(
-                              key: const ValueKey('save-client-button'),
-                              onPressed: _save,
-                              icon: const Icon(Icons.save_outlined),
-                              label: Text(
-                                editing ? 'Save client changes' : 'Save client',
+                            const SizedBox(height: 4),
+                            Text(
+                              editing
+                                  ? _draft == null
+                                        ? 'The existing confirmed information is prefilled. Cancel or Back discards changes.'
+                                        : 'Back keeps unfinished input on this device. Use Discard unfinished input to remove it.'
+                                  : 'Save contact, billing, and service-location information once, then reuse it in Work records.',
+                            ),
+                            const SizedBox(height: 14),
+                            _IdentityForm(
+                              name: _name,
+                              company: _company,
+                              phone: _phone,
+                              email: _email,
+                              preferredContact: _preferredContact,
+                              nameError: _nameError,
+                              onPreferredContactChanged: (value) =>
+                                  _changeCustomerInput(
+                                    () => _preferredContact = value,
+                                  ),
+                            ),
+                            const SizedBox(height: 14),
+                            _AddressForm(
+                              billing: _billing,
+                              locationLabel: _locationLabel,
+                              locationAddress: _locationAddress,
+                              accessNotes: _accessNotes,
+                              additionalLocationCount: mathMax(
+                                0,
+                                (_editingCustomer?.locations.length ?? 0) - 1,
                               ),
                             ),
+                            const SizedBox(height: 14),
+                            SectionCard(
+                              child: TextField(
+                                controller: _notes,
+                                maxLines: 4,
+                                decoration: const InputDecoration(
+                                  labelText: 'Client notes',
+                                  helperText:
+                                      'Keep sensitive notes to the minimum needed for service.',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Wrap(
+                              alignment: WrapAlignment.end,
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: [
+                                OutlinedButton(
+                                  onPressed: () => leaveDraftRoute(),
+                                  child: Text(
+                                    _draft == null ? 'Cancel' : 'Back',
+                                  ),
+                                ),
+                                FilledButton.icon(
+                                  key: const ValueKey('save-client-button'),
+                                  onPressed: _saving ? null : _save,
+                                  icon: const Icon(Icons.save_outlined),
+                                  label: Text(
+                                    editing
+                                        ? 'Save client changes'
+                                        : 'Save client',
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  void _save() {
-    if (_name.text.trim().isEmpty) {
-      setState(() => _nameError = 'Enter the client name.');
-      return;
-    }
-    final existing = widget.initialCustomer;
-    final location = WorkServiceLocation(
-      label: _locationLabel.text.trim().isEmpty
-          ? 'Primary service location'
-          : _locationLabel.text.trim(),
-      address: _locationAddress.text.trim(),
-      accessNotes: _accessNotes.text.trim(),
-    );
-    final remainingLocations = existing?.locations.skip(1) ?? const [];
-    Navigator.of(context).pop(
-      WorkCustomerProfile(
-        id: existing?.id ?? 'customer-${DateTime.now().microsecondsSinceEpoch}',
-        name: _name.text.trim(),
-        companyName: _company.text.trim(),
-        phone: _phone.text.trim(),
-        email: _email.text.trim(),
-        preferredContact: _preferredContact,
-        billingAddress: _billing.text.trim(),
-        locations: [location, ...remainingLocations],
-        notes: _notes.text.trim(),
-        linkedRecordCount: existing?.linkedRecordCount ?? 0,
-      ),
-    );
+  Future<void> _save() async {
+    if (!_draftReady || _saving) return;
+    await _confirmCustomer();
   }
 }
 

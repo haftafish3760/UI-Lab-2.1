@@ -1,6 +1,11 @@
+import '../shared/application_recovery_scope.dart';
+import 'open_saved_work_recovery.dart';
 import 'package:flutter/material.dart';
 
 import '../screens/expenses/reports_screen.dart';
+import '../data/prototype_operations_store.dart';
+import '../screens/work/company_profile_screen.dart';
+import '../screens/work/saved_clients_screen.dart';
 import '../shared/app_preferences.dart';
 import '../theme/app_theme.dart';
 import 'employee_directory_screen.dart';
@@ -25,19 +30,62 @@ class OperationsMenuScreen extends StatelessWidget {
               title: 'Company records',
               children: [
                 _MenuDestination(
-                  key: const ValueKey('menu-employees'),
-                  icon: Icons.badge_outlined,
-                  title: 'Employees',
-                  detail: 'Active and former employees, roles, and access',
-                  onTap: () => _open(context, const EmployeeDirectoryScreen()),
+                  key: const ValueKey('menu-customers'),
+                  icon: Icons.people_alt_outlined,
+                  title: 'Customers',
+                  detail: 'Contacts, service locations, and work history',
+                  onTap: () {
+                    final store = PrototypeOperationsScope.of(context);
+                    _open(
+                      context,
+                      SavedClientsScreen(
+                        initialClients: store.customers,
+                        selectedDay: DateTime.now(),
+                        onClientsChanged: store.replaceCustomers,
+                      ),
+                    );
+                  },
                 ),
                 _MenuDestination(
-                  key: const ValueKey('menu-vehicles'),
-                  icon: Icons.local_shipping_outlined,
-                  title: 'Vehicle profiles',
-                  detail: 'Odometers, assignments, status, and records',
-                  onTap: () => _open(context, const VehicleDirectoryScreen()),
+                  key: const ValueKey('menu-company-profile'),
+                  icon: Icons.business_outlined,
+                  title: 'Company Profile',
+                  detail: 'Business identity and document information',
+                  onTap: () {
+                    final store = PrototypeOperationsScope.of(context);
+                    _open(
+                      context,
+                      CompanyProfileScreen(
+                        initialProfile: store.companyProfile,
+                        selectedDay: DateTime.now(),
+                        onSaved: store.updateCompanyProfile,
+                      ),
+                    );
+                  },
                 ),
+                if (PrototypeOperationsScope.maybeOf(
+                      context,
+                    )?.directorySession?.permissions.canViewEmployees ??
+                    true)
+                  _MenuDestination(
+                    key: const ValueKey('menu-employees'),
+                    icon: Icons.badge_outlined,
+                    title: 'Employees',
+                    detail: 'Active and former employees, roles, and access',
+                    onTap: () =>
+                        _open(context, const EmployeeDirectoryScreen()),
+                  ),
+                if (PrototypeOperationsScope.maybeOf(
+                      context,
+                    )?.directorySession?.permissions.canViewVehicles ??
+                    true)
+                  _MenuDestination(
+                    key: const ValueKey('menu-vehicles'),
+                    icon: Icons.local_shipping_outlined,
+                    title: 'Vehicle profiles',
+                    detail: 'Odometers, assignments, status, and records',
+                    onTap: () => _open(context, const VehicleDirectoryScreen()),
+                  ),
                 _MenuDestination(
                   key: const ValueKey('menu-reports'),
                   icon: Icons.assessment_outlined,
@@ -239,6 +287,19 @@ class _SystemSettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _openAppearance(context),
           ),
+          ListTile(
+            key: const ValueKey('system-saved-work'),
+            leading: const Icon(Icons.restore_outlined),
+            title: const Text('Saved work'),
+            subtitle: Text(
+              ApplicationRecoveryScope.maybeOf(context) == null
+                  ? 'Saved work recovery is unavailable in this session'
+                  : 'Continue or review unfinished work saved on this device',
+            ),
+            onTap: ApplicationRecoveryScope.maybeOf(context) == null
+                ? null
+                : () => openSavedWorkRecovery(context),
+          ),
           const ListTile(
             leading: Icon(Icons.cloud_sync_outlined),
             title: Text('Backup and company sync'),
@@ -270,6 +331,15 @@ class _AppearanceSettingsScreen extends StatelessWidget {
             'Choose how Maintainiac looks on this device. This does not change company records.',
           ),
           const SizedBox(height: 12),
+          if (preferences.isSaving) const Text('Saving on this device…'),
+          if (preferences.saveError != null) ...[
+            Text(preferences.saveError!),
+            if (preferences.canRetrySave)
+              TextButton(
+                onPressed: preferences.retrySave,
+                child: const Text('Retry save'),
+              ),
+          ],
           for (final mode in ThemeMode.values)
             Card(
               margin: const EdgeInsets.only(bottom: 8),

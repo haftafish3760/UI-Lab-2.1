@@ -44,7 +44,13 @@ class _EstimateWorkspaceScreenState extends State<EstimateWorkspaceScreen> {
   final _scrollController = ScrollController();
   final _dateAnchorKey = GlobalKey();
   var _showAllDrafts = false;
-  var _preferences = const WorkRecordDisplayPreferences();
+  var _fixturePreferences = const WorkRecordDisplayPreferences();
+  WorkRecordDisplayPreferences get _preferences =>
+      readWorkRecordDisplayPreferences(
+        context,
+        'estimates',
+        _fixturePreferences,
+      );
 
   AppViewMode get _view => OperationalScope.of(context).view;
   String? get _employeeId => OperationalScope.of(context).selectedEmployeeId;
@@ -452,10 +458,12 @@ class _EstimateWorkspaceScreenState extends State<EstimateWorkspaceScreen> {
       ),
     );
     if (!mounted || job == null) return;
-    _store.addWorkRecord(job);
-    _store.updateWorkRecord(
-      estimate.withEstimateStage(EstimateStage.converted, DateTime.now()),
-    );
+    if (_store.workSession == null) {
+      _store.addWorkRecord(job);
+      _store.updateWorkRecord(
+        estimate.withEstimateStage(EstimateStage.converted, DateTime.now()),
+      );
+    }
     setState(() {});
   }
 
@@ -464,11 +472,14 @@ class _EstimateWorkspaceScreenState extends State<EstimateWorkspaceScreen> {
         .push<WorkRecordDisplayPreferences>(
           MaterialPageRoute(
             builder: (_) => WorkRecordSettingsScreen(
+              workspaceId: 'estimates',
               workspaceLabel: 'Estimates',
               initial: _preferences,
             ),
           ),
         );
-    if (mounted && updated != null) setState(() => _preferences = updated);
+    if (mounted && updated != null) {
+      setState(() => _fixturePreferences = updated);
+    }
   }
 }

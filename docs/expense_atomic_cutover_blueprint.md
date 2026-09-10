@@ -59,8 +59,9 @@ manufactures evidence from a label or image count.
 
 ### App-level authorized session checkpoint
 
-The platform entry point now opens the Expense repository from private
-Application Support/app data and injects one `ExpenseUiRepositoryController`
+The platform entry point `lib/main.dart` uses the retryable startup shell and
+`lib/src/startup/open_ui_lab_application.dart` to open `LocalPersistence` from
+private Application Support/app data and inject one `ExpenseUiRepositoryController`
 beneath the app shell. The UI Lab owner session uses a stable organization ID,
 actor employee ID, permission revision, company read scope, and explicit
 employee and Job label resolvers. File-repository recovery state is carried into
@@ -254,7 +255,7 @@ permission or operating-system delivery.
 
 | Current file | Current dependency | Cutover requirement |
 | --- | --- | --- |
-| `lib/src/app.dart` | binds authorized ordinary Expense, Receipt Draft, and recurring projections and publishes reminders after committed recurring source revisions | keep notification ownership separate and do not synchronize on controller loading/pending-only changes |
+| `lib/src/app.dart` with `lib/src/application_data_scopes.dart` | binds authorized ordinary Expense, Receipt Draft, and recurring projections and publishes reminders after committed recurring source revisions | keep notification ownership separate and do not synchronize on controller loading/pending-only changes |
 | `lib/src/data/expense_prototype_store.dart` | owns demo Expenses, drafts, recurring templates, and paid-occurrence creation | retain only as explicit rollback/demo fixture; never production source |
 | `lib/src/data/prototype_operations_store.dart` | exposes Expense lists/mutations and folds them into financial/report projections | inject authorized Expense projections; remove ordinary Expense ownership |
 | `lib/src/data/operational_attention.dart` | derives pending approval/correction rows from prototype Expenses | accept authorized Expense records; never query an unfiltered global list |
@@ -270,6 +271,7 @@ permission or operating-system delivery.
 | `lib/src/screens/expenses/expense_detail_screen.dart` | finds by ID and synchronously edits/approves lines and totals | controller lookup plus awaited update/approval with pending, failure, and conflict UI |
 | `lib/src/screens/expenses/expense_receipt_evidence_screen.dart` | resolves the authorized Expense receipt ID, verifies its exact submitted closed draft, and renders real read-only local image/PDF evidence | retain Document Intake ownership; add export/backup only through later explicit permissions |
 | `lib/src/screens/expenses/receipt_intake_screen.dart` | resumes the exact authorized draft; persists selected, removed, and manually ordered evidence; opens real image/PDF review; and invokes the retry-safe receipt submission coordinator | add correction, proposal, allocation, and export slices without bypassing the draft command |
+| `lib/src/screens/expenses/receipt_intake_confirmation.dart` | owns the screen's confirmation handler; connected sessions use atomic receipt submission, while the unbound fixture delegates through the operations store | preserve the authorized atomic boundary and keep fixture fallback explicit |
 | `lib/src/screens/expenses/expense_receipt_drafts_screen.dart` | reads authorized active drafts with loading/failure/recovery states and routes by stable ID | retain the explicit unbound widget fixture only; never masquerade as Needs Attention |
 | `lib/src/screens/expenses/scheduled_expenses_screen.dart` | reads and edits the authorized recurring projection in platform sessions | retain the explicit in-memory fallback for isolated tests only |
 | `lib/src/screens/expenses/scheduled_expense_detail_screen.dart` | coordinates an authorized ordinary Expense and durable occurrence link | preserve deterministic retry and never claim both records share one file transaction |
@@ -286,7 +288,8 @@ permission or operating-system delivery.
 | `lib/src/screens/dashboard/dashboard_record_navigation.dart` | checks prototype existence before opening Expense detail | controller `recordById`/authorized route result |
 | `lib/src/screens/dashboard/dashboard_day_record_actions.dart` | copies approval state from prototype Expense into a day entry | derive review state from current source record |
 | `lib/src/screens/dashboard/dashboard_projection_actions.dart` | manually creates and updates duplicate Expense day rows | replace with source-driven day projection |
-| `lib/src/screens/dashboard/dashboard_screen_actions.dart` | Dashboard add/fuel writes directly to prototype Expenses | authorized create, then projection refresh |
+| `lib/src/screens/dashboard/dashboard_screen_actions.dart` | delegates add/fuel to the shared record-navigation/editor flow; no direct prototype Expense dependency remains | retain awaited authorized confirmation and source-derived projections |
+| `lib/src/screens/dashboard/dashboard_summary_strip.dart` | summarizes operational-store financial totals, using authorized Expense totals when bound | retain exact authorized Expense projection while Work ledger persistence is migrated |
 | `lib/src/screens/dashboard/dashboard_day_screen.dart` | daily recap folds prototype Expense doubles | exact authorized daily total and source list |
 
 ### 3.4 Work and Materials consumers

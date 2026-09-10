@@ -1,8 +1,8 @@
 import '../screens/dashboard/dashboard_models.dart';
-import '../screens/expenses/expense_models.dart';
+import 'expenses/expense_workflow_models.dart';
 import '../screens/inventory/inventory_models.dart';
-import '../screens/work/estimate_models.dart';
-import '../screens/work/work_models.dart';
+import 'work/models/estimate_models.dart';
+import 'work/models/work_models.dart';
 import '../shared/app_view_mode.dart';
 
 enum OperationalAttentionModule { dashboard, work, expenses, inventory }

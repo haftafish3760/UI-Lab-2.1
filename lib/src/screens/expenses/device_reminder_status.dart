@@ -16,9 +16,10 @@ class DeviceReminderStatus extends StatelessWidget {
     final controller = NativeNotificationUiScope.maybeOf(context);
     if (controller == null ||
         controller.phase == NativeNotificationUiPhase.loading ||
-        controller.permission ==
-            NativeNotificationPermissionState.unsupported ||
-        controller.isGranted) {
+        (controller.phase != NativeNotificationUiPhase.failed &&
+            (controller.permission ==
+                    NativeNotificationPermissionState.unsupported ||
+                controller.isGranted))) {
       return const SizedBox.shrink();
     }
     final semantic = Theme.of(context).extension<AppSemanticColors>()!;
@@ -51,7 +52,9 @@ class DeviceReminderStatus extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  context.l10n.deviceRemindersOffTitle,
+                  failed
+                      ? context.l10n.deviceRemindersUnavailableTitle
+                      : context.l10n.deviceRemindersOffTitle,
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 3),
@@ -61,16 +64,24 @@ class DeviceReminderStatus extends StatelessWidget {
                   key: const ValueKey('enable-device-reminders'),
                   onPressed: requesting
                       ? null
+                      : failed
+                      ? controller.load
                       : () => controller.enable(sound: requestSound),
                   icon: requesting
                       ? const SizedBox.square(
                           dimension: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.notifications_active_outlined),
+                      : Icon(
+                          failed
+                              ? Icons.refresh_rounded
+                              : Icons.notifications_active_outlined,
+                        ),
                   label: Text(
                     requesting
                         ? context.l10n.deviceRemindersEnabling
+                        : failed
+                        ? context.l10n.deviceRemindersRetry
                         : context.l10n.deviceRemindersEnable,
                   ),
                 ),

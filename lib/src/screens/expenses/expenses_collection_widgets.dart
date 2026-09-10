@@ -25,110 +25,103 @@ class _ExpenseEntriesSectionState extends State<_ExpenseEntriesSection> {
   var _expanded = false;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => RecordedEntriesSection(
+    key: const ValueKey('expense-entries-section'),
+    builder: _buildEntries,
+  );
+
+  Widget _buildEntries(BuildContext context) {
     final visible = _expanded
         ? widget.expenses.length
         : widget.expenses.length.clamp(0, 3);
     final colors = Theme.of(context).colorScheme;
-    final semantic = _expenseSemanticColors(context);
-    return SectionCard(
-      key: const ValueKey('expense-entries-section'),
-      padding: EdgeInsets.zero,
-      borderColor: semantic.current,
-      backgroundColor: Color.alphaBlend(
-        semantic.current.withValues(alpha: .05),
-        colors.surface,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            key: const ValueKey('expense-entries-header'),
-            padding: const EdgeInsetsDirectional.fromSTEB(14, 7, 8, 7),
-            color: semantic.currentSurface,
-            child: Row(
-              children: [
-                Icon(Icons.receipt_long_outlined, color: semantic.current),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    "Today's entries",
-                    style: TextStyle(fontWeight: FontWeight.w600),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        OperationalSectionHeading(
+          headerKey: const ValueKey('expense-entries-header'),
+          background: OperationalCardPalette.entries.start,
+          foreground: OperationalCardPalette.entries.foreground,
+          child: Row(
+            children: [
+              Icon(Icons.receipt_long_outlined, color: colors.onSurface),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  "Today's entries",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              if (widget.expenses.length > 3)
+                TextButton(
+                  key: const ValueKey('expense-entries-expand-button'),
+                  onPressed: () => setState(() => _expanded = !_expanded),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _expanded
+                            ? 'Show less'
+                            : 'Show all ${widget.expenses.length}',
+                      ),
+                      Icon(
+                        _expanded
+                            ? Icons.expand_less_rounded
+                            : Icons.expand_more_rounded,
+                      ),
+                    ],
                   ),
                 ),
-                if (widget.expenses.length > 3)
-                  TextButton(
-                    key: const ValueKey('expense-entries-expand-button'),
-                    onPressed: () => setState(() => _expanded = !_expanded),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _expanded
-                              ? 'Show less'
-                              : 'Show all ${widget.expenses.length}',
-                        ),
-                        Icon(
-                          _expanded
-                              ? Icons.expand_less_rounded
-                              : Icons.expand_more_rounded,
-                        ),
-                      ],
-                    ),
+            ],
+          ),
+        ),
+        if (widget.expenses.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(20),
+            child: Text('No expenses recorded for this day.'),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  '$visible of ${widget.expenses.length} expenses',
+                  key: const ValueKey('expense-visible-count'),
+                  style: TextStyle(
+                    color: colors.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
                   ),
+                ),
+                const SizedBox(height: 8),
+                for (var index = 0; index < visible; index++) ...[
+                  ExpenseRecordCard(
+                    expense: widget.expenses[index],
+                    showJob: widget.showJobLinks,
+                    showOwner: true,
+                    showAmount: widget.showAmounts,
+                    onTap: () => widget.onOpen(widget.expenses[index]),
+                  ),
+                  if (index != visible - 1) const SizedBox(height: 8),
+                ],
               ],
             ),
           ),
-          if (widget.expenses.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Text('No expenses recorded for this day.'),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    '$visible of ${widget.expenses.length} expenses',
-                    key: const ValueKey('expense-visible-count'),
-                    style: TextStyle(
-                      color: colors.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  for (var index = 0; index < visible; index++) ...[
-                    ExpenseRecordCard(
-                      expense: widget.expenses[index],
-                      showJob: widget.showJobLinks,
-                      showOwner: true,
-                      showAmount: widget.showAmounts,
-                      onTap: () => widget.onOpen(widget.expenses[index]),
-                    ),
-                    if (index != visible - 1) const SizedBox(height: 8),
-                  ],
-                ],
+        if (widget.removedExpenseCount > 0)
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 6),
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton.icon(
+                key: const ValueKey('open-removed-expenses-button'),
+                onPressed: widget.onOpenRemoved,
+                icon: const Icon(Icons.restore_from_trash_outlined),
+                label: Text('Removed expenses (${widget.removedExpenseCount})'),
               ),
             ),
-          if (widget.removedExpenseCount > 0)
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 6),
-              child: Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: TextButton.icon(
-                  key: const ValueKey('open-removed-expenses-button'),
-                  onPressed: widget.onOpenRemoved,
-                  icon: const Icon(Icons.restore_from_trash_outlined),
-                  label: Text(
-                    'Removed expenses (${widget.removedExpenseCount})',
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }

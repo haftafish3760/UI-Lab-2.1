@@ -7,7 +7,11 @@ void main() {
     final discovered = <String>{};
     for (final entity in Directory('lib/src').listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
-      final source = entity.readAsStringSync();
+      final source =
+          entity.readAsStringSync() +
+          (entity.path == 'lib/src/app.dart'
+              ? File('lib/src/application_data_scopes.dart').readAsStringSync()
+              : '');
       if (_directlyDependsOnPrototypeExpenses(entity.path, source)) {
         discovered.add(entity.path);
       }
@@ -64,10 +68,22 @@ void main() {
 
   test('platform launch injects the private authorized Expense session', () {
     final mainSource = File('lib/main.dart').readAsStringSync();
-    final appSource = File('lib/src/app.dart').readAsStringSync();
+    final appSource =
+        File('lib/src/app.dart').readAsStringSync() +
+        File('lib/src/application_data_scopes.dart').readAsStringSync();
 
-    expect(mainSource, contains('openPrivateExpenseRepository()'));
-    expect(mainSource, contains('expenseRepository: expenses'));
+    final startupSource = File(
+      'lib/src/startup/open_ui_lab_application.dart',
+    ).readAsStringSync();
+    expect(mainSource, contains('openUiLabApplication('));
+    expect(mainSource, contains('ApplicationStartupScreen('));
+    expect(startupSource, contains('LocalPersistence.open('));
+    expect(startupSource, contains('directory: storageDirectory,'));
+    expect(
+      startupSource,
+      contains('resolveRetainedPath: resolveRetainedPath,'),
+    );
+    expect(startupSource, contains('expenseRepository: persistence.expenses'));
     expect(appSource, contains('ExpenseUiRepositoryController('));
     expect(appSource, contains('ExpenseUiScope('));
     expect(appSource, contains('expenseUiLabOwnerPermissions()'));
@@ -100,14 +116,14 @@ const _directPrototypeExpenseConsumers = <String>{
   'lib/src/data/prototype_operations_store.dart',
   'lib/src/screens/dashboard/dashboard_day_screen.dart',
   'lib/src/screens/dashboard/dashboard_record_navigation.dart',
-  'lib/src/screens/dashboard/dashboard_screen_actions.dart',
+  'lib/src/screens/dashboard/dashboard_summary_strip.dart',
   'lib/src/screens/expenses/expense_category_screen.dart',
   'lib/src/screens/expenses/expense_detail_screen.dart',
   'lib/src/screens/expenses/expense_receipt_drafts_screen.dart',
   'lib/src/screens/expenses/expense_receipt_evidence_screen.dart',
   'lib/src/screens/expenses/expenses_day_screen.dart',
   'lib/src/screens/expenses/expenses_screen.dart',
-  'lib/src/screens/expenses/receipt_intake_screen.dart',
+  'lib/src/screens/expenses/receipt_intake_confirmation.dart',
   'lib/src/screens/expenses/reports_screen.dart',
   'lib/src/screens/expenses/scheduled_expense_detail_screen.dart',
   'lib/src/screens/expenses/scheduled_expenses_screen.dart',

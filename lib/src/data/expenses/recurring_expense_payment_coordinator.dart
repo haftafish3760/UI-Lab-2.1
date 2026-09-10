@@ -1,4 +1,4 @@
-import '../../screens/expenses/expense_models.dart';
+import 'expense_workflow_models.dart';
 import 'expense_ui_repository_controller.dart';
 import 'recurring_expense_ui_controller.dart';
 
@@ -42,6 +42,30 @@ class RecurringExpensePaymentCoordinator {
     required double actualAmount,
     required DateTime paidOn,
   }) async {
+    if (expenses.organizationId != recurringExpenses.organizationId ||
+        expenses.actorEmployeeId != recurringExpenses.actorEmployeeId) {
+      return const RecurringExpensePaymentResult.failure(
+        'Expense and planned-payment sessions do not match.',
+      );
+    }
+    if (occurrence.templateId != template.id ||
+        !recurringExpenses.canRecordPaymentFor(template.id) ||
+        !expenses.canCreateForEmployee(template.ownerEmployeeId) ||
+        !actualAmount.isFinite ||
+        actualAmount <= 0) {
+      return const RecurringExpensePaymentResult.failure(
+        'This planned payment cannot be recorded with the current input or permissions.',
+      );
+    }
+    final current = recurringExpenses.recordById(template.id);
+    if (current == null ||
+        current.ownerEmployeeId != template.ownerEmployeeId ||
+        current.title != template.title ||
+        current.category != template.category) {
+      return const RecurringExpensePaymentResult.failure(
+        'This planned expense changed. Review it before recording payment.',
+      );
+    }
     final expenseId = _expenseId(occurrence.id);
     final deleted = expenses.deletedRecords.where(
       (record) => record.id == expenseId,

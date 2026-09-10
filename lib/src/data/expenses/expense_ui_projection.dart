@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../screens/expenses/expense_models.dart';
+import 'expense_workflow_models.dart';
 import 'expense_record.dart';
 
 @immutable

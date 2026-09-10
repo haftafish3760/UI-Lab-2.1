@@ -25,6 +25,51 @@ person reviews and confirms the specific effects first.
 
 ### Customer-facing name and choice
 
+Owner update 2026-09-07: receipt reading is optional. Use plain English, not OCR;
+“app-assisted receipts” is an owner example, while Receipt Assistant below is a
+working label, not a final naming decision. Defaults remain subject to review.
+
+### Basic and Detailed receipts — owner-confirmed
+
+Two receipt modes are required. Detailed includes individual line items and
+line prices/quantities as applicable. Basic records the receipt without requiring
+line itemization. Category is optional: users may leave it unset or choose a
+plain general business-receipt classification. Do not force them to choose even
+that general category, invent a tax category, or block save because it is absent.
+Required header fields beyond this decision remain to be defined; “Basic” does
+not silently make vendor/date or every existing form field mandatory.
+
+Both modes support manual entry with receipt assistance off. Assistance does
+not select a category or commit extracted fields without confirmation. An unset
+category remains stable/null in storage; any helpful “Uncategorized” display
+label is not an inferred tax classification. Category-specific fields appear
+when a category is selected, without making category selection mandatory.
+
+### Receipt backup sizes and preview — owner-confirmed
+
+At the backup-choice stage offer approximately 1 MB, 750 KB, 500 KB and 250 KB
+image-size targets. These are output-size choices, not guarantees that every
+receipt remains legible or an authorization to discard source data.
+
+Generate and show the actual candidate image before the user accepts its size.
+Allow useful zoom/pan to inspect fine print and long-receipt sections; show the
+actual resulting size. Never preview the original while saving a different
+compressed image. If a target cannot preserve readability, report that and let
+the user choose another size or retake/add sections; do not silently degrade.
+
+Use the original-quality image for extraction only when the user enables receipt
+assistance. The selected reviewed proof image can be the backed-up copy; original
+resolution is not a permanent backup requirement. Keep source bytes intact while
+capture/stitching/extraction and preview are pending. When/how originals may be
+removed after confirmation, and whether targets apply per photo or stitched
+output, remain open. No original deletion is implemented or authorized here.
+
+“Receipt photo” or “Saved receipt image” are plain-English naming proposals.
+Paid receipt backup is optional; refusing backup cannot block local saving or
+manual Basic/Detailed receipts. See `data_storage_sync_contract.md`.
+
+### Receipt assistance choices
+
 **Receipt Assistant** is the working customer-facing name for the optional
 receipt-reading feature. `OCR` remains an internal engineering term and is
 prohibited in ordinary customer-facing labels, helper text, buttons, errors,
@@ -242,10 +287,13 @@ without claiming to maintain exact truck counts.
 
 ## 4. Capture and long-receipt contract
 
-1. Preserve every original photo/file unchanged.
+1. Preserve source photos/files unchanged through processing and preview;
+   permanent original retention is not required by the owner's new backup rule.
+   Disposal timing is unresolved; no automatic deletion follows from this text.
 2. Record capture/import order, orientation, dimensions, file type, and checksum.
 3. Long-receipt capture may use overlapping photos in top-to-bottom order.
-4. Stitching creates review evidence; it never replaces the originals.
+4. Stitching creates derived review evidence. Do not overwrite sources while
+   processing; the reviewed backup derivative follows the size contract above.
 5. Show overlap, missing-section, duplicate-section, blur, glare, and crop
    warnings before extraction is confirmed.
 6. Permit reorder, rotate, replace, add, and remove before final review.
@@ -253,6 +301,11 @@ without claiming to maintain exact truck counts.
 8. The recognition engine retains raw recognized text and the image region
    behind every Receipt Assistant proposal.
 9. Offline capture and review remain available. Sync happens later if enabled.
+
+The owner reports 5.7 long-receipt stitching is unreliable. This is owner-reported
+failure, not a newly reproduced runtime finding. A reliable stitching engine is
+required; repair versus replacement requires independent assessment and tests
+for missing/duplicated sections, ordering and text legibility.
 
 ## 5. Receipt-level proposal
 

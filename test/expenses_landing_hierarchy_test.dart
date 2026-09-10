@@ -1,3 +1,5 @@
+import 'package:ui_lab_2_1/src/theme/operational_card_palette.dart';
+import 'package:ui_lab_2_1/src/shared/recorded_entries_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
@@ -68,14 +70,19 @@ void main() {
       isNotEmpty,
     );
     expect(tester.widget<Material>(drafts).color, semantic.draftSurface);
-    expect(
-      tester
-          .widget<Container>(
-            find.byKey(const ValueKey('expense-entries-header')),
-          )
-          .color,
-      semantic.currentSurface,
+    final heading = tester.widget<Container>(
+      find.byKey(const ValueKey('expense-entries-header')),
     );
+    expect(
+      (heading.decoration! as BoxDecoration).color,
+      OperationalCardPalette.entries.start,
+    );
+    expect(tester.widget<RecordedEntriesSection>(entries).gradient, isNull);
+    final outerCard = tester.widget<SectionCard>(
+      find.descendant(of: entries, matching: find.byType(SectionCard)).first,
+    );
+    expect(outerCard.backgroundColor, OperationalCardPalette.entries.start);
+    expect(outerCard.gradient, isNull);
 
     await tester.tap(find.byKey(const ValueKey('expenses-view-selector')));
     await tester.pumpAndSettle();

@@ -1,19 +1,33 @@
+import '../../data/work/work_items_draft_input.dart';
+import '../../data/work/estimate_photos_draft_input.dart';
+import '../../data/work/estimate_confirmation.dart';
+import '../../data/work/estimate_draft_workflow.dart';
+import '../../data/work/estimate_draft_controller.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../data/prototype_operations_store.dart';
+import '../../data/storage/draft_autosave_session.dart';
+import '../../data/storage/local_record_identity.dart';
+import '../../data/work/work_persistence_session.dart';
+import '../../data/work/estimate_photo_media_workflow.dart';
+import '../../shared/native_media_picker_scope.dart';
+import '../../shared/draft_navigation_guard.dart';
+import '../../shared/editor_draft_status.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
 import '../dashboard/dashboard_models.dart';
 import 'customer_edit_screen.dart';
 import 'estimate_items_screen.dart';
-import 'estimate_models.dart';
-import 'estimate_record_extensions.dart';
 import 'estimate_site_photos_screen.dart';
 import 'work_contact_models.dart';
 import 'work_detail_header.dart';
 import 'work_models.dart';
 
 part 'estimate_editor_sections.dart';
+part 'estimate_editor_persistence.dart';
+part 'estimate_editor_confirmation.dart';
 
 class EstimateEditorScreen extends StatefulWidget {
   const EstimateEditorScreen({
@@ -21,6 +35,7 @@ class EstimateEditorScreen extends StatefulWidget {
     this.initialClient,
     this.createdByEmployeeId,
     this.initialRecord,
+    this.recoveredWorkflow,
     super.key,
   });
 
@@ -29,18 +44,49 @@ class EstimateEditorScreen extends StatefulWidget {
   final String? createdByEmployeeId;
   final WorkRecord? initialRecord;
 
+  /// Already-selected input; this editor owns closing the workflow on exit.
+  final EstimateDraftController? recoveredWorkflow;
+
   @override
   State<EstimateEditorScreen> createState() => _EstimateEditorScreenState();
 }
 
-class _EstimateEditorScreenState extends State<EstimateEditorScreen> {
-  late final String _number;
+class _EstimateEditorScreenState extends State<EstimateEditorScreen>
+    with DraftNavigationGuard {
+  WorkPersistenceSession? _work;
+  late EstimateDraftController? _workflow = widget.recoveredWorkflow;
+  DraftAutosaveSession? get _draft => _workflow?.session;
+  StreamSubscription<DraftSaveState>? _draftSubscription;
+  WorkRecord? _baseRecord;
+  int _baseStorageRevision = 0;
+  bool _initialized = false;
+  bool _draftReady = false;
+  bool _saving = false;
+  String? _saveError;
+  late String _estimateId;
+  late String _creatorId;
+  @override
+  DraftAutosaveSession? get navigationDraft => _draft;
+  @override
+  bool get blockDraftNavigation => _saving;
+  void _refresh(VoidCallback change) => setState(change);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _work = PrototypeOperationsScope.of(context).workSession;
+      unawaited(_openEstimateDraft());
+    }
+  }
+
+  late String _number;
   late final TextEditingController _title;
   late final TextEditingController _scope;
   late final TextEditingController _discount;
   late final TextEditingController _tax;
   late final TextEditingController _terms;
-  late final DateTime _createdOn;
+  late DateTime _createdOn;
   late DateTime _expiresOn;
   DateTime? _followUpOn;
   DateTime? _proposedServiceOn;
@@ -48,7 +94,9 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen> {
   var _pricing = WorkPricingModel.flatRate;
   var _template = 'Service standard';
   var _items = <WorkLineItem>[];
+  var _itemDraftInputs = <String, WorkItemsDraftInput>{};
   var _sitePhotos = <WorkSitePhoto>[];
+  EstimatePhotosDraftInput? _photoDraftInput;
 
   double get _subtotal => _items.fold(0, (sum, item) => sum + item.total);
   double get _total =>
@@ -58,6 +106,12 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen> {
   void initState() {
     super.initState();
     final existing = widget.initialRecord;
+    _baseRecord = existing;
+    _estimateId = existing?.id ?? newLocalRecordIdentity('estimate');
+    _creatorId =
+        existing?.createdByEmployeeId ??
+        widget.createdByEmployeeId ??
+        demoEmployees.first.id;
     _number =
         existing?.number ??
         'EST-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
@@ -89,6 +143,8 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen> {
 
   @override
   void dispose() {
+    unawaited(_draftSubscription?.cancel());
+    unawaited(_draft?.close().catchError((Object _) {}));
     _title.dispose();
     _scope.dispose();
     _discount.dispose();
@@ -100,149 +156,174 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen> {
   @override
   Widget build(BuildContext context) {
     final customers = PrototypeOperationsScope.of(context).customers;
-    return Scaffold(
-      key: const ValueKey('estimate-editor-screen'),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
-            final layout = AppLayoutEngine.detailWorkspaceFor(
-              constraints.maxWidth - insets.horizontal,
-              textScaler: MediaQuery.textScalerOf(context),
-            );
-            return Center(
-              child: SizedBox(
-                width: layout.columnWidth,
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(0, 10, 0, 96),
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        WorkDetailHeader(
-                          label: widget.initialRecord == null
-                              ? 'New estimate'
-                              : 'Edit estimate',
-                          selectedDay: _createdOn,
-                          onBack: () => Navigator.of(context).pop(),
-                          showDateContext: true,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          widget.initialRecord == null
-                              ? 'Create an estimate'
-                              : 'Edit estimate ${widget.initialRecord!.revision}',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Describe the proposed work, build labor and materials, then review the exact customer copy before sending it.',
-                        ),
-                        const SizedBox(height: 14),
-                        _EstimateDraftBanner(
-                          number: _number,
-                          createdOn: _createdOn,
-                        ),
-                        const SizedBox(height: 12),
-                        _EstimateIdentitySection(
-                          number: _number,
-                          title: _title,
-                          scope: _scope,
-                          customers: customers,
-                          selectedClient: _client,
-                          pricing: _pricing,
-                          onClientChanged: (value) =>
-                              setState(() => _client = value),
-                          onAddClient: _addClient,
-                          onPricingChanged: (value) =>
-                              setState(() => _pricing = value),
-                        ),
-                        const SizedBox(height: 12),
-                        _EstimateSitePhotosSection(
-                          photoCount: _sitePhotos.length,
-                          onOpen: _editSitePhotos,
-                        ),
-                        const SizedBox(height: 12),
-                        _EstimateWorkBuildingSection(
-                          laborCount: _items
-                              .where(
-                                (item) => item.type == WorkLineItemType.labor,
-                              )
-                              .length,
-                          laborTotal: _items
-                              .where(
-                                (item) => item.type == WorkLineItemType.labor,
-                              )
-                              .fold<double>(0, (sum, item) => sum + item.total),
-                          materialCount: _items
-                              .where(
-                                (item) => item.type != WorkLineItemType.labor,
-                              )
-                              .length,
-                          materialTotal: _items
-                              .where(
-                                (item) => item.type != WorkLineItemType.labor,
-                              )
-                              .fold<double>(0, (sum, item) => sum + item.total),
-                          onLabor: _editLabor,
-                          onMaterials: _editMaterials,
-                        ),
-                        const SizedBox(height: 12),
-                        _EstimateTimingSection(
-                          createdOn: _createdOn,
-                          expiresOn: _expiresOn,
-                          followUpOn: _followUpOn,
-                          proposedServiceOn: _proposedServiceOn,
-                          onExpires: () => _pickDate(
-                            _expiresOn,
-                            (value) => _expiresOn = value,
+    return guardDraftNavigation(
+      Scaffold(
+        key: const ValueKey('estimate-editor-screen'),
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final insets = AppLayoutEngine.pageInsetsFor(
+                constraints.maxWidth,
+              );
+              final layout = AppLayoutEngine.detailWorkspaceFor(
+                constraints.maxWidth - insets.horizontal,
+                textScaler: MediaQuery.textScalerOf(context),
+              );
+              return Center(
+                child: SizedBox(
+                  width: layout.columnWidth,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(0, 10, 0, 96),
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          WorkDetailHeader(
+                            label: widget.initialRecord == null
+                                ? 'New estimate'
+                                : 'Edit estimate',
+                            selectedDay: _createdOn,
+                            onBack: () => leaveDraftRoute(),
+                            showDateContext: true,
                           ),
-                          onFollowUp: () => _pickDate(
-                            _followUpOn ?? _createdOn,
-                            (value) => _followUpOn = value,
-                          ),
-                          onProposedService: () => _pickDate(
-                            _proposedServiceOn ?? _createdOn,
-                            (value) => _proposedServiceOn = value,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _EstimatePricingSection(
-                          subtotal: _subtotal,
-                          total: _total,
-                          discount: _discount,
-                          tax: _tax,
-                          template: _template,
-                          terms: _terms,
-                          onTemplate: _chooseTemplate,
-                        ),
-                      ],
-                    ),
-                  ],
+                          if (_draft != null)
+                            EditorDraftStatus(
+                              state: _draft!.state,
+                              onRetry: _draft!.retry,
+                              onDiscard: _discardEstimateDraft,
+                            ),
+                          if (_saveError != null) Text(_saveError!),
+                          if (!_draftReady && _saveError == null)
+                            const Text('Opening saved input…'),
+                          if (_draftReady) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              widget.initialRecord == null
+                                  ? 'Create an estimate'
+                                  : 'Edit estimate ${widget.initialRecord!.revision}',
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Describe the proposed work, build labor and materials, then review the exact customer copy before sending it.',
+                            ),
+                            const SizedBox(height: 14),
+                            _EstimateDraftBanner(
+                              number: _number,
+                              createdOn: _createdOn,
+                            ),
+                            const SizedBox(height: 12),
+                            _EstimateIdentitySection(
+                              number: _number,
+                              title: _title,
+                              scope: _scope,
+                              customers: customers,
+                              selectedClient: _client,
+                              pricing: _pricing,
+                              onClientChanged: (value) =>
+                                  _changeEstimateInput(() => _client = value),
+                              onAddClient: _addClient,
+                              onPricingChanged: (value) =>
+                                  _changeEstimateInput(() => _pricing = value),
+                            ),
+                            const SizedBox(height: 12),
+                            _EstimateSitePhotosSection(
+                              photoCount: _sitePhotos.length,
+                              onOpen: _editSitePhotos,
+                            ),
+                            const SizedBox(height: 12),
+                            _EstimateWorkBuildingSection(
+                              laborCount: _items
+                                  .where(
+                                    (item) =>
+                                        item.type == WorkLineItemType.labor,
+                                  )
+                                  .length,
+                              laborTotal: _items
+                                  .where(
+                                    (item) =>
+                                        item.type == WorkLineItemType.labor,
+                                  )
+                                  .fold<double>(
+                                    0,
+                                    (sum, item) => sum + item.total,
+                                  ),
+                              materialCount: _items
+                                  .where(
+                                    (item) =>
+                                        item.type != WorkLineItemType.labor,
+                                  )
+                                  .length,
+                              materialTotal: _items
+                                  .where(
+                                    (item) =>
+                                        item.type != WorkLineItemType.labor,
+                                  )
+                                  .fold<double>(
+                                    0,
+                                    (sum, item) => sum + item.total,
+                                  ),
+                              onLabor: _editLabor,
+                              onMaterials: _editMaterials,
+                            ),
+                            const SizedBox(height: 12),
+                            _EstimateTimingSection(
+                              createdOn: _createdOn,
+                              expiresOn: _expiresOn,
+                              followUpOn: _followUpOn,
+                              proposedServiceOn: _proposedServiceOn,
+                              onExpires: () => _pickDate(
+                                _expiresOn,
+                                (value) => _expiresOn = value,
+                              ),
+                              onFollowUp: () => _pickDate(
+                                _followUpOn ?? _createdOn,
+                                (value) => _followUpOn = value,
+                              ),
+                              onProposedService: () => _pickDate(
+                                _proposedServiceOn ?? _createdOn,
+                                (value) => _proposedServiceOn = value,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _EstimatePricingSection(
+                              subtotal: _subtotal,
+                              total: _total,
+                              discount: _discount,
+                              tax: _tax,
+                              template: _template,
+                              terms: _terms,
+                              onTemplate: _chooseTemplate,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(12),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: FilledButton.icon(
-              key: ValueKey(
-                widget.initialRecord == null
-                    ? 'save-estimate-draft'
-                    : 'save-estimate-changes',
-              ),
-              onPressed: _save,
-              icon: const Icon(Icons.save_outlined),
-              label: Text(
-                widget.initialRecord == null
-                    ? 'Save estimate draft'
-                    : 'Save estimate changes',
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.all(12),
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 620),
+              child: FilledButton.icon(
+                key: ValueKey(
+                  widget.initialRecord == null
+                      ? 'save-estimate-draft'
+                      : 'save-estimate-changes',
+                ),
+                onPressed: _draftReady && !_saving ? _save : null,
+                icon: const Icon(Icons.save_outlined),
+                label: Text(
+                  widget.initialRecord == null
+                      ? 'Save estimate draft'
+                      : 'Save estimate changes',
+                ),
               ),
             ),
           ),
@@ -271,12 +352,18 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen> {
           initialItems: initialItems,
           pricing: _pricing,
           category: category,
+          draftSession: _draft,
+          recoveryInput: _itemDraftInputs[category.name],
+          onDraftChanged: (input) => _changeEstimateInput(() {
+            _itemDraftInputs[category.name] = input;
+          }),
           selectedDay: _createdOn,
         ),
       ),
     );
     if (!mounted || revised == null) return;
-    setState(() {
+    _changeEstimateInput(() {
+      _itemDraftInputs.remove(category.name);
       final keepLabor = category != EstimateItemCategory.labor;
       final retained = _items.where(
         (item) => (item.type == WorkLineItemType.labor) == keepLabor,
@@ -286,15 +373,30 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen> {
   }
 
   Future<void> _editSitePhotos() async {
+    final coordinator = NativeMediaPickerScope.maybeOf(context);
+    final media = _work == null || _draft == null || coordinator == null
+        ? null
+        : _work!.photoMediaWorkflow(draft: _draft!, coordinator: coordinator);
     final photos = await Navigator.of(context).push<List<WorkSitePhoto>>(
       MaterialPageRoute(
         builder: (_) => EstimateSitePhotosScreen(
           initialDay: _createdOn,
           initialPhotos: _sitePhotos,
+          retainPhotoFile: _work == null ? null : _retainEstimatePhoto,
+          draftSession: _draft,
+          mediaWorkflow: media,
+          recoveryInput: _photoDraftInput,
+          onDraftChanged: (input) =>
+              _changeEstimateInput(() => _photoDraftInput = input),
         ),
       ),
     );
-    if (mounted && photos != null) setState(() => _sitePhotos = photos);
+    if (mounted && photos != null) {
+      _changeEstimateInput(() {
+        _sitePhotos = photos;
+        _photoDraftInput = null;
+      });
+    }
   }
 
   Future<void> _addClient() async {
@@ -305,8 +407,10 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen> {
     );
     if (!mounted || customer == null) return;
     final store = PrototypeOperationsScope.of(context);
-    store.replaceCustomers([...store.customers, customer]);
-    setState(() => _client = customer.name);
+    if (store.directorySession == null) {
+      store.replaceCustomers([...store.customers, customer]);
+    }
+    _changeEstimateInput(() => _client = customer.name);
   }
 
   Future<void> _pickDate(
@@ -319,7 +423,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen> {
       firstDate: _createdOn.subtract(const Duration(days: 365)),
       lastDate: _createdOn.add(const Duration(days: 3650)),
     );
-    if (mounted && date != null) setState(() => assign(date));
+    if (mounted && date != null) _changeEstimateInput(() => assign(date));
   }
 
   Future<void> _chooseTemplate() async {
@@ -346,87 +450,9 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen> {
         ),
       ),
     );
-    if (mounted && selected != null) setState(() => _template = selected);
-  }
-
-  void _save() {
-    final existing = widget.initialRecord;
-    final missingCustomerDetails =
-        (_client?.trim().isEmpty ?? true) ||
-        _title.text.trim().isEmpty ||
-        _scope.text.trim().isEmpty;
-    if (existing != null &&
-        existing.resolvedEstimateStage != EstimateStage.draft &&
-        missingCustomerDetails) {
-      _message(
-        'Add the customer, estimate title, and proposed work before saving changes to a customer-ready estimate.',
-      );
-      return;
+    if (mounted && selected != null) {
+      _changeEstimateInput(() => _template = selected);
     }
-    final client = _client?.trim().isNotEmpty == true
-        ? _client!.trim()
-        : 'Client not selected';
-    final title = _title.text.trim().isEmpty
-        ? 'Untitled estimate'
-        : _title.text.trim();
-    final scope = _scope.text.trim().isEmpty
-        ? 'Proposed work not entered yet.'
-        : _scope.text.trim();
-    final now = DateTime.now();
-    final dates = EstimateDates(
-      createdOn: _createdOn,
-      lastEditedOn: now,
-      sentOn: widget.initialRecord?.estimateDates?.sentOn,
-      viewedOn: widget.initialRecord?.estimateDates?.viewedOn,
-      followUpOn: _followUpOn,
-      expiresOn: _expiresOn,
-      proposedServiceOn: _proposedServiceOn,
-      decidedOn: widget.initialRecord?.estimateDates?.decidedOn,
-      convertedOn: widget.initialRecord?.estimateDates?.convertedOn,
-    );
-    if (existing != null) {
-      Navigator.of(context).pop(
-        existing.reviseEstimate(
-          title: title,
-          client: client,
-          scope: scope,
-          pricing: _pricing,
-          items: _items,
-          sitePhotos: _sitePhotos,
-          template: _template,
-          terms: _terms.text.trim(),
-          discount: _money(_discount),
-          tax: _money(_tax),
-          dates: dates,
-          changedOn: now,
-        ),
-      );
-      return;
-    }
-    Navigator.of(context).pop(
-      WorkRecord(
-        id: 'estimate-${now.microsecondsSinceEpoch}',
-        kind: WorkRecordKind.estimate,
-        number: _number,
-        title: title,
-        client: client,
-        detail: scope,
-        pricing: _pricing,
-        createdOn: _createdOn,
-        createdByEmployeeId:
-            widget.createdByEmployeeId ?? demoEmployees.first.id,
-        status: WorkRecordStatus.draft,
-        items: List.unmodifiable(_items),
-        template: _template,
-        terms: _terms.text.trim(),
-        discount: _money(_discount),
-        tax: _money(_tax),
-        total: _total,
-        estimateStage: EstimateStage.draft,
-        estimateDates: dates,
-        sitePhotos: List.unmodifiable(_sitePhotos),
-      ),
-    );
   }
 
   void _message(String text) =>

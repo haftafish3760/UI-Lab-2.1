@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/dashboard_models.dart';
 import 'package:ui_lab_2_1/src/shared/localized_date.dart';
+import 'package:ui_lab_2_1/src/shared/recorded_entries_section.dart';
 
 Future<void> _pumpAt(WidgetTester tester, Size size) async {
   tester.view.physicalSize = size;
@@ -47,6 +48,13 @@ void main() {
     );
     expect(find.text('Needs attention'), findsOneWidget);
     expect(find.text("Today's entries"), findsOneWidget);
+    expect(
+      find.ancestor(
+        of: find.text("Today's entries"),
+        matching: find.byType(RecordedEntriesSection),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Expense categories'), findsNothing);
     expect(find.text('Choose date'), findsNothing);
     expect(find.text('Reports and recap'), findsNothing);

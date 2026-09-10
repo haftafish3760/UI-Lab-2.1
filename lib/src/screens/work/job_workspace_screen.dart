@@ -1,4 +1,9 @@
+import 'dart:async';
+import '../../data/work/work_items_draft_input.dart';
+import '../../shared/editor_input_lock.dart';
 import 'package:flutter/material.dart';
+import '../../data/storage/draft_autosave_session.dart';
+import '../../data/work/job_materials_draft_workflow.dart';
 import 'package:flutter/services.dart';
 
 import '../../data/prototype_operations_store.dart';
@@ -11,6 +16,9 @@ import '../expenses/expense_models.dart';
 import '../expenses/expense_permissions.dart';
 import '../expenses/receipt_intake_screen.dart';
 import 'job_workspace_models.dart';
+import 'job_notes_editor_dialog.dart';
+import 'job_assignment_editor_sheet.dart';
+import 'job_schedule_editor_sheet.dart';
 import 'work_contact_models.dart';
 import 'work_item_source_picker.dart';
 import 'work_items_editor.dart';
@@ -21,6 +29,7 @@ part 'job_workspace_sections.dart';
 part 'job_workspace_action_sections.dart';
 part 'job_customer_contact_sheet.dart';
 part 'job_workspace_interactions.dart';
+part 'job_materials_draft_editor.dart';
 part 'job_actions_screen.dart';
 
 class JobWorkspaceScreen extends StatefulWidget {
@@ -28,10 +37,12 @@ class JobWorkspaceScreen extends StatefulWidget {
     super.key,
     required this.workRecord,
     this.onWorkRecordUpdated,
+    this.recoveredMaterialsWorkflow,
     this.permissions = const JobWorkspacePermissions.development(),
   });
 
   final WorkRecord workRecord;
+  final JobMaterialsDraftController? recoveredMaterialsWorkflow;
   final ValueChanged<WorkRecord>? onWorkRecordUpdated;
   final JobWorkspacePermissions permissions;
 
@@ -43,6 +54,8 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
   late ActiveJobRecord _job;
   late WorkRecord _sourceRecord;
   var _initialized = false;
+  bool _committing = false;
+  int _sourceStorageRevision = 0;
 
   DateTime get _jobDay =>
       DateUtils.dateOnly(_sourceRecord.scheduledStart ?? DateTime.now());
@@ -58,6 +71,12 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
     super.didChangeDependencies();
     if (_initialized) return;
     final store = PrototypeOperationsScope.maybeOf(context);
+    final work = store?.workSession;
+    final current = work?.records
+        .where((record) => record.id == _sourceRecord.id)
+        .firstOrNull;
+    if (current != null) _sourceRecord = current;
+    _sourceStorageRevision = work?.storageRevisionFor(_sourceRecord.id) ?? 0;
     final customer = _customerFor(store?.customers ?? const []);
     final linkedExpenses = store == null
         ? const <ExpenseRecord>[]
@@ -74,68 +93,91 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
       linkedExpenses: linkedExpenses,
     );
     _initialized = true;
+    if (widget.recoveredMaterialsWorkflow != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(_editJobItems(selected: widget.recoveredMaterialsWorkflow));
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(
+      widget.recoveredMaterialsWorkflow?.session.close().catchError(
+        (Object _) {},
+      ),
+    );
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final scope = OperationalScope.of(context);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
-        final available = constraints.maxWidth - insets.horizontal;
-        final layout = AppLayoutEngine.detailWorkspaceFor(
-          available,
-          textScaler: MediaQuery.textScalerOf(context),
-        );
-        final compact = layout.columns == 1;
-        return Scaffold(
-          key: ValueKey('job-workspace-${_sourceRecord.id}'),
-          floatingActionButton: compact && _hasPhoneActions
-              ? FloatingActionButton.extended(
-                  key: const ValueKey('job-actions-fab'),
-                  onPressed: _openJobActions,
-                  icon: const Icon(Icons.add_task_rounded),
-                  label: const Text('Job actions'),
-                )
-              : null,
-          body: ColoredBox(
-            color: colors.surfaceContainerLowest,
-            child: SingleChildScrollView(
-              padding: insets.copyWith(top: 12, bottom: 32),
-              child: Center(
-                child: SizedBox(
-                  width: layout.workspaceWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      WorkScopeHeader(
-                        view: scope.view,
-                        selectedDay: _jobDay,
-                        selectedEmployeeId: scope.selectedEmployeeId,
-                        workspaceLabel: 'Job details',
-                        showBackButton: true,
-                        showDateDescription: false,
-                        showEmployeeStrip: false,
-                        onBack: () => Navigator.maybePop(context),
-                        onViewChanged: scope.setView,
-                        onEmployeeChanged: scope.selectEmployee,
+    return PopScope(
+      canPop: !_committing,
+      child: EditorInputLock(
+        locked: _committing,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
+            final available = constraints.maxWidth - insets.horizontal;
+            final layout = AppLayoutEngine.detailWorkspaceFor(
+              available,
+              textScaler: MediaQuery.textScalerOf(context),
+            );
+            final compact = layout.columns == 1;
+            return Scaffold(
+              key: ValueKey('job-workspace-${_sourceRecord.id}'),
+              floatingActionButton: compact && _hasPhoneActions
+                  ? FloatingActionButton.extended(
+                      key: const ValueKey('job-actions-fab'),
+                      onPressed: _openJobActions,
+                      icon: const Icon(Icons.add_task_rounded),
+                      label: const Text('Job actions'),
+                    )
+                  : null,
+              body: ColoredBox(
+                color: colors.surfaceContainerLowest,
+                child: SingleChildScrollView(
+                  padding: insets.copyWith(top: 12, bottom: 32),
+                  child: Center(
+                    child: SizedBox(
+                      width: layout.workspaceWidth,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          WorkScopeHeader(
+                            view: scope.view,
+                            selectedDay: _jobDay,
+                            selectedEmployeeId: scope.selectedEmployeeId,
+                            workspaceLabel: 'Job details',
+                            showBackButton: true,
+                            showDateDescription: false,
+                            showEmployeeStrip: false,
+                            onBack: () => Navigator.maybePop(context),
+                            onViewChanged: scope.setView,
+                            onEmployeeChanged: scope.selectEmployee,
+                          ),
+                          const SizedBox(height: 12),
+                          _JobIdentity(job: _job),
+                          SizedBox(height: layout.gap),
+                          if (layout.columns == 1)
+                            _singleColumn(layout.gap)
+                          else
+                            _twoColumns(layout),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      _JobIdentity(job: _job),
-                      SizedBox(height: layout.gap),
-                      if (layout.columns == 1)
-                        _singleColumn(layout.gap)
-                      else
-                        _twoColumns(layout),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -236,11 +278,71 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
     ],
   );
 
-  void _replaceJob(ActiveJobRecord job) => setState(() => _job = job);
+  void _adoptCommittedJob(WorkRecord record) {
+    final store = PrototypeOperationsScope.of(context);
+    setState(() {
+      _sourceRecord = record;
+      _sourceStorageRevision = store.workSession!.storageRevisionFor(record.id);
+      _job = activeJobForRecord(
+        record,
+        scheduledTime: _scheduledTimeLabel(context, record),
+        customer: _customerFor(store.customers),
+        linkedExpenses: store.expenses
+            .where((expense) => record.linkedExpenseIds.contains(expense.id))
+            .toList(),
+      );
+    });
+  }
 
-  void _persistSource(WorkRecord record) {
-    _sourceRecord = record;
-    widget.onWorkRecordUpdated?.call(record);
+  void _setJobBusy(bool value) => setState(() => _committing = value);
+  Future<bool> _commitJobChange(
+    ActiveJobRecord job,
+    WorkRecord record, {
+    int? expectedStorageRevision,
+  }) async {
+    if (_committing) return false;
+    final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
+    setState(() => _committing = true);
+    try {
+      if (work != null) {
+        if (!work.records.any((current) => current.id == record.id)) {
+          throw StateError('The saved job is unavailable.');
+        }
+        final saved = await work.save(
+          records: [record],
+          expectedStorageRevisions: {
+            record.id: expectedStorageRevision ?? _sourceStorageRevision,
+          },
+        );
+        if (!saved) {
+          throw StateError(work.failureMessage ?? 'The job was not saved.');
+        }
+        _sourceStorageRevision = work.storageRevisionFor(record.id);
+      } else {
+        widget.onWorkRecordUpdated?.call(record);
+      }
+      if (mounted) {
+        setState(() {
+          _sourceRecord = record;
+          _job = job;
+        });
+      }
+      return true;
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              work?.failureMessage ??
+                  'The job change was not saved. Please retry.',
+            ),
+          ),
+        );
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => _committing = false);
+    }
   }
 
   WorkCustomerProfile? _customerFor(List<WorkCustomerProfile> customers) {

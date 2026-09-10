@@ -135,8 +135,14 @@ class InvoiceActionsScreen extends StatelessWidget {
       ),
     );
     if (!context.mounted || updated == null) return;
-    PrototypeOperationsScope.of(context).updateWorkRecord(updated);
-    Navigator.of(context).pop();
+    final store = PrototypeOperationsScope.of(context);
+    final saved = await store.updateWorkRecord(updated);
+    if (!context.mounted) return;
+    if (saved) {
+      Navigator.of(context).pop();
+    } else {
+      _showSaveFailure(context, store);
+    }
   }
 
   Future<void> _preview(BuildContext context, WorkRecord current) async {
@@ -179,17 +185,24 @@ class InvoiceActionsScreen extends StatelessWidget {
           current.dueOn ??
           DateUtils.dateOnly(DateTime.now()).add(const Duration(days: 14)),
     );
-    store.updateWorkRecord(issued);
-    store.addFinancialEntry(
-      PrototypeFinancialEntry(
-        id: 'ledger-issued-${current.id}',
-        kind: PrototypeFinancialKind.invoiceIssued,
-        occurredOn: issued.issuedOn!,
-        amountCents: (issued.total * 100).round(),
-        sourceId: issued.number,
-      ),
+    final saved = await store.saveWorkAndFinancial(
+      records: [issued],
+      entries: [
+        PrototypeFinancialEntry(
+          id: 'ledger-issued-${current.id}',
+          kind: PrototypeFinancialKind.invoiceIssued,
+          occurredOn: issued.issuedOn!,
+          amountCents: (issued.total * 100).round(),
+          sourceId: issued.number,
+        ),
+      ],
     );
-    if (context.mounted) Navigator.of(context).pop();
+    if (!context.mounted) return;
+    if (saved) {
+      Navigator.of(context).pop();
+    } else {
+      _showSaveFailure(context, store);
+    }
   }
 
   Future<void> _recordPayment(BuildContext context, WorkRecord current) async {
@@ -205,18 +218,24 @@ class InvoiceActionsScreen extends StatelessWidget {
     );
     if (!context.mounted || payment == null) return;
     final store = PrototypeOperationsScope.of(context);
-    store.addFinancialEntry(payment);
-    final paidCents = store.financialEntries
-        .where(
-          (entry) =>
-              entry.kind == PrototypeFinancialKind.paymentReceived &&
-              entry.sourceId == current.number,
-        )
-        .fold(0, (sum, entry) => sum + entry.amountCents);
-    if (paidCents >= (current.total * 100).round()) {
-      store.updateWorkRecord(current.copyWith(status: WorkRecordStatus.paid));
+    final saved = await store.recordInvoicePayment(current, payment);
+    if (!context.mounted) return;
+    if (saved) {
+      Navigator.of(context).pop();
+    } else {
+      _showSaveFailure(context, store);
     }
-    if (context.mounted) Navigator.of(context).pop();
+  }
+
+  void _showSaveFailure(BuildContext context, PrototypeOperationsStore store) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          store.workSession?.failureMessage ??
+              'The changes were not saved. Please try again.',
+        ),
+      ),
+    );
   }
 }
 

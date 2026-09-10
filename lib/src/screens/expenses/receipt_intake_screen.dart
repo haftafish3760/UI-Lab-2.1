@@ -1,3 +1,4 @@
+import '../../shared/editor_input_lock.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,9 @@ import '../../data/receipts/receipt_draft_record.dart' as draft_data;
 import '../../data/receipts/receipt_draft_repository.dart' as draft_data;
 import '../../data/receipts/receipt_draft_submission_coordinator.dart';
 import '../../data/receipts/receipt_draft_ui_controller.dart';
+import '../../data/receipts/receipt_submission_session.dart';
+import '../../data/receipts/receipt_media_session.dart';
+import '../../data/storage/local_media_picker_request.dart';
 import '../../shared/localized_date.dart';
 import '../../shared/operational_scope.dart';
 import '../../shared/section_card.dart';
@@ -17,12 +21,13 @@ import 'expense_editor_screen.dart';
 import 'expense_models.dart';
 import 'expense_permission_denied.dart';
 import 'expense_permissions.dart';
-import 'expense_save_feedback.dart';
 import 'receipt_evidence_review_screen.dart';
 import 'receipt_intake_settings_screen.dart';
 import 'receipt_source_picker.dart';
 
 part 'receipt_intake_widgets.dart';
+part 'receipt_intake_confirmation.dart';
+part 'receipt_intake_media.dart';
 
 class ReceiptIntakeScreen extends StatefulWidget {
   const ReceiptIntakeScreen({
@@ -53,8 +58,11 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
   var _savingDraft = false;
   var _draftLoaded = false;
   String? _activeDraftId;
+  int? _evidenceBaseRevision;
   String? _draftFailure;
-  var _preferences = const ReceiptIntakeDisplayPreferences();
+  var _fixturePreferences = const ReceiptIntakeDisplayPreferences();
+  ReceiptIntakeDisplayPreferences get _preferences =>
+      readReceiptIntakeDisplayPreferences(context, _fixturePreferences);
   ExpenseRecord? _reviewDraft;
 
   @override
@@ -82,6 +90,7 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
       return;
     }
     _activeDraftId = stored.draftId;
+    _evidenceBaseRevision = stored.lifecycle.revision;
     _evidence
       ..clear()
       ..addAll(stored.activeEvidence.map(_selectionFromStored));
@@ -90,6 +99,16 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final media = ReceiptSubmissionScope.maybeOf(context)?.media;
+    return media == null
+        ? _buildReceipt(context)
+        : ListenableBuilder(
+            listenable: media,
+            builder: (context, _) => _buildReceipt(context),
+          );
+  }
+
+  Widget _buildReceipt(BuildContext context) {
     if (!widget.permissions.canView ||
         !widget.permissions.canViewAmounts ||
         !widget.permissions.canAttachReceipt) {
@@ -116,17 +135,21 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
               available.toDouble(),
               textScaler: MediaQuery.textScalerOf(context),
             );
-            final source = _ReceiptSourceCard(
-              evidence: _evidence,
-              openingPicker:
-                  _openingPicker || _savingDraft || loadingExistingDraft,
-              showEvidenceReminders: _preferences.showEvidenceReminders,
-              onCapture: () => _pick(_picker.capturePhoto),
-              onChoosePhotos: () => _pick(_picker.choosePhotos),
-              onChooseFiles: () => _pick(_picker.chooseFiles),
-              onManualEntry: () => _openReceiptEditor(imageCount: 0),
-              onReview: _openEvidenceReview,
-              onRemove: _removeEvidence,
+            final media = ReceiptSubmissionScope.maybeOf(context)?.media;
+            final source = EditorInputLock(
+              locked: _hasPendingMedia(media),
+              child: _ReceiptSourceCard(
+                evidence: _evidence,
+                openingPicker:
+                    _openingPicker || _savingDraft || loadingExistingDraft,
+                showEvidenceReminders: _preferences.showEvidenceReminders,
+                onCapture: () => _pickMedia(MediaPickerSource.camera),
+                onChoosePhotos: () => _pickMedia(MediaPickerSource.library),
+                onChooseFiles: () => _pickMedia(MediaPickerSource.files),
+                onManualEntry: () => _openReceiptEditor(imageCount: 0),
+                onReview: _openEvidenceReview,
+                onRemove: _removeEvidence,
+              ),
             );
             return ListView(
               padding: insets.copyWith(top: 10, bottom: 32),
@@ -180,6 +203,7 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
                           ),
                           const SizedBox(height: 10),
                         ],
+                        if (media != null) _mediaRecoveryNotice(media),
                         if (layout.columns == 1)
                           Column(
                             children: [
@@ -233,44 +257,19 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
             builder: (_) => ReceiptIntakeSettingsScreen(initial: _preferences),
           ),
         );
-    if (mounted && result != null) setState(() => _preferences = result);
-  }
-
-  Future<void> _pick(
-    Future<List<ReceiptEvidenceSelection>> Function() choose,
-  ) async {
-    if (_openingPicker) return;
-    setState(() => _openingPicker = true);
-    try {
-      final selected = await choose();
-      if (!mounted || selected.isEmpty) return;
-      setState(() {
-        for (final item in selected) {
-          if (_evidence.every((current) => current.path != item.path)) {
-            _evidence.add(item);
-          }
-        }
-      });
-      await _persistDraft();
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ReceiptSourcePicker.friendlyError(error))),
-      );
-    } finally {
-      if (mounted) setState(() => _openingPicker = false);
-    }
+    if (mounted && result != null) setState(() => _fixturePreferences = result);
   }
 
   Future<void> _openReceiptEditor({
     required int imageCount,
     bool persistFirst = true,
+    draft_data.StoredReceiptDraft? sourceReceipt,
   }) async {
     if (persistFirst && !await _persistDraft()) return;
     if (!mounted) return;
-    final activeDraft = ReceiptDraftUiScope.maybeOf(
-      context,
-    )?.recordById(_activeDraftId ?? '');
+    final activeDraft =
+        sourceReceipt ??
+        ReceiptDraftUiScope.maybeOf(context)?.recordById(_activeDraftId ?? '');
     final record = await Navigator.of(context).push<ExpenseRecord>(
       MaterialPageRoute(
         builder: (_) => ExpenseEditorScreen(
@@ -282,51 +281,18 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
           initialJobId: activeDraft?.linkedJobId ?? widget.linkedJobId,
           initialJobLabel: activeDraft?.linkedJobLabel ?? widget.linkedJobLabel,
           existing: _reviewDraft,
+          receiptDraftId: activeDraft?.draftId,
           permissions: widget.permissions,
           purpose: ExpenseEditorPurpose.receiptReview,
+          onConfirm: (record) => _confirmReceiptRecord(
+            record,
+            expectedReceiptRevision: activeDraft?.lifecycle.revision,
+          ),
         ),
       ),
     );
     if (!mounted || record == null) return;
-    _reviewDraft = record;
-    final draftController = ReceiptDraftUiScope.maybeOf(context);
-    final expenseController = ExpenseUiScope.maybeOf(context);
-    final draftId = _activeDraftId;
-    if (draftController != null && draftId != null) {
-      if (expenseController == null) {
-        _showDraftMessage(
-          'Expense storage is unavailable. The receipt draft remains open.',
-        );
-        return;
-      }
-      final result =
-          await ReceiptDraftSubmissionCoordinator(
-            expenses: expenseController,
-            receiptDrafts: draftController,
-          ).submit(
-            draftId: draftId,
-            reviewedRecord: record,
-            paidByEmployeeId:
-                record.paidByEmployeeId ??
-                OperationalScope.of(context).selectedEmployeeId ??
-                'alex',
-            occurredAtUtc: DateTime.now().toUtc(),
-          );
-      if (!mounted) return;
-      if (!result.succeeded) {
-        _showDraftMessage(result.message ?? 'The Expense was not saved.');
-        return;
-      }
-      Navigator.pop(context, result.expense);
-      return;
-    }
-    final saved = await PrototypeOperationsScope.of(context).addExpense(record);
-    if (!mounted) return;
-    if (saved == null) {
-      await showExpenseSaveFailure(context);
-      return;
-    }
-    Navigator.pop(context, saved);
+    Navigator.pop(context, record);
   }
 
   Future<void> _openEvidenceReview(int initialIndex) async {
@@ -338,20 +304,28 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
               evidence: List.unmodifiable(_evidence),
               permissions: widget.permissions,
               initialIndex: initialIndex,
+              receiptDraftId: _activeDraftId,
+              receiptRevision: _evidenceBaseRevision,
             ),
           ),
         );
     if (!mounted || result == null) return;
+    final committed = result.committedReceipt;
     setState(() {
+      if (committed != null) {
+        _evidenceBaseRevision = committed.lifecycle.revision;
+      }
       _evidence
         ..clear()
         ..addAll(result.orderedEvidence);
     });
-    if (!await _persistDraft() || !mounted) return;
+    if (committed == null && !await _persistDraft()) return;
+    if (!mounted) return;
     if (result.continueToDetails) {
       await _openReceiptEditor(
         imageCount: _evidence.length,
         persistFirst: false,
+        sourceReceipt: committed,
       );
     }
   }
@@ -374,10 +348,17 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
       final current = requestedId == null
           ? null
           : controller.recordById(requestedId);
-      if (widget.draftId != null && current == null) {
+      if (requestedId != null && current == null) {
         _showDraftMessage(
           controller.failure?.message ??
               'That receipt draft is no longer available.',
+        );
+        return false;
+      }
+      if (current != null &&
+          _evidenceBaseRevision != current.lifecycle.revision) {
+        _showDraftMessage(
+          'That receipt changed after this review started. Your choices have not been applied; reload and review the receipt.',
         );
         return false;
       }
@@ -404,7 +385,20 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
       ];
       final occurredAtUtc = DateTime.now().toUtc();
       final title = current?.title ?? widget.draftTitle ?? 'Receipt draft';
-      final stored = current == null
+      final currentIds = current?.activeEvidence
+          .map((item) => item.evidenceId)
+          .toList();
+      final unchanged =
+          currentIds != null &&
+          imports.isEmpty &&
+          retainedIds.length == currentIds.length &&
+          List.generate(
+            retainedIds.length,
+            (index) => retainedIds[index] == currentIds[index],
+          ).every((same) => same);
+      final stored = unchanged
+          ? current
+          : current == null
           ? await controller.create(
               draftId: _newDraftId(occurredAtUtc),
               title: title,
@@ -416,6 +410,7 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
             )
           : await controller.update(
               draftId: current.draftId,
+              expectedRevision: _evidenceBaseRevision,
               title: title,
               expenseDate: current.expenseDate,
               retainedEvidenceIds: retainedIds,
@@ -433,6 +428,7 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
       if (!mounted) return false;
       setState(() {
         _activeDraftId = stored.draftId;
+        _evidenceBaseRevision = stored.lifecycle.revision;
         _draftLoaded = true;
         _evidence
           ..clear()
@@ -442,6 +438,10 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
     } finally {
       if (mounted) setState(() => _savingDraft = false);
     }
+  }
+
+  void _updateMedia(VoidCallback change) {
+    if (mounted) setState(change);
   }
 
   void _showDraftMessage(String message) {

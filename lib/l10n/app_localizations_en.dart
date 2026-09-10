@@ -9,10 +9,29 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get selectVehicleLabel => 'Select vehicle';
+
+  @override
   String get appTitle => 'Maintainiac UI Lab 2.1';
 
   @override
   String get navDashboard => 'Dashboard';
+
+  @override
+  String get dashboardOdometerLabel => 'Odometer';
+
+  @override
+  String get dashboardStartWorkday => 'Start workday';
+
+  @override
+  String get dashboardPaymentsLabel => 'Payments';
+
+  @override
+  String get dashboardMilesLabel => 'Miles';
+
+  @override
+  String get dashboardMileageUnavailable =>
+      'Business mileage totals are not connected in this UI Lab preview yet. No zero total has been assumed.';
 
   @override
   String get navDashboardCompact => 'Dashboard';
@@ -124,6 +143,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get nativeReminderBody =>
       'Open Maintainiac to review a scheduled reminder.';
+
+  @override
+  String get deviceRemindersUnavailableTitle => 'Device reminders unavailable';
+
+  @override
+  String get deviceRemindersRetry => 'Retry device reminders';
 
   @override
   String get deviceRemindersOffTitle => 'Device reminders are off';

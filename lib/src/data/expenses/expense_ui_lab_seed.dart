@@ -1,4 +1,4 @@
-import '../../screens/expenses/expense_models.dart';
+import 'expense_workflow_models.dart';
 import 'expense_record_adapter.dart';
 import 'expense_repository.dart';
 import 'expense_ui_lab_policy.dart';

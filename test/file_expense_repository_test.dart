@@ -310,6 +310,7 @@ void main() {
       );
 
       expect(stored.receiptId, isNull);
+      expect(stored.receiptImageCount, 0);
     },
   );
 

@@ -9,6 +9,11 @@
 # packages, and plugins designed to encourage good coding practices.
 analyzer:
   exclude:
+    # Downloaded CLI dependencies contain standalone server templates.
+    - '**/node_modules/**'
+    # Upstream standalone example and Pigeon generator have separate dev dependencies.
+    - third_party/image_picker_android/example/**
+    - third_party/image_picker_android/pigeons/**
     - build/**
     - android/**
     - ios/**

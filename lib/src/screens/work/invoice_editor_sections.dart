@@ -98,6 +98,14 @@ class _InvoiceIdentitySection extends StatelessWidget {
           isExpanded: true,
           decoration: const InputDecoration(labelText: 'Customer'),
           items: [
+            // Preserve a recovered name even if its customer directory entry
+            // is currently unavailable; recovery must not invalidate raw input.
+            if (selectedClient != null &&
+                !customers.any((customer) => customer.name == selectedClient))
+              DropdownMenuItem(
+                value: selectedClient!,
+                child: Text(selectedClient!),
+              ),
             for (final customer in customers)
               DropdownMenuItem(
                 value: customer.name,

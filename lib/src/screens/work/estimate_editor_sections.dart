@@ -194,6 +194,12 @@ class _EstimateIdentitySection extends StatelessWidget {
               helperMaxLines: 4,
             ),
             items: [
+              if (selectedClient != null &&
+                  !customers.any((customer) => customer.name == selectedClient))
+                DropdownMenuItem<String>(
+                  value: selectedClient,
+                  child: Text(selectedClient!),
+                ),
               for (final customer in customers)
                 DropdownMenuItem<String>(
                   value: customer.name,
@@ -214,6 +220,7 @@ class _EstimateIdentitySection extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         TextField(
+          key: const ValueKey('estimate-title'),
           controller: title,
           decoration: const InputDecoration(
             labelText: 'Estimate title',

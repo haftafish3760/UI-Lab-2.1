@@ -41,7 +41,9 @@ class _JobListWorkspaceScreenState extends State<JobListWorkspaceScreen> {
   final _search = TextEditingController();
   var _showAllDateJobs = false;
   var _showAllActiveJobs = false;
-  var _preferences = const WorkRecordDisplayPreferences();
+  var _fixturePreferences = const WorkRecordDisplayPreferences();
+  WorkRecordDisplayPreferences get _preferences =>
+      readWorkRecordDisplayPreferences(context, 'jobs', _fixturePreferences);
 
   PrototypeOperationsStore get _store => PrototypeOperationsScope.of(context);
   AppViewMode get _view => OperationalScope.of(context).view;
@@ -430,12 +432,15 @@ class _JobListWorkspaceScreenState extends State<JobListWorkspaceScreen> {
         .push<WorkRecordDisplayPreferences>(
           MaterialPageRoute(
             builder: (_) => WorkRecordSettingsScreen(
+              workspaceId: 'jobs',
               workspaceLabel: 'Jobs',
               initial: _preferences,
             ),
           ),
         );
-    if (mounted && updated != null) setState(() => _preferences = updated);
+    if (mounted && updated != null) {
+      setState(() => _fixturePreferences = updated);
+    }
   }
 
   Future<void> _openJob(WorkRecord record) async {

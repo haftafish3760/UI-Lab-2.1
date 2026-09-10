@@ -1,12 +1,17 @@
 import 'dart:math' as math;
+import '../../data/workday/workday_persistence_session.dart';
+import '../../data/workday/workday_read_models.dart';
+import '../../data/workday/stored_workday_record.dart';
 
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations_extension.dart';
 
 import '../../data/operational_attention.dart';
 import '../../data/prototype_operations_store.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/app_view_mode.dart';
-import '../../shared/operational_attention_panel.dart';
+import '../../shared/app_preferences.dart';
+import '../../theme/app_theme.dart';
 import '../../shared/operational_scope.dart';
 import '../../shared/operations_workspace.dart';
 import 'active_vehicle_header.dart';
@@ -20,7 +25,11 @@ import 'dashboard_day_screen.dart';
 import 'dashboard_models.dart';
 import 'dashboard_record_navigation.dart';
 import 'dashboard_settings_screen.dart';
+import 'dashboard_summary_strip.dart';
+import '../work/payments_screen.dart';
+import '../expenses/expenses_screen.dart';
 import 'dashboard_workday_models.dart';
+import 'dashboard_end_workday_dialog.dart';
 import 'employee_status_strip.dart';
 import '../expenses/expense_editor_screen.dart';
 import '../expenses/expense_detail_screen.dart';
@@ -43,9 +52,13 @@ import 'start_workday_screen.dart';
 import 'workday_actions_screen.dart';
 
 part 'dashboard_screen_actions.dart';
+part 'dashboard_plan_actions.dart';
+part 'dashboard_manual_entry_actions.dart';
+part 'dashboard_body_layout.dart';
 part 'dashboard_attention_actions.dart';
 part 'dashboard_projection_actions.dart';
-part 'dashboard_end_workday_dialog.dart';
+
+part 'dashboard_workday_persistence.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -58,10 +71,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const _permissions = DashboardPermissions.development();
 
   var _selectedDate = dashboardToday;
-  DashboardWorkdaySession? _workday;
-  var _enabledWorkdayActions = Set<DashboardWorkdayAction>.of(
+  DashboardWorkdaySession? _fixtureWorkday;
+  var _fixtureEnabledWorkdayActions = Set<DashboardWorkdayAction>.of(
     defaultDashboardWorkdayActions,
   );
+
+  Set<DashboardWorkdayAction> get _enabledWorkdayActions {
+    final names = AppPreferencesScope.maybeOf(context)?.dashboardActions;
+    return names == null
+        ? _fixtureEnabledWorkdayActions
+        : names.map(DashboardWorkdayAction.values.byName).toSet();
+  }
+
+  set _enabledWorkdayActions(Set<DashboardWorkdayAction> actions) =>
+      _fixtureEnabledWorkdayActions = actions;
 
   DashboardDayData _dayDataFor(DateTime day, EmployeeStatus? employee) {
     final scope = OperationalScope.of(context);
@@ -91,10 +114,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final employee = _employeeFor(scope.selectedEmployeeId);
     final attentionQuery = _dashboardAttentionQuery(scope);
     final attentionItems = store.attentionCenter.itemsFor(attentionQuery);
-    final showAttention = store.attentionCenter.shouldShow(
-      attentionQuery,
-      attentionItems,
-    );
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: DashboardBackdrop(
@@ -117,11 +136,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onSettings: _openDashboardSettings,
           onReturnToToday: () => setState(() => _selectedDate = dashboardToday),
           attentionItems: attentionItems,
-          showAttention: showAttention,
-          onOpenAttention: _openAttentionItem,
           onOpenAllAttention: () => _openAttentionList(attentionQuery),
-          onDismissAttention: () =>
-              store.attentionCenter.dismiss(attentionQuery, attentionItems),
           onOpenPlan: _openPlan,
           onPlanAction: _handlePlanAction,
           onOpenEntry: _openEntry,
@@ -202,254 +217,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       MaterialPageRoute<void>(
         builder: (_) => DashboardDayScreen(initialDay: day),
       ),
-    );
-  }
-}
-
-class _DashboardBody extends StatelessWidget {
-  const _DashboardBody({
-    required this.view,
-    required this.selectedDate,
-    required this.employee,
-    required this.data,
-    required this.showOdometer,
-    required this.onViewChanged,
-    required this.onDateSelected,
-    required this.onEmployeeSelected,
-    required this.onCompanyOverview,
-    required this.workday,
-    required this.onStartWorkday,
-    required this.onSettings,
-    required this.onReturnToToday,
-    required this.attentionItems,
-    required this.showAttention,
-    required this.onOpenAttention,
-    required this.onOpenAllAttention,
-    required this.onDismissAttention,
-    required this.onOpenPlan,
-    required this.onPlanAction,
-    required this.onOpenEntry,
-    required this.entryCountForDay,
-    required this.needsApprovalForDay,
-  });
-
-  final AppViewMode view;
-  final DateTime selectedDate;
-  final EmployeeStatus? employee;
-  final DashboardDayData data;
-  final bool showOdometer;
-  final ValueChanged<AppViewMode> onViewChanged;
-  final ValueChanged<DateTime> onDateSelected;
-  final ValueChanged<EmployeeStatus> onEmployeeSelected;
-  final VoidCallback onCompanyOverview;
-  final DashboardWorkdaySession? workday;
-  final VoidCallback onStartWorkday;
-  final VoidCallback onSettings;
-  final VoidCallback onReturnToToday;
-  final List<OperationalAttentionItem> attentionItems;
-  final bool showAttention;
-  final ValueChanged<OperationalAttentionItem> onOpenAttention;
-  final VoidCallback onOpenAllAttention;
-  final VoidCallback onDismissAttention;
-  final ValueChanged<PlanItem> onOpenPlan;
-  final void Function(PlanItem item, PlanAction action) onPlanAction;
-  final ValueChanged<DayEntry> onOpenEntry;
-  final int Function(DateTime day) entryCountForDay;
-  final bool Function(DateTime day) needsApprovalForDay;
-
-  @override
-  Widget build(BuildContext context) {
-    final scaler = MediaQuery.textScalerOf(context);
-    return LayoutBuilder(
-      builder: (context, bodyConstraints) {
-        final pageInsets = AppLayoutEngine.pageInsetsFor(
-          bodyConstraints.maxWidth,
-        );
-        final availableWidth = math.max(
-          0,
-          bodyConstraints.maxWidth - pageInsets.horizontal,
-        );
-        final layout = AppLayoutEngine.dashboardOperationsFor(
-          availableWidth.toDouble(),
-          textScaler: scaler,
-        );
-        final type = AppLayoutEngine.typographyFor(layout.workspaceWidth);
-        final attentionPanel = OperationalAttentionPanel(
-          key: const ValueKey('dashboard-needs-attention'),
-          items: attentionItems,
-          rowKeyFor: (item) => ValueKey('dashboard-attention-${item.sourceId}'),
-          onOpen: onOpenAttention,
-          onOpenAll: onOpenAllAttention,
-          onDismiss: onDismissAttention,
-        );
-        final employeeStrip = view == AppViewMode.admin
-            ? EmployeeStatusStrip(
-                employees: demoEmployees,
-                selectedId: employee?.id,
-                onSelected: onEmployeeSelected,
-              )
-            : null;
-        return CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: pageInsets.copyWith(top: 12, bottom: 92),
-              sliver: SliverToBoxAdapter(
-                child: SizedBox(
-                  width: availableWidth.toDouble(),
-                  child: OperationsWorkspaceFrame(
-                    layout: layout,
-                    primaryContent: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ActiveVehicleHeader(
-                          view: view,
-                          onViewChanged: onViewChanged,
-                          activeEmployee: employee,
-                          onEmployeeSelected: onEmployeeSelected,
-                          onCompanyOverview: onCompanyOverview,
-                          onStartWorkday: onStartWorkday,
-                          onSettings: onSettings,
-                          showPrimaryAction:
-                              view == AppViewMode.technician && workday == null,
-                        ),
-                        const SizedBox(height: 14),
-                        Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: SizedBox(
-                            width: layout.laneWidth,
-                            child: DashboardDateHeading(
-                              type: type,
-                              date: selectedDate,
-                              onReturnToToday: onReturnToToday,
-                            ),
-                          ),
-                        ),
-                        if (employeeStrip != null) ...[
-                          const SizedBox(height: 12),
-                          employeeStrip,
-                        ],
-                        const SizedBox(height: 12),
-                        if (workday != null) ...[
-                          ActiveWorkdayOverview(session: workday!),
-                          const SizedBox(height: 12),
-                        ],
-                        _DashboardLanes(
-                          layout: layout,
-                          date: selectedDate,
-                          data: data,
-                          showOdometer: showOdometer,
-                          onOpenPlan: onOpenPlan,
-                          onPlanAction: onPlanAction,
-                          onOpenEntry: onOpenEntry,
-                          attention: showAttention ? attentionPanel : null,
-                          companyOverview:
-                              view == AppViewMode.admin && employee == null,
-                          calendar: DashboardCalendar(
-                            compact: layout.columns == 1,
-                            maximumWidth: layout.laneWidth,
-                            selectedDay: selectedDate,
-                            onDaySelected: onDateSelected,
-                            entryCountForDay: entryCountForDay,
-                            needsApprovalForDay: needsApprovalForDay,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _DashboardLanes extends StatelessWidget {
-  const _DashboardLanes({
-    required this.layout,
-    required this.date,
-    required this.data,
-    required this.showOdometer,
-    required this.onOpenPlan,
-    required this.onPlanAction,
-    required this.onOpenEntry,
-    required this.attention,
-    required this.calendar,
-    required this.companyOverview,
-  });
-
-  final OperationsWorkspaceLayout layout;
-  final DateTime date;
-  final DashboardDayData data;
-  final bool showOdometer;
-  final ValueChanged<PlanItem> onOpenPlan;
-  final void Function(PlanItem item, PlanAction action) onPlanAction;
-  final ValueChanged<DayEntry> onOpenEntry;
-  final Widget? attention;
-  final Widget calendar;
-  final bool companyOverview;
-
-  Widget get plan => KeyedSubtree(
-    key: companyOverview
-        ? const ValueKey('admin-company-schedule')
-        : const ValueKey('dashboard-technician-schedule'),
-    child: TodayPlan(
-      date: date,
-      items: data.plan,
-      onOpen: onOpenPlan,
-      onAction: onPlanAction,
-    ),
-  );
-  Widget get entries => KeyedSubtree(
-    key: companyOverview
-        ? const ValueKey('admin-company-entries')
-        : const ValueKey('dashboard-technician-entries'),
-    child: TodayEntries(
-      date: date,
-      entries: data.entries,
-      showOdometer: showOdometer,
-      onOpen: onOpenEntry,
-    ),
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    final priorityLane = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (attention case final panel?) ...[
-          panel,
-          SizedBox(height: layout.gap),
-        ],
-        plan,
-      ],
-    );
-    final calendarLane = KeyedSubtree(
-      key: companyOverview
-          ? const ValueKey('admin-company-calendar')
-          : const ValueKey('dashboard-technician-calendar'),
-      child: calendar,
-    );
-    final lanes = switch (layout.columns) {
-      1 => [priorityLane, entries, calendarLane],
-      2 => [
-        priorityLane,
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            entries,
-            SizedBox(height: layout.gap),
-            calendarLane,
-          ],
-        ),
-      ],
-      _ => [priorityLane, entries, calendarLane],
-    };
-    return KeyedSubtree(
-      key: ValueKey('dashboard-${layout.columns}-lane-row'),
-      child: OperationsLaneGrid(layout: layout, children: lanes),
     );
   }
 }

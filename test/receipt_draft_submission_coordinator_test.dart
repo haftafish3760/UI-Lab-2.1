@@ -75,6 +75,44 @@ void main() {
       expect(expenses.records, hasLength(1));
       expect(drafts.records, hasLength(1));
 
+      final changedEvidence = await drafts.update(
+        draftId: created.draftId,
+        title: created.title,
+        expenseDate: created.expenseDate,
+        retainedEvidenceIds: created.activeEvidence
+            .map((e) => e.evidenceId)
+            .toList(),
+        addedEvidence: [
+          ReceiptEvidenceImport(
+            sourcePath: evidence.path,
+            originalName: 'second-page.jpg',
+            kind: ReceiptDraftEvidenceKind.photo,
+          ),
+        ],
+        occurredAtUtc: DateTime.utc(2026, 9, 1, 13, 1),
+      );
+      expect(changedEvidence?.activeEvidence, hasLength(2));
+      final mismatchedRetry = await coordinator.submit(
+        draftId: created.draftId,
+        reviewedRecord: reviewed.copyWith(receiptImageCount: 2),
+        paidByEmployeeId: 'alex',
+        occurredAtUtc: DateTime.utc(2026, 9, 1, 13, 2),
+      );
+      expect(mismatchedRetry.succeeded, isFalse);
+      expect(mismatchedRetry.message, contains('different confirmed values'));
+      expect(expenses.records.single.receiptImageCount, 1);
+      expect(drafts.records.single.activeEvidence, hasLength(2));
+      await drafts.update(
+        draftId: created.draftId,
+        title: created.title,
+        expenseDate: created.expenseDate,
+        retainedEvidenceIds: created.activeEvidence
+            .map((e) => e.evidenceId)
+            .toList(),
+        addedEvidence: const [],
+        occurredAtUtc: DateTime.utc(2026, 9, 1, 13, 3),
+      );
+
       final retried = await coordinator.submit(
         draftId: created.draftId,
         reviewedRecord: reviewed,
@@ -114,19 +152,80 @@ void main() {
       expect(history.single.activeEvidence, hasLength(1));
     },
   );
+  for (final identity in [
+    ('another-organization', 'alex'),
+    ('organization-1', 'jordan'),
+  ]) {
+    test(
+      'submission rejects mismatched session ${identity.$1}/${identity.$2}',
+      () async {
+        final root = await Directory.systemTemp.createTemp(
+          'receipt-session-boundary-',
+        );
+        addTearDown(() => root.delete(recursive: true));
+        final evidence = File('${root.path}/receipt.jpg');
+        await evidence.writeAsBytes([2, 4, 6, 8]);
+        final drafts = _receiptController(
+          await FileReceiptDraftRepository.open(
+            Directory('${root.path}/receipts'),
+          ),
+        );
+        final expenses = _expenseController(
+          await FileExpenseRepository.open(Directory('${root.path}/expenses')),
+          organizationId: identity.$1,
+          actorId: identity.$2,
+        );
+        addTearDown(drafts.dispose);
+        addTearDown(expenses.dispose);
+        await drafts.load();
+        await expenses.load();
+        final draft = await drafts.create(
+          draftId: 'boundary-draft',
+          title: 'Receipt',
+          expenseDate: DateTime(2026, 9, 1),
+          evidence: [
+            ReceiptEvidenceImport(
+              sourcePath: evidence.path,
+              originalName: 'receipt.jpg',
+              kind: ReceiptDraftEvidenceKind.photo,
+            ),
+          ],
+          occurredAtUtc: DateTime.utc(2026, 9, 1),
+        );
+        expect(draft, isNotNull);
+        final result =
+            await ReceiptDraftSubmissionCoordinator(
+              expenses: expenses,
+              receiptDrafts: drafts,
+            ).submit(
+              draftId: draft!.draftId,
+              reviewedRecord: _reviewedExpense(),
+              paidByEmployeeId: 'alex',
+              occurredAtUtc: DateTime.utc(2026, 9, 1),
+            );
+        expect(result.succeeded, isFalse);
+        expect(result.message, contains('sessions do not match'));
+        expect(expenses.records, isEmpty);
+        expect(drafts.records.single.state, ReceiptDraftState.inProgress);
+        expect(drafts.records.single.lifecycle.revision, 1);
+      },
+    );
+  }
 }
 
 ExpenseUiRepositoryController _expenseController(
-  ExpenseRepository repository,
-) => ExpenseUiRepositoryController(
+  ExpenseRepository repository, {
+  String organizationId = 'organization-1',
+  String actorId = 'alex',
+}) => ExpenseUiRepositoryController(
   ExpenseUiRepositoryBridge(
     service: AuthorizedExpenseService(repository),
     employeeLabelForId: (_) => 'Alex Morgan',
     jobLabelForId: (_) => null,
   ),
   ExpenseCommandPermissions(
-    organizationId: 'organization-1',
-    actorEmployeeId: 'alex',
+    organizationId: organizationId,
+    actorEmployeeId: actorId,
     permissionRevision: 'permissions-1',
     readScope: ExpenseReadScope.company,
     canCreate: true,

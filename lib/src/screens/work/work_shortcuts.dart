@@ -7,12 +7,16 @@ enum WorkDestination {
   customers('Saved Clients', Icons.people_alt_outlined),
   payments('Payments', Icons.payments_outlined),
   jobs('Jobs', Icons.home_repair_service_outlined),
+  scheduling('Scheduling', Icons.event_available_outlined),
+  quotes('Quotes', Icons.description_outlined),
   estimates('Estimates', Icons.request_quote_outlined),
   invoices('Invoices', Icons.receipt_long_outlined);
 
   const WorkDestination(this.label, this.icon);
   final String label;
   final IconData icon;
+
+  bool get isConnected => this != scheduling && this != quotes;
 }
 
 class WorkShortcutGrid extends StatelessWidget {
@@ -29,9 +33,29 @@ class WorkShortcutGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        var minimumLabelWidth = 0.0;
+        for (final destination in destinations) {
+          for (final word in destination.label.split(' ')) {
+            final painter = TextPainter(
+              text: TextSpan(
+                text: word,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              textDirection: Directionality.of(context),
+              textScaler: MediaQuery.textScalerOf(context),
+            )..layout();
+            if (painter.width + 4 > minimumLabelWidth) {
+              minimumLabelWidth = painter.width + 4;
+            }
+          }
+        }
         final layout = AppLayoutEngine.workShortcutsFor(
           constraints.maxWidth,
           textScaler: MediaQuery.textScalerOf(context),
+          minimumLabelWidth: minimumLabelWidth,
         );
         return Semantics(
           label: 'Work sections',
@@ -99,18 +123,27 @@ class _WorkShortcutTile extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Icon(destination.icon, size: 28),
+                child: Icon(destination.icon, size: 32, color: colors.primary),
               ),
               const SizedBox(height: 5),
               Text(
                 destination.label,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   height: 1.1,
                 ),
               ),
+              if (!destination.isConnected)
+                Text(
+                  'Not connected',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
             ],
           ),
         ),

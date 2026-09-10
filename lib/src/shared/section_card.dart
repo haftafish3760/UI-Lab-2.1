@@ -8,6 +8,7 @@ class SectionCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(16),
     this.borderColor,
     this.backgroundColor,
+    this.gradient,
     super.key,
   });
 
@@ -15,6 +16,7 @@ class SectionCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final Color? borderColor;
   final Color? backgroundColor;
+  final Gradient? gradient;
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +24,7 @@ class SectionCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor ?? colors.surface,
+        gradient: gradient,
         border: Border.all(color: borderColor ?? colors.outline, width: 1),
         borderRadius: BorderRadius.circular(AppRadii.surface),
         boxShadow: colors.brightness == Brightness.dark

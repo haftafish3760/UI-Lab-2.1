@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'local_document_path_scope.dart';
 
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
@@ -23,23 +24,36 @@ class LocalDocumentPreview extends StatelessWidget {
   final String semanticsLabel;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: semanticsLabel,
-    image: kind == LocalDocumentKind.image,
-    child: DecoratedBox(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
-        borderRadius: BorderRadius.circular(8),
+  Widget build(BuildContext context) {
+    final String resolvedPath;
+    try {
+      resolvedPath = LocalDocumentPathScope.resolvePath(context, path);
+    } on Object {
+      return const _DocumentUnavailable(
+        message: 'This document could not be located.',
+      );
+    }
+    return Semantics(
+      label: semanticsLabel,
+      image: kind == LocalDocumentKind.image,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerLowest,
+          border: Border.all(color: Theme.of(context).colorScheme.outline),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(7),
+          child: kind == LocalDocumentKind.pdf
+              ? _LocalPdfPreview(
+                  key: ValueKey(resolvedPath),
+                  path: resolvedPath,
+                )
+              : _LocalImagePreview(path: resolvedPath),
+        ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(7),
-        child: kind == LocalDocumentKind.pdf
-            ? _LocalPdfPreview(path: path)
-            : _LocalImagePreview(path: path),
-      ),
-    ),
-  );
+    );
+  }
 }
 
 class _LocalImagePreview extends StatelessWidget {
@@ -64,7 +78,7 @@ class _LocalImagePreview extends StatelessWidget {
 }
 
 class _LocalPdfPreview extends StatefulWidget {
-  const _LocalPdfPreview({required this.path});
+  const _LocalPdfPreview({required this.path, super.key});
 
   final String path;
 

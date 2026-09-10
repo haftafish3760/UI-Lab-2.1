@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../data/prototype_operations_store.dart';
+import '../../data/expenses/expense_ui_repository_controller.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/localized_date.dart';
+import '../../shared/local_draft_scope.dart';
 import '../../shared/operational_scope.dart';
 import '../../shared/section_card.dart';
 import '../dashboard/dashboard_models.dart';
@@ -240,6 +242,9 @@ class ExpenseDetailScreen extends StatelessWidget {
         !permissions.canEditRecord(isOwn: recordIsOwn)) {
       return;
     }
+    final editorConfirms =
+        LocalDraftScope.maybeOf(context) != null &&
+        ExpenseUiScope.maybeOf(context) != null;
     final result = await Navigator.of(context).push<ExpenseRecord>(
       MaterialPageRoute(
         builder: (_) => ExpenseEditorScreen(
@@ -253,6 +258,7 @@ class ExpenseDetailScreen extends StatelessWidget {
       ),
     );
     if (!context.mounted) return;
+    if (editorConfirms) return;
     var draft = result;
     while (context.mounted && draft != null) {
       if (!context.mounted) return;
@@ -382,6 +388,21 @@ class ExpenseDetailScreen extends StatelessWidget {
     final isOwn = permissions.owns(paidByEmployeeId: expense.paidByEmployeeId);
     if (!permissions.canViewAmounts ||
         !permissions.canEditRecord(isOwn: isOwn)) {
+      return;
+    }
+    if (LocalDraftScope.maybeOf(context) != null &&
+        ExpenseUiScope.maybeOf(context) != null) {
+      await Navigator.of(context).push<ExpenseRecord>(
+        MaterialPageRoute(
+          builder: (_) => ExpenseEditorScreen(
+            expenseDate: expense.resolvedDate ?? dashboardToday,
+            existing: expense,
+            initialLineId: item.id,
+            permissions: permissions,
+            existingRecordIsOwn: isOwn,
+          ),
+        ),
+      );
       return;
     }
     final updated = await showExpenseLineItemEditor(

@@ -180,6 +180,7 @@ class StoredExpenseRecord {
     List<ExpenseRevisionSnapshot> priorVersions = const [],
     this.expenseTimeMinutes,
     this.receiptId,
+    this.receiptImageCount,
     this.jobId,
     this.vehicleId,
     ExpenseItemization itemization = const ExpenseItemization.totalOnly(),
@@ -205,6 +206,7 @@ class StoredExpenseRecord {
         'Expense total cannot be negative.',
       );
     }
+    _validateReceiptImageCount(receiptId, receiptImageCount);
     itemization.validateFor(total);
     final minutes = expenseTimeMinutes;
     if (minutes != null && (minutes < 0 || minutes >= 1440)) {
@@ -227,6 +229,9 @@ class StoredExpenseRecord {
   final String categoryLabelSnapshot;
   final ExpenseMoney total;
   final String? receiptId;
+
+  /// Null means older data did not record an evidence count.
+  final int? receiptImageCount;
   final String? jobId;
   final String? vehicleId;
   final ExpenseItemization itemization;
@@ -244,6 +249,7 @@ class StoredExpenseRecord {
       categoryLabelSnapshot == other.categoryLabelSnapshot &&
       total == other.total &&
       receiptId == other.receiptId &&
+      receiptImageCount == other.receiptImageCount &&
       jobId == other.jobId &&
       vehicleId == other.vehicleId &&
       itemization == other.itemization;
@@ -256,6 +262,7 @@ class StoredExpenseRecord {
     DateTime? expenseDate,
     Object? expenseTimeMinutes = _unchangedExpenseValue,
     Object? receiptId = _unchangedExpenseValue,
+    Object? receiptImageCount = _unchangedExpenseValue,
     Object? jobId = _unchangedExpenseValue,
     Object? vehicleId = _unchangedExpenseValue,
     ExpenseItemization? itemization,
@@ -279,6 +286,9 @@ class StoredExpenseRecord {
     receiptId: identical(receiptId, _unchangedExpenseValue)
         ? this.receiptId
         : receiptId as String?,
+    receiptImageCount: identical(receiptImageCount, _unchangedExpenseValue)
+        ? this.receiptImageCount
+        : receiptImageCount as int?,
     jobId: identical(jobId, _unchangedExpenseValue)
         ? this.jobId
         : jobId as String?,
@@ -304,6 +314,7 @@ class StoredExpenseRecord {
     'categoryLabelSnapshot': categoryLabelSnapshot,
     'total': total.toJson(),
     'receiptId': receiptId,
+    'receiptImageCount': receiptImageCount,
     'jobId': jobId,
     'vehicleId': vehicleId,
     'itemization': itemization.toJson(),
@@ -326,6 +337,7 @@ class StoredExpenseRecord {
         categoryLabelSnapshot: _requiredString(json, 'categoryLabelSnapshot'),
         total: ExpenseMoney.fromJson(_requiredMap(json, 'total')),
         receiptId: json['receiptId'] as String?,
+        receiptImageCount: json['receiptImageCount'] as int?,
         jobId: json['jobId'] as String?,
         vehicleId: json['vehicleId'] as String?,
         itemization: json['itemization'] is Map
@@ -416,5 +428,13 @@ DateTime? _optionalUtcDate(Object? value) =>
 void _requireNonEmpty(String value, String name) {
   if (value.trim().isEmpty) {
     throw ArgumentError.value(value, name, 'Cannot be empty.');
+  }
+}
+
+void _validateReceiptImageCount(String? receiptId, int? count) {
+  if (count != null && (count < 0 || (receiptId == null && count > 0))) {
+    throw ArgumentError(
+      'Receipt image count must be nonnegative and attached evidence needs a receipt identity.',
+    );
   }
 }

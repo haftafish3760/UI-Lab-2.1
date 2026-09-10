@@ -18,7 +18,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.byKey(const ValueKey('dashboard-needs-attention')),
+      find.byKey(const ValueKey('dashboard-summary-attention')),
       findsOneWidget,
     );
     expect(

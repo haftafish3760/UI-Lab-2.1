@@ -67,6 +67,8 @@ void main() {
     tester,
   ) async {
     await _pumpApp(tester, size: const Size(600, 900), textScale: 2);
+    await tester.ensureVisible(find.byKey(const ValueKey('menu-employees')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('menu-employees')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('add-employee-button')));
@@ -101,7 +103,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Vehicle information'), findsOneWidget);
-    expect(find.text('Confirmed odometer reading'), findsOneWidget);
+    expect(find.text('Confirmed odometer reading (mi)'), findsOneWidget);
     expect(find.text('Assigned employee or crew'), findsOneWidget);
     expect(find.text('Save vehicle'), findsOneWidget);
     expect(tester.takeException(), isNull);

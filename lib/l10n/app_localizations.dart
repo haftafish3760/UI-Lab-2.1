@@ -103,6 +103,12 @@ abstract class AppLocalizations {
     Locale('fr', 'CA'),
   ];
 
+  /// No description provided for @selectVehicleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Select vehicle'**
+  String get selectVehicleLabel;
+
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
@@ -114,6 +120,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dashboard'**
   String get navDashboard;
+
+  /// No description provided for @dashboardOdometerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer'**
+  String get dashboardOdometerLabel;
+
+  /// No description provided for @dashboardStartWorkday.
+  ///
+  /// In en, this message translates to:
+  /// **'Start workday'**
+  String get dashboardStartWorkday;
+
+  /// No description provided for @dashboardPaymentsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get dashboardPaymentsLabel;
+
+  /// No description provided for @dashboardMilesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Miles'**
+  String get dashboardMilesLabel;
+
+  /// No description provided for @dashboardMileageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Business mileage totals are not connected in this UI Lab preview yet. No zero total has been assumed.'**
+  String get dashboardMileageUnavailable;
 
   /// No description provided for @navDashboardCompact.
   ///
@@ -306,6 +342,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open Maintainiac to review a scheduled reminder.'**
   String get nativeReminderBody;
+
+  /// No description provided for @deviceRemindersUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device reminders unavailable'**
+  String get deviceRemindersUnavailableTitle;
+
+  /// No description provided for @deviceRemindersRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry device reminders'**
+  String get deviceRemindersRetry;
 
   /// No description provided for @deviceRemindersOffTitle.
   ///

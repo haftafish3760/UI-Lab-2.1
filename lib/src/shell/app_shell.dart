@@ -48,6 +48,7 @@ class _AppShellState extends State<AppShell> {
     final navigation = AppLayoutEngine.navigationFor(
       availableSize,
       dashboard: _selectedIndex == 0,
+      work: _selectedIndex == 1,
     );
     final desktop = navigation == AppNavigationMode.rail;
     return PopScope(
@@ -77,6 +78,13 @@ class _AppShellState extends State<AppShell> {
                           children: _modules,
                         ),
                       ),
+                      if (desktop && _selectedIndex == 1)
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 728),
+                            child: const PrototypeAdBanner(),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -89,7 +97,14 @@ class _AppShellState extends State<AppShell> {
             : Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const PrototypeAdBanner(),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: _selectedIndex == 1 ? 728 : double.infinity,
+                      ),
+                      child: const PrototypeAdBanner(),
+                    ),
+                  ),
                   AppBottomNavigation(
                     selectedIndex: _selectedIndex,
                     onSelected: _selectModule,

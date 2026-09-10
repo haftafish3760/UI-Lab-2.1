@@ -28,17 +28,17 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
       case _JobAction.editNotes:
         await _editNotes();
       case _JobAction.startTravel:
-        _setJobStatus(JobStatus.enRoute);
+        await _setJobStatus(JobStatus.enRoute);
       case _JobAction.markArrived:
-        _setJobStatus(JobStatus.arrived);
+        await _setJobStatus(JobStatus.arrived);
       case _JobAction.startWork || _JobAction.resumeWork:
-        _setJobStatus(JobStatus.inProgress);
+        await _setJobStatus(JobStatus.inProgress);
       case _JobAction.pauseWork:
-        _setJobStatus(JobStatus.paused);
+        await _setJobStatus(JobStatus.paused);
       case _JobAction.needsReturnVisit:
-        _setJobStatus(JobStatus.needsReturnVisit);
+        await _setJobStatus(JobStatus.needsReturnVisit);
       case _JobAction.completeJob:
-        _setJobStatus(JobStatus.completed);
+        await _setJobStatus(JobStatus.completed);
       case _JobAction.reschedule:
         await _rescheduleJob();
       case _JobAction.reassign:
@@ -46,8 +46,7 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
     }
   }
 
-  void _setJobStatus(JobStatus status) {
-    _replaceJob(_job.copyWith(status: status));
+  Future<void> _setJobStatus(JobStatus status) async {
     final recordStatus = switch (status) {
       JobStatus.scheduled => WorkRecordStatus.scheduled,
       JobStatus.enRoute => WorkRecordStatus.enRoute,
@@ -57,7 +56,8 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
       JobStatus.needsReturnVisit => WorkRecordStatus.needsReturnVisit,
       JobStatus.completed => WorkRecordStatus.completed,
     };
-    _persistSource(
+    await _commitJobChange(
+      _job.copyWith(status: status),
       _sourceRecord.copyWith(
         status: recordStatus,
         completedOn: recordStatus == WorkRecordStatus.completed
@@ -77,10 +77,10 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
       ),
     );
     if (!mounted || source == null) return;
-    _linkExpenseRecord(source);
+    await _linkExpenseRecord(source);
   }
 
-  void _linkExpenseRecord(ExpenseRecord source) {
+  Future<void> _linkExpenseRecord(ExpenseRecord source) async {
     final attachmentId = 'expense-${source.id}';
     if (_job.receipts.any((item) => item.id == attachmentId)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -95,8 +95,9 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
       status: source.receiptStatus ?? 'No receipt attached',
       kind: JobAttachmentKind.expense,
     );
-    _replaceJob(_job.copyWith(receipts: [..._job.receipts, attachment]));
-    _persistSource(
+
+    await _commitJobChange(
+      _job.copyWith(receipts: [..._job.receipts, attachment]),
       _sourceRecord.copyWith(
         linkedExpenseIds: [..._sourceRecord.linkedExpenseIds, source.id],
       ),
@@ -104,88 +105,29 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
   }
 
   Future<void> _editNotes() async {
-    final controller = TextEditingController(text: _job.technicianNotes);
-    final notes = await showDialog<String>(
+    if (!widget.permissions.canEditJob) return;
+    final store = PrototypeOperationsScope.maybeOf(context);
+    final record = await showDialog<WorkRecord>(
       context: context,
-      builder: (context) => AlertDialog(
-        insetPadding: const EdgeInsets.all(16),
-        constraints: const BoxConstraints(maxWidth: 480),
-        title: const Text('Edit job notes'),
-        content: TextField(
-          controller: controller,
-          minLines: 4,
-          maxLines: 8,
-          decoration: const InputDecoration(labelText: 'Notes for this job'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Save notes'),
-          ),
-        ],
-      ),
+      builder: (_) =>
+          JobNotesEditorDialog(record: _sourceRecord, work: store?.workSession),
     );
-    controller.dispose();
-    if (mounted && notes != null) {
-      _replaceJob(_job.copyWith(technicianNotes: notes));
-      _persistSource(_sourceRecord.copyWith(jobNotes: notes));
+    if (!mounted || record == null) return;
+    if (store?.workSession == null) {
+      await _commitJobChange(
+        _job.copyWith(technicianNotes: record.jobNotes),
+        record,
+      );
+    } else {
+      _adoptCommittedJob(record);
     }
   }
 
-  Future<void> _editJobItems() async {
-    if (!widget.permissions.canAddMaterials) return;
-    final existingMaterials = _job.lineItems
-        .where(
-          (item) =>
-              item.isJobAddition &&
-              item.kind == JobLineKind.material &&
-              canEditJobMaterialAddition(item, widget.permissions),
-        )
-        .map((item) => item.toWorkLineItem())
-        .toList();
-    final editableIds = existingMaterials.map((item) => item.id).toSet();
-    final additions = await Navigator.of(context).push<List<WorkLineItem>>(
-      MaterialPageRoute(
-        builder: (_) => WorkItemsEditor(
-          initialItems: existingMaterials,
-          pricing: _sourceRecord.pricing,
-          workspaceLabel: 'Job materials',
-          allowedTypes: const [WorkLineItemType.material],
-          allowMaterialCostHistory: widget.permissions.canViewInternalCost,
-          allowExpenseEvidence:
-              widget.permissions.canLinkExpenses &&
-              widget.permissions.canViewInternalCost,
-          allowTruckStock: widget.permissions.canUseTruckStock,
-          canViewInternalCost: widget.permissions.canViewInternalCost,
-          canViewCustomerPrice: canViewJobCustomerPrice(widget.permissions),
-          canSetCustomerPrice: widget.permissions.canSetCustomerPrice,
-          allowedJobBillingTreatments: jobMaterialBillingTreatmentsFor(
-            widget.permissions,
-          ),
-          selectedDay: _sourceRecord.scheduledStart,
-        ),
-      ),
-    );
-    if (!mounted || additions == null) return;
-    if (!_applyStockChanges(existingMaterials, additions)) return;
-    final jobItems = [
-      ..._job.lineItems.where((item) => !editableIds.contains(item.id)),
-      ...additions.map(
-        (item) => JobLineItem.fromWorkLineItem(item, isJobAddition: true),
-      ),
-    ];
-    final revised = jobItems.map((item) => item.toWorkLineItem()).toList();
-    _replaceJob(_job.copyWith(lineItems: jobItems));
-    _persistSource(
-      _sourceRecord.reviseItems(revised, changedOn: DateTime.now()),
-    );
-  }
-
-  bool _applyStockChanges(List<WorkLineItem> before, List<WorkLineItem> after) {
+  bool _applyStockChanges(
+    List<WorkLineItem> before,
+    List<WorkLineItem> after, {
+    bool apply = true,
+  }) {
     final store = PrototypeOperationsScope.maybeOf(context);
     if (store == null) return true;
     double used(List<WorkLineItem> items, String stockId) => items
@@ -229,6 +171,7 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
         return false;
       }
     }
+    if (!apply) return true;
     for (final stockId in allStockIds) {
       final record = stockById[stockId]!;
       final change = used(after, stockId) - used(before, stockId);
@@ -275,7 +218,7 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
     );
     if (!mounted || source == null) return;
     if (!store.expenses.any((record) => record.id == source.id)) return;
-    _linkExpenseRecord(source);
+    await _linkExpenseRecord(source);
   }
 
   Future<void> _attachJobPhoto() async {
@@ -318,135 +261,51 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
   }
 
   Future<void> _rescheduleJob() async {
-    final now = DateTime.now();
-    final date = await showDatePicker(
+    if (!widget.permissions.canEditJob) return;
+    final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
+    final record = await showModalBottomSheet<WorkRecord>(
       context: context,
-      initialDate: now,
-      firstDate: now.subtract(const Duration(days: 365)),
-      lastDate: now.add(const Duration(days: 730)),
-      helpText: 'Choose the new job date',
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => JobScheduleEditorSheet(record: _sourceRecord, work: work),
     );
-    if (!mounted || date == null) return;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      helpText: 'Choose the new arrival time',
-    );
-    if (!mounted || time == null) return;
-    final localizations = MaterialLocalizations.of(context);
-    final value =
-        '${localizations.formatMediumDate(date)} · '
-        '${localizations.formatTimeOfDay(time)}';
-    final rescheduledReturnVisit = _job.status == JobStatus.needsReturnVisit;
-    _replaceJob(
-      _job.copyWith(
-        scheduledTime: value,
-        status: rescheduledReturnVisit ? JobStatus.scheduled : _job.status,
-      ),
-    );
-    final scheduledStart = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
-    _persistSource(
-      _sourceRecord.copyWith(
-        scheduledStart: scheduledStart,
-        scheduledEnd: scheduledStart.add(const Duration(hours: 2)),
-        status: rescheduledReturnVisit
-            ? WorkRecordStatus.scheduled
-            : _sourceRecord.status,
-      ),
-    );
+    if (!mounted || record == null) return;
+    if (work == null) {
+      await _commitJobChange(
+        _job.copyWith(
+          scheduledTime: _scheduledTimeLabel(context, record),
+          status: record.status == WorkRecordStatus.scheduled
+              ? JobStatus.scheduled
+              : _job.status,
+        ),
+        record,
+      );
+    } else {
+      _adoptCommittedJob(record);
+    }
   }
 
   Future<void> _reassignJob() async {
-    var technician = _job.assignedTechnician;
-    var vehicle = _job.assignedVehicle;
-    final result = await showModalBottomSheet<(String, String)>(
+    if (!widget.permissions.canEditJob) return;
+    final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
+    final record = await showModalBottomSheet<WorkRecord>(
       context: context,
       showDragHandle: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => SafeArea(
-          top: false,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Reassign job',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    initialValue: technician,
-                    decoration: const InputDecoration(labelText: 'Technician'),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'Alex Morgan',
-                        child: Text('Alex Morgan'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Jordan Lee',
-                        child: Text('Jordan Lee'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Unassigned',
-                        child: Text('Unassigned'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setSheetState(() => technician = value);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: vehicle,
-                    decoration: const InputDecoration(labelText: 'Vehicle'),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'Transit 12',
-                        child: Text('Transit 12'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Service Van 4',
-                        child: Text('Service Van 4'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'No vehicle assigned',
-                        child: Text('No vehicle assigned'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) setSheetState(() => vehicle = value);
-                    },
-                  ),
-                  const SizedBox(height: 18),
-                  FilledButton(
-                    onPressed: () =>
-                        Navigator.pop(context, (technician, vehicle)),
-                    child: const Text('Save assignment'),
-                  ),
-                ],
-              ),
-            ),
-          ),
+      isScrollControlled: true,
+      builder: (_) =>
+          JobAssignmentEditorSheet(record: _sourceRecord, work: work),
+    );
+    if (!mounted || record == null) return;
+    if (work == null) {
+      await _commitJobChange(
+        _job.copyWith(
+          assignedTechnician: record.assignee,
+          assignedVehicle: record.vehicle,
         ),
-      ),
-    );
-    if (!mounted || result == null) return;
-    _replaceJob(
-      _job.copyWith(assignedTechnician: result.$1, assignedVehicle: result.$2),
-    );
-    _persistSource(
-      _sourceRecord.copyWith(assignee: result.$1, vehicle: result.$2),
-    );
+        record,
+      );
+    } else {
+      _adoptCommittedJob(record);
+    }
   }
 }

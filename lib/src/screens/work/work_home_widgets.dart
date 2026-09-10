@@ -349,7 +349,7 @@ class _WorkCalendarPanel extends StatelessWidget {
     children: [
       Text('Work Calendar', style: Theme.of(context).textTheme.titleMedium),
       const SizedBox(height: 3),
-      const Text('Choose a date to review or schedule work.'),
+      const Text('Review planned work and recorded activity by date.'),
       const SizedBox(height: 10),
       WorkMonthCalendar(
         maximumWidth: maximumWidth,

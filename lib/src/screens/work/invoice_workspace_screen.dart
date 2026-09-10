@@ -21,6 +21,7 @@ import 'work_scope_header.dart';
 import 'work_selected_date_bar.dart';
 
 part 'invoice_workspace_widgets.dart';
+part 'invoice_workspace_queries.dart';
 
 class InvoiceWorkspaceScreen extends StatefulWidget {
   const InvoiceWorkspaceScreen({
@@ -42,7 +43,13 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
   var _showAllDateInvoices = false;
   var _showAllOpenInvoices = false;
   var _showAllDrafts = false;
-  var _preferences = const WorkRecordDisplayPreferences();
+  var _fixturePreferences = const WorkRecordDisplayPreferences();
+  WorkRecordDisplayPreferences get _preferences =>
+      readWorkRecordDisplayPreferences(
+        context,
+        'invoices',
+        _fixturePreferences,
+      );
 
   PrototypeOperationsStore get _store => PrototypeOperationsScope.of(context);
   AppViewMode get _view => OperationalScope.of(context).view;
@@ -327,102 +334,6 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
     );
   }
 
-  List<WorkRecord> get _scopedInvoices => _store.workRecords.where((record) {
-    if (record.kind != WorkRecordKind.invoice) return false;
-    if (!_preferences.includeClosedRecords &&
-        record.status == WorkRecordStatus.paid) {
-      return false;
-    }
-    if (_view == AppViewMode.technician) {
-      final employee = dashboardEmployeeById(
-        _employeeId ?? demoEmployees.first.id,
-      );
-      return record.createdByEmployeeId == employee.id ||
-          record.assignee == employee.name;
-    }
-    if (_employeeId == null) return true;
-    final employee = dashboardEmployeeById(_employeeId!);
-    return record.createdByEmployeeId == employee.id ||
-        record.assignee == employee.name;
-  }).toList();
-
-  List<WorkRecord> get _dateInvoices {
-    final attentionIds = _attentionItems.map((item) => item.sourceId).toSet();
-    return _sort(
-      _scopedInvoices.where(
-        (record) =>
-            record.status != WorkRecordStatus.draft &&
-            record.occursOn(_selectedDay) &&
-            !attentionIds.contains(record.id),
-      ),
-    );
-  }
-
-  List<WorkRecord> _invoicesForDay(DateTime day) => _sort(
-    _scopedInvoices.where(
-      (record) =>
-          record.status != WorkRecordStatus.draft && record.occursOn(day),
-    ),
-  );
-
-  List<WorkRecord> get _openInvoices {
-    final excluded = {
-      ..._attentionItems.map((item) => item.sourceId),
-      ..._dateInvoices.map((record) => record.id),
-    };
-    return _sort(
-      _scopedInvoices.where(
-        (record) =>
-            record.status != WorkRecordStatus.draft &&
-            record.status != WorkRecordStatus.paid &&
-            !excluded.contains(record.id),
-      ),
-    );
-  }
-
-  List<WorkRecord> get _draftInvoices => _sort(
-    _scopedInvoices.where((record) => record.status == WorkRecordStatus.draft),
-  );
-
-  List<WorkRecord> get _searchResults {
-    final query = _search.text.trim().toLowerCase();
-    return _sort(
-      _scopedInvoices.where(
-        (record) =>
-            record.number.toLowerCase().contains(query) ||
-            record.title.toLowerCase().contains(query) ||
-            record.client.toLowerCase().contains(query) ||
-            record.sourceId?.toLowerCase().contains(query) == true,
-      ),
-    );
-  }
-
-  List<OperationalAttentionItem> get _attentionItems =>
-      _store.attentionCenter.itemsFor(_attentionQueryForDay(null));
-
-  OperationalAttentionQuery _attentionQueryForDay(DateTime? day) =>
-      OperationalAttentionQuery(
-        panelId: 'invoice-home',
-        module: OperationalAttentionModule.work,
-        view: _view,
-        access: const OperationalAttentionAccess({
-          OperationalAttentionCapability.reviewInvoices,
-        }),
-        selectedEmployeeId: _employeeId,
-        selectedDay: day,
-        resourceKinds: const {OperationalAttentionResourceKind.invoice},
-      );
-
-  List<OperationalAttentionItem> _attentionItemsForDay(DateTime day) =>
-      _store.attentionCenter.itemsFor(_attentionQueryForDay(day));
-
-  List<WorkRecord> _sort(Iterable<WorkRecord> records) =>
-      records.toList()..sort((a, b) {
-        final first = a.createdOn ?? DateTime(1970);
-        final second = b.createdOn ?? DateTime(1970);
-        return second.compareTo(first);
-      });
-
   void _selectDay(DateTime day) =>
       setState(() => _selectedDay = DateUtils.dateOnly(day));
 
@@ -453,12 +364,15 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
         .push<WorkRecordDisplayPreferences>(
           MaterialPageRoute(
             builder: (_) => WorkRecordSettingsScreen(
+              workspaceId: 'invoices',
               workspaceLabel: 'Invoices',
               initial: _preferences,
             ),
           ),
         );
-    if (mounted && updated != null) setState(() => _preferences = updated);
+    if (mounted && updated != null) {
+      setState(() => _fixturePreferences = updated);
+    }
   }
 
   void _openAttentionItem(OperationalAttentionItem item) {

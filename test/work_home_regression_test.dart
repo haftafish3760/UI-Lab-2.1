@@ -31,43 +31,42 @@ Future<void> _pumpWorkHome(WidgetTester tester, Size size) async {
 }
 
 void main() {
-  testWidgets(
-    'Work home is date first, then attention, employee context, and actions',
-    (tester) async {
-      await _pumpWorkHome(tester, const Size(390, 844));
+  testWidgets('Work home puts destinations before date and scoped records', (
+    tester,
+  ) async {
+    await _pumpWorkHome(tester, const Size(390, 844));
 
-      final date = find.byKey(const ValueKey('work-date-heading'));
-      final attention = find.byKey(const ValueKey('work-attention-section'));
-      final employees = find.byKey(const ValueKey('employee-status-strip'));
-      final firstAction = find.byKey(const ValueKey('quick-companyInfo'));
+    final date = find.byKey(const ValueKey('work-date-heading'));
+    final attention = find.byKey(const ValueKey('work-attention-section'));
+    final employees = find.byKey(const ValueKey('employee-status-strip'));
+    final firstAction = find.byKey(const ValueKey('quick-jobs'));
 
-      expect(
-        tester.getTopLeft(date).dy,
-        lessThan(tester.getTopLeft(attention).dy),
-      );
-      expect(
-        tester.getTopLeft(attention).dy,
-        lessThan(tester.getTopLeft(employees).dy),
-      );
-      expect(
-        tester.getTopLeft(employees).dy,
-        lessThan(tester.getTopLeft(firstAction).dy),
-      );
-      expect(
-        find.text(
-          'Select an employee to carry that person’s context across the app.',
-        ),
-        findsNothing,
-      );
-      expect(
-        find.text(
-          'Jobs, estimates, invoices, customers, and payments for this date.',
-        ),
-        findsNothing,
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
+    expect(
+      tester.getTopLeft(date).dy,
+      lessThan(tester.getTopLeft(attention).dy),
+    );
+    expect(
+      tester.getTopLeft(attention).dy,
+      lessThan(tester.getTopLeft(employees).dy),
+    );
+    expect(
+      tester.getTopLeft(firstAction).dy,
+      lessThan(tester.getTopLeft(date).dy),
+    );
+    expect(
+      find.text(
+        'Select an employee to carry that person’s context across the app.',
+      ),
+      findsNothing,
+    );
+    expect(
+      find.text(
+        'Jobs, estimates, invoices, customers, and payments for this date.',
+      ),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('Work home separates compact records and unfinished drafts', (
     tester,
@@ -190,16 +189,16 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Work uses three ordered operational lanes at desktop width', (
+  testWidgets('Work groups records beside a bounded calendar on desktop', (
     tester,
   ) async {
     await _pumpWorkHome(tester, const Size(1200, 900));
 
     final attention = find.byKey(const ValueKey('work-attention-section'));
     final jobs = find.byKey(const ValueKey('work-jobs-section'));
-    expect(find.byKey(const ValueKey('work-3-column-queues')), findsOneWidget);
+    expect(find.byKey(const ValueKey('work-1-column-queues')), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('work-3-column-attention')),
+      find.byKey(const ValueKey('work-2-column-attention')),
       findsOneWidget,
     );
     expect(tester.getSize(attention).width, lessThanOrEqualTo(480));
@@ -211,8 +210,13 @@ void main() {
     final invoicesX = tester
         .getTopLeft(find.byKey(const ValueKey('work-invoices-section')))
         .dx;
-    expect(jobsX, lessThan(estimatesX));
-    expect(estimatesX, lessThan(invoicesX));
+    expect(jobsX, estimatesX);
+    expect(estimatesX, invoicesX);
+    expect(
+      tester.getTopLeft(find.text('Work Calendar')).dx,
+      greaterThan(jobsX),
+    );
+    expect(find.byKey(const ValueKey('work-actions-inline')), findsOneWidget);
     expect(find.byKey(const ValueKey('work-actions-fab')), findsNothing);
     expect(find.text('New job'), findsOneWidget);
     expect(find.text('New estimate'), findsOneWidget);

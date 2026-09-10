@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 
-import '../../screens/expenses/expense_models.dart';
+import 'expense_workflow_models.dart';
+import '../storage/draft_repository.dart';
+import '../storage/local_draft_checkpoint.dart';
 import 'authorized_expense_service.dart';
 import 'expense_ui_projection.dart';
 import 'expense_ui_repository_bridge.dart';
@@ -35,8 +37,10 @@ class ExpenseUiRepositoryController extends ChangeNotifier {
     this._bridge,
     this._permissions, {
     bool recoveredFromDamagedSnapshot = false,
+    this.drafts,
   }) : _showRecoveryNotice = recoveredFromDamagedSnapshot;
 
+  final DraftRepository? drafts;
   final ExpenseUiRepositoryBridge _bridge;
   final ExpenseCommandPermissions _permissions;
   ExpenseUiProjectionSnapshot _projection = ExpenseUiProjectionSnapshot.empty;
@@ -50,7 +54,37 @@ class ExpenseUiRepositoryController extends ChangeNotifier {
   bool _showRecoveryNotice;
   bool _disposed = false;
 
+  void requireActiveDraftOwner() {
+    if (_disposed) {
+      throw StateError('The expense workflow owner is no longer active.');
+    }
+  }
+
   ExpenseRepositoryControllerPhase get phase => _phase;
+  String get organizationId => _permissions.organizationId;
+  String get actorEmployeeId => _permissions.actorEmployeeId;
+  bool canCreateForEmployee(String employeeId) =>
+      !_disposed &&
+      _permissions.canCreate &&
+      _permissions.readAccess != null &&
+      _permissions.canTargetEmployee(employeeId);
+  bool canEditExpense(String expenseId) {
+    final record = recordById(expenseId);
+    return _permissions.canEdit &&
+        record != null &&
+        record.paidByEmployeeId != null &&
+        _permissions.canTargetEmployee(record.paidByEmployeeId!);
+  }
+
+  bool canEditForEmployee(String employeeId) =>
+      _permissions.canEdit &&
+      _permissions.readAccess != null &&
+      _permissions.canTargetEmployee(employeeId);
+
+  Future<ExpenseUiProjectionRecord?> readCurrentExpense(String id) =>
+      _bridge.readCurrent(id, _permissions);
+
+  int? revisionForId(String expenseId) => _bridge.revisionForId(expenseId);
   ExpenseRepositoryFailure? get failure => _failure;
   ExpenseUiProjectionSnapshot get projection => _projection;
   List<ExpenseRecord> get records => _projection.records;
@@ -90,8 +124,9 @@ class ExpenseUiRepositoryController extends ChangeNotifier {
     required ExpenseRecord record,
     required String paidByEmployeeId,
     required DateTime occurredAtUtc,
+    LocalDraftCheckpoint? draftCheckpoint,
   }) async {
-    if (_creating) return null;
+    if (_disposed || _creating) return null;
     _creating = true;
     _failure = null;
     _notify();
@@ -101,6 +136,7 @@ class ExpenseUiRepositoryController extends ChangeNotifier {
         permissions: _permissions,
         paidByEmployeeId: paidByEmployeeId,
         occurredAtUtc: occurredAtUtc,
+        draftCheckpoint: draftCheckpoint,
       );
       _applyCachedProjection(created.id);
       _phase = ExpenseRepositoryControllerPhase.ready;
@@ -124,7 +160,7 @@ class ExpenseUiRepositoryController extends ChangeNotifier {
     required String paidByEmployeeId,
     required DateTime occurredAtUtc,
   }) async {
-    if (_creating) return null;
+    if (_disposed || _creating) return null;
     _creating = true;
     _failure = null;
     _notify();
@@ -156,6 +192,8 @@ class ExpenseUiRepositoryController extends ChangeNotifier {
     required ExpenseRecord record,
     required DateTime occurredAtUtc,
     String? auditNote,
+    int? expectedRevision,
+    LocalDraftCheckpoint? draftCheckpoint,
   }) => _mutateRecord(
     expenseId: record.id,
     operation: ExpenseRepositoryOperation.update,
@@ -164,6 +202,8 @@ class ExpenseUiRepositoryController extends ChangeNotifier {
       permissions: _permissions,
       occurredAtUtc: occurredAtUtc,
       auditNote: auditNote,
+      expectedRevision: expectedRevision,
+      draftCheckpoint: draftCheckpoint,
     ),
   );
 
@@ -216,7 +256,7 @@ class ExpenseUiRepositoryController extends ChangeNotifier {
     required ExpenseRepositoryOperation operation,
     required Future<ExpenseRecord> Function() action,
   }) async {
-    if (_pendingExpenseIds.contains(expenseId)) return null;
+    if (_disposed || _pendingExpenseIds.contains(expenseId)) return null;
     _pendingExpenseIds.add(expenseId);
     _failure = null;
     _notify();

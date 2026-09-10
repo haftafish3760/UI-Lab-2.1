@@ -1,10 +1,12 @@
 import 'package:flutter/widgets.dart';
 
 import 'app_view_mode.dart';
+import '../data/workday/workday_persistence_session.dart';
 
 class OperationalScopeController extends ChangeNotifier {
   OperationalScopeController({
     AppViewMode view = AppViewMode.technician,
+    this.workdaySession,
     String technicianEmployeeId = 'alex',
     this._selectedVehicleId = 'transit-12',
     String? initialInventoryScopeVehicleId,
@@ -13,9 +15,19 @@ class OperationalScopeController extends ChangeNotifier {
        _inventoryVehicleId = initialInventoryScopeVehicleId,
        _selectedEmployeeId = view == AppViewMode.technician
            ? technicianEmployeeId
-           : null;
+           : null {
+    workdaySession?.addListener(notifyListeners);
+  }
 
   final String _technicianEmployeeId;
+  final WorkdayPersistenceSession? workdaySession;
+
+  @override
+  void dispose() {
+    workdaySession?.removeListener(notifyListeners);
+    super.dispose();
+  }
+
   AppViewMode _view;
   String? _selectedEmployeeId;
   String _selectedVehicleId;
@@ -33,8 +45,9 @@ class OperationalScopeController extends ChangeNotifier {
       ? _selectedVehicleId
       : _inventoryVehicleId;
 
-  int confirmedOdometerTenthsFor(String vehicleId) =>
-      _confirmedOdometerTenths[vehicleId] ?? 0;
+  int confirmedOdometerTenthsFor(String vehicleId) => workdaySession == null
+      ? _confirmedOdometerTenths[vehicleId] ?? 0
+      : workdaySession!.odometerFor(vehicleId)?.readingTenths ?? 0;
 
   void setView(AppViewMode value) {
     if (_view == value) return;
@@ -74,6 +87,7 @@ class OperationalScopeController extends ChangeNotifier {
     required String vehicleId,
     required int readingTenths,
   }) {
+    if (workdaySession != null) return false;
     final previous = _confirmedOdometerTenths[vehicleId] ?? 0;
     if (readingTenths < previous) return false;
     if (previous == readingTenths) return true;

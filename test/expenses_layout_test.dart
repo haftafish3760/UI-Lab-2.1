@@ -49,7 +49,15 @@ void main() {
       lessThanOrEqualTo(AppLayoutEngine.laneMaximum),
     );
     expect(tester.getSize(calendar).width, lessThan(500));
-    expect(tester.getSize(calendar).height, lessThan(510));
+    final monthHeight = tester.getSize(calendar).height;
+    expect(monthHeight, lessThanOrEqualTo(510));
+    final monthGridHeight = tester
+        .getSize(find.byKey(const ValueKey('work-5-7-calendar-grid')))
+        .height;
+    final monthGrid = tester.widget<GridView>(
+      find.byKey(const ValueKey('work-5-7-calendar-grid')),
+    );
+    expect(monthGrid.childrenDelegate.estimatedChildCount, 42);
 
     await tester.tap(find.byKey(const ValueKey('calendar-view-toggle')));
     await tester.pumpAndSettle();
@@ -58,6 +66,15 @@ void main() {
       find.byKey(const ValueKey('work-5-7-calendar-grid')),
     );
     expect(grid.childrenDelegate.estimatedChildCount, 7);
+    // Week removes five rows; its longer period label may reflow separately.
+    expect(
+      monthGridHeight -
+          tester
+              .getSize(find.byKey(const ValueKey('work-5-7-calendar-grid')))
+              .height,
+      closeTo(350, 0.01),
+    );
+    expect(tester.getSize(calendar).height, lessThan(monthHeight));
     expect(tester.takeException(), isNull);
   });
 }

@@ -22,6 +22,14 @@ Read these before changing UI:
 
 - Consistency is mandatory. Use `AppTheme`, `AppLayoutEngine`, and shared
   primitives; never create a private global breakpoint system inside a screen.
+- Follow the whole-card, meaning-based color rule in UI foundation section 3:
+  Plan and Entries retain their respective families across screens/employees.
+  Do not substitute minimalist pale bodies or header-only color. Exact trial
+  shades are not owner acceptance; verify the rendered result against feedback.
+- Surface missing dependencies and safeguards proactively within the requested
+  scope; do not require the owner to specify routine engineering necessities.
+  Explain unresolved product choices and never portray a fixture as a connected
+  production system. See Product Control's authority and completion rules.
 - Base layout on local post-navigation logical constraints and `TextScaler`, not
   OS, device name, orientation label, physical pixels, or monitor size.
 - Preserve system accessibility scaling. Reflow instead of globally clamping.
@@ -40,6 +48,13 @@ Read these before changing UI:
 
 ## Change discipline
 
+- Before substantial subsystem work or delegation, follow the required reuse
+  assessment in `docs/maintainiac_app_blueprint.md` section 2. Inspect relevant
+  5.7 capabilities read-only, report suitability and unverified risks, and carry
+  the requirement into each bounded agent assignment before implementation.
+- Before blueprint edits, follow "Blueprint changes: check existing
+  requirements first" in `docs/product_control_blueprint.md`; update the owning
+  rule or cross-reference it instead of creating competing copies.
 - Inspect branch and dirty state before editing; preserve unrelated work.
 - Update code, blueprint, and regression test together when a shared UI rule
   changes.

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../layout/app_layout_engine.dart';
-import '../../shared/section_card.dart';
+import '../../shared/recorded_entries_section.dart';
+import '../../shared/operational_section_heading.dart';
+import '../../theme/operational_card_palette.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../../theme/app_theme.dart';
 import 'dashboard_models.dart';
@@ -13,9 +15,11 @@ class TodayEntries extends StatefulWidget {
     this.entries = demoEntries,
     this.showOdometer = false,
     this.onOpen,
+    this.previewGradient,
   });
 
   final DateTime? date;
+  final Gradient? previewGradient;
   final List<DayEntry> entries;
   final bool showOdometer;
   final ValueChanged<DayEntry>? onOpen;
@@ -39,15 +43,17 @@ class _TodayEntriesState extends State<TodayEntries> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final semantic =
-        Theme.of(context).extension<AppSemanticColors>() ??
-        (colors.brightness == Brightness.dark
-            ? AppSemanticColors.dark
-            : AppSemanticColors.light);
-    final headerBackground = semantic.currentSurface;
-    final headerForeground = colors.onSurface;
+  Widget build(BuildContext context) => RecordedEntriesSection(
+    gradient: widget.previewGradient,
+    builder: _buildSection,
+  );
+
+  Widget _buildSection(BuildContext context) {
+    const tone = OperationalCardPalette.entries;
+    final headerBackground = widget.previewGradient == null
+        ? tone.start
+        : Colors.transparent;
+    final headerForeground = tone.foreground;
     final entries = [...widget.entries]
       ..sort(
         (a, b) => dashboardTimeMinutes(
@@ -57,90 +63,76 @@ class _TodayEntriesState extends State<TodayEntries> {
     final visibleCount = _expanded
         ? entries.length
         : entries.length.clamp(0, 3);
-    final sectionBackground = Color.alphaBlend(
-      semantic.current.withValues(alpha: .055),
-      colors.surface,
-    );
     return LayoutBuilder(
       builder: (context, constraints) {
         final type = AppLayoutEngine.typographyFor(constraints.maxWidth);
-        return SectionCard(
-          padding: EdgeInsets.zero,
-          backgroundColor: sectionBackground,
-          borderColor: semantic.current.withValues(alpha: .62),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                key: const ValueKey('today-entries-header'),
-                padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
-                decoration: BoxDecoration(
-                  color: headerBackground,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(AppRadii.surface - 1),
-                  ),
-                ),
-                child: _EntriesSectionHeader(
-                  title:
-                      sameDashboardDay(
-                        widget.date ?? dashboardToday,
-                        dashboardToday,
-                      )
-                      ? "Today's Entries"
-                      : 'Entries',
-                  total: entries.length,
-                  expanded: _expanded,
-                  foreground: headerForeground,
-                  iconColor: semantic.current,
-                  type: type,
-                  onToggle: () => setState(() => _expanded = !_expanded),
-                ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            OperationalSectionHeading(
+              headerKey: const ValueKey('today-entries-header'),
+              dividerColor: OperationalCardPalette.entries.row,
+              background: headerBackground,
+              foreground: headerForeground,
+              child: _EntriesSectionHeader(
+                title:
+                    sameDashboardDay(
+                      widget.date ?? dashboardToday,
+                      dashboardToday,
+                    )
+                    ? "Today's Entries"
+                    : 'Entries',
+                total: entries.length,
+                expanded: _expanded,
+                foreground: headerForeground,
+                iconColor: tone.foreground,
+                type: type,
+                onToggle: () => setState(() => _expanded = !_expanded),
               ),
-              if (entries.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-                  child: Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      _countLabel(visibleCount, entries.length),
-                      key: const ValueKey('entries-visible-count'),
-                      style: TextStyle(
-                        color: colors.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
+            ),
+            if (entries.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    _countLabel(visibleCount, entries.length),
+                    key: const ValueKey('entries-visible-count'),
+                    style: TextStyle(
+                      color: tone.foreground,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-              if (entries.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'No entries have been recorded for this day.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: colors.onSurfaceVariant),
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-                  child: Column(
-                    children: [
-                      for (var index = 0; index < visibleCount; index++) ...[
-                        _EntryRow(
-                          entry: entries[index],
-                          showOdometer: widget.showOdometer,
-                          onTap: widget.onOpen == null
-                              ? null
-                              : () => widget.onOpen!(entries[index]),
-                        ),
-                        if (index != visibleCount - 1)
-                          const SizedBox(height: 8),
-                      ],
-                    ],
-                  ),
+              ),
+            if (entries.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'No entries have been recorded for this day.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: tone.foreground),
                 ),
-            ],
-          ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                child: Column(
+                  children: [
+                    for (var index = 0; index < visibleCount; index++) ...[
+                      _EntryRow(
+                        entry: entries[index],
+                        showOdometer: widget.showOdometer,
+                        onTap: widget.onOpen == null
+                            ? null
+                            : () => widget.onOpen!(entries[index]),
+                      ),
+                      if (index != visibleCount - 1) const SizedBox(height: 8),
+                    ],
+                  ],
+                ),
+              ),
+          ],
         );
       },
     );
@@ -329,38 +321,32 @@ class _EntryRow extends StatelessWidget {
   }
 
   ({Color surface, Color border, Color accent}) _toneFor(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final semantic =
-        theme.extension<AppSemanticColors>() ??
-        (theme.brightness == Brightness.dark
-            ? AppSemanticColors.dark
-            : AppSemanticColors.light);
-    return switch (entry.reviewStatus) {
-      DayEntryReviewStatus.needsApproval => (
-        surface: semantic.attentionSurface,
-        border: semantic.attention.withValues(alpha: .74),
-        accent: semantic.attention,
-      ),
-      DayEntryReviewStatus.approved => (
-        surface: semantic.successSurface,
-        border: semantic.success.withValues(alpha: .7),
-        accent: semantic.success,
-      ),
-      DayEntryReviewStatus.denied => (
-        surface: semantic.dangerSurface,
-        border: semantic.danger.withValues(alpha: .72),
-        accent: semantic.danger,
-      ),
-      DayEntryReviewStatus.none => (
-        surface: Color.alphaBlend(
-          semantic.current.withValues(alpha: .045),
-          colors.surfaceContainerLow,
-        ),
-        border: semantic.current.withValues(alpha: .45),
-        accent: entry.color,
-      ),
-    };
+    if (entry.reviewStatus == DayEntryReviewStatus.needsApproval) {
+      const attention = OperationalCardPalette.attention;
+      return (
+        surface: attention.start,
+        border: attention.foreground.withValues(alpha: .45),
+        accent: attention.foreground,
+      );
+    }
+    const tone = OperationalCardPalette.entries;
+    const semantic = AppSemanticColors.light;
+    final accent = OperationalCardPalette.readableAccent(
+      switch (entry.reviewStatus) {
+        DayEntryReviewStatus.needsApproval => semantic.attention,
+        DayEntryReviewStatus.approved => semantic.success,
+        DayEntryReviewStatus.denied => semantic.danger,
+        DayEntryReviewStatus.none => entry.color,
+      },
+      tone.row,
+    );
+    return (
+      surface: tone.row,
+      border: entry.reviewStatus == DayEntryReviewStatus.none
+          ? OperationalCardTone.darkInk.withValues(alpha: .35)
+          : accent,
+      accent: accent,
+    );
   }
 
   Widget _time() => Text(

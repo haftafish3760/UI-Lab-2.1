@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
-import '../../theme/app_semantic_colors.dart';
+import '../../shared/operational_section_heading.dart';
+import '../../shared/operational_card_color_scope.dart';
+import '../../theme/operational_card_palette.dart';
 import '../../theme/app_theme.dart';
 import 'dashboard_models.dart';
 
@@ -14,6 +16,7 @@ class TodayPlan extends StatefulWidget {
     this.date,
     this.items = demoPlan,
     this.onOpen,
+    this.previewGradient,
     this.onAction,
     this.allowedActions = const {
       PlanAction.viewDetails,
@@ -24,6 +27,7 @@ class TodayPlan extends StatefulWidget {
   });
 
   final DateTime? date;
+  final Gradient? previewGradient;
   final List<PlanItem> items;
   final ValueChanged<PlanItem>? onOpen;
   final void Function(PlanItem item, PlanAction action)? onAction;
@@ -48,15 +52,17 @@ class _TodayPlanState extends State<TodayPlan> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final semantic =
-        Theme.of(context).extension<AppSemanticColors>() ??
-        (colors.brightness == Brightness.dark
-            ? AppSemanticColors.dark
-            : AppSemanticColors.light);
-    final headerBackground = semantic.plannedSurface;
-    final headerForeground = colors.onSurface;
+  Widget build(BuildContext context) => OperationalCardColorScope(
+    tone: OperationalCardPalette.plan,
+    builder: _buildSection,
+  );
+
+  Widget _buildSection(BuildContext context) {
+    const tone = OperationalCardPalette.plan;
+    final headerBackground = widget.previewGradient == null
+        ? tone.start
+        : Colors.transparent;
+    final headerForeground = tone.foreground;
     final items = [...widget.items]
       ..sort(
         (a, b) => dashboardTimeMinutes(
@@ -64,29 +70,21 @@ class _TodayPlanState extends State<TodayPlan> {
         ).compareTo(dashboardTimeMinutes(b.time)),
       );
     final visibleCount = _expanded ? items.length : items.length.clamp(0, 3);
-    final sectionBackground = Color.alphaBlend(
-      semantic.planned.withValues(alpha: .055),
-      colors.surface,
-    );
     return LayoutBuilder(
       builder: (context, constraints) {
         final type = AppLayoutEngine.typographyFor(constraints.maxWidth);
         return SectionCard(
           padding: EdgeInsets.zero,
-          backgroundColor: sectionBackground,
-          borderColor: semantic.planned.withValues(alpha: .62),
+          backgroundColor: tone.end,
+          gradient: widget.previewGradient,
+          borderColor: tone.start,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                key: const ValueKey('today-plan-header'),
-                padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
-                decoration: BoxDecoration(
-                  color: headerBackground,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(AppRadii.surface - 1),
-                  ),
-                ),
+              OperationalSectionHeading(
+                headerKey: const ValueKey('today-plan-header'),
+                background: headerBackground,
+                foreground: headerForeground,
                 child: _PlanSectionHeader(
                   title:
                       sameDashboardDay(
@@ -98,7 +96,7 @@ class _TodayPlanState extends State<TodayPlan> {
                   total: items.length,
                   expanded: _expanded,
                   foreground: headerForeground,
-                  iconColor: semantic.planned,
+                  iconColor: tone.foreground,
                   type: type,
                   onToggle: () => setState(() => _expanded = !_expanded),
                 ),
@@ -111,7 +109,7 @@ class _TodayPlanState extends State<TodayPlan> {
                     _countLabel(visibleCount, items.length),
                     key: const ValueKey('plan-visible-count'),
                     style: TextStyle(
-                      color: colors.onSurfaceVariant,
+                      color: tone.foreground,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -308,10 +306,10 @@ class _PlanRow extends StatelessWidget {
   Widget _wideContent(BuildContext context, AppTypography type) {
     return Row(
       children: [
-        _StatusBar(color: item.color),
+        _StatusBar(color: _accent),
         const SizedBox(width: 8),
         SizedBox(width: 60, child: _TimeLabel(item.time)),
-        Icon(item.icon, color: item.color, size: 20),
+        Icon(item.icon, color: _accent, size: 20),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -341,7 +339,7 @@ class _PlanRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _StatusBar(color: item.color),
+        _StatusBar(color: _accent),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -360,7 +358,7 @@ class _PlanRow extends StatelessWidget {
               Row(
                 children: [
                   if (!enlargedText) ...[
-                    Icon(item.icon, color: item.color, size: 17),
+                    Icon(item.icon, color: _accent, size: 17),
                     const SizedBox(width: 6),
                   ],
                   _TimeLabel(item.time),
@@ -433,6 +431,10 @@ class _PlanRow extends StatelessWidget {
   );
 
   void _openDetails() => onOpen?.call(item);
+  Color get _accent => OperationalCardPalette.readableAccent(
+    item.color,
+    OperationalCardPalette.plan.row,
+  );
 }
 
 class _EmptyPlan extends StatelessWidget {
@@ -440,13 +442,12 @@ class _EmptyPlan extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Text(
         'Nothing is scheduled for this day.',
         textAlign: TextAlign.center,
-        style: TextStyle(color: colors.onSurfaceVariant),
+        style: TextStyle(color: OperationalCardPalette.plan.foreground),
       ),
     );
   }

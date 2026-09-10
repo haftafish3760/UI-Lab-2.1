@@ -71,6 +71,8 @@ class ReceiptDraftUiController extends ChangeNotifier {
   bool _disposed = false;
 
   ReceiptDraftUiPhase get phase => _phase;
+  String get organizationId => _permissions.organizationId;
+  String get actorEmployeeId => _permissions.actorEmployeeId;
   ReceiptDraftUiFailure? get failure => _failure;
   bool get isLoading => _phase == ReceiptDraftUiPhase.loading;
   bool get showRecoveryNotice => _showRecoveryNotice;
@@ -183,6 +185,7 @@ class ReceiptDraftUiController extends ChangeNotifier {
     required Iterable<String> retainedEvidenceIds,
     required List<ReceiptEvidenceImport> addedEvidence,
     required DateTime occurredAtUtc,
+    int? expectedRevision,
     String? linkedJobId,
     String? linkedJobLabel,
   }) => _mutate(
@@ -190,6 +193,12 @@ class ReceiptDraftUiController extends ChangeNotifier {
     operation: ReceiptDraftUiOperation.update,
     action: () async {
       final current = _requireDraft(draftId);
+      if (expectedRevision != null &&
+          expectedRevision != current.lifecycle.revision) {
+        throw const ReceiptDraftRevisionConflictException(
+          'Receipt evidence changed after this review began.',
+        );
+      }
       final orderedRetainedIds = retainedEvidenceIds.toList(growable: false);
       final retained = orderedRetainedIds.toSet();
       if (retained.length != orderedRetainedIds.length) {
@@ -200,6 +209,11 @@ class ReceiptDraftUiController extends ChangeNotifier {
       final activeById = {
         for (final item in current.activeEvidence) item.evidenceId: item,
       };
+      if (orderedRetainedIds.any((id) => !activeById.containsKey(id))) {
+        throw const FormatException(
+          'Receipt evidence order contains an unavailable item.',
+        );
+      }
       final requested = current.copyWith(
         title: title.trim(),
         expenseDate: expenseDate,
@@ -288,7 +302,7 @@ class ReceiptDraftUiController extends ChangeNotifier {
     required Future<StoredReceiptDraft> Function() action,
     bool retainClosedResult = true,
   }) async {
-    if (!_pendingDraftIds.add(draftId)) return null;
+    if (_disposed || !_pendingDraftIds.add(draftId)) return null;
     _failure = null;
     _notify();
     try {

@@ -242,15 +242,16 @@ class _WorkDayScreenState extends State<WorkDayScreen> {
   }
 
   Future<void> _assignJob(WorkRecord record) async {
-    final assignment = await showModalBottomSheet<(String, String)>(
+    final store = PrototypeOperationsScope.of(context);
+    final saved = await showModalBottomSheet<WorkRecord>(
       context: context,
       showDragHandle: true,
-      builder: (_) => const WorkAssignmentSheet(),
+      isScrollControlled: true,
+      builder: (_) =>
+          JobAssignmentEditorSheet(record: record, work: store.workSession),
     );
-    if (!mounted || assignment == null) return;
-    PrototypeOperationsScope.of(context).updateWorkRecord(
-      record.copyWith(assignee: assignment.$1, vehicle: assignment.$2),
-    );
+    if (!mounted || saved == null) return;
+    if (store.workSession == null) await store.updateWorkRecord(saved);
   }
 }
 

@@ -8,6 +8,8 @@ import '../theme/app_theme.dart';
 import 'app_view_mode.dart';
 
 part 'operational_header_controls.dart';
+part 'operational_owner_header.dart';
+part 'operational_context_picker.dart';
 
 enum OperationalContextKind { employee, vehicle, activeVehicle }
 
@@ -71,6 +73,8 @@ class OperationalHeader extends StatelessWidget {
     this.viewKey = const ValueKey('operational-view-selector'),
     this.settingsKey = const ValueKey('operational-settings-button'),
     this.headerTitle,
+    this.ownerPresentation = false,
+    this.contextReading,
     super.key,
   });
 
@@ -94,6 +98,8 @@ class OperationalHeader extends StatelessWidget {
   final Key viewKey;
   final Key settingsKey;
   final String? headerTitle;
+  final bool ownerPresentation;
+  final Widget? contextReading;
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +111,16 @@ class OperationalHeader extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
+          if (ownerPresentation) {
+            return Align(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: AppLayoutEngine.maximumFormWorkspaceWidth,
+                ),
+                child: _OwnerHeaderContents(header: this),
+              ),
+            );
+          }
           final layout = AppLayoutEngine.headerFor(
             availableWidth: constraints.maxWidth,
             textScaler: MediaQuery.textScalerOf(context),

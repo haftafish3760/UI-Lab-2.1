@@ -2,7 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 
-import '../screens/expenses/expense_models.dart';
+import 'expenses/expense_workflow_models.dart';
 
 class ExpensePrototypeStore extends ChangeNotifier {
   ExpensePrototypeStore({

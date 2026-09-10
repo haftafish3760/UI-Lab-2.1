@@ -23,7 +23,9 @@ class ReportsScreen extends StatefulWidget {
 
 class _ReportsScreenState extends State<ReportsScreen> {
   var _period = ReportPeriod.thisMonth;
-  var _preferences = const ReportDisplayPreferences.defaults();
+  var _fixturePreferences = const ReportDisplayPreferences.defaults();
+  ReportDisplayPreferences get _preferences =>
+      readReportDisplayPreferences(context, _fixturePreferences);
 
   AppViewMode get _view => OperationalScope.of(context).view;
   String? get _selectedEmployeeId =>
@@ -124,7 +126,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         builder: (_) => ReportsSettingsScreen(initial: _preferences),
       ),
     );
-    if (mounted && result != null) setState(() => _preferences = result);
+    if (mounted && result != null) setState(() => _fixturePreferences = result);
   }
 
   PrototypeReportSummary _reportSummary(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
+import '../../theme/operational_card_palette.dart';
 import 'expense_models.dart';
 
 class ExpenseRecordCard extends StatelessWidget {
@@ -24,14 +25,18 @@ class ExpenseRecordCard extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final pending = expense.approvalStatus == ExpenseApprovalStatus.pending;
     final background = pending
-        ? colors.surfaceContainerHighest
+        ? OperationalCardPalette.attention.start
         : colors.surfaceContainerLow;
-    final foreground = pending ? colors.onSurfaceVariant : colors.onSurface;
+    final foreground = pending
+        ? OperationalCardPalette.attention.foreground
+        : colors.onSurface;
     return Material(
       key: ValueKey('expense-record-${expense.id}'),
       color: background,
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: colors.outline),
+        side: BorderSide(
+          color: pending ? foreground.withValues(alpha: .45) : colors.outline,
+        ),
         borderRadius: BorderRadius.circular(AppRadii.control),
       ),
       clipBehavior: Clip.antiAlias,
@@ -62,7 +67,9 @@ class ExpenseRecordCard extends StatelessWidget {
                         TextSpan(
                           text: '\n$_detail',
                           style: TextStyle(
-                            color: colors.onSurfaceVariant,
+                            color: pending
+                                ? foreground
+                                : colors.onSurfaceVariant,
                             fontSize: 11.5,
                             height: 1.1,
                           ),
@@ -85,7 +92,11 @@ class ExpenseRecordCard extends StatelessWidget {
                         ),
                       ),
                     const SizedBox(width: 2),
-                    const Icon(Icons.chevron_right_rounded, size: 19),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 19,
+                      color: foreground,
+                    ),
                   ],
                 ),
               ],

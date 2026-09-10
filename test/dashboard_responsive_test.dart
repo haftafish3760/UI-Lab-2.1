@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
+import 'package:ui_lab_2_1/src/screens/dashboard/today_entries.dart';
 import 'package:ui_lab_2_1/src/layout/app_layout_engine.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/active_vehicle_header.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/dashboard_calendar.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/dashboard_models.dart';
+import 'support/load_material_test_font.dart';
 
 Future<void> pumpAt(
   WidgetTester tester,
@@ -28,6 +30,8 @@ Future<void> pumpAt(
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(loadMaterialTestFont);
   testWidgets(
     'transient zero-size startup does not build invalid constraints',
     (tester) async {
@@ -46,10 +50,7 @@ void main() {
     await pumpAt(tester, const Size(412, 915));
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.text('ACTIVE VEHICLE'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('dashboard-view-selector')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('dashboard-view-selector')), findsNothing);
     expect(find.text("Today's Plan"), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -155,7 +156,7 @@ void main() {
     tester,
   ) async {
     await pumpAt(tester, const Size(412, 915));
-    final attention = find.byKey(const ValueKey('dashboard-needs-attention'));
+    final attention = find.byKey(const ValueKey('dashboard-summary-attention'));
     final plan = find.byKey(const ValueKey('dashboard-technician-schedule'));
     final entries = find.byKey(const ValueKey('dashboard-technician-entries'));
     final calendar = find.byKey(
@@ -283,7 +284,7 @@ void main() {
       expect(find.byType(ActiveVehicleHeader), findsOneWidget);
       expect(
         tester.getSize(find.byType(ActiveVehicleHeader)).height,
-        lessThanOrEqualTo(105),
+        lessThanOrEqualTo(125),
         reason: 'Header exceeded its two-row limit at $width logical pixels.',
       );
       expect(
@@ -302,34 +303,18 @@ void main() {
   });
 
   testWidgets(
-    'phone header actions stay side by side without truncation at normal scale',
+    'owner header is compact and Start remains outside it at normal scale',
     (tester) async {
       for (final width in [320.0, 360.0, 412.0, 450.0]) {
         await pumpAt(tester, Size(width, 844));
 
-        expect(
-          find.byKey(const ValueKey('header-actions-side-by-side')),
-          findsOneWidget,
-          reason: 'Header actions stacked too early at $width logical pixels.',
-        );
-        expect(
-          find.byKey(const ValueKey('header-actions-stacked')),
-          findsNothing,
-        );
         final selector = find.byKey(const ValueKey('dashboard-view-selector'));
-        final selectorTexts = tester.widgetList<Text>(
-          find.descendant(of: selector, matching: find.byType(Text)),
-        );
-        expect(
-          selectorTexts.any((text) => (text.data ?? '').contains('Technician')),
-          isTrue,
-        );
+        expect(selector, findsNothing);
         final startRect = tester.getRect(
           find.byKey(const ValueKey('start-workday-button')),
         );
-        final viewRect = tester.getRect(selector);
-        expect(startRect.top, closeTo(viewRect.top, .1));
-        expect(startRect.right, lessThan(viewRect.left));
+        final headerRect = tester.getRect(find.byType(ActiveVehicleHeader));
+        expect(startRect.top, greaterThan(headerRect.bottom));
         expect(tester.takeException(), isNull);
       }
     },
@@ -346,7 +331,7 @@ void main() {
       );
       expect(
         find.byKey(const ValueKey('dashboard-view-selector')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(find.text('ACTIVE VEHICLE'), findsOneWidget);
       final error = tester.takeException();
@@ -387,11 +372,15 @@ void main() {
     final entriesButton = find.byKey(const ValueKey('entries-expand-button'));
     await tester.ensureVisible(entriesButton);
     await tester.pumpAndSettle();
-    expect(find.text('3 of 7 entries'), findsOneWidget);
+    final entryCount = tester
+        .widget<TodayEntries>(find.byType(TodayEntries))
+        .entries
+        .length;
+    expect(find.text('3 of $entryCount entries'), findsOneWidget);
     await tester.tap(entriesButton);
     await tester.pumpAndSettle();
     expect(find.text('Estimate sent'), findsOneWidget);
-    expect(find.text('7 of 7 entries'), findsOneWidget);
+    expect(find.text('$entryCount of $entryCount entries'), findsOneWidget);
 
     final receipt = find.text('Central Supply');
     await tester.ensureVisible(receipt);

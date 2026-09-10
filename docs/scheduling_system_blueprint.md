@@ -331,6 +331,11 @@ An offline device cannot receive instantaneous revocation. Define a bounded offl
 
 ## 11. Local persistence, Firebase backup and team synchronization
 
+Cross-module policy owner: `data_storage_sync_contract.md`. The local/Hive and
+optional-backup plan below is historical direction, not a resolved app-wide
+cloud-authority choice. U02 governs category authority, offline privileges,
+sync versus paid backup, external media and retention. No storage migration here.
+
 The owner's target is Hive-backed local operation with optional Firebase backup. Current UI Lab Work is not proved durable by the presence of durable Expense code. Do not silently substitute a different database or migrate existing Expense/receipt/notification storage inside the scheduling task.
 
 First implement repository contracts and in-memory test adapters for the headless engine. Before durable cutover, provide a schema/migration decision: reuse of existing common storage mechanics, an isolated Hive adapter, identity mapping, revision/audit transaction boundaries, recovery, encryption/key handling and data export/rollback. Any new dependency or shared startup change is a coordinated integration slice.

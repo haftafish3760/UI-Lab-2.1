@@ -1,6 +1,8 @@
+import '../storage/draft_repository.dart';
+import '../storage/local_draft_checkpoint.dart';
 import 'package:flutter/widgets.dart';
 
-import '../../screens/expenses/expense_models.dart';
+import 'expense_workflow_models.dart';
 import 'authorized_recurring_expense_service.dart';
 import 'recurring_expense_records.dart';
 import 'recurring_expense_repository.dart';
@@ -14,9 +16,11 @@ class RecurringExpenseUiController extends ChangeNotifier {
     this._permissions,
     this._employeeLabelForId, {
     bool recoveredFromDamagedSnapshot = false,
+    this.drafts,
   }) : _showRecoveryNotice = recoveredFromDamagedSnapshot;
 
   final AuthorizedRecurringExpenseService _service;
+  final DraftRepository? drafts;
   final RecurringExpenseCommandPermissions _permissions;
   final RecurringExpenseEmployeeLabelResolver _employeeLabelForId;
   final Map<String, StoredRecurringExpenseTemplate> _templates = {};
@@ -27,6 +31,54 @@ class RecurringExpenseUiController extends ChangeNotifier {
   int _sourceRevision = 0;
   bool _showRecoveryNotice;
   bool _disposed = false;
+
+  void requireActiveDraftOwner() {
+    if (_disposed) {
+      throw StateError('The expense workflow owner is no longer active.');
+    }
+  }
+
+  String get organizationId => _permissions.organizationId;
+  String get actorEmployeeId => _permissions.actorEmployeeId;
+  String get actorEmployeeLabel => _employeeLabelForId(actorEmployeeId);
+  bool get canManage => !_disposed && _permissions.canManage;
+  bool canManageForEmployee(String id) =>
+      _permissions.canManage &&
+      _permissions.readAccess != null &&
+      _permissions.canTargetEmployee(id);
+  bool canPayForEmployee(String id) =>
+      _permissions.canRecordPayment &&
+      _permissions.readAccess != null &&
+      _permissions.canTargetEmployee(id);
+  Future<StoredRecurringExpenseTemplate?> readCurrentTemplate(String id) =>
+      _service.readCurrentTemplate(id, _permissions);
+  Future<StoredRecurringExpenseOccurrence?> readCurrentOccurrence(String id) =>
+      _service.readCurrentOccurrence(id, _permissions);
+  Future<ScheduledExpenseRecord?> readCurrentPlan(String id) async {
+    final record = await readCurrentTemplate(id);
+    return record == null
+        ? null
+        : RecurringExpenseUiAdapter.toUiTemplate(record, _employeeLabelForId);
+  }
+
+  Future<ScheduledExpenseOccurrence?> readOpenOccurrence(String id) async {
+    final record = await readCurrentOccurrence(id);
+    return record == null || !record.isOpen
+        ? null
+        : RecurringExpenseUiAdapter.toUiOccurrence(record);
+  }
+
+  bool canRecordPaymentFor(String templateId) {
+    final template = _templates[templateId];
+    return template != null &&
+        _permissions.canRecordPayment &&
+        (template.assignedEmployeeId == actorEmployeeId ||
+            _permissions.canManageOtherEmployees);
+  }
+
+  int? revisionForId(String id) => _templates[id]?.lifecycle.revision;
+  int? occurrenceRevisionForId(String id) =>
+      _occurrences[id]?.lifecycle.revision;
 
   RecurringExpenseUiPhase get phase => _phase;
   String? get failureMessage => _failureMessage;
@@ -115,51 +167,78 @@ class RecurringExpenseUiController extends ChangeNotifier {
     }
   }
 
-  Future<ScheduledExpenseRecord?> create(ScheduledExpenseRecord record) =>
-      _mutateTemplate(record.id, () async {
-        final now = DateTime.now().toUtc();
-        final stored = RecurringExpenseUiAdapter.newStoredTemplate(
-          record: record,
-          organizationId: _permissions.organizationId,
-          createdByEmployeeId: _permissions.actorEmployeeId,
-          occurredAtUtc: now,
-        );
-        final result = await _service.createTemplate(
-          template: stored,
-          initialOccurrence: stored.initialOccurrence(
-            occurrenceId: _occurrenceId(stored.templateId, stored.nextDueOn),
-            occurredAtUtc: now,
-            actorEmployeeId: _permissions.actorEmployeeId,
-            permissionRevision: _permissions.permissionRevision,
-          ),
-          permissions: _permissions,
-          occurredAtUtc: now,
-        );
-        _apply(result);
-        return recordById(record.id)!;
-      });
+  Future<ScheduledExpenseRecord?> create(
+    ScheduledExpenseRecord record, {
+    LocalDraftCheckpoint? draftCheckpoint,
+  }) => _mutateTemplate(record.id, () async {
+    final now = DateTime.now().toUtc();
+    final stored = RecurringExpenseUiAdapter.newStoredTemplate(
+      record: record,
+      organizationId: _permissions.organizationId,
+      createdByEmployeeId: _permissions.actorEmployeeId,
+      occurredAtUtc: now,
+    );
+    final result = await _service.createTemplate(
+      template: stored,
+      initialOccurrence: stored.initialOccurrence(
+        occurrenceId: _occurrenceId(stored.templateId, stored.nextDueOn),
+        occurredAtUtc: now,
+        actorEmployeeId: _permissions.actorEmployeeId,
+        permissionRevision: _permissions.permissionRevision,
+      ),
+      permissions: _permissions,
+      draftCheckpoint: draftCheckpoint,
+      occurredAtUtc: now,
+    );
+    _apply(result);
+    return recordById(record.id)!;
+  });
 
-  Future<ScheduledExpenseRecord?> update(ScheduledExpenseRecord record) =>
-      _mutateTemplate(record.id, () async {
-        final current = _requireTemplate(record.id);
-        final result = await _service.updateTemplate(
-          template: RecurringExpenseUiAdapter.updateStoredTemplate(
-            current: current,
-            record: record,
-          ),
-          expectedRevision: current.lifecycle.revision,
-          permissions: _permissions,
-          occurredAtUtc: DateTime.now().toUtc(),
-        );
-        _apply(result);
-        return recordById(record.id)!;
-      });
+  Future<ScheduledExpenseRecord?> update(
+    ScheduledExpenseRecord record, {
+    LocalDraftCheckpoint? draftCheckpoint,
+    int? expectedRevision,
+  }) => _mutateTemplate(record.id, () async {
+    final current = _requireTemplate(record.id);
+    if ((draftCheckpoint != null && expectedRevision == null) ||
+        (expectedRevision != null &&
+            current.lifecycle.revision != expectedRevision)) {
+      throw const RecurringExpenseRevisionConflictException(
+        'This planned expense changed after editing started.',
+      );
+    }
+    final result = await _service.updateTemplate(
+      template: RecurringExpenseUiAdapter.updateStoredTemplate(
+        current: current,
+        record: record,
+      ),
+      expectedRevision: expectedRevision ?? current.lifecycle.revision,
+      draftCheckpoint: draftCheckpoint,
+      permissions: _permissions,
+      occurredAtUtc: DateTime.now().toUtc(),
+    );
+    _apply(result);
+    return recordById(record.id)!;
+  });
 
   Future<ScheduledExpenseOccurrence?> updateOccurrence(
-    ScheduledExpenseOccurrence occurrence,
-  ) => _mutateOccurrence(occurrence.id, () async {
+    ScheduledExpenseOccurrence occurrence, {
+    LocalDraftCheckpoint? draftCheckpoint,
+    int? expectedTemplateRevision,
+    int? expectedRevision,
+  }) => _mutateOccurrence(occurrence.id, () async {
     final current = _requireOccurrence(occurrence.id);
     final template = _requireTemplate(current.templateId);
+    if ((draftCheckpoint != null &&
+            (expectedTemplateRevision == null || expectedRevision == null)) ||
+        (expectedTemplateRevision != null &&
+            template.lifecycle.revision != expectedTemplateRevision) ||
+        (expectedRevision != null &&
+            current.lifecycle.revision != expectedRevision)) {
+      throw const RecurringExpenseRevisionConflictException(
+        'This planned payment or its plan changed after editing started.',
+      );
+    }
     final result = await _service.updateOccurrence(
       templateId: template.templateId,
       occurrence: current.copyWith(
@@ -168,8 +247,10 @@ class RecurringExpenseUiController extends ChangeNotifier {
           occurrence.expectedAmount,
         ),
       ),
-      expectedTemplateRevision: template.lifecycle.revision,
-      expectedRevision: current.lifecycle.revision,
+      expectedTemplateRevision:
+          expectedTemplateRevision ?? template.lifecycle.revision,
+      expectedRevision: expectedRevision ?? current.lifecycle.revision,
+      draftCheckpoint: draftCheckpoint,
       permissions: _permissions,
       occurredAtUtc: DateTime.now().toUtc(),
     );
@@ -254,7 +335,7 @@ class RecurringExpenseUiController extends ChangeNotifier {
       _mutate(id, action);
 
   Future<T?> _mutate<T>(String id, Future<T> Function() action) async {
-    if (!_pendingIds.add(id)) return null;
+    if (_disposed || !_pendingIds.add(id)) return null;
     _failureMessage = null;
     _notify();
     try {

@@ -14,9 +14,13 @@ Future<void> _pumpDashboard(WidgetTester tester) async {
 }
 
 Future<void> _switchToAdmin(WidgetTester tester) async {
-  await tester.tap(find.byKey(const ValueKey('dashboard-view-selector')));
+  await tester.tap(find.byKey(const ValueKey('app-destination-work')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const ValueKey('work-view-selector')));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Admin'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const ValueKey('app-destination-dashboard')));
   await tester.pumpAndSettle();
 }
 
@@ -58,15 +62,15 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Needs attention Show all remains its own exact-record queue', (
+  testWidgets('Needs attention opens its own exact-record queue', (
     tester,
   ) async {
     await _pumpDashboard(tester);
     await _switchToAdmin(tester);
 
-    final showAll = find.text('Show all 4');
-    await tester.ensureVisible(showAll);
-    await tester.tap(showAll);
+    final attention = find.byKey(const ValueKey('dashboard-summary-attention'));
+    await tester.ensureVisible(attention);
+    await tester.tap(attention);
     await tester.pumpAndSettle();
 
     expect(

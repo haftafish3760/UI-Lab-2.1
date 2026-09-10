@@ -1,4 +1,4 @@
-import '../../screens/expenses/expense_models.dart';
+import '../expenses/expense_workflow_models.dart';
 import '../expenses/expense_ui_repository_controller.dart';
 import 'receipt_draft_ui_controller.dart';
 
@@ -40,6 +40,12 @@ class ReceiptDraftSubmissionCoordinator {
     required String paidByEmployeeId,
     required DateTime occurredAtUtc,
   }) async {
+    if (expenses.organizationId != receiptDrafts.organizationId ||
+        expenses.actorEmployeeId != receiptDrafts.actorEmployeeId) {
+      return const ReceiptDraftSubmissionResult.failure(
+        'Receipt and Expense sessions do not match. Reopen this workflow before saving.',
+      );
+    }
     final draft = receiptDrafts.recordById(draftId);
     if (draft == null) {
       return const ReceiptDraftSubmissionResult.failure(
@@ -67,7 +73,7 @@ class ReceiptDraftSubmissionCoordinator {
 
     var expense = expenses.recordById(expenseId);
     if (expense != null &&
-        (!_matches(expense, requested) ||
+        (!receiptSubmissionMatches(expense, requested) ||
             expenses.receiptIdForExpense(expenseId) != draftId)) {
       return const ReceiptDraftSubmissionResult.failure(
         'An Expense with this receipt identity contains different confirmed '
@@ -129,7 +135,7 @@ ExpenseRecord _withIdentity(ExpenseRecord record, String expenseId) =>
       submitterAttentionReason: record.submitterAttentionReason,
     );
 
-bool _matches(ExpenseRecord existing, ExpenseRecord requested) {
+bool receiptSubmissionMatches(ExpenseRecord existing, ExpenseRecord requested) {
   final existingDate = existing.resolvedDate;
   final requestedDate = requested.resolvedDate;
   if (existingDate == null || requestedDate == null) return false;
@@ -140,6 +146,7 @@ bool _matches(ExpenseRecord existing, ExpenseRecord requested) {
       existing.paidByEmployeeId == requested.paidByEmployeeId &&
       existing.jobId == requested.jobId &&
       existing.receiptType == requested.receiptType &&
+      existing.receiptImageCount == requested.receiptImageCount &&
       _sameOptionalMoney(existing.receiptSubtotal, requested.receiptSubtotal) &&
       _sameMoney(existing.salesTax, requested.salesTax) &&
       existing.approvalStatus == requested.approvalStatus &&

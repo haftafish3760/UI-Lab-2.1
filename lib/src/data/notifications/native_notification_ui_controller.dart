@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import 'native_notification_delivery_coordinator.dart';
 import 'native_notification_gateway.dart';
+import '../storage/serialized_async_actions.dart';
 
 enum NativeNotificationUiPhase { loading, ready, requesting, failed }
 
@@ -19,7 +20,8 @@ class NativeNotificationUiController extends ChangeNotifier {
   final NativeNotificationDeliveryCoordinator _coordinator;
   final Locale Function() _locale;
   Future<void> _sourceReady;
-  Future<void> _serial = Future<void>.value();
+  final _actions = SerializedAsyncActions();
+  Future<AsyncActionPause> pauseOperations() => _actions.pauseAndDrain();
   NativeNotificationUiPhase _phase = NativeNotificationUiPhase.loading;
   NativeNotificationPermissionState _permission =
       NativeNotificationPermissionState.unsupported;
@@ -57,6 +59,23 @@ class NativeNotificationUiController extends ChangeNotifier {
     }
     _notify();
   });
+
+  /// Serialized with reminder initialization so platform failures stay local to
+  /// this optional service and never escape the app's post-frame callback.
+  Future<String?> takeLaunchPayload() async {
+    String? payload;
+    await _enqueue(() async {
+      if (_disposed) return;
+      try {
+        payload = await _gateway.takeLaunchPayload();
+      } on Object {
+        _phase = NativeNotificationUiPhase.failed;
+        _failureMessage = 'Device reminders could not be updated.';
+        _notify();
+      }
+    });
+    return payload;
+  }
 
   Future<bool> enable({required bool sound}) async {
     var enabled = false;
@@ -107,11 +126,7 @@ class NativeNotificationUiController extends ChangeNotifier {
     );
   }
 
-  Future<void> _enqueue(Future<void> Function() action) {
-    final next = _serial.then((_) => action());
-    _serial = next.catchError((Object _) {});
-    return next;
-  }
+  Future<void> _enqueue(Future<void> Function() action) => _actions.run(action);
 
   void _notify() {
     if (!_disposed) notifyListeners();

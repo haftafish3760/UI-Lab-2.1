@@ -8,12 +8,15 @@ screen and interactions; production data architecture belongs to the main app.
 
 ## Approved dashboard regions
 
-- Dark operational header: active vehicle, odometer, navigation,
-  start-workday action, role view, and settings.
+- Dark operational header: compact title/navigation/settings row, followed by
+  vehicle and odometer. Owner presentation has no View/Technician selector;
+  Start workday is below the header, not inside it.
 - Selected date as the first orientation label below the header. Dashboard has
   no competing notification bell; Needs attention is its one action queue.
 - Today's Plan: scheduled work still requiring action.
-- Today's Entries: completed stops and other records created during the day.
+- Today's Entries: recorded activity for the selected day. Omit the section
+  when no entries exist, regardless of whether Start workday was pressed.
+  Existing entries remain visible before starting and after ending a workday.
 - Calendar: a bounded Week/Month navigator. Selecting a date pushes the
   separate Calendar Day screen for that date; it never replaces Dashboard
   content in place.
@@ -25,11 +28,31 @@ attention, when it exists, follows the date and precedes ordinary work. A
 dismissed panel hides the current projection only; it does not resolve or alter
 the underlying records.
 
-Needs attention and Plan always share the priority lane, with Needs attention
-directly above Plan. At two lanes, Entries and Calendar share the second lane.
-At three lanes, Entries and Calendar receive their own lanes. A missing Needs
-attention projection removes the panel and its spacing; it does not leave an
-empty placeholder.
+Owner update, September 7: Needs attention is first in the five-card horizontal
+strip, followed by Payments, Expenses, Miles, and Work. Do not also render the
+old attention panel. Cards are 96 by 120 logical pixels at normal text size;
+long values, translation and accessibility text may grow the shared dimensions.
+Measure monetary values before laying out the strip: widen the common card
+width when necessary rather than split digits, abbreviate money or clamp text.
+Use icons, full labels and visible values; color alone is insufficient.
+Plan and Entries use the lanes below this strip. With no entries, omit that
+lane and its spacing rather than leaving an empty box.
+
+The owner requires solid whole-card blue for Plan and medium-depth jade for Entries,
+not header-only color or section gradients. Inner record rows are lighter and
+distinct. September 8 exact shades are a visual trial owned
+by UI foundation section 3 and `OperationalCardPalette`, not accepted colors
+or private screen values. Employee changes never change these meanings. Keep
+the restored light-green Start workday action. The
+status-bar background/safe-area treatment must remain unchanged in this pass.
+
+The owner vehicle picker adapts the dark 5.7 dialog with vehicle name/detail.
+Exactly the current selection is highlighted BLUE when reopened, not green and
+not an always-selected company row. The app-wide intended contract is that
+header, picker, records and totals share vehicle/company scope. IMPORTANT:
+current Dashboard/financial prototype projections do not yet satisfy that
+whole-app filtering contract; this presentation pass is not its implementation.
+Do not infer vehicle association from a display label or reassign old records.
 
 The Dashboard receives post-navigation, post-inset logical width from the
 shared `AppLayoutEngine` and uses this exact contract:
@@ -52,9 +75,9 @@ LP.
 Dashboard uses the application semantic palette rather than screen-local
 colors:
 
-- red identifies unresolved Needs attention work;
-- purple identifies planned work;
-- blue identifies ordinary current-day records;
+- muted orange identifies unresolved Needs attention and pending approval;
+- blue section fill identifies Plan;
+- jade-green outer section fill identifies recorded Entries;
 - orange identifies a record waiting for an authorized decision;
 - green identifies approved or completed state; and
 - red also identifies a declined or failed state inside a record list.

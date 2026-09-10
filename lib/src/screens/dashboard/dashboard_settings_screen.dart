@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../layout/app_layout_engine.dart';
 import '../../shared/operational_scope.dart';
+import '../../shared/app_preferences.dart';
 import '../../shared/section_card.dart';
 import 'active_vehicle_header.dart';
 import 'dashboard_models.dart';
@@ -21,6 +22,34 @@ class DashboardSettingsScreen extends StatefulWidget {
 
 class _DashboardSettingsScreenState extends State<DashboardSettingsScreen> {
   late var _enabled = Set<DashboardWorkdayAction>.of(widget.enabledActions);
+
+  bool _saving = false;
+  Future<void> _setEnabled(Set<DashboardWorkdayAction> actions) async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    final next = {...actions, DashboardWorkdayAction.endDay};
+    final saved = await AppPreferencesScope.of(
+      context,
+    ).setDashboardActions(next.map((action) => action.name).toSet());
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      if (saved) _enabled = next;
+    });
+    if (!saved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Dashboard settings were not saved. Previous choices remain active.',
+          ),
+          action: SnackBarAction(
+            label: 'Retry',
+            onPressed: () => _setEnabled(next),
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,15 +128,16 @@ class _DashboardSettingsScreenState extends State<DashboardSettingsScreen> {
                               ),
                               value: _enabled.contains(spec.action),
                               onChanged:
-                                  spec.action == DashboardWorkdayAction.endDay
+                                  (spec.action ==
+                                          DashboardWorkdayAction.endDay ||
+                                      _saving)
                                   ? null
-                                  : (value) => setState(() {
-                                      if (value == true) {
-                                        _enabled.add(spec.action);
-                                      } else {
-                                        _enabled.remove(spec.action);
-                                      }
-                                    }),
+                                  : (value) => _setEnabled(
+                                      value == true
+                                          ? {..._enabled, spec.action}
+                                          : ({..._enabled}
+                                              ..remove(spec.action)),
+                                    ),
                             ),
                           const SizedBox(height: 10),
                           Wrap(
@@ -116,18 +146,18 @@ class _DashboardSettingsScreenState extends State<DashboardSettingsScreen> {
                             runSpacing: 10,
                             children: [
                               TextButton(
-                                onPressed: () => setState(
-                                  () => _enabled = Set.of(
-                                    defaultDashboardWorkdayActions,
-                                  ),
-                                ),
+                                onPressed: _saving
+                                    ? null
+                                    : () => _setEnabled(
+                                        Set.of(defaultDashboardWorkdayActions),
+                                      ),
                                 child: const Text('Restore defaults'),
                               ),
                               FilledButton.icon(
                                 key: const ValueKey(
                                   'save-dashboard-settings-button',
                                 ),
-                                onPressed: _save,
+                                onPressed: _saving ? null : _save,
                                 icon: const Icon(Icons.check_rounded),
                                 label: const Text('Save Dashboard settings'),
                               ),
@@ -154,6 +184,8 @@ class _DashboardSettingsScreenState extends State<DashboardSettingsScreen> {
     return null;
   }
 
-  void _save() =>
-      Navigator.of(context).pop({..._enabled, DashboardWorkdayAction.endDay});
+  void _save() {
+    if (_saving) return;
+    Navigator.of(context).pop({..._enabled, DashboardWorkdayAction.endDay});
+  }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations_extension.dart';
 
 import '../../shared/app_view_mode.dart';
 import '../../shared/operational_header.dart';
 import '../../shared/operational_scope.dart';
+import '../../theme/app_theme.dart';
 import 'dashboard_models.dart';
 
 class ActiveVehicleHeader extends StatelessWidget {
@@ -21,6 +23,9 @@ class ActiveVehicleHeader extends StatelessWidget {
     this.leadingTooltip = 'Open navigation menu',
     this.onLeading,
     this.settingsTooltip = 'Dashboard settings',
+    this.ownerPresentation = false,
+    this.onVehicleChanged,
+    this.ownerTitle,
   });
 
   final AppViewMode view;
@@ -36,6 +41,9 @@ class ActiveVehicleHeader extends StatelessWidget {
   final String leadingTooltip;
   final VoidCallback? onLeading;
   final String settingsTooltip;
+  final bool ownerPresentation;
+  final ValueChanged<String>? onVehicleChanged;
+  final String? ownerTitle;
 
   static const _company = OperationalHeaderContextOption(
     id: 'company',
@@ -51,6 +59,37 @@ class ActiveVehicleHeader extends StatelessWidget {
     final scope = OperationalScope.of(context);
     final options = _contextOptions(scope);
     return OperationalHeader(
+      ownerPresentation: ownerPresentation,
+      headerTitle: ownerPresentation
+          ? (ownerTitle ?? context.l10n.navDashboard)
+          : null,
+      contextReading: ownerPresentation
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.dashboardOdometerLabel.toUpperCase(),
+                  style: const TextStyle(
+                    color: AppColors.onHeaderMuted,
+                    fontSize: 11,
+                    height: 1.15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _odometerLabel(scope, scope.selectedVehicleId),
+                  key: const ValueKey('dashboard-header-odometer'),
+                  style: const TextStyle(
+                    color: Color(0xFF6AD39B),
+                    fontSize: 19,
+                    height: 1.15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            )
+          : null,
       view: view,
       onViewChanged: onViewChanged ?? _noopView,
       selectedContext: _selectedContext(options, scope),
@@ -83,16 +122,18 @@ class ActiveVehicleHeader extends StatelessWidget {
   List<OperationalHeaderContextOption> _contextOptions(
     OperationalScopeController scope,
   ) {
-    if (view == AppViewMode.technician) {
+    if (ownerPresentation || view == AppViewMode.technician) {
       return [
         for (final vehicle in demoVehicles)
           OperationalHeaderContextOption(
             id: vehicle.id,
             kind: OperationalContextKind.activeVehicle,
-            title:
-                '${vehicle.name} · ${formatOdometerTenths(scope.confirmedOdometerTenthsFor(vehicle.id))} mi',
-            detail:
-                '${vehicle.description} · Odometer ${formatOdometerTenths(scope.confirmedOdometerTenthsFor(vehicle.id))} mi',
+            title: ownerPresentation
+                ? vehicle.name
+                : '${vehicle.name} · ${_odometerLabel(scope, vehicle.id)}',
+            detail: ownerPresentation
+                ? vehicle.description
+                : '${vehicle.description} · Odometer ${_odometerLabel(scope, vehicle.id)}',
             icon: vehicle.icon,
           ),
       ];
@@ -115,7 +156,7 @@ class ActiveVehicleHeader extends StatelessWidget {
     List<OperationalHeaderContextOption> options,
     OperationalScopeController scope,
   ) {
-    if (view == AppViewMode.technician) {
+    if (ownerPresentation || view == AppViewMode.technician) {
       return options.firstWhere(
         (option) => option.id == scope.selectedVehicleId,
         orElse: () => options.first,
@@ -130,8 +171,9 @@ class ActiveVehicleHeader extends StatelessWidget {
     OperationalHeaderContextOption option,
     OperationalScopeController scope,
   ) {
-    if (view == AppViewMode.technician) {
+    if (ownerPresentation || view == AppViewMode.technician) {
       scope.selectVehicle(option.id);
+      onVehicleChanged?.call(option.id);
       return;
     }
     if (option.id == _company.id) {
@@ -146,4 +188,15 @@ class ActiveVehicleHeader extends StatelessWidget {
 
   static void _noop() {}
   static void _noopView(AppViewMode _) {}
+}
+
+String _odometerLabel(OperationalScopeController scope, String vehicleId) {
+  final session = scope.workdaySession;
+  if (session != null) {
+    final odometer = session.odometerFor(vehicleId);
+    if (odometer == null) return 'Unavailable';
+    if (odometer.revision == 0) return 'Not recorded';
+    return '${formatOdometerTenths(odometer.readingTenths)} mi';
+  }
+  return '${formatOdometerTenths(scope.confirmedOdometerTenthsFor(vehicleId))} mi';
 }

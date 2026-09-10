@@ -1,9 +1,11 @@
 # Maintainiac 5.7 Capability Migration Map
 
 Status: pre-migration control document 0.1  
-Validated: 2026-09-01  
-Purpose: prevent drift while proven capabilities are extracted from Maintainiac
-5.7 Active into the UI Lab 2.1 replacement shell
+Historical discovery date: 2026-09-01; not revalidated in this documentation pass.
+Purpose: map candidate capabilities to accepted application contracts before
+any migration. Authority: `README.md` and `application_decision_register.md`;
+production destination is 2.1 (D30), with SQLite/Drift selected (D31).
+See `current_product_blueprint.md` and `storage_database_codex_handoff.md`.
 
 Read-only discovery snapshot: branch
 `backup/receipt-pipeline-pre-registration-2026-08-04`, HEAD
@@ -16,7 +18,7 @@ current, correct, or release-ready.
 
 This map controls capability movement between two repositories:
 
-- **Target:** `/Volumes/AppleWork/UI-Lab-2.1`
+- **Current contract/proving workspace:** `/Volumes/AppleWork/UI-Lab-2.1`
 - **Protected source:** `/Users/rbbie/Documents/Maintainiac_5.7_Active`
 
 UI Lab owns the accepted screen behavior, responsive layout, plain-language
@@ -41,16 +43,16 @@ Until the owner approves a bounded slice:
    conversion, and rollback gate before implementation begins.
 5. Preserve unrelated dirty work in both repositories.
 
-This is a controlled replacement, not a blank rewrite and not an in-place
-restyling of 5.7. Its primary known weakness is UI/UX, not an assumption that
-its engines are disposable. UI Lab is the candidate clean shell; 5.7 remains
-the recovery and comparison source until the replacement has independently
-proven parity.
+Controlled replacement in 2.1 is selected by D30. Assess both repositories'
+existing systems; neither age nor passing source tests settles
+quality. Preserve useful behavior, not defects. Paths/dispositions below are
+historical candidates, not current verification or transplant approval.
 
 ## 2. Non-negotiable migration rules
 
-1. **Local truth first.** Confirmed records save locally before any optional
-   backup or sync attempt.
+1. **Durable offline work.** Confirmed local operations save before optional
+   backup or sync attempts. Global acceptance/authority is category-specific;
+   see `data_storage_sync_contract.md` and U02. Local success is not cloud ack.
 2. **Stable identity.** Expense, receipt, receipt line, attachment, occurrence,
    job, vehicle, employee, and organization identifiers remain stable across
    restart, import, export, and sync.
@@ -110,7 +112,8 @@ The new dependency direction is one way:
 
 Widgets do not open Hive boxes, access Firebase, parse receipts, read files, or
 make permission decisions from role labels. Infrastructure does not import
-screens. Cloud code never becomes the source of truth for a local record.
+screens. Domain ownership is not storage location. Cloud authority for selected
+categories remains U02; an existing local adapter does not settle that policy.
 
 ### Planned target responsibilities
 
@@ -328,7 +331,9 @@ notification repository a messaging store.
 | `lib/screens/expenses/data/expense_ocr_failure_diagnostics.dart` | Defer | Reintroduce only through privacy-reviewed diagnostic contracts |
 | `lib/screens/expenses/data/expense_screen_telemetry.dart` | Reference only | Treat this root and its companion telemetry files as one legacy family; do not migrate wholesale; redesign minimal privacy-safe operational telemetry later |
 
-The long-receipt stitching engine is a separate rewrite. Original images and
+Long-receipt repair versus replacement requires independent assessment; the
+owner allowed either route. The old mandatory-rewrite disposition is not
+approval. Original images and
 their order remain evidence. A stitched image is derived evidence and cannot
 replace originals. The engine must have overlap, missing-middle, duplicate-row,
 rotation, blur, glare, and very-long-receipt fixtures before it can feed Receipt
@@ -476,8 +481,8 @@ This is an active characterization requirement, not permission to treat 5.7 as
 documentation only. At the start of each approved capability slice, run the
 existing untouched 5.7 harness, add narrowly scoped tests for uncovered public
 behavior, freeze privacy-safe artifacts, and only then decide whether the
-capability is adapted, wrapped, or replaced. The long-receipt stitching engine
-is already classified as a rewrite and must not be copied into the target.
+capability is adapted, wrapped, or replaced. Long-receipt repair/replacement
+requires its own evidence and bounded approval; do not transplant it wholesale.
 
 ### 6.11 Evidence maturity labels
 
@@ -665,12 +670,13 @@ current boundary is intentional:
 2. `expense_repository.dart` defines own/team/company query predicates before
    aggregation plus create, update, soft-delete, restore, and approved-total
    operations.
-3. `file_expense_repository.dart` uses two checksummed generations with
-   serialized writes. A failed or interrupted write cannot replace the last
-   valid generation; recovery from a damaged generation is explicitly
-   reported instead of hidden.
-4. `private_expense_repository.dart` resolves the repository beneath platform
-   Application Support/app data. It must never be redirected to Documents or a
+3. The retained legacy `file_expense_repository.dart` uses two checksummed
+   generations with serialized writes for compatibility and independent tests.
+   It is not the current application startup path.
+4. Current startup opens SQLite through `LocalPersistence.open`, beneath private
+   Application Support/app data, and injects its repositories into the app.
+   The unused private file-repository startup helpers were removed during the
+   SQLite migration. Live storage must not be redirected to Documents or a
    user-selected export directory.
 5. `expense_record_adapter.dart` requires explicit organization and employee
    IDs. It does not infer authorization identity from the visible employee
@@ -888,3 +894,50 @@ This map is updated before—not after—scope expands. A discovered source file
 field, box, permission, native dependency, or cloud document that is not listed
 here is unapproved work. Add it, classify it, identify its tests and rollback,
 then seek approval for the revised slice.
+
+## 15. Whole-application build and dependency map — 2026-09-07
+
+Documentation only; no 5.7 inspection or migration in this pass. Paths below
+refer to historical discovery in §6 where available. Unknown paths remain
+unknown. D/U references resolve in `application_decision_register.md`. All
+reuse dispositions require refreshed independent assessment before execution.
+
+| Target contract | Candidate 5.7 capability/evidence | Dependencies and gate before movement |
+| --- | --- | --- |
+| Shared layout/accessibility D06–D08 | Legacy presentation is comparison evidence, not target design | Shared engine, scoped state, full width/scaling/locale workflow acceptance |
+| Durable records/Hive D14,D17 | §6.1 bootstrap, secure storage, guard, lifecycle, durable store | Independently assess schemas, atomicity, recovery, keys, U01/U02 |
+| Cloud/sync/backup D17 | §6.8 identity, schema, queue, proof storage and restore | Decide record authority and entitlement; distinguish sync, backup and external media |
+| Expenses/receipts D12,D15 | §6.2 ledger and §6.3 drafts/evidence | Expense cutover map, exact money, confirmed effects, interrupted-save recovery |
+| OCR/long receipts D14,D15 | §6.5 OCR contract, parser, review merge | Regional fixtures, retained originals, manual fallback; repair vs replace undecided |
+| Inventory/trade packs/par D13,D14 | §6.6 complete work_supplies data/catalog/parser/QA families | Preserve manifests/identities; cost vs stock vs job actuals; par policy U07 |
+| Trips/GPS/workday D09,D13,D14 | §6.9 active_workday_store; GPS path inventory still required | Background permissions, battery, lifecycle, durable samples, confirmation, real-device proof |
+| Customers/Quotes/Estimates/Jobs D01,D12 | §6.9 job store; estimate census incomplete; quote/customer census required | Stable identity, U03/U04, independent workflow characterization |
+| Scheduling D09,D10 | Work/employee/time seams need fresh census | Pure proposal engine, staffing scope, U05 and historical-entry protection |
+| Invoices/Payments/Documents D12,D15 | §6.9 invoice ledger/record/PDF renderer | Exact revisions, decimal arithmetic, shared renderer/reader and safe exports |
+| Calendar/history D09 | Workday/source dates; legacy calendar reference | Project owners' records, no duplicate day-ledger authority |
+| Maintenance/Repairs/assets D13 | No complete source inventory in this map | U07 identity, thresholds, service/repair vs expense/stock ownership; no build this pass |
+| Notifications/attention D13 | §6.4 reminder evidence and §6.4.1 notification assessment | Proven adapters, separate action queues and delivery states |
+| Localization/units D11 | Legacy parser/catalog regional and unit behavior needs assessment | Shared catalog, source units/evidence and no translated record identity |
+| Permissions/settings D16,D18 | §6.7 permission/approval evidence | Capability/scope/revision, U03 and page vs company/user settings |
+| Portal/QR and AI planning P02,D21 | No accepted reusable implementation established here | Scoped commands, exact revision links, U08/U10; no auth/paid-service setup |
+| Admin health D19 | §6.5 diagnostics/telemetry are reference only | U09 minimal data, redaction, separate operator scope |
+| QA D05 | §6.10 harness, fixtures and holdout inventory | Assess test assumptions; green legacy checks are not independent correctness |
+
+Recommended dependency sequence, not implementation authorization:
+
+1. Reconcile product authority and assess both foundations without changing 5.7.
+   Establish stable record identities, command boundaries and storage decisions.
+2. Assess high-investment storage/Hive, OCR, GPS, inventory/trade packs as complete
+   dependency groups. Explain reuse/repair/replace with actual evidence.
+3. Prove the selected SQLite/Drift foundation in an approved isolated context;
+   preserve Hive source data and verify conversion rather than assuming parity.
+4. Integrate one approved workflow across domain, storage, permissions, screen,
+   history, notifications and recovery. Retain a reversible migration path.
+5. Expand only after regression, runtime/device and owner acceptance evidence.
+
+Every future slice records decision IDs, source revision/manifest, destination,
+schema/data conversion, dependencies, protected records, permissions/offline
+states, independent expected results, tests actually run, runtime evidence,
+rollback, approval and open gaps. Do not freeze known incorrect legacy output
+as the expected target result. A legacy test and its implementation may agree
+while both violating the owner's requirements.

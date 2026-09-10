@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
 
 import 'app_semantic_colors.dart';
+import 'operational_card_palette.dart';
 
 /// Product color tokens. Routine screens should use [ColorScheme] rather than
 /// introducing one-off colors. The dark header is intentionally shared by both
 /// modes so it remains a stable orientation landmark.
 abstract final class AppColors {
   static const ink = Color(0xFF172A33);
-  static const muted = Color(0xFF526771);
+  static const muted = Color(0xFF3D535E);
 
   static const canvas = Color(0xFFC9D8DF);
-  static const surface = Color(0xFFE2EBEF);
-  static const surfaceMuted = Color(0xFFD5E2E8);
+  static const surface = Color(0xFFC5D6DE);
+  static const surfaceMuted = Color(0xFFB6CDD7);
   static const surfaceStrong = Color(0xFFBED1DA);
   static const border = Color(0xFF91A8B3);
   static const strongBorder = Color(0xFF8298A2);
 
   static const blue = Color(0xFF285F78);
-  static const blueSoft = Color(0xFFD5E5ED);
+  static const blueSoft = Color(0xFF91B8CD);
   static const green = Color(0xFF0B6B50);
-  static const greenSoft = Color(0xFFD5E9E1);
+  static const greenSoft = Color(0xFF95BFA8);
+  static const startWorkday = Color(0xFF6AD39B);
+  static const pickerBlue = Color(0xFF1E5A78);
+  static const pickerBlueDeep = Color(0xFF102D3D);
   static const warning = Color(0xFF8B5A12);
   static const warningSoft = Color(0xFFF2E5CC);
 
@@ -83,10 +87,10 @@ class AppModuleColors extends ThemeExtension<AppModuleColors> {
 
   static const dark = AppModuleColors(
     dashboard: AppColors.darkGreen,
-    work: AppColors.darkBlue,
+    work: Color(0xFF68B4E3),
     expenses: AppColors.darkYellow,
     inventory: AppColors.darkOrange,
-    maintenance: AppColors.darkRed,
+    maintenance: Color(0xFFFF827B),
   );
 
   @override
@@ -299,6 +303,10 @@ abstract final class AppTheme {
         ),
       ),
       iconTheme: IconThemeData(color: ink, size: 22),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: OperationalCardPalette.action,
+        foregroundColor: OperationalCardTone.ink,
+      ),
     );
   }
 }

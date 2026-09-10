@@ -20,6 +20,7 @@ class ExpenseRevisionSnapshot {
     required this.approval,
     this.expenseTimeMinutes,
     this.receiptId,
+    this.receiptImageCount,
     this.jobId,
     this.vehicleId,
   }) : recordedAtUtc = recordedAtUtc.toUtc(),
@@ -29,6 +30,7 @@ class ExpenseRevisionSnapshot {
          expenseDate.day,
        ),
        itemization = itemization.immutableCopy() {
+    _validateReceiptImageCount(receiptId, receiptImageCount);
     if (revision < 1) {
       throw ArgumentError.value(revision, 'revision', 'Must be positive.');
     }
@@ -50,6 +52,7 @@ class ExpenseRevisionSnapshot {
         categoryLabelSnapshot: record.categoryLabelSnapshot,
         total: record.total,
         receiptId: record.receiptId,
+        receiptImageCount: record.receiptImageCount,
         jobId: record.jobId,
         vehicleId: record.vehicleId,
         itemization: record.itemization,
@@ -66,6 +69,7 @@ class ExpenseRevisionSnapshot {
   final String categoryLabelSnapshot;
   final ExpenseMoney total;
   final String? receiptId;
+  final int? receiptImageCount;
   final String? jobId;
   final String? vehicleId;
   final ExpenseItemization itemization;
@@ -82,6 +86,7 @@ class ExpenseRevisionSnapshot {
     'categoryLabelSnapshot': categoryLabelSnapshot,
     'total': total.toJson(),
     'receiptId': receiptId,
+    'receiptImageCount': receiptImageCount,
     'jobId': jobId,
     'vehicleId': vehicleId,
     'itemization': itemization.toJson(),
@@ -100,6 +105,7 @@ class ExpenseRevisionSnapshot {
         categoryLabelSnapshot: _requiredString(json, 'categoryLabelSnapshot'),
         total: ExpenseMoney.fromJson(_requiredMap(json, 'total')),
         receiptId: json['receiptId'] as String?,
+        receiptImageCount: json['receiptImageCount'] as int?,
         jobId: json['jobId'] as String?,
         vehicleId: json['vehicleId'] as String?,
         itemization: ExpenseItemization.fromJson(

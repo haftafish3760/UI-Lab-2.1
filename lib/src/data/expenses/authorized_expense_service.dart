@@ -1,4 +1,5 @@
 import 'expense_record.dart';
+import '../storage/local_draft_checkpoint.dart';
 import 'expense_repository.dart';
 
 class ExpenseCommandPermissions {
@@ -61,6 +62,15 @@ class AuthorizedExpenseService {
 
   final ExpenseRepository _repository;
 
+  Future<StoredExpenseRecord?> findCurrent({
+    required String expenseId,
+    required ExpenseCommandPermissions permissions,
+  }) => _repository.findById(
+    expenseId: expenseId,
+    access: _requireReadAccess(permissions),
+    includeDeleted: true,
+  );
+
   Future<List<StoredExpenseRecord>> query({
     required ExpenseCommandPermissions permissions,
     DateTime? fromInclusive,
@@ -108,6 +118,7 @@ class AuthorizedExpenseService {
     required ExpenseCommandPermissions permissions,
     required DateTime occurredAtUtc,
     String? note,
+    LocalDraftCheckpoint? draftCheckpoint,
   }) async {
     _requireAction(permissions.canCreate, 'create Expenses');
     _requireOrganization(record, permissions);
@@ -125,7 +136,7 @@ class AuthorizedExpenseService {
     }
     return _repository.create(
       record,
-      context: _context(permissions, occurredAtUtc, note),
+      context: _context(permissions, occurredAtUtc, note, draftCheckpoint),
     );
   }
 
@@ -135,6 +146,7 @@ class AuthorizedExpenseService {
     required ExpenseCommandPermissions permissions,
     required DateTime occurredAtUtc,
     String? note,
+    LocalDraftCheckpoint? draftCheckpoint,
   }) async {
     _requireAction(permissions.canEdit, 'edit Expenses');
     final current = await _requireCurrent(record.expenseId, permissions);
@@ -168,7 +180,7 @@ class AuthorizedExpenseService {
     return _repository.update(
       record,
       expectedRevision: expectedRevision,
-      context: _context(permissions, occurredAtUtc, note),
+      context: _context(permissions, occurredAtUtc, note, draftCheckpoint),
       auditAction: receiptCorrection
           ? ExpenseAuditAction.corrected
           : approvalChanged
@@ -273,11 +285,23 @@ class AuthorizedExpenseService {
   ExpenseMutationContext _context(
     ExpenseCommandPermissions permissions,
     DateTime occurredAtUtc,
-    String? note,
-  ) => ExpenseMutationContext(
-    actorEmployeeId: permissions.actorEmployeeId,
-    occurredAtUtc: occurredAtUtc,
-    permissionRevision: permissions.permissionRevision,
-    note: note,
-  );
+    String? note, [
+    LocalDraftCheckpoint? draftCheckpoint,
+  ]) {
+    final repository = _repository;
+    if (draftCheckpoint != null &&
+        (repository is! ExpenseDraftConfirmationRepository ||
+            !repository.supportsDraftConfirmation)) {
+      throw const ExpenseStorageException(
+        'This storage cannot safely confirm a saved draft.',
+      );
+    }
+    return ExpenseMutationContext(
+      actorEmployeeId: permissions.actorEmployeeId,
+      occurredAtUtc: occurredAtUtc,
+      permissionRevision: permissions.permissionRevision,
+      note: note,
+      draftCheckpoint: draftCheckpoint,
+    );
+  }
 }

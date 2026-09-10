@@ -128,26 +128,16 @@ class _ExpensesDayScreenState extends State<ExpensesDayScreen> {
 
   Future<void> _recordExpense(BuildContext context) async {
     if (!widget.permissions.canCreate) return;
-    ExpenseRecord? draft;
-    while (context.mounted) {
-      if (!context.mounted) return;
-      final record = await Navigator.of(context).push<ExpenseRecord>(
-        MaterialPageRoute<ExpenseRecord>(
-          builder: (_) => ExpenseEditorScreen(
-            expenseDate: widget.day,
-            existing: draft,
-            permissions: widget.permissions,
-          ),
+    final store = PrototypeOperationsScope.of(context);
+    await Navigator.of(context).push<ExpenseRecord>(
+      MaterialPageRoute(
+        builder: (_) => ExpenseEditorScreen(
+          expenseDate: widget.day,
+          permissions: widget.permissions,
+          onConfirm: store.addExpense,
         ),
-      );
-      if (!context.mounted || record == null) return;
-      draft = record;
-      final saved = await PrototypeOperationsScope.of(
-        context,
-      ).addExpense(record);
-      if (!context.mounted || saved != null) return;
-      if (!await showExpenseSaveFailure(context)) return;
-    }
+      ),
+    );
   }
 
   Future<void> _openSettings() async {

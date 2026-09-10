@@ -29,6 +29,57 @@ void main() {
     expect(harness.controller.permissionWasRequested, isFalse);
   });
 
+  testWidgets(
+    'initialization failure is visible and retry does not request permission',
+    (tester) async {
+      final harness = _ControllerHarness();
+      addTearDown(harness.dispose);
+      harness.gateway.failInitialize = true;
+      await harness.controller.load();
+      await tester.pumpWidget(
+        NativeNotificationUiScope(
+          controller: harness.controller,
+          child: MaterialApp(
+            theme: AppTheme.light,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(
+              body: DeviceReminderStatus(requestSound: true),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Device reminders unavailable'), findsOneWidget);
+      expect(find.text('Retry device reminders'), findsOneWidget);
+      harness.gateway.failInitialize = false;
+      await tester.tap(find.text('Retry device reminders'));
+      await tester.pumpAndSettle();
+      expect(harness.controller.phase, NativeNotificationUiPhase.ready);
+      expect(harness.gateway.permissionRequestCount, 0);
+      expect(find.text('Enable device reminders'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  test(
+    'launch payload waits for initialization and is returned once',
+    () async {
+      final harness = _ControllerHarness();
+      addTearDown(harness.dispose);
+      harness.gateway.initializeGate = Completer<void>();
+      harness.gateway.launchPayload = 'notification-123';
+      final opening = harness.controller.load();
+      final launch = harness.controller.takeLaunchPayload();
+      await Future<void>.delayed(Duration.zero);
+      expect(harness.gateway.launchReads, 0);
+      harness.gateway.initializeGate!.complete();
+      await opening;
+      expect(await launch, 'notification-123');
+      expect(await harness.controller.takeLaunchPayload(), isNull);
+      expect(harness.gateway.permissionRequestCount, 0);
+    },
+  );
+
   testWidgets('the labeled Enable action is the only permission trigger', (
     tester,
   ) async {
@@ -99,6 +150,10 @@ class _ControllerHarness {
 class _FakeNativeNotificationGateway implements NativeNotificationGateway {
   NativeNotificationPermissionState permission =
       NativeNotificationPermissionState.notGranted;
+  bool failInitialize = false;
+  Completer<void>? initializeGate;
+  String? launchPayload;
+  int launchReads = 0;
   int initializeCount = 0;
   int permissionCheckCount = 0;
   int permissionRequestCount = 0;
@@ -111,6 +166,8 @@ class _FakeNativeNotificationGateway implements NativeNotificationGateway {
   @override
   Future<void> initialize() async {
     initializeCount += 1;
+    if (failInitialize) throw StateError('injected initialization failure');
+    await initializeGate?.future;
   }
 
   @override
@@ -141,7 +198,12 @@ class _FakeNativeNotificationGateway implements NativeNotificationGateway {
   Future<void> cancel(int platformId) async {}
 
   @override
-  Future<String?> takeLaunchPayload() async => null;
+  Future<String?> takeLaunchPayload() async {
+    launchReads++;
+    final value = launchPayload;
+    launchPayload = null;
+    return value;
+  }
 
   void dispose() => _taps.close();
 }

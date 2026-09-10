@@ -106,6 +106,7 @@ class PlanItem {
 enum PlanItemKind { jobStop, operationalTask }
 
 enum DayEntryKind {
+  jobActivity('Job activity', Icons.home_repair_service_outlined),
   workday('Workday', Icons.badge_outlined),
   trip('Trip', Icons.route_outlined),
   expense('Expense', Icons.receipt_long_outlined),

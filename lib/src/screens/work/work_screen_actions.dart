@@ -26,7 +26,7 @@ extension _WorkScreenActions on _WorkScreenState {
       ),
     );
     if (updated != null && mounted) {
-      _updateState(() => _preferences = updated);
+      _updateState(() => _fixturePreferences = updated);
     }
   }
 
@@ -99,6 +99,25 @@ extension _WorkScreenActions on _WorkScreenState {
         _openSavedClients();
       case WorkDestination.payments:
         _openPayments();
+      case WorkDestination.scheduling:
+      case WorkDestination.quotes:
+        showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(destination.label),
+            content: Text(
+              destination == WorkDestination.scheduling
+                  ? 'Scheduling is not connected in this UI Lab build. The Work calendar still opens your dated records; it does not calculate availability.'
+                  : 'Quotes are not connected in this UI Lab build. Estimates remain a separate workspace.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Back to Work'),
+              ),
+            ],
+          ),
+        );
     }
   }
 
@@ -142,7 +161,9 @@ extension _WorkScreenActions on _WorkScreenState {
     );
     if (!mounted || created == null) return;
     final store = PrototypeOperationsScope.of(context);
-    store.replaceCustomers([...store.customers, created]);
+    if (store.directorySession == null) {
+      store.replaceCustomers([...store.customers, created]);
+    }
   }
 
   void _openRecordWorkspace(WorkRecordKind kind) {
@@ -258,22 +279,25 @@ extension _WorkScreenActions on _WorkScreenState {
     );
     if (!mounted || job == null) return;
     final store = PrototypeOperationsScope.of(context);
-    store.addWorkRecord(job);
-    store.updateWorkRecord(
-      estimate.withEstimateStage(EstimateStage.converted, DateTime.now()),
-    );
+    if (store.workSession == null) {
+      store.addWorkRecord(job);
+      store.updateWorkRecord(
+        estimate.withEstimateStage(EstimateStage.converted, DateTime.now()),
+      );
+    }
     _updateState(() {});
   }
 
   Future<void> _assignJob(WorkRecord record) async {
-    final assignment = await showModalBottomSheet<(String, String)>(
+    final store = PrototypeOperationsScope.of(context);
+    final saved = await showModalBottomSheet<WorkRecord>(
       context: context,
       showDragHandle: true,
-      builder: (context) => const WorkAssignmentSheet(),
+      isScrollControlled: true,
+      builder: (_) =>
+          JobAssignmentEditorSheet(record: record, work: store.workSession),
     );
-    if (!mounted || assignment == null) return;
-    PrototypeOperationsScope.of(context).updateWorkRecord(
-      record.copyWith(assignee: assignment.$1, vehicle: assignment.$2),
-    );
+    if (!mounted || saved == null) return;
+    if (store.workSession == null) await store.updateWorkRecord(saved);
   }
 }

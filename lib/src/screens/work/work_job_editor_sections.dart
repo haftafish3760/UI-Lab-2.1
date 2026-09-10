@@ -108,6 +108,12 @@ class _JobIdentitySection extends StatelessWidget {
             isExpanded: true,
             decoration: const InputDecoration(labelText: 'Client'),
             items: [
+              if (selectedClient != null &&
+                  !customers.any((customer) => customer.name == selectedClient))
+                DropdownMenuItem(
+                  value: selectedClient,
+                  child: Text(selectedClient!),
+                ),
               for (final customer in customers)
                 DropdownMenuItem(
                   value: customer.name,
@@ -134,6 +140,14 @@ class _JobIdentitySection extends StatelessWidget {
             isExpanded: true,
             decoration: const InputDecoration(labelText: 'Service location'),
             items: [
+              if (selectedLocation != null &&
+                  !locations.any(
+                    (location) => location.address == selectedLocation,
+                  ))
+                DropdownMenuItem(
+                  value: selectedLocation,
+                  child: Text(selectedLocation!),
+                ),
               for (final location in locations)
                 DropdownMenuItem(
                   value: location.address,

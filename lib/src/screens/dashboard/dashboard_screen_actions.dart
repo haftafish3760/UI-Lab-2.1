@@ -3,158 +3,20 @@
 part of 'dashboard_screen.dart';
 
 extension _DashboardScreenActions on _DashboardScreenState {
-  Future<void> _handlePlanAction(PlanItem item, PlanAction action) async {
-    if (!_DashboardScreenState._permissions.canAddSchedule) return;
-    switch (action) {
-      case PlanAction.viewDetails:
-        _openPlan(item);
-      case PlanAction.markArrived:
-        if (item.kind != PlanItemKind.jobStop) return;
-        _updatePlanStatus(item, 'Arrived');
-      case PlanAction.reschedule:
-        await _reschedulePlanItem(item);
-      case PlanAction.markComplete:
-        _updatePlanStatus(item, 'Completed');
-    }
-  }
-
-  void _updatePlanStatus(PlanItem item, String status) {
-    final store = PrototypeOperationsScope.of(context);
-    final sourceId = item.sourceRecordId ?? item.id;
-    final sourceRecord = store.workRecords
-        .where((candidate) => candidate.id == sourceId)
-        .firstOrNull;
-    if (item.kind == PlanItemKind.jobStop &&
-        sourceRecord?.kind == WorkRecordKind.job) {
-      store.updateWorkRecord(
-        sourceRecord!.copyWith(
-          status: status == 'Arrived'
-              ? WorkRecordStatus.arrived
-              : WorkRecordStatus.completed,
-        ),
-      );
-    }
-    final employee = _employeeFor(
-      OperationalScope.of(context).selectedEmployeeId,
-    );
-    final current = _dayData(employee);
-    final updatedPlan = [
-      for (final candidate in current.plan)
-        if (candidate.id == item.id)
-          candidate.copyWith(status: status)
-        else
-          candidate,
-    ];
-    final entry = DayEntry(
-      id: '${status.toLowerCase()}-${item.id}-${DateTime.now().microsecondsSinceEpoch}',
-      time: MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.now()),
-      title: status == 'Arrived'
-          ? 'Arrived at job'
-          : item.kind == PlanItemKind.jobStop
-          ? 'Job completed'
-          : 'Task completed',
-      detail: '${item.title} · ${item.detail}',
-      kind: DayEntryKind.note,
-      color: status == 'Arrived'
-          ? const Color(0xFF2D6680)
-          : const Color(0xFF087A4A),
-    );
-    _saveDay(
-      _selectedDate,
-      DashboardDayData(plan: updatedPlan, entries: [...current.entries, entry]),
-    );
-  }
-
-  Future<void> _reschedulePlanItem(PlanItem item) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: dashboardToday.subtract(const Duration(days: 365)),
-      lastDate: dashboardToday.add(const Duration(days: 730)),
-      helpText: 'Choose the new work date',
-    );
-    if (!mounted || date == null) return;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: _timeFromLabel(item.time),
-      helpText: 'Choose the new arrival time',
-    );
-    if (!mounted || time == null) return;
-    final employee = _employeeFor(
-      OperationalScope.of(context).selectedEmployeeId,
-    );
-    final source = _dayData(employee);
-    final target = _dayDataFor(date, employee);
-    final updated = item.copyWith(
-      time: MaterialLocalizations.of(context).formatTimeOfDay(time),
-      status: 'Scheduled',
-    );
-    final store = PrototypeOperationsScope.of(context);
-    final sourceId = item.sourceRecordId ?? item.id;
-    final sourceRecord = store.workRecords
-        .where((candidate) => candidate.id == sourceId)
-        .firstOrNull;
-    if (item.kind == PlanItemKind.jobStop &&
-        sourceRecord?.kind == WorkRecordKind.job) {
-      final oldStart = sourceRecord!.scheduledStart;
-      final oldEnd = sourceRecord.scheduledEnd;
-      final duration = oldStart != null && oldEnd != null
-          ? oldEnd.difference(oldStart)
-          : const Duration(hours: 2);
-      final scheduledStart = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-      );
-      store.updateWorkRecord(
-        sourceRecord.copyWith(
-          scheduledStart: scheduledStart,
-          scheduledEnd: scheduledStart.add(duration),
-          status: WorkRecordStatus.scheduled,
-        ),
-      );
-    }
-    if (sameDashboardDay(date, _selectedDate)) {
-      _saveDay(
-        _selectedDate,
-        DashboardDayData(
-          plan: [
-            for (final candidate in source.plan)
-              if (candidate.id == item.id) updated else candidate,
-          ],
-          entries: source.entries,
-        ),
-      );
-    } else {
-      _saveDay(
-        _selectedDate,
-        DashboardDayData(
-          plan: source.plan
-              .where((candidate) => candidate.id != item.id)
-              .toList(),
-          entries: source.entries,
-        ),
-      );
-      _saveDay(
-        date,
-        DashboardDayData(
-          plan: [
-            ...target.plan.where((candidate) => candidate.id != item.id),
-            updated,
-          ],
-          entries: target.entries,
-        ),
-      );
-    }
-  }
-
   Future<void> _startWorkday() async {
+    final persistence = WorkdayPersistenceScope.maybeOf(context);
+    if (persistence != null &&
+        (!persistence.isReady ||
+            persistence.isSaving ||
+            _storedActiveWorkday != null)) {
+      return;
+    }
     final result = await Navigator.of(context).push<StartWorkdayResult>(
       MaterialPageRoute(builder: (_) => const StartWorkdayScreen()),
     );
-    if (!mounted || result == null || _workday != null) return;
+    if (!mounted || result == null || persistence != null || _workday != null) {
+      return;
+    }
     final session = DashboardWorkdaySession.start(result);
     final employee = _employeeFor(
       OperationalScope.of(context).selectedEmployeeId,
@@ -182,6 +44,7 @@ extension _DashboardScreenActions on _DashboardScreenState {
   }
 
   Future<void> _openWorkdayActions() async {
+    final stored = _storedActiveWorkday;
     final session = _workday;
     if (session == null) return;
     final action = await Navigator.of(context).push<DashboardWorkdayAction>(
@@ -195,9 +58,17 @@ extension _DashboardScreenActions on _DashboardScreenState {
     if (!mounted || action == null || _workday == null) return;
     switch (action) {
       case DashboardWorkdayAction.pauseOrResume:
+        if (stored != null) {
+          await _pauseStoredWorkday(stored);
+          return;
+        }
         setState(() => _workday = _workday!.togglePause());
         return;
       case DashboardWorkdayAction.endDay:
+        if (stored != null) {
+          await _endStoredWorkday(stored);
+          return;
+        }
         await _endWorkday();
         return;
       case DashboardWorkdayAction.addStop:
@@ -237,12 +108,17 @@ extension _DashboardScreenActions on _DashboardScreenState {
   }
 
   Future<void> _endWorkday() async {
+    final stored = _storedActiveWorkday;
+    if (stored != null) {
+      await _endStoredWorkday(stored);
+      return;
+    }
     final session = _workday;
     if (session == null) return;
     final scope = OperationalScope.of(context);
     final reading = await showDialog<int>(
       context: context,
-      builder: (context) => _EndWorkdayDialog(
+      builder: (context) => EndWorkdayDialog(
         initialOdometerTenths: scope.confirmedOdometerTenthsFor(
           session.vehicleId,
         ),
@@ -351,18 +227,17 @@ extension _DashboardScreenActions on _DashboardScreenState {
       OperationalScope.of(context).view,
     );
     if (!permissions.canCreate) return;
-    final record = await Navigator.of(context).push<ExpenseRecord>(
+    final store = PrototypeOperationsScope.of(context);
+    await Navigator.of(context).push<ExpenseRecord>(
       MaterialPageRoute(
         builder: (_) => ExpenseEditorScreen(
           expenseDate: _selectedDate,
           initialCategory: initialCategory,
           permissions: permissions,
+          onConfirm: store.addExpense,
         ),
       ),
     );
-    if (!mounted || record == null) return;
-    final saved = await PrototypeOperationsScope.of(context).addExpense(record);
-    if (!mounted || saved == null) return;
   }
 
   Future<void> _addScheduleItem() => _createDashboardJob();
@@ -380,35 +255,6 @@ extension _DashboardScreenActions on _DashboardScreenState {
       ),
     );
     if (!mounted || record == null) return;
-  }
-
-  Future<void> _addDayEntry() async {
-    final title = await _askForTitle('Add day record', 'Record description');
-    if (!mounted || title == null) return;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      helpText: 'Choose the record time',
-    );
-    if (!mounted || time == null) return;
-    final current = _dayData(
-      _employeeFor(OperationalScope.of(context).selectedEmployeeId),
-    );
-    final entry = DayEntry(
-      id: 'note-${DateTime.now().microsecondsSinceEpoch}',
-      time: MaterialLocalizations.of(context).formatTimeOfDay(time),
-      title: title,
-      detail: 'Manually added record',
-      kind: DayEntryKind.note,
-      color: const Color(0xFF65727A),
-    );
-    _saveDay(
-      _selectedDate,
-      DashboardDayData(
-        plan: current.plan,
-        entries: [...current.entries, entry],
-      ),
-    );
   }
 
   Future<String?> _askForTitle(String title, String label) async {

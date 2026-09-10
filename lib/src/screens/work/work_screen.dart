@@ -4,6 +4,7 @@ import '../../data/operational_attention.dart';
 import '../../data/prototype_operations_store.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/app_view_mode.dart';
+import '../../shared/app_preferences.dart';
 import '../../shared/operational_scope.dart';
 import '../../shared/operations_workspace.dart';
 import '../../shared/operational_attention_panel.dart';
@@ -27,7 +28,7 @@ import 'job_workspace_screen.dart';
 import 'work_contact_models.dart';
 import 'payments_screen.dart';
 import 'saved_clients_screen.dart';
-import 'work_assignment_sheet.dart';
+import 'job_assignment_editor_sheet.dart';
 import 'work_attention_list_screen.dart';
 import 'work_job_editor.dart';
 import 'work_models.dart';
@@ -52,7 +53,17 @@ class WorkScreen extends StatefulWidget {
 
 class _WorkScreenState extends State<WorkScreen> {
   var _selectedDay = DateUtils.dateOnly(DateTime.now());
-  var _preferences = const WorkDisplayPreferences();
+  var _fixturePreferences = const WorkDisplayPreferences();
+  WorkDisplayPreferences get _preferences {
+    final saved = AppPreferencesScope.maybeOf(context);
+    return saved == null
+        ? _fixturePreferences
+        : WorkDisplayPreferences(
+            showEmployeeCards: saved.workShowEmployeeCards,
+            showDailySummaries: saved.workShowDailySummaries,
+            includeCompletedWork: saved.workIncludeCompletedWork,
+          );
+  }
 
   List<WorkRecord> get _records =>
       PrototypeOperationsScope.of(context).workRecords;
@@ -67,9 +78,15 @@ class _WorkScreenState extends State<WorkScreen> {
       builder: (context, constraints) {
         final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
         final availableWidth = constraints.maxWidth - insets.horizontal;
-        final layout = AppLayoutEngine.operationsFor(
+        final layout = AppLayoutEngine.workLandingFor(
           availableWidth,
           textScaler: MediaQuery.textScalerOf(context),
+        );
+        final recordLayout = OperationsWorkspaceLayout(
+          columns: 1,
+          laneWidth: layout.laneWidth,
+          gap: 16,
+          workspaceWidth: layout.laneWidth,
         );
         final recordsInScope = _records.where(_recordIsInScope).toList();
         final attentionQuery = _attentionQuery();
@@ -122,85 +139,127 @@ class _WorkScreenState extends State<WorkScreen> {
                           ).selectEmployee,
                           onSettings: _openSettings,
                           showEmployeeStrip: false,
+                          showDateContext: false,
                           showDateDescription: false,
                         ),
-                        if (showAttention) ...[
-                          const SizedBox(height: 12),
-                          OperationsLaneGrid(
-                            key: ValueKey(
-                              'work-${layout.columns}-column-attention',
-                            ),
-                            layout: layout,
-                            children: [
-                              OperationalAttentionPanel(
-                                key: const ValueKey('work-attention-section'),
-                                items: attentionItems,
-                                rowKeyFor: (item) =>
-                                    ValueKey('work-attention-${item.sourceId}'),
-                                onOpen: _openAttentionItem,
-                                onOpenAll: () =>
-                                    _openAttentionList(attentionItems),
-                                onDismiss: () => attentionCenter.dismiss(
-                                  attentionQuery,
-                                  attentionItems,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                        if (employeeStrip != null) ...[
-                          employeeStrip,
-                          const SizedBox(height: 12),
-                        ],
-                        _WorkLanes(
-                          layout: layout,
-                          view: _view,
-                          selectedDay: _selectedDay,
-                          records: recordsInScope,
-                          attentionRecordIds: {
-                            for (final item in attentionItems) item.sourceId,
-                          },
-                          showDailySummaries: _preferences.showDailySummaries,
-                          onOpenJob: _openJob,
-                          onAssignJob: _assignJob,
-                          onOpenJobs: () =>
-                              _openRecordWorkspace(WorkRecordKind.job),
-                          onOpenEstimate: _openEstimate,
-                          onOpenInvoice: _openInvoice,
-                          onOpenEstimates: () =>
-                              _openRecordWorkspace(WorkRecordKind.estimate),
-                          onOpenInvoices: () =>
-                              _openRecordWorkspace(WorkRecordKind.invoice),
-                          onCreateJob: _createJob,
-                          onCreateEstimate: () =>
-                              _handleAction(_WorkAction.createEstimate),
-                          onCreateInvoice: () =>
-                              _handleAction(_WorkAction.createInvoice),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Company records',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 14),
                         WorkShortcutGrid(
+                          key: const ValueKey('work-primary-destinations'),
                           destinations: const [
-                            WorkDestination.companyInfo,
-                            WorkDestination.customers,
+                            WorkDestination.jobs,
                             WorkDestination.payments,
+                            WorkDestination.scheduling,
+                            WorkDestination.quotes,
+                            WorkDestination.estimates,
+                            WorkDestination.invoices,
                           ],
                           onSelected: _handleDestination,
                         ),
+                        const SizedBox(height: 18),
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 12,
+                          runSpacing: 8,
+                          children: [
+                            Text(
+                              MaterialLocalizations.of(
+                                context,
+                              ).formatFullDate(_selectedDay),
+                              key: const ValueKey('work-date-heading'),
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            if (layout.showsInlineModuleActions)
+                              FilledButton.icon(
+                                key: const ValueKey('work-actions-inline'),
+                                onPressed: _showWorkActions,
+                                icon: const Icon(Icons.add_rounded),
+                                label: const Text('Add work'),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        OperationsLaneGrid(
+                          key: const ValueKey('work-landing-lanes'),
+                          layout: layout,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (showAttention) ...[
+                                  OperationsLaneGrid(
+                                    key: ValueKey(
+                                      'work-${layout.columns}-column-attention',
+                                    ),
+                                    layout: recordLayout,
+                                    children: [
+                                      OperationalAttentionPanel(
+                                        key: const ValueKey(
+                                          'work-attention-section',
+                                        ),
+                                        items: attentionItems,
+                                        rowKeyFor: (item) => ValueKey(
+                                          'work-attention-${item.sourceId}',
+                                        ),
+                                        onOpen: _openAttentionItem,
+                                        onOpenAll: () =>
+                                            _openAttentionList(attentionItems),
+                                        onDismiss: () =>
+                                            attentionCenter.dismiss(
+                                              attentionQuery,
+                                              attentionItems,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                                if (employeeStrip != null) ...[
+                                  employeeStrip,
+                                  const SizedBox(height: 12),
+                                ],
+                                _WorkLanes(
+                                  layout: recordLayout,
+                                  view: _view,
+                                  selectedDay: _selectedDay,
+                                  records: recordsInScope,
+                                  attentionRecordIds: {
+                                    for (final item in attentionItems)
+                                      item.sourceId,
+                                  },
+                                  showDailySummaries:
+                                      _preferences.showDailySummaries,
+                                  onOpenJob: _openJob,
+                                  onAssignJob: _assignJob,
+                                  onOpenJobs: () =>
+                                      _openRecordWorkspace(WorkRecordKind.job),
+                                  onOpenEstimate: _openEstimate,
+                                  onOpenInvoice: _openInvoice,
+                                  onOpenEstimates: () => _openRecordWorkspace(
+                                    WorkRecordKind.estimate,
+                                  ),
+                                  onOpenInvoices: () => _openRecordWorkspace(
+                                    WorkRecordKind.invoice,
+                                  ),
+                                  onCreateJob: _createJob,
+                                  onCreateEstimate: () =>
+                                      _handleAction(_WorkAction.createEstimate),
+                                  onCreateInvoice: () =>
+                                      _handleAction(_WorkAction.createInvoice),
+                                ),
+                              ],
+                            ),
+                            _WorkCalendarPanel(
+                              maximumWidth: layout.laneWidth,
+                              selectedDay: _selectedDay,
+                              onDaySelected: _openWorkDay,
+                              entryCountForDay: (day) => recordsInScope
+                                  .where((record) => record.occursOn(day))
+                                  .length,
+                            ),
+                          ],
+                        ),
                       ],
-                    ),
-                    followingContent: _WorkCalendarPanel(
-                      maximumWidth: layout.laneWidth,
-                      selectedDay: _selectedDay,
-                      onDaySelected: _openWorkDay,
-                      entryCountForDay: (day) => recordsInScope
-                          .where((record) => record.occursOn(day))
-                          .length,
                     ),
                   ),
                 ),

@@ -1,3 +1,4 @@
+import '../storage/local_draft_checkpoint.dart';
 import 'expense_money.dart';
 import 'recurring_expense_records.dart';
 import 'recurring_expense_terms.dart';
@@ -187,18 +188,25 @@ abstract interface class RecurringExpenseRepository {
   });
 }
 
+abstract interface class RecurringExpenseDraftConfirmationRepository
+    implements RecurringExpenseRepository {
+  bool get supportsDraftConfirmation;
+}
+
 class RecurringExpenseMutationContext {
   RecurringExpenseMutationContext({
     required this.actorEmployeeId,
     required DateTime occurredAtUtc,
     required this.permissionRevision,
     this.note,
+    this.draftCheckpoint,
   }) : occurredAtUtc = occurredAtUtc.toUtc();
 
   final String actorEmployeeId;
   final DateTime occurredAtUtc;
   final String permissionRevision;
   final String? note;
+  final LocalDraftCheckpoint? draftCheckpoint;
 
   RecurringExpenseAuditEvent auditEvent({
     required RecurringExpenseAuditAction action,

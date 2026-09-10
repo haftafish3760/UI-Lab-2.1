@@ -7,6 +7,8 @@ import 'package:ui_lab_2_1/src/screens/work/work_screen.dart';
 import 'package:ui_lab_2_1/src/shared/app_view_mode.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
+import 'package:ui_lab_2_1/src/shell/app_menu_scope.dart';
+import 'package:ui_lab_2_1/src/shell/operations_menu_screen.dart';
 
 part 'work_calendar_routing_test_part.dart';
 
@@ -34,7 +36,19 @@ Future<void> _pumpWork(
             size: size,
             textScaler: TextScaler.linear(textScale),
           ),
-          child: MaterialApp(theme: AppTheme.light, home: const WorkScreen()),
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: Builder(
+              builder: (context) => AppMenuScope(
+                onOpen: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const OperationsMenuScreen(),
+                  ),
+                ),
+                child: const WorkScreen(),
+              ),
+            ),
+          ),
         ),
       ),
     ),
@@ -52,15 +66,29 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
 void main() {
   registerWorkCalendarRoutingTests();
 
-  testWidgets('Work prioritizes three records and keeps three company tools', (
+  testWidgets('Work exposes its six destinations above dated records', (
     tester,
   ) async {
     for (final size in [const Size(320, 844), const Size(1440, 900)]) {
       await _pumpWork(tester, size);
-      for (final label in ['My Info', 'Saved Clients', 'Payments']) {
+      for (final label in [
+        'Jobs',
+        'Payments',
+        'Scheduling',
+        'Quotes',
+        'Estimates',
+        'Invoices',
+      ]) {
         expect(find.text(label), findsWidgets);
       }
-      for (final destination in ['companyInfo', 'customers', 'payments']) {
+      for (final destination in [
+        'jobs',
+        'payments',
+        'scheduling',
+        'quotes',
+        'estimates',
+        'invoices',
+      ]) {
         expect(
           tester.getSize(
             find.byKey(ValueKey('work-shortcut-icon-$destination')),
@@ -118,7 +146,12 @@ void main() {
   ) async {
     await _pumpWork(tester, const Size(390, 844));
 
-    await _tapVisible(tester, find.byKey(const ValueKey('quick-companyInfo')));
+    await tester.tap(find.byTooltip('Open navigation'));
+    await tester.pumpAndSettle();
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('menu-company-profile')),
+    );
     expect(find.text('Blue Ridge Service Company'), findsWidgets);
     expect(
       find.byKey(const ValueKey('edit-company-profile-button')),
@@ -127,7 +160,7 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
-    await _tapVisible(tester, find.byKey(const ValueKey('quick-customers')));
+    await _tapVisible(tester, find.byKey(const ValueKey('menu-customers')));
     expect(find.text('Saved Clients'), findsWidgets);
     expect(find.text('Elena Garcia'), findsOneWidget);
     expect(find.text('Jordan Miller'), findsOneWidget);
@@ -383,6 +416,21 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
+    // Back retains the imported item; finish it before starting another source.
+    expect(find.text('Continue unfinished item'), findsOneWidget);
+    await tester.tap(find.text('Continue unfinished item'));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widgetList<TextField>(find.byType(TextField))
+          .firstWhere((field) => field.decoration?.labelText == 'Item name')
+          .controller
+          ?.text,
+      'Braided faucet supply line',
+    );
+    await tester.tap(find.text('Add line item'));
+    await tester.pumpAndSettle();
+    expect(find.text('Continue unfinished item'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('link-receipt-expense')));
     await tester.pumpAndSettle();
     expect(find.text('Use a receipt item'), findsWidgets);
@@ -410,8 +458,8 @@ void main() {
     tester,
   ) async {
     await _pumpWork(tester, const Size(320, 844), textScale: 2);
-    expect(find.text('My Info'), findsOneWidget);
-    expect(find.text('Saved Clients'), findsOneWidget);
+    expect(find.text('Jobs'), findsOneWidget);
+    expect(find.text('Scheduling'), findsOneWidget);
     expect(find.text('Estimates'), findsWidgets);
     expect(find.text('Invoices'), findsWidgets);
     expect(tester.takeException(), isNull);
@@ -421,7 +469,10 @@ void main() {
     expect(AppLayoutEngine.workFor(390).columns, 1);
     expect(AppLayoutEngine.workFor(800).columns, 2);
     expect(AppLayoutEngine.workFor(1200).columns, 3);
-    expect(AppLayoutEngine.workFor(1800).laneWidth, lessThanOrEqualTo(500));
+    expect(
+      AppLayoutEngine.workLandingFor(1800).laneWidth,
+      lessThanOrEqualTo(400),
+    );
     expect(AppLayoutEngine.workShortcutsFor(304).columns, 3);
     expect(AppLayoutEngine.workShortcutsFor(900).columns, 6);
     expect(AppLayoutEngine.workShortcutsFor(900).iconExtent, 62);

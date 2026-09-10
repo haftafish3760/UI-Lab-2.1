@@ -1,4 +1,4 @@
-import '../../screens/expenses/expense_models.dart';
+import 'expense_workflow_models.dart';
 import 'authorized_recurring_expense_service.dart';
 import 'recurring_expense_repository.dart';
 import 'recurring_expense_ui_adapter.dart';

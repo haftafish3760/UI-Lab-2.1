@@ -235,6 +235,13 @@ class _DashboardDayScreenState extends State<DashboardDayScreen> {
       await _createScheduledJob();
       return;
     }
+    if (await DashboardRecordNavigation.openStoredDayNoteEditor(
+      context,
+      _day,
+    )) {
+      return;
+    }
+    if (!mounted) return;
     final title = await _askForTitle('Add a day record');
     if (!mounted || title == null) return;
     final scope = OperationalScope.of(context);

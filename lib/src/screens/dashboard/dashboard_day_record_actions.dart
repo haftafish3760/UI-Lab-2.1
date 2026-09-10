@@ -158,16 +158,18 @@ extension _DashboardDayRecordActions on _DashboardDayScreenState {
         _openPlan(item);
       case PlanAction.markArrived:
         if (item.kind == PlanItemKind.jobStop) {
-          _updateDayPlanStatus(item, 'Arrived');
+          await _updateDayPlanStatus(item, 'Arrived');
         }
       case PlanAction.reschedule:
         await _rescheduleDayPlanItem(item);
       case PlanAction.markComplete:
-        _updateDayPlanStatus(item, 'Completed');
+        await _updateDayPlanStatus(item, 'Completed');
     }
   }
 
-  void _updateDayPlanStatus(PlanItem item, String status) {
+  Future<void> _updateDayPlanStatus(PlanItem item, String status) async {
+    final actionDay = _day;
+    final actionContext = _contextId(OperationalScope.of(context));
     final scope = OperationalScope.of(context);
     final employee = _employeeFor(scope.selectedEmployeeId);
     final contextId = _contextId(scope);
@@ -182,14 +184,37 @@ extension _DashboardDayRecordActions on _DashboardDayScreenState {
         .where((candidate) => candidate.id == sourceId)
         .firstOrNull;
     if (item.kind == PlanItemKind.jobStop &&
+        record?.kind != WorkRecordKind.job) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This job is no longer available.')),
+      );
+      return;
+    }
+    if (item.kind == PlanItemKind.jobStop &&
         record?.kind == WorkRecordKind.job) {
-      store.updateWorkRecord(
+      final saved = await store.updateWorkRecord(
         record!.copyWith(
           status: status == 'Arrived'
               ? WorkRecordStatus.arrived
               : WorkRecordStatus.completed,
         ),
       );
+      if (!mounted) return;
+      if (_day != actionDay ||
+          _contextId(OperationalScope.of(context)) != actionContext) {
+        return;
+      }
+      if (!saved) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'The job could not be saved. Its existing schedule and status are unchanged.',
+            ),
+          ),
+        );
+        return;
+      }
+      if (store.workSession != null) return;
     }
     final time = MaterialLocalizations.of(
       context,
@@ -229,6 +254,14 @@ extension _DashboardDayRecordActions on _DashboardDayScreenState {
   }
 
   Future<void> _rescheduleDayPlanItem(PlanItem item) async {
+    if (item.kind == PlanItemKind.jobStop &&
+        PrototypeOperationsScope.of(context).workSession != null) {
+      await DashboardRecordNavigation.rescheduleJob(context, item);
+      return;
+    }
+
+    final actionDay = _day;
+    final actionContext = _contextId(OperationalScope.of(context));
     final date = await showDatePicker(
       context: context,
       initialDate: _day,
@@ -237,12 +270,20 @@ extension _DashboardDayRecordActions on _DashboardDayScreenState {
       helpText: 'Choose the new work date',
     );
     if (!mounted || date == null) return;
+    if (_day != actionDay ||
+        _contextId(OperationalScope.of(context)) != actionContext) {
+      return;
+    }
     final time = await showTimePicker(
       context: context,
       initialTime: _calendarTimeFromLabel(item.time),
       helpText: 'Choose the new arrival time',
     );
     if (!mounted || time == null) return;
+    if (_day != actionDay ||
+        _contextId(OperationalScope.of(context)) != actionContext) {
+      return;
+    }
     final scope = OperationalScope.of(context);
     final employee = _employeeFor(scope.selectedEmployeeId);
     final contextId = _contextId(scope);
@@ -266,6 +307,13 @@ extension _DashboardDayRecordActions on _DashboardDayScreenState {
         .where((candidate) => candidate.id == sourceId)
         .firstOrNull;
     if (item.kind == PlanItemKind.jobStop &&
+        sourceRecord?.kind != WorkRecordKind.job) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This job is no longer available.')),
+      );
+      return;
+    }
+    if (item.kind == PlanItemKind.jobStop &&
         sourceRecord?.kind == WorkRecordKind.job) {
       final oldStart = sourceRecord!.scheduledStart;
       final oldEnd = sourceRecord.scheduledEnd;
@@ -279,13 +327,29 @@ extension _DashboardDayRecordActions on _DashboardDayScreenState {
         time.hour,
         time.minute,
       );
-      store.updateWorkRecord(
+      final saved = await store.updateWorkRecord(
         sourceRecord.copyWith(
           scheduledStart: scheduledStart,
           scheduledEnd: scheduledStart.add(duration),
           status: WorkRecordStatus.scheduled,
         ),
       );
+      if (!mounted) return;
+      if (_day != actionDay ||
+          _contextId(OperationalScope.of(context)) != actionContext) {
+        return;
+      }
+      if (!saved) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'The job could not be saved. Its existing schedule and status are unchanged.',
+            ),
+          ),
+        );
+        return;
+      }
+      if (store.workSession != null) return;
     }
     store.updateDashboardDay(
       day: _day,

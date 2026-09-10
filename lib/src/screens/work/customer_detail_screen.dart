@@ -149,10 +149,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       ),
     );
     if (!mounted || job == null) return;
-    store.addWorkRecord(job);
-    store.updateWorkRecord(
-      estimate.withEstimateStage(EstimateStage.converted, DateTime.now()),
-    );
+    if (store.workSession == null) {
+      store.addWorkRecord(job);
+      store.updateWorkRecord(
+        estimate.withEstimateStage(EstimateStage.converted, DateTime.now()),
+      );
+    }
   }
 }
 

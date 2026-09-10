@@ -68,6 +68,7 @@ void main() {
     await tester.pumpAndSettle();
     final systemSettings = find.byKey(const ValueKey('menu-system-settings'));
     await tester.ensureVisible(systemSettings);
+    await tester.pumpAndSettle();
     await tester.tap(systemSettings);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('system-appearance-setting')));

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 
 part 'dashboard_layout_calculator.dart';
+part 'work_landing_layout_calculator.dart';
 
 enum AppNavigationMode { bottom, rail }
 
@@ -140,6 +141,11 @@ abstract final class AppLayoutEngine {
   static const dashboardThreeColumnMinimumWidth = 1248.0;
   static const dashboardLaneMaximum = 400.0;
   static const dashboardGap = 24.0;
+  static const summaryStripCardMinimumHeight = 120.0;
+  static double summaryStripCardWidthFor(
+    TextScaler scaler, {
+    double valueWidth = 0,
+  }) => math.max(96 * math.max(1, scaler.scale(14) / 14), valueWidth + 20);
 
   /// Three true desktop lanes may grow to 600 LP each. One- and two-lane
   /// layouts remain compact instead of becoming enlarged phone canvases.
@@ -160,12 +166,13 @@ abstract final class AppLayoutEngine {
   static AppNavigationMode navigationFor(
     Size window, {
     bool dashboard = false,
+    bool work = false,
   }) =>
       window.width >=
-              (dashboard
+              (dashboard || work
                   ? dashboardRailMinimumWindowWidth
                   : railMinimumWindowWidth) &&
-          window.height >= 600
+          (work || window.height >= 600)
       ? AppNavigationMode.rail
       : AppNavigationMode.bottom;
 
@@ -263,6 +270,13 @@ abstract final class AppLayoutEngine {
     return 8 + 10 * t;
   }
 
+  /// Shared owner-header reflow. Height remains content-driven; large text
+  /// moves the reading below its context rather than clipping either value.
+  static bool stackOwnerHeaderContextFor(
+    double availableWidth, {
+    TextScaler textScaler = TextScaler.noScaling,
+  }) => availableWidth < 270 + _layoutScalePenalty(textScaler) * 180;
+
   static DetailWorkspaceLayout detailWorkspaceFor(
     double availableWidth, {
     TextScaler textScaler = TextScaler.noScaling,
@@ -355,28 +369,15 @@ abstract final class AppLayoutEngine {
   static WorkShortcutLayout workShortcutsFor(
     double availableWidth, {
     TextScaler textScaler = TextScaler.noScaling,
-  }) {
-    final safeWidth = math.max(0.0, availableWidth);
-    final scalePenalty = _layoutScalePenalty(textScaler);
-    final columns = scalePenalty > .35
-        ? (safeWidth >= 420 ? 3 : 2)
-        : safeWidth >= 660
-        ? 6
-        : safeWidth >= 276
-        ? 3
-        : 2;
-    const shortcutGap = 8.0;
-    final width = math.max(
-      0.0,
-      math.min(110.0, (safeWidth - shortcutGap * (columns - 1)) / columns),
-    );
-    return WorkShortcutLayout(
-      columns: columns,
-      tileWidth: width,
-      iconExtent: 62,
-      gap: shortcutGap,
-    );
-  }
+    double? minimumLabelWidth,
+  }) => _calculateWorkShortcuts(availableWidth, textScaler, minimumLabelWidth);
+
+  /// Work home groups dated records beside a readable calendar, never three
+  /// unrelated slices of a phone stack. Other module layouts are unchanged.
+  static OperationsWorkspaceLayout workLandingFor(
+    double availableWidth, {
+    TextScaler textScaler = TextScaler.noScaling,
+  }) => _calculateWorkLanding(availableWidth, textScaler);
 
   static HeaderLayout headerFor({
     required double availableWidth,

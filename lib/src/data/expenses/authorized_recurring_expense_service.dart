@@ -1,3 +1,4 @@
+import '../storage/local_draft_checkpoint.dart';
 import 'expense_money.dart';
 import 'recurring_expense_records.dart';
 import 'recurring_expense_repository.dart';
@@ -57,6 +58,22 @@ class AuthorizedRecurringExpenseService {
 
   final RecurringExpenseRepository _repository;
 
+  Future<StoredRecurringExpenseTemplate?> readCurrentTemplate(
+    String id,
+    RecurringExpenseCommandPermissions permissions,
+  ) async => _repository.findTemplate(
+    templateId: id,
+    access: _requireReadAccess(permissions),
+  );
+
+  Future<StoredRecurringExpenseOccurrence?> readCurrentOccurrence(
+    String id,
+    RecurringExpenseCommandPermissions permissions,
+  ) async => _repository.findOccurrence(
+    occurrenceId: id,
+    access: _requireReadAccess(permissions),
+  );
+
   Future<List<StoredRecurringExpenseTemplate>> queryTemplates({
     required RecurringExpenseCommandPermissions permissions,
     DateTime? fromInclusive,
@@ -99,6 +116,7 @@ class AuthorizedRecurringExpenseService {
     required RecurringExpenseCommandPermissions permissions,
     required DateTime occurredAtUtc,
     String? note,
+    LocalDraftCheckpoint? draftCheckpoint,
   }) {
     _requireAction(permissions.canManage, 'set up planned expenses');
     if (template.organizationId != permissions.organizationId ||
@@ -117,7 +135,7 @@ class AuthorizedRecurringExpenseService {
     return _repository.createTemplate(
       template: template,
       initialOccurrence: initialOccurrence,
-      context: _context(permissions, occurredAtUtc, note),
+      context: _context(permissions, occurredAtUtc, note, draftCheckpoint),
     );
   }
 
@@ -127,6 +145,7 @@ class AuthorizedRecurringExpenseService {
     required RecurringExpenseCommandPermissions permissions,
     required DateTime occurredAtUtc,
     String? note,
+    LocalDraftCheckpoint? draftCheckpoint,
   }) async {
     _requireAction(permissions.canManage, 'edit planned expenses');
     _requireTarget(
@@ -140,7 +159,7 @@ class AuthorizedRecurringExpenseService {
     return _repository.updateTemplateAndOpenOccurrence(
       template: template,
       expectedTemplateRevision: expectedRevision,
-      context: _context(permissions, occurredAtUtc, note),
+      context: _context(permissions, occurredAtUtc, note, draftCheckpoint),
     );
   }
 
@@ -152,6 +171,7 @@ class AuthorizedRecurringExpenseService {
     required RecurringExpenseCommandPermissions permissions,
     required DateTime occurredAtUtc,
     String? note,
+    LocalDraftCheckpoint? draftCheckpoint,
   }) async {
     _requireAction(permissions.canManage, 'edit planned payments');
     final template = await _requireTemplate(templateId, permissions);
@@ -173,7 +193,7 @@ class AuthorizedRecurringExpenseService {
       occurrence: occurrence,
       expectedTemplateRevision: expectedTemplateRevision,
       expectedRevision: expectedRevision,
-      context: _context(permissions, occurredAtUtc, note),
+      context: _context(permissions, occurredAtUtc, note, draftCheckpoint),
     );
   }
 
@@ -332,11 +352,23 @@ class AuthorizedRecurringExpenseService {
   RecurringExpenseMutationContext _context(
     RecurringExpenseCommandPermissions permissions,
     DateTime occurredAtUtc,
-    String? note,
-  ) => RecurringExpenseMutationContext(
-    actorEmployeeId: permissions.actorEmployeeId,
-    occurredAtUtc: occurredAtUtc,
-    permissionRevision: permissions.permissionRevision,
-    note: note,
-  );
+    String? note, [
+    LocalDraftCheckpoint? draftCheckpoint,
+  ]) {
+    final repository = _repository;
+    if (draftCheckpoint != null &&
+        (repository is! RecurringExpenseDraftConfirmationRepository ||
+            !repository.supportsDraftConfirmation)) {
+      throw const RecurringExpenseStorageException(
+        'This storage cannot safely confirm a saved draft.',
+      );
+    }
+    return RecurringExpenseMutationContext(
+      actorEmployeeId: permissions.actorEmployeeId,
+      occurredAtUtc: occurredAtUtc,
+      permissionRevision: permissions.permissionRevision,
+      note: note,
+      draftCheckpoint: draftCheckpoint,
+    );
+  }
 }

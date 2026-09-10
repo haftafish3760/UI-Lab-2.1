@@ -1,6 +1,16 @@
+import '../../data/work/work_items_draft_input.dart';
+import '../../shared/editor_input_lock.dart';
+import '../../data/work/invoice_confirmation.dart';
+import '../../data/work/invoice_draft_workflow.dart';
+import '../../data/work/invoice_draft_controller.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../data/prototype_operations_store.dart';
+import '../../data/storage/draft_autosave_session.dart';
+import '../../data/storage/local_record_identity.dart';
+import '../../shared/editor_draft_status.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
 import 'customer_edit_screen.dart';
@@ -11,6 +21,8 @@ import 'work_models.dart';
 
 part 'invoice_editor_sections.dart';
 part 'invoice_editor_feedback.dart';
+part 'invoice_editor_persistence.dart';
+part 'invoice_editor_confirmation.dart';
 
 class InvoiceEditorScreen extends StatefulWidget {
   const InvoiceEditorScreen({
@@ -18,12 +30,16 @@ class InvoiceEditorScreen extends StatefulWidget {
     this.sourceJob,
     this.initialRecord,
     this.createdByEmployeeId,
+    this.recoveredWorkflow,
     super.key,
   });
 
   final DateTime initialDay;
   final WorkRecord? sourceJob;
   final WorkRecord? initialRecord;
+
+  /// This editor owns closing the already-selected workflow on exit.
+  final InvoiceDraftController? recoveredWorkflow;
   final String? createdByEmployeeId;
 
   @override
@@ -33,7 +49,19 @@ class InvoiceEditorScreen extends StatefulWidget {
 class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
   static const _directInvoice = 'direct-invoice';
 
-  late final String _number;
+  late String _number;
+  late String _recordId;
+  late String _creatorId;
+  late DateTime _createdOn;
+  late InvoiceDraftController? _workflow = widget.recoveredWorkflow;
+  DraftAutosaveSession? get _draft => _workflow?.session;
+  StreamSubscription<DraftSaveState>? _draftSubscription;
+  bool _draftStarted = false;
+  bool _draftReady = false;
+  bool _submitting = false;
+  bool _allowPop = false;
+  int _baseStorageRevision = 0;
+  WorkItemsDraftInput? _itemDraftInput;
   late final TextEditingController _title;
   late final TextEditingController _summary;
   late final TextEditingController _discount;
@@ -49,6 +77,8 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
   var _template = 'Service standard';
   var _paymentMethod = 'Not selected';
   String? _formError;
+
+  void _refresh(VoidCallback change) => setState(change);
 
   PrototypeOperationsStore get _store => PrototypeOperationsScope.of(context);
 
@@ -75,6 +105,10 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
     super.initState();
     final existing = widget.initialRecord;
     final source = widget.sourceJob;
+    _recordId = existing?.id ?? newLocalRecordIdentity('invoice');
+    _creatorId =
+        existing?.createdByEmployeeId ?? widget.createdByEmployeeId ?? 'alex';
+    _createdOn = existing?.createdOn ?? DateUtils.dateOnly(DateTime.now());
     _number =
         existing?.number ??
         'INV-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
@@ -109,10 +143,24 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
     ];
     _template = existing?.template ?? 'Service standard';
     _paymentMethod = existing?.paymentMethod ?? 'Not selected';
+    for (final controller in [_title, _summary, _discount, _tax, _terms]) {
+      controller.addListener(_captureDraft);
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_draftStarted) {
+      _draftStarted = true;
+      unawaited(_openDraft());
+    }
   }
 
   @override
   void dispose() {
+    unawaited(_draftSubscription?.cancel());
+    unawaited(_draft?.close().catchError((Object _) {}));
     _title.dispose();
     _summary.dispose();
     _discount.dispose();
@@ -122,122 +170,145 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    key: const ValueKey('invoice-editor-screen'),
-    body: SafeArea(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
-          final width = AppLayoutEngine.formWorkspaceWidthFor(
-            constraints.maxWidth - insets.horizontal,
-          );
-          return ListView(
-            padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
-            children: [
-              Center(
-                child: SizedBox(
-                  width: width,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      WorkDetailHeader(
-                        label: widget.initialRecord == null
-                            ? 'New invoice'
-                            : 'Edit invoice',
-                        selectedDay: _issuedOn,
-                        onBack: () => Navigator.of(context).pop(),
-                        showDateContext: true,
+  Widget build(BuildContext context) => PopScope(
+    canPop: _allowPop || _draft == null,
+    onPopInvokedWithResult: (didPop, result) {
+      if (!didPop) unawaited(_leaveEditor());
+    },
+    child: Scaffold(
+      key: const ValueKey('invoice-editor-screen'),
+      body: SafeArea(
+        child: EditorInputLock(
+          locked: _submitting,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final insets = AppLayoutEngine.pageInsetsFor(
+                constraints.maxWidth,
+              );
+              final width = AppLayoutEngine.formWorkspaceWidthFor(
+                constraints.maxWidth - insets.horizontal,
+              );
+              return ListView(
+                padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
+                children: [
+                  Center(
+                    child: SizedBox(
+                      width: width,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          WorkDetailHeader(
+                            label: widget.initialRecord == null
+                                ? 'New invoice'
+                                : 'Edit invoice',
+                            selectedDay: _issuedOn,
+                            onBack: _leaveEditor,
+                            showDateContext: true,
+                          ),
+                          if (_draft != null)
+                            EditorDraftStatus(
+                              state: _draft!.state,
+                              onRetry: _draft!.retry,
+                              onDiscard: _discardDraft,
+                            ),
+                          if (!_draftReady && _formError == null)
+                            const Text('Opening saved input…'),
+                          if (!_draftReady && _formError != null)
+                            _InvoiceFormError(message: _formError!),
+                          if (_draftReady) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              widget.initialRecord == null
+                                  ? 'Prepare an invoice'
+                                  : 'Edit invoice $_number',
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Review the customer, completed work, charges, and due date before saving the draft.',
+                            ),
+                            if (_formError case final error?) ...[
+                              const SizedBox(height: 10),
+                              _InvoiceFormError(message: error),
+                            ],
+                            const SizedBox(height: 12),
+                            _InvoiceSourceSection(
+                              jobs: _jobs,
+                              selectedValue:
+                                  _jobs.any((job) => job.id == _sourceJobId)
+                                  ? _sourceJobId!
+                                  : _directInvoice,
+                              directValue: _directInvoice,
+                              onChanged: _selectSource,
+                            ),
+                            const SizedBox(height: 12),
+                            _InvoiceIdentitySection(
+                              number: _number,
+                              title: _title,
+                              summary: _summary,
+                              customers: _store.customers,
+                              selectedClient: _client,
+                              locations: _locationsFor(_client),
+                              selectedLocation: _location,
+                              pricing: _pricing,
+                              onClientChanged: _selectClient,
+                              onLocationChanged: (value) =>
+                                  _updateInput(() => _location = value),
+                              onAddClient: _addClient,
+                              onPricingChanged: (value) =>
+                                  _updateInput(() => _pricing = value),
+                            ),
+                            const SizedBox(height: 12),
+                            _InvoiceItemsSection(
+                              itemCount: _items.length,
+                              subtotal: _subtotal,
+                              onOpen: _editItems,
+                            ),
+                            const SizedBox(height: 12),
+                            _InvoiceDatesSection(
+                              issuedOn: _issuedOn,
+                              dueOn: _dueOn,
+                              onIssuedOn: () => _pickDate(issueDate: true),
+                              onDueOn: () => _pickDate(issueDate: false),
+                            ),
+                            const SizedBox(height: 12),
+                            _InvoiceCustomerCopySection(
+                              subtotal: _subtotal,
+                              total: _total,
+                              discount: _discount,
+                              tax: _tax,
+                              terms: _terms,
+                              template: _template,
+                              paymentMethod: _paymentMethod,
+                              onTemplateChanged: (value) =>
+                                  _updateInput(() => _template = value),
+                              onPaymentMethodChanged: (value) =>
+                                  _updateInput(() => _paymentMethod = value),
+                              onMoneyChanged: () => _updateInput(() {}),
+                            ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        widget.initialRecord == null
-                            ? 'Prepare an invoice'
-                            : 'Edit invoice $_number',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Review the customer, completed work, charges, and due date before saving the draft.',
-                      ),
-                      if (_formError case final error?) ...[
-                        const SizedBox(height: 10),
-                        _InvoiceFormError(message: error),
-                      ],
-                      const SizedBox(height: 12),
-                      _InvoiceSourceSection(
-                        jobs: _jobs,
-                        selectedValue:
-                            _jobs.any((job) => job.id == _sourceJobId)
-                            ? _sourceJobId!
-                            : _directInvoice,
-                        directValue: _directInvoice,
-                        onChanged: _selectSource,
-                      ),
-                      const SizedBox(height: 12),
-                      _InvoiceIdentitySection(
-                        number: _number,
-                        title: _title,
-                        summary: _summary,
-                        customers: _store.customers,
-                        selectedClient: _client,
-                        locations: _locationsFor(_client),
-                        selectedLocation: _location,
-                        pricing: _pricing,
-                        onClientChanged: _selectClient,
-                        onLocationChanged: (value) =>
-                            setState(() => _location = value),
-                        onAddClient: _addClient,
-                        onPricingChanged: (value) =>
-                            setState(() => _pricing = value),
-                      ),
-                      const SizedBox(height: 12),
-                      _InvoiceItemsSection(
-                        itemCount: _items.length,
-                        subtotal: _subtotal,
-                        onOpen: _editItems,
-                      ),
-                      const SizedBox(height: 12),
-                      _InvoiceDatesSection(
-                        issuedOn: _issuedOn,
-                        dueOn: _dueOn,
-                        onIssuedOn: () => _pickDate(issueDate: true),
-                        onDueOn: () => _pickDate(issueDate: false),
-                      ),
-                      const SizedBox(height: 12),
-                      _InvoiceCustomerCopySection(
-                        subtotal: _subtotal,
-                        total: _total,
-                        discount: _discount,
-                        tax: _tax,
-                        terms: _terms,
-                        template: _template,
-                        paymentMethod: _paymentMethod,
-                        onTemplateChanged: (value) =>
-                            setState(() => _template = value),
-                        onPaymentMethodChanged: (value) =>
-                            setState(() => _paymentMethod = value),
-                        onMoneyChanged: () => setState(() {}),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ],
-          );
-        },
+                ],
+              );
+            },
+          ),
+        ),
       ),
-    ),
-    bottomNavigationBar: SafeArea(
-      minimum: const EdgeInsets.all(12),
-      child: Center(
-        heightFactor: 1,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 620),
-          child: FilledButton.icon(
-            key: const ValueKey('save-invoice-draft'),
-            onPressed: _save,
-            icon: const Icon(Icons.save_outlined),
-            label: const Text('Save invoice draft'),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.all(12),
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620),
+            child: FilledButton.icon(
+              key: const ValueKey('save-invoice-draft'),
+              onPressed: _draftReady && !_submitting ? _save : null,
+              icon: const Icon(Icons.save_outlined),
+              label: const Text('Save invoice draft'),
+            ),
           ),
         ),
       ),
@@ -253,13 +324,20 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
   }
 
   void _selectSource(String? value) {
+    if (_itemDraftInput != null) {
+      _updateInput(
+        () => _formError =
+            'Finish or discard the unfinished item changes before changing the source job.',
+      );
+      return;
+    }
     if (value == _directInvoice) {
-      setState(() => _sourceJobId = null);
+      _updateInput(() => _sourceJobId = null);
       return;
     }
     final source = _jobs.where((job) => job.id == value).firstOrNull;
     if (source == null) return;
-    setState(() {
+    _updateInput(() {
       _sourceJobId = source.id;
       _client = source.client;
       _location = source.serviceLocation;
@@ -272,7 +350,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
 
   void _selectClient(String? value) {
     final locations = _locationsFor(value);
-    setState(() {
+    _updateInput(() {
       _client = value;
       _location = locations.firstOrNull?.address;
     });
@@ -285,8 +363,10 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
       ),
     );
     if (!mounted || customer == null) return;
-    _store.replaceCustomers([..._store.customers, customer]);
-    setState(() {
+    if (_store.directorySession == null) {
+      _store.replaceCustomers([..._store.customers, customer]);
+    }
+    _updateInput(() {
       _client = customer.name;
       _location = customer.locations.firstOrNull?.address;
     });
@@ -297,6 +377,11 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
       MaterialPageRoute(
         builder: (_) => WorkItemsEditor(
           initialItems: _items,
+          draftSession: _draft,
+          recoveryInput: _itemDraftInput,
+          onDraftChanged: _draft == null
+              ? null
+              : (input) => _updateInput(() => _itemDraftInput = input),
           pricing: _pricing,
           workspaceLabel: 'Invoice Items',
           allowTruckStock: true,
@@ -304,7 +389,12 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
         ),
       ),
     );
-    if (mounted && items != null) setState(() => _items = items);
+    if (mounted && items != null) {
+      _updateInput(() {
+        _items = items;
+        _itemDraftInput = null;
+      });
+    }
   }
 
   Future<void> _pickDate({required bool issueDate}) async {
@@ -317,7 +407,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
       helpText: issueDate ? 'Choose invoice date' : 'Choose payment due date',
     );
     if (!mounted || picked == null) return;
-    setState(() {
+    _updateInput(() {
       if (issueDate) {
         final previous = _issuedOn;
         _issuedOn = DateUtils.dateOnly(picked);
@@ -329,55 +419,6 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
         _dueOn = DateUtils.dateOnly(picked);
       }
     });
-  }
-
-  void _save() {
-    if (_client == null ||
-        _title.text.trim().isEmpty ||
-        _summary.text.trim().isEmpty ||
-        _items.isEmpty) {
-      setState(
-        () => _formError =
-            'Choose a customer and enter the work completed with at least one invoice item.',
-      );
-      return;
-    }
-    if (_dueOn.isBefore(_issuedOn)) {
-      setState(
-        () => _formError =
-            'The payment due date cannot be before the invoice date.',
-      );
-      return;
-    }
-    final existing = widget.initialRecord;
-    Navigator.of(context).pop(
-      WorkRecord(
-        id: existing?.id ?? 'invoice-${DateTime.now().microsecondsSinceEpoch}',
-        kind: WorkRecordKind.invoice,
-        number: _number,
-        title: _title.text.trim(),
-        client: _client!,
-        detail: _summary.text.trim(),
-        pricing: _pricing,
-        sourceId: _sourceJobId,
-        serviceLocation: _location ?? '',
-        createdOn: existing?.createdOn ?? DateUtils.dateOnly(DateTime.now()),
-        issuedOn: _issuedOn,
-        dueOn: _dueOn,
-        createdByEmployeeId:
-            existing?.createdByEmployeeId ??
-            widget.createdByEmployeeId ??
-            'alex',
-        status: existing?.status ?? WorkRecordStatus.draft,
-        items: List.unmodifiable(_items),
-        template: _template,
-        terms: _terms.text.trim(),
-        paymentMethod: _paymentMethod,
-        discount: _moneyValue(_discount),
-        tax: _moneyValue(_tax),
-        total: _total,
-      ),
-    );
   }
 }
 

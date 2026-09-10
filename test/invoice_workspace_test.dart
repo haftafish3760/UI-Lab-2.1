@@ -167,6 +167,13 @@ void main() {
 
     final row = find.byKey(const ValueKey('invoice-row-inv-2088'));
     expect(row, findsOneWidget);
+    final invoice = PrototypeOperationsScope.of(
+      tester.element(row),
+    ).workRecords.singleWhere((record) => record.id == 'inv-2088');
+    final expectedIssueDate = MaterialLocalizations.of(
+      tester.element(row),
+    ).formatFullDate(invoice.issuedOn!);
+
     expect(tester.getSize(row).height, lessThanOrEqualTo(72));
     await tester.tap(
       find.ancestor(of: row, matching: find.byType(InkWell)).first,
@@ -179,7 +186,10 @@ void main() {
     expect(find.text('Invoice items'), findsOneWidget);
     expect(find.text('Payment history'), findsOneWidget);
     expect(find.text('Invoice details'), findsOneWidget);
-    expect(find.text('Tuesday, September 1, 2026'), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('work-date-heading'))).data,
+      expectedIssueDate,
+    );
     expect(
       find.textContaining('installed the approved replacement'),
       findsOneWidget,

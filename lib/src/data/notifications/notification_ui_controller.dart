@@ -1,3 +1,4 @@
+import '../storage/serialized_async_actions.dart';
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
@@ -19,6 +20,8 @@ class NotificationUiController extends ChangeNotifier {
   String? _failureMessage;
   DateTime? _availableAtUtc;
   bool _disposed = false;
+  final _actions = SerializedAsyncActions();
+  Future<AsyncActionPause> pauseOperations() => _actions.pauseAndDrain();
   int _loadGeneration = 0;
 
   List<StoredNotificationEvent> get events => _events;
@@ -65,43 +68,46 @@ class NotificationUiController extends ChangeNotifier {
     }
   }
 
-  Future<bool> markRead(StoredNotificationEvent event) async {
-    if (event.readState != NotificationReadState.unread) return true;
-    return _changeState(event, NotificationReadState.read);
-  }
+  Future<bool> markRead(StoredNotificationEvent event) =>
+      _actions.run(() async {
+        if (event.readState != NotificationReadState.unread) return true;
+        return _changeState(event, NotificationReadState.read);
+      });
 
-  Future<StoredNotificationEvent?> eventForOpen(String notificationId) async {
-    try {
-      await _sourceReady;
-      var event = await _service.findEvent(
-        notificationId: notificationId,
-        permissions: _permissions,
-      );
-      if (event == null || event.readState == NotificationReadState.dismissed) {
-        return null;
-      }
-      if (event.readState == NotificationReadState.unread) {
-        event = await _service.changeReadState(
-          notificationId: event.notificationId,
-          state: NotificationReadState.read,
-          expectedRevision: event.lifecycle.revision,
-          permissions: _permissions,
-          occurredAtUtc: DateTime.now().toUtc(),
-          note: 'Opened from a device notification.',
-        );
-        _replace(event);
-        _notify();
-      }
-      return event;
-    } on Object {
-      _failureMessage = 'Notifications could not be loaded.';
-      _phase = NotificationUiPhase.failed;
-      _notify();
-      return null;
-    }
-  }
+  Future<StoredNotificationEvent?> eventForOpen(String notificationId) =>
+      _actions.run(() async {
+        try {
+          await _sourceReady;
+          var event = await _service.findEvent(
+            notificationId: notificationId,
+            permissions: _permissions,
+          );
+          if (event == null ||
+              event.readState == NotificationReadState.dismissed) {
+            return null;
+          }
+          if (event.readState == NotificationReadState.unread) {
+            event = await _service.changeReadState(
+              notificationId: event.notificationId,
+              state: NotificationReadState.read,
+              expectedRevision: event.lifecycle.revision,
+              permissions: _permissions,
+              occurredAtUtc: DateTime.now().toUtc(),
+              note: 'Opened from a device notification.',
+            );
+            _replace(event);
+            _notify();
+          }
+          return event;
+        } on Object {
+          _failureMessage = 'Notifications could not be loaded.';
+          _phase = NotificationUiPhase.failed;
+          _notify();
+          return null;
+        }
+      });
 
-  Future<bool> markAllRead() async {
+  Future<bool> markAllRead() => _actions.run(() async {
     final unread = _events
         .where((event) => event.readState == NotificationReadState.unread)
         .toList();
@@ -109,7 +115,7 @@ class NotificationUiController extends ChangeNotifier {
       if (!await _changeState(event, NotificationReadState.read)) return false;
     }
     return true;
-  }
+  });
 
   Future<bool> _changeState(
     StoredNotificationEvent event,

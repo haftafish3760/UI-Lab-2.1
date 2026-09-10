@@ -1,5 +1,5 @@
-import '../screens/work/estimate_models.dart';
-import '../screens/work/work_models.dart';
+import 'work/models/estimate_models.dart';
+import 'work/models/work_models.dart';
 import 'prototype_financial_models.dart';
 
 List<PrototypeFinancialEntry> prototypeDemoFinancialEntries() {

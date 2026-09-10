@@ -1,4 +1,4 @@
-import '../../screens/work/work_models.dart';
+import '../work/models/work_models.dart';
 import 'authorized_expense_service.dart';
 import 'expense_repository.dart';
 import 'file_expense_repository.dart';

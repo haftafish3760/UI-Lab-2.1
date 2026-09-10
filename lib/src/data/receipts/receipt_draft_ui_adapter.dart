@@ -1,4 +1,4 @@
-import '../../screens/expenses/expense_models.dart';
+import '../expenses/expense_workflow_models.dart';
 import 'receipt_draft_record.dart';
 
 typedef ReceiptDraftEmployeeLabelResolver = String Function(String employeeId);

@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../data/prototype_operations_store.dart';
+
 import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
 import 'customer_detail_screen.dart';
@@ -130,7 +132,9 @@ class _SavedClientsScreenState extends State<SavedClientsScreen> {
       _clients[index] = updated;
       _clients.sort(_compareClients);
     });
-    widget.onClientsChanged(List.unmodifiable(_clients));
+    if (PrototypeOperationsScope.maybeOf(context)?.directorySession == null) {
+      widget.onClientsChanged(List.unmodifiable(_clients));
+    }
   }
 
   Future<void> _addClient() async {
@@ -144,7 +148,9 @@ class _SavedClientsScreenState extends State<SavedClientsScreen> {
       _clients.add(created);
       _clients.sort(_compareClients);
     });
-    widget.onClientsChanged(List.unmodifiable(_clients));
+    if (PrototypeOperationsScope.maybeOf(context)?.directorySession == null) {
+      widget.onClientsChanged(List.unmodifiable(_clients));
+    }
   }
 }
 

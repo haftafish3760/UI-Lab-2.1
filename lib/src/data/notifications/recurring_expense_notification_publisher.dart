@@ -1,4 +1,4 @@
-import '../../screens/expenses/expense_models.dart';
+import '../expenses/expense_workflow_models.dart';
 import 'authorized_notification_service.dart';
 import 'notification_demo_policy.dart';
 import 'notification_records.dart';

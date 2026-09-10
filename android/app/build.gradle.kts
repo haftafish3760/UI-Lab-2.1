@@ -1,13 +1,27 @@
+import java.util.Base64
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Dedicated test identity keeps runner install/uninstall away from normal app data.
+val storageQa = (project.findProperty("dart-defines") as? String)
+    ?.split(",")
+    ?.any { String(Base64.getDecoder().decode(it)) == "STORAGE_QA=true" } == true
+
 android {
     namespace = "com.maintainiac.ui_lab_2_1"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+
+    if (storageQa) {
+        sourceSets.getByName("debug") {
+            java.srcDir("src/storageQa/java")
+            manifest.srcFile("src/storageQa/AndroidManifest.xml")
+        }
+    }
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
@@ -17,7 +31,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.maintainiac.ui_lab_2_1"
+        applicationId = if (storageQa) "com.maintainiac.ui_lab_2_1.storageqa" else "com.maintainiac.ui_lab_2_1"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

@@ -12,6 +12,9 @@ import '../../shared/operational_scope.dart';
 import '../../shared/operations_workspace.dart';
 import '../../shared/operational_attention_panel.dart';
 import '../../shared/section_card.dart';
+import '../../shared/recorded_entries_section.dart';
+import '../../shared/operational_section_heading.dart';
+import '../../theme/operational_card_palette.dart';
 import '../../shared/module_month_calendar.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/app_semantic_colors.dart';
@@ -25,14 +28,12 @@ import 'expense_models.dart';
 import 'expense_permissions.dart';
 import 'expense_record_card.dart';
 import 'expense_receipt_drafts_screen.dart';
-import 'expense_save_feedback.dart';
 import 'expenses_scope_header.dart';
 import 'expenses_settings_screen.dart';
 import 'receipt_intake_screen.dart';
 import 'recurring_expense_repository_status.dart';
 import 'removed_expenses_screen.dart';
 import 'scheduled_expense_editor_screen.dart';
-import 'scheduled_expense_feedback.dart';
 import 'scheduled_expenses_screen.dart';
 
 part 'expenses_widgets.dart';
@@ -54,7 +55,9 @@ class ExpensesScreen extends StatefulWidget {
 class _ExpensesScreenState extends State<ExpensesScreen> {
   final _selectedDate = dashboardToday;
   late final List<ExpenseRecord>? _injectedExpenses;
-  var _preferences = const ExpenseDisplayPreferences.defaults();
+  var _fixturePreferences = const ExpenseDisplayPreferences.defaults();
+  ExpenseDisplayPreferences get _preferences =>
+      readExpenseDisplayPreferences(context, _fixturePreferences);
 
   AppViewMode get _view => OperationalScope.of(context).view;
   String? get _selectedEmployeeId =>
@@ -334,7 +337,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         builder: (_) => ExpensesSettingsScreen(initial: _preferences),
       ),
     );
-    if (mounted && result != null) setState(() => _preferences = result);
+    if (mounted && result != null) setState(() => _fixturePreferences = result);
   }
 
   Future<void> _showExpenseActions() async {
@@ -366,32 +369,23 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     ExpenseCategory initialCategory = ExpenseCategory.materials,
   }) async {
     if (!_permissions.canCreate) return;
-    ExpenseRecord? draft;
-    while (mounted) {
-      if (!mounted) return;
-      final record = await Navigator.of(context).push<ExpenseRecord>(
-        MaterialPageRoute(
-          builder: (_) => ExpenseEditorScreen(
-            expenseDate: _selectedDate,
-            initialCategory: initialCategory,
-            initialReceiptType: _preferences.receiptTypeFor(initialCategory),
-            existing: draft,
-            permissions: _permissions,
-          ),
+    await Navigator.of(context).push<ExpenseRecord>(
+      MaterialPageRoute(
+        builder: (_) => ExpenseEditorScreen(
+          expenseDate: _selectedDate,
+          initialCategory: initialCategory,
+          initialReceiptType: _preferences.receiptTypeFor(initialCategory),
+          permissions: _permissions,
+          onConfirm: (record) async {
+            if (_injectedExpenses case final injected?) {
+              setState(() => injected.insert(0, record));
+              return record;
+            }
+            return PrototypeOperationsScope.of(context).addExpense(record);
+          },
         ),
-      );
-      if (!mounted || record == null) return;
-      draft = record;
-      if (_injectedExpenses case final injected?) {
-        setState(() => injected.insert(0, record));
-        return;
-      }
-      final saved = await PrototypeOperationsScope.of(
-        context,
-      ).addExpense(record);
-      if (!mounted || saved != null) return;
-      if (!await showExpenseSaveFailure(context)) return;
-    }
+      ),
+    );
   }
 
   void _openReceiptIntake() {
@@ -450,7 +444,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     if (!_permissions.canManageScheduledExpenses) return;
     final record = await Navigator.of(context).push<ScheduledExpenseRecord>(
       MaterialPageRoute(
-        builder: (_) => ScheduledExpenseEditorScreen(permissions: _permissions),
+        builder: (_) => ScheduledExpenseEditorScreen(
+          permissions: _permissions,
+          onConfirm: RecurringExpenseUiScope.maybeOf(context)?.create,
+        ),
       ),
     );
     if (mounted && record != null) {
@@ -461,8 +458,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         ).expenseStore.addScheduledExpense(record);
         return;
       }
-      final saved = await controller.create(record);
-      if (mounted && saved == null) await showScheduledExpenseFailure(context);
     }
   }
 

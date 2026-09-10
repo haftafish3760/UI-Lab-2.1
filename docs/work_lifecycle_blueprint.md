@@ -1,6 +1,8 @@
 # Work Lifecycle Blueprint
 
 Status: UI Lab working contract 0.1  
+Authority/status: `README.md` and `application_decision_register.md`. Inherited
+rules without owner evidence remain PLANNED; this file does not select U01.
 Applies to: Customers, Estimates, Jobs, Schedule, Invoices, Payments, Materials,
 Receipts, Calendar, and Dashboard projections
 
@@ -33,6 +35,10 @@ remain dependable enough for a growing service company.
 
 ## Lifecycle
 
+This is a common connected example, not proof every Invoice/Payment must pass
+every earlier step. Direct-entry/link policy remains U04. Do not silently impose
+the illustrated sequence as a mandatory gate.
+
 1. Create or select a customer and service location.
 2. Create an estimate, or create a direct job when quoting is not required.
 3. Build scope and pricing as flat rate or time and materials.
@@ -49,6 +55,14 @@ remain dependable enough for a growing service company.
     and corrections.
 12. Project confirmed dated activity into Dashboard, Calendar, reporting, and
     customer history without duplicating source records.
+
+## Quotes — required capability, independent lifecycle unresolved
+
+Quotes must be represented as a complete Work application, not erased because
+older registers only listed Estimates. Quote versus Estimate pricing commitment,
+expiry, acceptance, revision, conversion and document rules require U04. Do not
+invent legal distinctions or treat them as synonyms. Shared customer, pricing
+and document infrastructure can be evaluated without settling those policies.
 
 ## Customer and location record
 
@@ -69,6 +83,16 @@ Forms use one column on narrow constraints. Wider constraints may pair logically
 related fields, but label order, validation, and keyboard traversal remain stable.
 Customer details must not be copied into every workflow as editable parallel truth;
 documents store the required historical snapshot plus the stable customer/site ID.
+
+Customer storage checkpoint, September 9, 2026: saved contacts and all existing
+service locations now persist in SQLite. The client editor retains raw unfinished
+input locally, offers owned unfinished new clients on reopening, and resumes the
+specific edit draft for an existing client. Back keeps input; explicit discard
+removes only the recovery draft. Save waits for the customer write and exact draft
+consumption to commit together. A failure or stale edit preserves input and keeps
+the form open. This is tested implementation evidence, not owner visual acceptance
+or completion of duplicate merging, privacy retention, stable Work foreign keys,
+production identity, or every nested workflow. See the storage contract for gates.
 
 ## Estimate workspace
 
@@ -139,9 +163,29 @@ cent. The prior signature remains only with its signed revision in audit
 history; it is never displayed or accepted as approval of the revised estimate.
 The revised estimate returns to an approval-required state and cannot create a
 job until the customer approves that exact revision.
+Implementation checkpoint: the estimate editor's main input now persists as a
+separate local recovery draft. Back retains it; explicit confirmation atomically
+writes the estimate revision and consumes that exact recovery draft. A failed
+confirmation preserves the saved approval and unfinished input. Nested labor/material lists and unfinished line items now share this recovery
+draft; confirmation requires reviewing those changes first. Photo-list metadata and unfinished notes also recover locally, but durable
+new imports use app-owned verified files. Existing-path migration and real-device
+image interruption validation remain unfinished; see `data_storage_sync_contract.md` for the
+verified scope and remaining gaps.
+
+Job workspace rescheduling now retains unfinished date/time input separately and
+preserves the recorded elapsed duration when confirming a new arrival time. A
+missing start/end interval blocks confirmation instead of assuming two hours.
+This storage checkpoint does not replace the time-zone, feasibility or scheduling
+engine requirements in `scheduling_system_blueprint.md`.
+
 Acceptance never creates a job automatically. A separately permitted, explicit
 `Create and plan job` action creates the linked job and then requires schedule
-and assignment review.
+and assignment review. SQLite-backed creation now commits the job and estimate
+conversion together, checks the captured source revision/current signature, and
+rejects competing conversions. The editor stays open if confirmation fails; raw
+job main-form and nested item input now autosave separately, retain on Back,
+and are consumed only with successful confirmation. Job-detail mutation forms
+and app-wide recovery entry points remain unfinished. See `data_storage_sync_contract.md`.
 
 Company review is a separate revision-bound lifecycle when the owner's policy
 requires it. The creator submits the exact estimate revision. An authorized
@@ -245,6 +289,11 @@ port replaces that boundary with the authorized document service and records
 the confirmed delivery result.
 
 ### Release-one customer portal and QR handoff
+
+Status reconciliation: the following is the existing PLANNED portal design
+(P02). The current owner requests mapping, not automatic approval of its
+release-one timing or every commercial/consent rule. U08 owns those open choices.
+Preserve security boundaries while awaiting decisions.
 
 Release one uses a small, document-specific web portal rather than a customer
 messaging system. An authorized contractor generates a QR code from the exact
@@ -519,6 +568,27 @@ while preserving the Job ID as the source. The user may then review customer,
 work completed, invoice items, invoice and due dates, discount, tax, template,
 expected payment method, and payment terms. An incomplete form does not create
 a record. Save creates an Unfinished draft; it does not issue or deliver it.
+Storage integration checkpoint, September 9, 2026: the main Invoice editor now
+keeps raw unfinished input separately from the saved invoice file. It shows local
+write acknowledgment and retry failure, offers owner-scoped unfinished invoices
+when starting another invoice, and restores the specific recovery draft when
+editing an existing invoice. Back retains input; `Discard unfinished input`
+requires an explicit confirmation and does not delete a saved invoice record.
+`Save invoice draft` validates the form and atomically stores the record while
+consuming the exact recovery draft revision. Failed or stale confirmation keeps
+the editor and recovery input. This is an implementation checkpoint, not owner
+visual acceptance or complete workflow durability. The invoice item workspace
+and line-item form now share its recovery checkpoint, preserving partial numbers,
+item identity and source links. Back retains their input. A pending item offers
+`Continue unfinished item`; starting competing edits and saving the enclosing
+invoice wait until that input is reviewed or explicitly discarded. `Discard item
+changes` confirms removal of that working item session, leaving previously saved
+invoice records unchanged. New-customer input is now connected to its own scoped directory recovery
+draft; company-profile and payment input now have their own scoped recovery
+drafts as well. Other module editors and global recovery navigation still need
+integration. The shared storage contract owns cross-module draft policy and
+remaining gates.
+
 The import includes quoted/planned Job items and additions explicitly marked
 **Add to invoice later**. It excludes non-billable material use and proposed
 changes still awaiting customer approval. Invoice review remains explicit and
@@ -544,6 +614,16 @@ payments reduce the offered balance, and overpayment is rejected. Selecting a
 saved payment opens its owning Invoice record. Saved payments use the same
 compact record grammar as the rest of Work: each payment is a separate bordered
 60-LP-class container rather than a merged list inside one undifferentiated panel.
+Payment storage checkpoint, September 9, 2026: raw amount, method, date and note
+save locally without creating a payment. Back retains input; explicit discard
+removes only the unconfirmed draft. Saving validates exact decimal cents, checks
+the current authorized balance, and commits the payment, invoice storage revision
+and exact draft consumption together. A failed or stale write keeps the form and
+input. Even partial payments advance the shared invoice storage revision so two
+independent sessions cannot post against the same stale balance. This has focused
+regression evidence; it does not establish physical-device interruption behavior
+or complete recovery access after an invoice leaves the normal open-invoice list.
+
 Invoice detail, actions, editor, payment entry, Payments, and Payment day routes
 put their applicable record date immediately below the shared operational header.
 `Work completed` contains the confirmed service summary; due timing belongs only
@@ -601,13 +681,15 @@ such as location or odometer sharing remain separate from role grants.
   reflow; they are not ellipsized to force a desktop arrangement onto a phone.
 - Dark mode uses neutral charcoal panels and section headers. Semantic colors are
   reserved for status, selection, warnings, and actions—not colored panel edges.
-- Work home uses `AppLayoutEngine.operationsFor` and no private width rules. Its wide
-  composition is Jobs, separate Estimates and Invoices summaries, and Work
-  Calendar in three bounded lanes no wider than 480 LP. Its directory uses six
-  labeled 62-LP icon tiles governed by `AppLayoutEngine.workShortcutsFor`.
-- Work home order is shared header, localized date, genuine Needs Attention,
-  optional Admin employee strip, six labeled destinations, compact daily record
-  summaries, then the full module-width calendar. Redundant date and employee
+- Work home uses `AppLayoutEngine.workLandingFor` and no private width rules.
+  Its wide composition groups dated records beside a readable calendar in two
+  bounded 400-LP-maximum lanes. Its directory uses six labeled 62-LP icon
+  surfaces governed by `AppLayoutEngine.workShortcutsFor` with measured labels.
+- Work home order is shared header, six labeled destinations, localized date,
+  genuine Needs Attention, optional Admin employee strip, compact daily record
+  summaries, then the calendar on narrow screens (alongside records on wide).
+  Destination ownership and unconnected Quotes/Scheduling states are specified
+  in the Work home section of `operations_screen_blueprint.md`. Redundant date and employee
   helper paragraphs are omitted. `Add work` pushes a full-screen labeled action
   grid and returns the chosen action; it is not a modal list sheet.
 - Work Day derives its records, lanes, and compact-FAB-versus-inline `Add work`

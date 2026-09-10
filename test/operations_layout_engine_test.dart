@@ -180,12 +180,12 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('desktop-destination-work')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('work-3-column-queues')), findsOneWidget);
+    expect(find.byKey(const ValueKey('work-landing-lanes')), findsOneWidget);
     expect(
       tester
           .getSize(find.byKey(const ValueKey('operations-workspace-frame')))
           .width,
-      AppLayoutEngine.maximumOperationsWorkspaceWidth,
+      AppLayoutEngine.workLandingFor(2300).workspaceWidth,
     );
 
     await tester.tap(
@@ -273,7 +273,7 @@ void main() {
         await tester.tap(destination);
         await tester.pumpAndSettle();
         final key = switch (module) {
-          'work' => 'work-${scenario.moduleColumns}-column-queues',
+          'work' => 'work-landing-lanes',
           'expenses' => 'expenses-${scenario.moduleColumns}-column-layout',
           'inventory' => 'inventory-${scenario.moduleColumns}-column-content',
           _ => 'maintenance-${scenario.moduleColumns}-column-layout',
@@ -383,11 +383,13 @@ void main() {
     };
 
     for (final entry in owners.entries) {
-      final source = File(entry.value).readAsStringSync();
+      final source = _librarySource(entry.value);
       expect(
         source,
         entry.key == 'Dashboard'
             ? contains('AppLayoutEngine.dashboardOperationsFor(')
+            : entry.key == 'Work'
+            ? contains('AppLayoutEngine.workLandingFor(')
             : contains('AppLayoutEngine.operationsFor('),
         reason: '${entry.key} must use the shared layout calculation.',
       );
@@ -410,4 +412,17 @@ void main() {
       reason: 'Shell navigation must use its actual local constraints.',
     );
   });
+}
+
+// A cohesive Dart library can move layout implementation into declared parts
+// without changing its owner. Inspect those parts as well as the entry file.
+String _librarySource(String path) {
+  final file = File(path);
+  final source = file.readAsStringSync();
+  final parts = RegExp(r"^part '([^']+)';", multiLine: true).allMatches(source);
+  return [
+    source,
+    for (final part in parts)
+      File.fromUri(file.parent.uri.resolve(part.group(1)!)).readAsStringSync(),
+  ].join('\n');
 }

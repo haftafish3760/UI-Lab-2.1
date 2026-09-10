@@ -3,21 +3,43 @@
 Status: governing working draft 0.1  
 Purpose: the one control document an engineer or Codex agent reads before
 adding, moving, or wiring a product surface.  
-Scope: UI Lab presentation blueprint now; production behavior mapping later.
+Scope: application architecture and screen/system ownership. Start at
+`README.md` and `application_decision_register.md`.
 
 This document does not replace the detailed visual, operations, or Work
 lifecycle blueprints. It makes them enforceable: no screen, button, permission,
 query, route, record link, integration, or test obligation may be invented in
 isolation.
 
+## Blueprint changes: check existing requirements first
+
+Owner requirement, September 5, 2026. Applies to every agent and every request
+to add or change blueprint content:
+
+- Before writing, search all repository blueprints, working contracts, and
+  handoff documents for the requirement, including equivalent wording. Read
+  matching sections and their references; checking only the destination file
+  is insufficient. Inspect relevant implementation when the requirement also
+  concerns behavior that may already exist.
+- Tell the owner what already exists, what is missing or conflicting, and
+  what change is proposed before editing. Do not present an incomplete search
+  as proof that a requirement is absent; disclose inaccessible material.
+- If the requirement exists, update its authoritative section only as needed
+  and cross-reference it elsewhere rather than adding a competing copy. If it
+  is absent, add it once in the appropriate owning blueprint. Preserve
+  unrelated requirements and distinguish superseded decisions explicitly.
+- Distinguish documented requirements from implemented behavior and verified
+  results. Documentation does not prove functionality, and passing checks do
+  not prove that the product meets the owner's intended workflow.
+
 ## 1. Authority and non-negotiable rules
 
 Priority order for a conflict:
 
 1. explicit product-owner direction in the current task;
-2. confirmed product decisions in `maintainiac_app_blueprint.md`;
-3. this control blueprint;
-4. module blueprint and accepted UI Lab behavior;
+2. owner-evidenced ACCEPTED/CANONICAL decision-register entries;
+3. their owning sections indexed in `README.md`, including this document;
+4. inherited module proposals and implementation observations, labeled separately;
 5. read-only 5.7 behavior evidence;
 6. a proposal, which must be labeled **Open** and not silently shipped.
 
@@ -37,9 +59,8 @@ Product rules:
    human confirmation creates or changes confirmed business truth.
 7. Every ordinary action has a plain-language label. An icon may reinforce a
    label; it never replaces one for routine work.
-8. Every implementation stays readable: aim for 500-800 Dart lines, review
-   above 500, split safely above 800, and preserve cohesive functionality over
-   arbitrary file-size splitting.
+8. Authored production files target 500 lines. Split by cohesive responsibility;
+   document safe exceptions rather than sacrificing functionality to a count.
 9. Maintainiac is a recordkeeping/document platform in the current product
    boundary, not a party to contractor/customer work or a guarantor/collector
    of customer payment. Platform Terms, contractor document terms, and customer
@@ -60,7 +81,8 @@ Product rules:
 | View and scope | operational scope | Technician first, Admin second; persist Company Overview or selected employee across peer modules | bypass authorization |
 | Vehicle/odometer | vehicle/workday services | Show selected vehicle and confirmed odometer together in header; physical reading is official | create competing per-screen readings |
 | Calendar | shared calendar projection and presentation | Same selection/accessibility language; filter module views to owning records; combine authorized module events on Dashboard | own, duplicate, or silently mutate source records |
-| Settings | current screen | Configure only the visible screen's display/actions, subject to permission; render only when a real choice exists | become a hidden global control panel or dead placeholder |
+| Page settings | current screen | Required for top-level modules, Calendar, Repairs, receipt camera and Data Saver; meaningful permission-scoped choices for that page and related behavior | become an unrelated global control panel or fake working placeholder |
+| Company/account settings | organization or user preference owner | Identity, shared defaults, language/units, privacy, storage and notifications by scope | override page ownership or silently rewrite history |
 | Notifications | shared notification service | Project permission-scoped reminders/updates, unread state, channels, and exact owning-record routes | replace Needs Attention, approve work, or claim platform delivery without adapter evidence |
 | Customer reminder delivery | outbound document communication | Send consented payment-plan reminders for an exact Invoice/plan revision through approved channels | infer consent, become chat, change a balance, or enter employee unread counts |
 | Accounting connections | provider-neutral accounting integration | Queue authorized exports of confirmed records through mapping, idempotency, conflict, retry, and audit contracts | own operational records, block offline work, or leak provider schemas into screens |
@@ -85,7 +107,8 @@ not clip, ellipsize, or quietly disappear. Each screen imports
 
 An attempted operation is allowed only when all checks pass:
 
-1. active organization and authenticated membership;
+1. valid local owner context for account-free operation, or authenticated
+   membership for shared/team/cloud resources; no universal sign-in gate;
 2. explicit capability for resource and action;
 3. allowed scope: own, assigned, team, company, selected employee, or selected
    record;
@@ -143,6 +166,7 @@ send, or delete estimates?”
 | Record | Sole owner | Required links | Key state rules |
 | --- | --- | --- | --- |
 | Customer/site/contact | Customers | organization, service sites, documents/jobs | detail-first view; edit opens prefilled form |
+| Quote | Work / Quotes | customer/site, revisions, proposed work; conversions unresolved | distinct required capability, not automatically an Estimate synonym (U04) |
 | Estimate | Work | customer, site, items, template, revisions, attachments | sent/accepted/declined/expired; accepted estimate remains immutable quoted source |
 | Job | Work | optional estimate, schedule, assignment, vehicle, field evidence | direct or estimate-created; scheduled state is not completion |
 | Invoice | Work | optional job/estimate, document version, payments | own delivery/balance/credit history; never overwrites estimate |
@@ -215,6 +239,7 @@ not yet been approved, not permission for an agent to improvise.
 | --- | --- | --- | --- | --- |
 | Dashboard | What do I need to do today and what happened? | projections | employee/company, date, workday/vehicle | Start/Open/End workday; open job/entry; authorized add actions |
 | Work home | What commercial/field records need attention? | Work projections | employee/company, date | open Jobs/Estimates/Invoices/Payments/Customers; authorized New |
+| Quotes | What proposed work needs preparation or response? | Work / Quotes | customer/site/revision | complete workflow required; acceptance and conversion rules await U04 |
 | Estimates | What was proposed and what needs a decision? | Work | employee/company, date/search | create, attach internal job-site photos, edit, preview, send, approve, accept/decline, create/plan job |
 | Jobs | What is scheduled, active, blocked, or complete? | Work | employee/company, date/filter | create, assign/reassign, schedule/reschedule, change status, open active job |
 | Active job | What work is to be done and what evidence/actuals exist? | Work | job | call/message, notes, photos, receipts, actual materials, change, complete, return visit |
@@ -252,6 +277,13 @@ control explains what condition is missing only when revealing that condition is
 itself authorized; otherwise it is absent.
 
 ## 7. Workday controls
+
+Owner update D25: users need not create a vehicle profile to use the app. Supply
+one ready-to-use vehicle identity without labeling it “Default vehicle.” A user
+tracking two vehicles needs two distinct profiles; readings/trips must never
+merge across them. Display name is unresolved. Required vehicle/odometer checks
+below concern a vehicle-based workday action, not a universal app-entry barrier;
+non-vehicle recordkeeping cannot require completing a vehicle setup form.
 
 Start Workday: confirm eligible person/work context, active vehicle, and
 physical odometer; explain optional GPS/trip assistance; reject an odometer
@@ -307,20 +339,21 @@ Recommended strategy: **staged migration, not wholesale rewrite**.
    fixtures, and tests.
 4. Classify each discovered implementation: reuse unchanged; adapter; replace
    presentation; consolidate duplicate; retire only with proof; or Open risk.
-5. Port one complete vertical slice behind a feature flag/alternate route in a
-   separate approved 5.7 integration lane. Compare old/new behavior, run tests,
+5. With 2.1 selected by D30, port one complete vertical slice in a
+   separately approved integration boundary. Compare old/new behavior, run tests,
    restart/offline checks, and owner visual review before defaulting it on.
 6. Move in dependency order: shared authorization/context/adapters; Dashboard
    and active workday; Work lifecycle; Expenses and receipt review; Inventory;
    Maintenance; reports/recap. Expenses may be blueprinted next, but receipt
    stitching remains a distinct production integration slice.
 
-Option A (UI Lab then direct 5.7 UI integration) is safe only when performed as
-the staged port above. Option B (move 5.7 brains into UI Lab) is a high-risk
-rewrite with no proven persistence/integration boundary. Option C (total
-rebuild) is not justified until the census demonstrates an unadaptable core;
-the current evidence supports controlled replacement of presentation, not
-discarding proven behavior and regression coverage.
+The destination is 2.1 under D30, not a production-readiness certification.
+Assess existing systems in BOTH repositories,
+including storage/Hive, OCR, GPS, inventory parsers/trade packs, permissions and
+sync. Existing tests and documentation do not establish independent correctness.
+The migration map owns dependency/gate detail. App-wide cloud authority, local
+state, external media, paid backup and retention belong to
+`data_storage_sync_contract.md`, not a legacy optional-mirror assumption.
 
 ## 10. Traceability and completion rule
 

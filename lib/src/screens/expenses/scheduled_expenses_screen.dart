@@ -14,7 +14,6 @@ import 'expenses_settings_screen.dart';
 import 'recurring_expense_repository_status.dart';
 import 'scheduled_expense_detail_screen.dart';
 import 'scheduled_expense_editor_screen.dart';
-import 'scheduled_expense_feedback.dart';
 
 class ScheduledExpensesScreen extends StatelessWidget {
   const ScheduledExpensesScreen({
@@ -157,7 +156,10 @@ class ScheduledExpensesScreen extends StatelessWidget {
     if (!permissions.canManageScheduledExpenses) return;
     final result = await Navigator.of(context).push<ScheduledExpenseRecord>(
       MaterialPageRoute(
-        builder: (_) => ScheduledExpenseEditorScreen(permissions: permissions),
+        builder: (_) => ScheduledExpenseEditorScreen(
+          permissions: permissions,
+          onConfirm: RecurringExpenseUiScope.maybeOf(context)?.create,
+        ),
       ),
     );
     if (result == null || !context.mounted) return;
@@ -167,10 +169,6 @@ class ScheduledExpensesScreen extends StatelessWidget {
         context,
       ).expenseStore.addScheduledExpense(result);
       return;
-    }
-    final saved = await controller.create(result);
-    if (context.mounted && saved == null) {
-      await showScheduledExpenseFailure(context);
     }
   }
 
