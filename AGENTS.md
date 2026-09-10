@@ -64,3 +64,12 @@ Read these before changing UI:
   before allowing an exception.
 - Use `dart format`, `flutter analyze`, `flutter test`, and the relevant platform
   build. A green test is not owner visual acceptance.
+
+## Build resource cleanup — owner direction
+
+- On this 8-GB Mac Mini, run at most one emulator/simulator at a time.
+- After Android build/test work finishes, check for active builds, then stop idle
+  Gradle/Kotlin daemons and other task-owned build workers. Verify they exited.
+- Do not leave build services running between unrelated UI/review work. Preserve
+  the app being reviewed, Codex, and the Maintainiac bridge; identify Node process
+  ownership before stopping anything. Never kill all Java/Node processes blindly.
