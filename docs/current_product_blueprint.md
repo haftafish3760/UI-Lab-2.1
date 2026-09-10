@@ -181,8 +181,11 @@ No current screen design or visual test is automatic owner acceptance.
 
 The normal build was installed and launched wirelessly on the S25 Ultra on
 2026-09-10; foreground activity was verified, not visual or full-workflow acceptance.
-The GitHub WIP checkpoint is `48822818b3c1cc9e21799eb1b97a705362aaff6d` on
-`codex/sqlite-migration-checkpoint-20260910`; it is not a release/completion claim.
+The migration checkpoint originated at `48822818b3c1cc9e21799eb1b97a705362aaff6d`.
+On September 10 the owner requested normal single-repository use on the laptop:
+all checkpoint commits through `1fdf43a` were fast-forwarded into and verified on
+GitHub `main`. The Mac checkout is also on `main`. Build output is ignored and
+not tracked. This backup is not a release or migration-completion claim.
 
 For exact test checkpoints, remaining integration, platform limitations and
 unresolved failures, use the current gate matrix at the top of
@@ -195,20 +198,69 @@ identity are not connected; local operation does not require Firebase.
 
 ## 8. Collaboration and remaining work
 
-Owner requires full contextual handoffs, visible separate sidebar tasks when
-delegating, and no hidden-agent substitution. No sidebar task was created here;
-the available tool search did not expose a task-creation tool. The existing migration task owns the local-storage completion stage before
-inventory. `storage_database_codex_handoff.md` is historical handoff material;
-consult the current gate matrix before treating any remaining-work list as current.
+The owner is a single person building Maintainiac with Codex assistance, not a
+multi-developer team. Continue in the existing repository on `main`; do not make
+the owner juggle parallel branches or create agents/tasks without a request.
+The current machine-to-machine continuation is documented in
+[Current Codex handoff](codex_continuation_handoff_2026_09_10.md). The older
+`storage_database_codex_handoff.md` is historical; use the current gate matrix
+for storage status rather than restarting the migration.
 
-Scope now: documentation only. Next storage task must assess existing systems,
-map dependencies, propose bounded slices, and test throughout; no unsupported
-time estimates. The owner reports over a month invested in inventory. Respect
-that work without assuming migration takes the same time or a few hours.
+Immediate owner priority is shared adaptive layout and Dashboard, followed by
+screen-by-screen review. Storage remains unfinished and must remain protected
+behind reusable interfaces. Inventory follows the local migration completion
+audit; it has not started. Scheduling, regional localization, units and account
+isolation remain required work, not claims of complete production integration.
 
-This reconciliation records substantive product directions visible in this
-conversation, not a claim to recover missing transcript details or certify every
-legacy document. Older knowledge-upload files/review drafts are derived historical
-artifacts and must not override this blueprint or be uploaded as current without
-refresh. Owners of detailed mechanics: Product control, data/storage/sync, Work
-lifecycle, receipt/material intake, scheduling, localization and UI foundation.
+### Latest layout direction and inspected implementation — September 10
+
+These owner directions supersede conflicting inherited visual expectations.
+They are requirements, not completed implementation or visual acceptance:
+
+- Audit breakpoints throughout the app, using local post-navigation logical
+  width and TextScaler. Compose useful wide-screen workspaces; do not stretch
+  phone cards or require every lane to reach maximum width before adding a lane.
+- Dashboard should be a command center. Keep navigation menu, active vehicle,
+  odometer and contextual settings on one compact row at ordinary text sizes;
+  vehicle and odometer should stay together. Preserve accessibility reflow.
+- Restore a discoverable way to end an active workday using the existing
+  workflow. Do not invent a second workday or odometer persistence path.
+- Match the shared calendar background to the protected 5.7 presentation for
+  Month and Week. Show only the weeks the month requires, not an enforced six.
+- Jobs landing date/search stretching is also rejected, but other screens come
+  first. Other palette decisions remain open; calendar contrast is urgent.
+- Dashboard calendar combines authorized module projections; each module's
+  calendar filters to its own records. Historical/future day routes must allow
+  authorized add/edit operations through record owners. This requirement already
+  lives in `calendar_system_blueprint.md`; it does not create a second ledger.
+
+Inspection found Dashboard's 748/1248-LP transitions and fixed 400-LP lane cap,
+a two-row owner header, forced 42-cell Month grids, and an active-workday summary
+without its own end control. 5.7's calendar uses a painted gradient, not a single
+flat background color. No source changes for this new layout request have been
+implemented yet. See the handoff for exact files and proposed next verification.
+
+### Completed work and remaining evidence
+
+The current migration gate matrix in `sqlite_remaining_work_audit.md` owns exact
+implementation/test limits. Implemented foundations include SQLite domain
+adapters; versioned raw-input drafts; transactional confirmation, revisions and
+outbox; startup integrity checks; reusable recovery controllers; retained media
+journals and isolated platform QA runners. The early-discard guard prevents a
+false discard success before initialization. Android media publication rechecks
+inside its transaction to prevent overlapping helpers overwriting published
+results. These changes are in the main-branch checkpoint.
+
+Recorded verification includes 578 declared-suite passes, a separate full run
+with 1,061 passes and seven failures (one size issue subsequently fixed), and
+130 native-media checks. These are dated checkpoints, not fresh runs against
+all subsequent changes. Physical iPhone launch, broader platforms, whole-install
+restore UI and production cloud integration remain open. No completion claim.
+
+Build resource cleanup is now in AGENTS.md: at most one emulator on the 8-GB
+Mac; stop idle Android build workers after builds and preserve Codex/bridge/app
+processes. Idle Gradle daemons and task-owned CUA workers were stopped. The Mac
+app measured about 482 MB physical footprint in a debug run; no leak diagnosis
+or release-memory baseline was proven. Activating an already-running Mac app
+was not proof of launching the newest build; the next runtime review must
+restart the correct artifact safely.

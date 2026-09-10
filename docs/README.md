@@ -1,5 +1,7 @@
 # Maintainiac canonical application map
 
+**Laptop continuation:** [Current Codex handoff — September 10](codex_continuation_handoff_2026_09_10.md). Main contains the migration checkpoint; implementation is not complete.
+
 Updated 2026-09-09. This is the canonical documentation entry point, not a
 claim that the application is implemented or that every inherited rule was
 approved. Read [the decision register](application_decision_register.md) first.

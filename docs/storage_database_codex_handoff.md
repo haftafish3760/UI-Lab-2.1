@@ -1,5 +1,7 @@
 # Codex handoff — durable SQLite/Drift foundation and Hive migration assessment
 
+> Historical handoff. Start with [the September 10 continuation](codex_continuation_handoff_2026_09_10.md) and the current storage gate matrix; do not restart from this older status.
+
 Prepared 2026-09-09 for a separate visible owner-controlled task.
 Workspace: `/Volumes/AppleWork/UI-Lab-2.1`.
 Protected source: `/Users/rbbie/Documents/Maintainiac_5.7_Active` (read-only).
