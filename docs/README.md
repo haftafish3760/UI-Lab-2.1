@@ -1,5 +1,9 @@
 # Maintainiac canonical application map
 
+**Current working plan (September 11):** [Workflow delivery roadmap](workflow_delivery_roadmap.md).
+Start with its owner corrections and [Start Workday review](start_workday_workflow_review.md).
+Product name is not selected. Historical titles/technical IDs are not a branding decision.
+
 **Laptop continuation:** [Current Codex handoff — September 10](codex_continuation_handoff_2026_09_10.md). Main contains the migration checkpoint; implementation is not complete.
 
 Updated 2026-09-09. This is the canonical documentation entry point, not a

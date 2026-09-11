@@ -5,9 +5,14 @@ import 'package:flutter/material.dart';
 import 'dashboard_workday_models.dart';
 
 class ActiveWorkdayOverview extends StatefulWidget {
-  const ActiveWorkdayOverview({required this.session, super.key});
+  const ActiveWorkdayOverview({
+    required this.session,
+    this.showLegacyNextJob = true,
+    super.key,
+  });
 
   final DashboardWorkdaySession session;
+  final bool showLegacyNextJob;
 
   @override
   State<ActiveWorkdayOverview> createState() => _ActiveWorkdayOverviewState();
@@ -93,7 +98,9 @@ class _ActiveWorkdayOverviewState extends State<ActiveWorkdayOverview> {
             children: [
               Expanded(
                 child: Text(
-                  'Next job · 8:00 AM',
+                  widget.showLegacyNextJob
+                      ? 'Next job · 8:00 AM'
+                      : session.vehicleLabel,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),

@@ -1,4 +1,39 @@
-# Maintainiac — current owner blueprint
+# Business application — current owner blueprint
+
+## September 11 owner correction and current work
+
+Latest clarification: this task owns UI/UX; the owner will delegate data-layer
+and inventory work separately. The roadmap's audits are evidence for that handoff,
+not permission to change storage here. The owner now works remotely against the
+existing Mac checkout, `/Volumes/AppleWork/UI-Lab-2.1`, with its VS Code Flutter
+session. Publish the preserved Windows changes to this repository and update
+that checkout in place; do not create another clone or overwrite local changes.
+SSH code access is independent of the optional remote-desktop viewing session.
+
+Product name: **[not selected]**. Do not rename application IDs, database paths,
+repositories or Firebase resources incidentally. Current owner messages govern;
+the owner has not reviewed or approved the entire inherited AI-authored blueprint.
+
+The current [workflow delivery roadmap](workflow_delivery_roadmap.md) captures
+the September 11 conversation, dependencies, proposed workspace split and
+acceptance plan. Start Workday is first, then active-day/job workflow, then
+Business Overview/Dispatch and financial reporting. One agent works with the
+owner; the owner assigns inventory and GPS/odometer specialists separately.
+No delegation or inventory migration is authorized by this document.
+
+Dispatcher and finance-only responsibilities must be supported; the former
+assistant statement that only two dashboards are needed is withdrawn. Admin
+must not open the technician Plan/Entries composition. Employee selection is a
+scope drill-down, not authority or duplicated schedules. Financial reports need
+day/week/month/year/custom periods and traceable spending/result definitions.
+The September 10 dashboard implementation below was rejected, not accepted.
+Detailed layout and commercial choices in the roadmap are explicitly proposals.
+
+Start's bright green is now requested from 5.7 Active (#20F060), superseding the
+older lighter-green retention rule. The decorative calendar adaptation added on
+September 11 was rejected. Unnecessary sixth weeks must disappear; six rows
+remain valid when the actual month requires them. Exact intended donor calendar
+instance needs tracing before claiming an exact color match.
 
 Owner direction reconciled 2026-09-09; implementation status refreshed 2026-09-10.
 This is the fresh current-direction entry point, indexed by `README.md`.
@@ -234,11 +269,14 @@ They are requirements, not completed implementation or visual acceptance:
   authorized add/edit operations through record owners. This requirement already
   lives in `calendar_system_blueprint.md`; it does not create a second ledger.
 
-Inspection found Dashboard's 748/1248-LP transitions and fixed 400-LP lane cap,
-a two-row owner header, forced 42-cell Month grids, and an active-workday summary
-without its own end control. 5.7's calendar uses a painted gradient, not a single
-flat background color. No source changes for this new layout request have been
-implemented yet. See the handoff for exact files and proposed next verification.
+September 10 Windows dashboard pass replaces the wide 748/1248-LP equal-lane
+composition; its owning specification is `technician_dashboard_blueprint.md`.
+The owner explicitly retained Technician/Admin for small businesses of roughly
+five to ten people and limited this pass to wider dashboards. Portrait and other
+screens remain unchanged. Wide controls expose the existing End workday flow.
+The calendar's forced 42-cell grid and proposed 5.7 background adaptation remain
+separate outstanding shared-calendar work, not changes claimed by this pass.
+Source/test completion is not owner visual acceptance or production team readiness.
 
 ### Completed work and remaining evidence
 

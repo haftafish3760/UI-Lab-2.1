@@ -516,6 +516,14 @@ strip measures the longest authorized name and status at the active
 
 ## 9. Dashboard Body Contract
 
+September 10 wide-dashboard override: `technician_dashboard_blueprint.md` owns
+the revised asymmetric 748/1132-LP composition, text-scale adjustments, bounded
+record/calendar widths, wide context/view toolbar and inline workday actions.
+It supersedes this document's inherited equal-400-LP Dashboard lanes and
+owner-without-View statements on wide Dashboard only. Portrait, other modules,
+semantic color, safe areas, and calendar behavior are unchanged. Wide previews
+show six records; the three-record statements below remain the compact default.
+
 ### Date and attention
 
 - The full selected date is the section orientation label.

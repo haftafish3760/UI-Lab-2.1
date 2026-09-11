@@ -175,7 +175,7 @@ void main() {
       tester
           .getSize(find.byKey(const ValueKey('operations-workspace-frame')))
           .width,
-      AppLayoutEngine.dashboardThreeColumnMinimumWidth,
+      1432,
     );
 
     await tester.tap(find.byKey(const ValueKey('desktop-destination-work')));
@@ -349,11 +349,11 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('large text preserves Dashboard lanes and scrollable rail', (
+  testWidgets('large text reflows Dashboard before crowding and keeps the rail', (
     tester,
   ) async {
     await _pumpAt(tester, const Size(1120, 900), textScale: 2);
-    expect(find.byKey(const ValueKey('dashboard-2-lane-row')), findsOneWidget);
+    expect(find.byKey(const ValueKey('dashboard-1-lane-row')), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
     expect(
       find.descendant(

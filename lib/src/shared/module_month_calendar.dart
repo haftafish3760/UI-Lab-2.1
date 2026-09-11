@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations_extension.dart';
 import '../layout/app_layout_engine.dart';
 import 'module_calendar_day_cell.dart';
+import 'calendar_panel_surface.dart';
 
 export 'module_calendar_day_cell.dart' show CalendarRecordKind;
 
@@ -85,72 +86,77 @@ class _WorkMonthCalendarState extends State<WorkMonthCalendar> {
       key: const ValueKey('work-5-7-calendar'),
       decoration: BoxDecoration(
         color: colors.surface,
-        border: Border.all(color: colors.outline, width: 1.2),
+        border: Border.all(
+          color: CalendarPanelSurface.gridLine(context),
+          width: 1.5,
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _CalendarHeader(
-            label: _showWeek
-                ? _weekLabel(materialCopy, first)
-                : materialCopy.formatMonthYear(_focusedMonth),
-            onPrevious: () => _changeMonth(-1),
-            onNext: () => _changeMonth(1),
-            onTitle: _pickMonth,
-            showingWeek: _showWeek,
-            onToggleView: () => setState(() => _showWeek = !_showWeek),
-          ),
-          const _WeekdayHeader(),
-          AnimatedSize(
-            key: const ValueKey('calendar-period-grid-transition'),
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: KeyedSubtree(
-              key: _showWeek
-                  ? const ValueKey('inline-week-grid')
-                  : const ValueKey('inline-month-grid'),
-              child: GridView.builder(
-                key: const ValueKey('work-5-7-calendar-grid'),
-                itemCount: itemCount,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 7,
-                  childAspectRatio: dayWidth / rowHeight,
+      child: CalendarPanelSurface(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _CalendarHeader(
+              label: _showWeek
+                  ? _weekLabel(materialCopy, first)
+                  : materialCopy.formatMonthYear(_focusedMonth),
+              onPrevious: () => _changeMonth(-1),
+              onNext: () => _changeMonth(1),
+              onTitle: _pickMonth,
+              showingWeek: _showWeek,
+              onToggleView: () => setState(() => _showWeek = !_showWeek),
+            ),
+            const _WeekdayHeader(),
+            AnimatedSize(
+              key: const ValueKey('calendar-period-grid-transition'),
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: KeyedSubtree(
+                key: _showWeek
+                    ? const ValueKey('inline-week-grid')
+                    : const ValueKey('inline-month-grid'),
+                child: GridView.builder(
+                  key: const ValueKey('work-5-7-calendar-grid'),
+                  itemCount: itemCount,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 7,
+                    childAspectRatio: dayWidth / rowHeight,
+                  ),
+                  itemBuilder: (context, index) {
+                    final day = first.add(Duration(days: index));
+                    final outsideMonth =
+                        !_showWeek && day.month != _focusedMonth.month;
+                    final entryCount = outsideMonth
+                        ? 0
+                        : widget.entryCountForDay?.call(day) ?? 0;
+                    return ModuleCalendarDayCell(
+                      day: day,
+                      selected: _sameDay(day, widget.selectedDay),
+                      today: _sameDay(day, DateTime.now()),
+                      outsideMonth: outsideMonth,
+                      entryCount: entryCount,
+                      needsApproval:
+                          !outsideMonth &&
+                          (widget.needsApprovalForDay?.call(day) ?? false),
+                      recordKind: widget.recordKind,
+                      isLastColumn: index % 7 == 6,
+                      isLastRow: index >= itemCount - 7,
+                      onTap: () {
+                        setState(() {
+                          _focusedDay = day;
+                          _focusedMonth = DateTime(day.year, day.month);
+                        });
+                        widget.onDaySelected(day);
+                      },
+                    );
+                  },
                 ),
-                itemBuilder: (context, index) {
-                  final day = first.add(Duration(days: index));
-                  final outsideMonth =
-                      !_showWeek && day.month != _focusedMonth.month;
-                  final entryCount = outsideMonth
-                      ? 0
-                      : widget.entryCountForDay?.call(day) ?? 0;
-                  return ModuleCalendarDayCell(
-                    day: day,
-                    selected: _sameDay(day, widget.selectedDay),
-                    today: _sameDay(day, DateTime.now()),
-                    outsideMonth: outsideMonth,
-                    entryCount: entryCount,
-                    needsApproval:
-                        !outsideMonth &&
-                        (widget.needsApprovalForDay?.call(day) ?? false),
-                    recordKind: widget.recordKind,
-                    isLastColumn: index % 7 == 6,
-                    isLastRow: index >= itemCount - 7,
-                    onTap: () {
-                      setState(() {
-                        _focusedDay = day;
-                        _focusedMonth = DateTime(day.year, day.month);
-                      });
-                      widget.onDaySelected(day);
-                    },
-                  );
-                },
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

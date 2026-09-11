@@ -55,6 +55,7 @@ part 'dashboard_screen_actions.dart';
 part 'dashboard_plan_actions.dart';
 part 'dashboard_manual_entry_actions.dart';
 part 'dashboard_body_layout.dart';
+part 'dashboard_command_bar.dart';
 part 'dashboard_attention_actions.dart';
 part 'dashboard_projection_actions.dart';
 
@@ -114,56 +115,90 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final employee = _employeeFor(scope.selectedEmployeeId);
     final attentionQuery = _dashboardAttentionQuery(scope);
     final attentionItems = store.attentionCenter.itemsFor(attentionQuery);
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: DashboardBackdrop(
-        child: _DashboardBody(
-          view: scope.view,
-          selectedDate: _selectedDate,
-          employee: employee,
-          data: _dayData(employee),
-          showOdometer: false,
-          onViewChanged: scope.setView,
-          onDateSelected: _openCalendarDay,
-          onEmployeeSelected: (value) => scope.selectEmployee(value.id),
-          onCompanyOverview: () => scope.selectEmployee(null),
-          workday:
-              scope.view == AppViewMode.technician &&
-                  sameDashboardDay(_selectedDate, dashboardToday)
-              ? _workday
-              : null,
-          onStartWorkday: _startWorkday,
-          onSettings: _openDashboardSettings,
-          onReturnToToday: () => setState(() => _selectedDate = dashboardToday),
-          attentionItems: attentionItems,
-          onOpenAllAttention: () => _openAttentionList(attentionQuery),
-          onOpenPlan: _openPlan,
-          onPlanAction: _handlePlanAction,
-          onOpenEntry: _openEntry,
-          entryCountForDay: (day) => _dayDataFor(day, employee).entries.length,
-          needsApprovalForDay: (day) => _dayDataFor(day, employee).entries.any(
-            (entry) => entry.reviewStatus == DayEntryReviewStatus.needsApproval,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide =
+            AppLayoutEngine.dashboardOperationsFor(
+              constraints.maxWidth -
+                  AppLayoutEngine.pageInsetsFor(
+                    constraints.maxWidth,
+                  ).horizontal,
+              textScaler: MediaQuery.textScalerOf(context),
+            ).columns >
+            1;
+        return Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          body: DashboardBackdrop(
+            child: _DashboardBody(
+              view: scope.view,
+              selectedDate: _selectedDate,
+              employee: employee,
+              data: _dayData(employee),
+              showOdometer: false,
+              onViewChanged: scope.setView,
+              onDateSelected: _openCalendarDay,
+              onEmployeeSelected: (value) => scope.selectEmployee(value.id),
+              onCompanyOverview: () => scope.selectEmployee(null),
+              workday:
+                  scope.view == AppViewMode.technician &&
+                      sameDashboardDay(_selectedDate, dashboardToday)
+                  ? _workday
+                  : null,
+              onStartWorkday: _startWorkday,
+              onSettings: _openDashboardSettings,
+              onReturnToToday: () =>
+                  setState(() => _selectedDate = dashboardToday),
+              attentionItems: attentionItems,
+              onOpenAllAttention: () => _openAttentionList(attentionQuery),
+              onOpenPlan: _openPlan,
+              onPlanAction: _handlePlanAction,
+              onOpenEntry: _openEntry,
+              entryCountForDay: (day) =>
+                  _dayDataFor(day, employee).entries.length,
+              needsApprovalForDay: (day) =>
+                  _dayDataFor(day, employee).entries.any(
+                    (entry) =>
+                        entry.reviewStatus ==
+                        DayEntryReviewStatus.needsApproval,
+                  ),
+              onOpenActions:
+                  scope.view == AppViewMode.technician && _workday != null
+                  ? _openWorkdayActions
+                  : _canAdd
+                  ? _showAddActions
+                  : null,
+              onEndWorkday: () async {
+                final stored = _storedActiveWorkday;
+                if (stored != null) {
+                  await _endStoredWorkday(stored);
+                } else {
+                  await _endWorkday();
+                }
+              },
+            ),
           ),
-        ),
-      ),
-      floatingActionButton:
-          _workday != null && sameDashboardDay(_selectedDate, dashboardToday)
-          ? FloatingActionButton.extended(
-              key: const ValueKey('dashboard-workday-actions-fab'),
-              heroTag: 'dashboard-workday-actions-fab',
-              onPressed: _openWorkdayActions,
-              icon: const Icon(Icons.grid_view_rounded),
-              label: const Text('Actions'),
-            )
-          : _canAdd
-          ? FloatingActionButton.extended(
-              key: const ValueKey('dashboard-add-button'),
-              heroTag: 'dashboard-add-fab',
-              onPressed: _showAddActions,
-              icon: const Icon(Icons.add),
-              label: const Text('Add'),
-            )
-          : null,
+          floatingActionButton: wide
+              ? null
+              : _workday != null &&
+                    sameDashboardDay(_selectedDate, dashboardToday)
+              ? FloatingActionButton.extended(
+                  key: const ValueKey('dashboard-workday-actions-fab'),
+                  heroTag: 'dashboard-workday-actions-fab',
+                  onPressed: _openWorkdayActions,
+                  icon: const Icon(Icons.grid_view_rounded),
+                  label: const Text('Actions'),
+                )
+              : _canAdd
+              ? FloatingActionButton.extended(
+                  key: const ValueKey('dashboard-add-button'),
+                  heroTag: 'dashboard-add-fab',
+                  onPressed: _showAddActions,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add'),
+                )
+              : null,
+        );
+      },
     );
   }
 

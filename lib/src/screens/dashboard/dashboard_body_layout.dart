@@ -22,6 +22,8 @@ class _DashboardBody extends StatelessWidget {
     required this.onOpenEntry,
     required this.entryCountForDay,
     required this.needsApprovalForDay,
+    required this.onOpenActions,
+    required this.onEndWorkday,
   });
 
   final AppViewMode view;
@@ -44,6 +46,8 @@ class _DashboardBody extends StatelessWidget {
   final ValueChanged<DayEntry> onOpenEntry;
   final int Function(DateTime day) entryCountForDay;
   final bool Function(DateTime day) needsApprovalForDay;
+  final VoidCallback? onOpenActions;
+  final VoidCallback onEndWorkday;
 
   @override
   Widget build(BuildContext context) {
@@ -60,10 +64,12 @@ class _DashboardBody extends StatelessWidget {
         final layout = AppLayoutEngine.dashboardOperationsFor(
           availableWidth.toDouble(),
           textScaler: scaler,
+          hasEntries: data.entries.isNotEmpty,
         );
         final type = AppLayoutEngine.typographyFor(layout.workspaceWidth);
         final employeeStrip = view == AppViewMode.admin
             ? EmployeeStatusStrip(
+                compact: layout.columns > 1,
                 employees: demoEmployees,
                 selectedId: employee?.id,
                 onSelected: onEmployeeSelected,
@@ -79,6 +85,7 @@ class _DashboardBody extends StatelessWidget {
                     layout.workspaceWidth + pageInsets.horizontal,
                   ),
                   child: ActiveVehicleHeader(
+                    dashboardWide: layout.columns > 1,
                     ownerPresentation: true,
                     view: view,
                     onViewChanged: onViewChanged,
@@ -102,18 +109,22 @@ class _DashboardBody extends StatelessWidget {
                     primaryContent: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: SizedBox(
-                            width: layout.laneWidth,
-                            child: DashboardDateHeading(
-                              type: type,
-                              date: selectedDate,
-                              onReturnToToday: onReturnToToday,
+                        if (layout.columns > 1)
+                          _DashboardCommandBar(body: this, layout: layout)
+                        else
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: SizedBox(
+                              width: layout.laneWidth,
+                              child: DashboardDateHeading(
+                                type: type,
+                                date: selectedDate,
+                                onReturnToToday: onReturnToToday,
+                              ),
                             ),
                           ),
-                        ),
-                        if (view == AppViewMode.technician &&
+                        if (layout.columns == 1 &&
+                            view == AppViewMode.technician &&
                             workday == null) ...[
                           const SizedBox(height: 12),
                           Align(
@@ -137,6 +148,7 @@ class _DashboardBody extends StatelessWidget {
                         ],
                         const SizedBox(height: 12),
                         DashboardSummaryStrip(
+                          wide: layout.columns > 1,
                           date: selectedDate,
                           data: data,
                           attentionCount: attentionItems.length,
@@ -176,7 +188,10 @@ class _DashboardBody extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         if (workday != null) ...[
-                          ActiveWorkdayOverview(session: workday!),
+                          ActiveWorkdayOverview(
+                            session: workday!,
+                            showLegacyNextJob: layout.columns == 1,
+                          ),
                           const SizedBox(height: 12),
                         ],
                         _DashboardLanes(
@@ -191,7 +206,7 @@ class _DashboardBody extends StatelessWidget {
                               view == AppViewMode.admin && employee == null,
                           calendar: DashboardCalendar(
                             compact: layout.columns == 1,
-                            maximumWidth: layout.laneWidth,
+                            maximumWidth: layout.calendarWidth,
                             selectedDay: selectedDate,
                             onDaySelected: onDateSelected,
                             entryCountForDay: entryCountForDay,
@@ -224,7 +239,7 @@ class _DashboardLanes extends StatelessWidget {
     required this.companyOverview,
   });
 
-  final OperationsWorkspaceLayout layout;
+  final DashboardWorkspaceLayout layout;
   final DateTime date;
   final DashboardDayData data;
   final bool showOdometer;
@@ -239,6 +254,7 @@ class _DashboardLanes extends StatelessWidget {
         ? const ValueKey('admin-company-schedule')
         : const ValueKey('dashboard-technician-schedule'),
     child: TodayPlan(
+      previewCount: layout.columns > 1 ? 6 : 3,
       date: date,
       items: data.plan,
       onOpen: onOpenPlan,
@@ -250,6 +266,7 @@ class _DashboardLanes extends StatelessWidget {
         ? const ValueKey('admin-company-entries')
         : const ValueKey('dashboard-technician-entries'),
     child: TodayEntries(
+      previewCount: layout.columns > 1 ? 6 : 3,
       date: date,
       entries: data.entries,
       showOdometer: showOdometer,
@@ -259,33 +276,52 @@ class _DashboardLanes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final priorityLane = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [plan],
-    );
     final calendarLane = KeyedSubtree(
       key: companyOverview
           ? const ValueKey('admin-company-calendar')
           : const ValueKey('dashboard-technician-calendar'),
       child: calendar,
     );
-    final lanes = switch (layout.columns) {
-      1 => [priorityLane, if (data.entries.isNotEmpty) entries, calendarLane],
-      2 => [
-        priorityLane,
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    if (layout.columns > 1) {
+      return KeyedSubtree(
+        key: ValueKey('dashboard-${layout.columns}-lane-row'),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (data.entries.isNotEmpty) ...[
-              entries,
-              SizedBox(height: layout.gap),
-            ],
-            calendarLane,
+            Expanded(
+              child: layout.columns == 3 && data.entries.isNotEmpty
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: plan),
+                        SizedBox(width: layout.gap),
+                        Expanded(child: entries),
+                      ],
+                    )
+                  : Align(
+                      alignment: AlignmentDirectional.topStart,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 600),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            plan,
+                            if (data.entries.isNotEmpty) ...[
+                              SizedBox(height: layout.gap),
+                              entries,
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+            ),
+            SizedBox(width: layout.gap),
+            SizedBox(width: layout.calendarWidth, child: calendarLane),
           ],
         ),
-      ],
-      _ => [priorityLane, if (data.entries.isNotEmpty) entries, calendarLane],
-    };
+      );
+    }
+    final lanes = [plan, if (data.entries.isNotEmpty) entries, calendarLane];
     return KeyedSubtree(
       key: ValueKey('dashboard-${layout.columns}-lane-row'),
       child: OperationsLaneGrid(layout: layout, children: lanes),

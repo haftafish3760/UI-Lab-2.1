@@ -20,8 +20,8 @@ screen and interactions; production data architecture belongs to the main app.
 - Calendar: a bounded Week/Month navigator. Selecting a date pushes the
   separate Calendar Day screen for that date; it never replaces Dashboard
   content in place.
-- Wide layouts: Plan, Entries, and Calendar each use a bounded Dashboard lane
-  no wider than 400 LP.
+- Wide layouts follow the September 10 composition below: record columns have
+  more reading room than the supporting calendar. Portrait is unchanged.
 
 The date is the first content below the shared operational header. Needs
 attention, when it exists, follows the date and precedes ordinary work. A
@@ -60,8 +60,37 @@ shared `AppLayoutEngine` and uses this exact contract:
 | Available Dashboard width | Composition |
 | --- | --- |
 | below 748 LP | one centered lane, maximum 400 LP: attention, Plan, Entries, Calendar |
-| 748-1247 LP | two lanes: attention plus Plan; Entries plus Calendar |
-| 1248 LP and above | three 400-LP lanes with 24-LP gaps: attention plus Plan; Entries; Calendar |
+| 748-1131 LP | work column (Plan then Entries), supporting Calendar aligned at the top; 16-LP gap; total maximum 1016 LP |
+| 1132 LP and above | Plan and Entries side by side, Calendar at top-right; 16-LP gaps; total maximum 1432 LP |
+
+September 10 owner-requested wide-dashboard redesign: these thresholds use
+post-navigation width, not OS or physical orientation. Increased TextScaler
+adds 160 LP per scale penalty to the two-column threshold and 240 LP to the
+three-column threshold. Work columns remain at or below 600 LP, Calendar at or
+below 400 LP. Empty Entries selects the two-column composition instead of
+reserving a vacant third column. All panels scroll with one page scroll surface.
+
+The wide header places menu, operational context, confirmed odometer (Technician),
+Technician/Admin selector and settings together. Admin uses Company Overview
+or the selected employee, never a misleading vehicle selector. Its employee
+status controls wrap as compact selectable chips. The wide date command row
+offers the existing Add/workday actions and direct End workday review, while
+the floating action remains on compact layouts. No new persistence path is used.
+Five summary controls share the wide band (96 LP minimum height); long values
+and accessibility keep their measured minimum and horizontal scroll if needed.
+Wide Plan/Entries show up to six records before Show all; compact remains three.
+Workday status does not invent a next-job time. Existing colors, records,
+calendar day routes, and all non-Dashboard presentations remain unchanged.
+
+Target audience clarified: independent contractors and small service companies,
+typically up to five to ten people. Both views remain. This presentation does
+not establish production team authorization, vehicle-scoped financial totals,
+live employee telemetry, or any other currently missing data integration.
+
+Implementation boundary: Start Workday still uses its original equal-width
+form geometry through the legacy `dashboardFor` adapter. It must not consume
+the asymmetric `dashboardOperationsFor` result. Regression explicitly starts
+and opens End workday review from a wide dashboard without ending the session.
 
 The 220-LP labeled navigation rail begins on Dashboard at a 1000-LP full-window
 width and a 600-LP height, after two useful Dashboard lanes fit. Other modules
@@ -253,11 +282,9 @@ stretch a phone layout or invent a screen-specific breakpoint.
 - Phone: stacked Needs attention, Plan, Entries, and the shared Month calendar. The
   Week control collapses it to the selected week; Month restores all six weeks
   in place. There is no footer action. Tapping a day pushes Calendar Day.
-- Tablet/intermediate: two controlled lanes once 748 LP remains after page
-  insets; no stretched cards.
-- Wide desktop: persistent labeled navigation and three 400-LP Dashboard lanes
-  only once all three fit. The Month calendar is never a full-width desktop
-  banner.
+- Tablet/intermediate and wider windows: use the composition table above;
+  Calendar stays top-right rather than dropping underneath recorded entries.
+  The Month calendar is never a full-width desktop banner.
 - Text may become modestly smaller and lighter in weight on compact screens, but
   never lighter in contrast. System accessibility scaling must not clip,
   truncate, or lose actions.

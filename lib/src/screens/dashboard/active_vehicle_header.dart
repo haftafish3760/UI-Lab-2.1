@@ -26,6 +26,7 @@ class ActiveVehicleHeader extends StatelessWidget {
     this.ownerPresentation = false,
     this.onVehicleChanged,
     this.ownerTitle,
+    this.dashboardWide = false,
   });
 
   final AppViewMode view;
@@ -44,6 +45,7 @@ class ActiveVehicleHeader extends StatelessWidget {
   final bool ownerPresentation;
   final ValueChanged<String>? onVehicleChanged;
   final String? ownerTitle;
+  final bool dashboardWide;
 
   static const _company = OperationalHeaderContextOption(
     id: 'company',
@@ -59,11 +61,14 @@ class ActiveVehicleHeader extends StatelessWidget {
     final scope = OperationalScope.of(context);
     final options = _contextOptions(scope);
     return OperationalHeader(
+      dashboardWide: dashboardWide,
       ownerPresentation: ownerPresentation,
       headerTitle: ownerPresentation
           ? (ownerTitle ?? context.l10n.navDashboard)
           : null,
-      contextReading: ownerPresentation
+      contextReading:
+          ownerPresentation &&
+              (!dashboardWide || view == AppViewMode.technician)
           ? Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,7 +127,8 @@ class ActiveVehicleHeader extends StatelessWidget {
   List<OperationalHeaderContextOption> _contextOptions(
     OperationalScopeController scope,
   ) {
-    if (ownerPresentation || view == AppViewMode.technician) {
+    if ((ownerPresentation && !dashboardWide) ||
+        view == AppViewMode.technician) {
       return [
         for (final vehicle in demoVehicles)
           OperationalHeaderContextOption(
@@ -156,7 +162,8 @@ class ActiveVehicleHeader extends StatelessWidget {
     List<OperationalHeaderContextOption> options,
     OperationalScopeController scope,
   ) {
-    if (ownerPresentation || view == AppViewMode.technician) {
+    if ((ownerPresentation && !dashboardWide) ||
+        view == AppViewMode.technician) {
       return options.firstWhere(
         (option) => option.id == scope.selectedVehicleId,
         orElse: () => options.first,
@@ -171,7 +178,8 @@ class ActiveVehicleHeader extends StatelessWidget {
     OperationalHeaderContextOption option,
     OperationalScopeController scope,
   ) {
-    if (ownerPresentation || view == AppViewMode.technician) {
+    if ((ownerPresentation && !dashboardWide) ||
+        view == AppViewMode.technician) {
       scope.selectVehicle(option.id);
       onVehicleChanged?.call(option.id);
       return;

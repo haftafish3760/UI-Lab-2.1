@@ -14,6 +14,7 @@ class TodayPlan extends StatefulWidget {
   const TodayPlan({
     super.key,
     this.date,
+    this.previewCount = 3,
     this.items = demoPlan,
     this.onOpen,
     this.previewGradient,
@@ -27,6 +28,7 @@ class TodayPlan extends StatefulWidget {
   });
 
   final DateTime? date;
+  final int previewCount;
   final Gradient? previewGradient;
   final List<PlanItem> items;
   final ValueChanged<PlanItem>? onOpen;
@@ -69,7 +71,9 @@ class _TodayPlanState extends State<TodayPlan> {
           a.time,
         ).compareTo(dashboardTimeMinutes(b.time)),
       );
-    final visibleCount = _expanded ? items.length : items.length.clamp(0, 3);
+    final visibleCount = _expanded
+        ? items.length
+        : items.length.clamp(0, widget.previewCount);
     return LayoutBuilder(
       builder: (context, constraints) {
         final type = AppLayoutEngine.typographyFor(constraints.maxWidth);
@@ -86,6 +90,7 @@ class _TodayPlanState extends State<TodayPlan> {
                 background: headerBackground,
                 foreground: headerForeground,
                 child: _PlanSectionHeader(
+                  previewCount: widget.previewCount,
                   title:
                       sameDashboardDay(
                         widget.date ?? dashboardToday,
@@ -151,6 +156,7 @@ class _TodayPlanState extends State<TodayPlan> {
 class _PlanSectionHeader extends StatelessWidget {
   const _PlanSectionHeader({
     required this.title,
+    required this.previewCount,
     required this.total,
     required this.expanded,
     required this.foreground,
@@ -160,6 +166,7 @@ class _PlanSectionHeader extends StatelessWidget {
   });
 
   final String title;
+  final int previewCount;
   final int total;
   final bool expanded;
   final Color foreground;
@@ -185,7 +192,7 @@ class _PlanSectionHeader extends StatelessWidget {
         ),
       ],
     );
-    if (total <= 3) return titleRow;
+    if (total <= previewCount) return titleRow;
     final enlarged = MediaQuery.textScalerOf(context).scale(13) > 18;
     final action = TextButton(
       key: const ValueKey('plan-expand-button'),

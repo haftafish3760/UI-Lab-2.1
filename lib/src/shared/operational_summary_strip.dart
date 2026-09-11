@@ -29,11 +29,21 @@ class OperationalSummaryItem {
 /// A single horizontally scrollable strip. All cards share dimensions; text
 /// can grow their common height instead of being cropped or abbreviated.
 class OperationalSummaryStrip extends StatelessWidget {
-  const OperationalSummaryStrip({required this.items, super.key});
+  const OperationalSummaryStrip({
+    required this.items,
+    this.wide = false,
+    super.key,
+  });
   final List<OperationalSummaryItem> items;
+  final bool wide;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) =>
+        _buildStrip(context, constraints.maxWidth),
+  );
+
+  Widget _buildStrip(BuildContext context, double availableWidth) {
     final scaler = MediaQuery.textScalerOf(context);
     final valueStyle = Theme.of(context).textTheme.bodyMedium!.copyWith(
       color: OperationalCardTone.ink,
@@ -51,10 +61,16 @@ class OperationalSummaryStrip extends StatelessWidget {
       if (measure.width > valueWidth) valueWidth = measure.width;
       measure.dispose();
     }
-    final width = AppLayoutEngine.summaryStripCardWidthFor(
+    final minimumWidth = AppLayoutEngine.summaryStripCardWidthFor(
       scaler,
       valueWidth: valueWidth.ceilToDouble(),
     );
+    final proposedWidth = items.isEmpty
+        ? minimumWidth
+        : (availableWidth - 12 * (items.length - 1)) / items.length;
+    final width = wide && proposedWidth.isFinite && proposedWidth > minimumWidth
+        ? proposedWidth
+        : minimumWidth;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: IntrinsicHeight(
@@ -67,8 +83,10 @@ class OperationalSummaryStrip extends StatelessWidget {
                 width: width,
                 child: ConstrainedBox(
                   key: ValueKey('dashboard-summary-${items[index].id}'),
-                  constraints: const BoxConstraints(
-                    minHeight: AppLayoutEngine.summaryStripCardMinimumHeight,
+                  constraints: BoxConstraints(
+                    minHeight: wide
+                        ? 96
+                        : AppLayoutEngine.summaryStripCardMinimumHeight,
                   ),
                   child: Material(
                     color: items[index].color,

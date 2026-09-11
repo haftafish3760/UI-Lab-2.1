@@ -12,6 +12,7 @@ class TodayEntries extends StatefulWidget {
   const TodayEntries({
     super.key,
     this.date,
+    this.previewCount = 3,
     this.entries = demoEntries,
     this.showOdometer = false,
     this.onOpen,
@@ -19,6 +20,7 @@ class TodayEntries extends StatefulWidget {
   });
 
   final DateTime? date;
+  final int previewCount;
   final Gradient? previewGradient;
   final List<DayEntry> entries;
   final bool showOdometer;
@@ -62,7 +64,7 @@ class _TodayEntriesState extends State<TodayEntries> {
       );
     final visibleCount = _expanded
         ? entries.length
-        : entries.length.clamp(0, 3);
+        : entries.length.clamp(0, widget.previewCount);
     return LayoutBuilder(
       builder: (context, constraints) {
         final type = AppLayoutEngine.typographyFor(constraints.maxWidth);
@@ -75,6 +77,7 @@ class _TodayEntriesState extends State<TodayEntries> {
               background: headerBackground,
               foreground: headerForeground,
               child: _EntriesSectionHeader(
+                previewCount: widget.previewCount,
                 title:
                     sameDashboardDay(
                       widget.date ?? dashboardToday,
@@ -147,6 +150,7 @@ class _TodayEntriesState extends State<TodayEntries> {
 class _EntriesSectionHeader extends StatelessWidget {
   const _EntriesSectionHeader({
     required this.title,
+    required this.previewCount,
     required this.total,
     required this.expanded,
     required this.foreground,
@@ -156,6 +160,7 @@ class _EntriesSectionHeader extends StatelessWidget {
   });
 
   final String title;
+  final int previewCount;
   final int total;
   final bool expanded;
   final Color foreground;
@@ -181,7 +186,7 @@ class _EntriesSectionHeader extends StatelessWidget {
         ),
       ],
     );
-    if (total <= 3) return titleRow;
+    if (total <= previewCount) return titleRow;
     final enlarged = MediaQuery.textScalerOf(context).scale(13) > 18;
     final action = TextButton(
       key: const ValueKey('entries-expand-button'),

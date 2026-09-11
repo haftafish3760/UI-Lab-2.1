@@ -17,9 +17,11 @@ class DashboardSummaryStrip extends StatelessWidget {
     required this.onExpenses,
     required this.onWork,
     required this.onMiles,
+    this.wide = false,
     super.key,
   });
   final DateTime date;
+  final bool wide;
   final DashboardDayData data;
   final int attentionCount;
   final VoidCallback onAttention, onPayments, onExpenses, onWork, onMiles;
@@ -36,6 +38,7 @@ class DashboardSummaryStrip extends StatelessWidget {
       name: 'USD',
     );
     return OperationalSummaryStrip(
+      wide: wide,
       key: const ValueKey('dashboard-summary-strip'),
       items: [
         OperationalSummaryItem(

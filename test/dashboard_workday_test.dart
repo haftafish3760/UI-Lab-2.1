@@ -142,9 +142,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await _startDefaultWorkday(tester);
-    await tester.tap(
-      find.byKey(const ValueKey('dashboard-workday-actions-fab')),
-    );
+    await tester.tap(find.byKey(const ValueKey('dashboard-inline-actions')));
     await tester.pumpAndSettle();
     expect(find.text('Pause workday'), findsNothing);
     expect(find.text('End workday'), findsOneWidget);
@@ -172,6 +170,30 @@ void main() {
     expect(find.textContaining('mapped to its owning module'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'wide End workday opens the existing review without ending early',
+    (tester) async {
+      await _pumpAt(tester, const Size(1440, 900));
+      await _startDefaultWorkday(tester);
+      expect(tester.takeException(), isNull, reason: 'after starting workday');
+      expect(
+        find.byKey(const ValueKey('dashboard-end-workday')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('dashboard-end-workday')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('ending-odometer-field')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('active-workday-overview')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('End Workday requires a physical ending odometer', (
     tester,

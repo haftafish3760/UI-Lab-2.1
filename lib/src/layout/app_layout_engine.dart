@@ -134,13 +134,11 @@ abstract final class AppLayoutEngine {
   static const gap = 18.0;
   static const maximumGap = 48.0;
 
-  /// Dashboard lanes deliberately stay compact. The first transition leaves
-  /// enough room for two useful 350-LP records after the shell page insets;
-  /// the third lane appears only when all three lanes can reach 400 LP.
+  /// Dashboard geometry is local, text-scaled, and separate from other modules.
   static const dashboardTwoColumnMinimumWidth = 748.0;
-  static const dashboardThreeColumnMinimumWidth = 1248.0;
+  static const dashboardThreeColumnMinimumWidth = 1132.0;
   static const dashboardLaneMaximum = 400.0;
-  static const dashboardGap = 24.0;
+  static const dashboardGap = 16.0;
   static const summaryStripCardMinimumHeight = 120.0;
   static double summaryStripCardWidthFor(
     TextScaler scaler, {
@@ -239,9 +237,9 @@ abstract final class AppLayoutEngine {
     double availableWidth, {
     TextScaler textScaler = TextScaler.noScaling,
   }) {
-    final operations = dashboardOperationsFor(
-      availableWidth,
-      textScaler: textScaler,
+    final operations = _calculateStartWorkdayLayout(
+      availableWidth: availableWidth,
+      scalePenalty: _layoutScalePenalty(textScaler),
     );
     return DashboardLayout(
       mode: switch (operations.columns) {
@@ -257,12 +255,14 @@ abstract final class AppLayoutEngine {
 
   /// Dashboard-specific composition returned through the shared layout
   /// engine. This is intentionally not a breakpoint hidden in the screen.
-  static OperationsWorkspaceLayout dashboardOperationsFor(
+  static DashboardWorkspaceLayout dashboardOperationsFor(
     double availableWidth, {
     TextScaler textScaler = TextScaler.noScaling,
+    bool hasEntries = true,
   }) => _calculateDashboardOperationsLayout(
     availableWidth: availableWidth,
     scalePenalty: _layoutScalePenalty(textScaler),
+    hasEntries: hasEntries,
   );
 
   static double dateActionGapFor(double availableWidth) {

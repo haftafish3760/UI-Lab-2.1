@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations_extension.dart';
 import '../layout/app_layout_engine.dart';
 import '../theme/app_semantic_colors.dart';
+import 'calendar_panel_surface.dart';
 
 enum CalendarRecordKind {
   record,
@@ -98,10 +99,10 @@ class ModuleCalendarDayCell extends StatelessWidget {
         key: ValueKey('calendar-day-$suffix'),
         child: Material(
           color: outsideMonth
-              ? colors.surfaceContainerHigh
+              ? colors.surfaceContainerHigh.withValues(alpha: .4)
               : selected
               ? semantic.currentSurface
-              : colors.surface,
+              : Colors.transparent,
           child: InkWell(
             key: ValueKey('work-calendar-day-$suffix'),
             onTap: onTap,
@@ -110,10 +111,16 @@ class ModuleCalendarDayCell extends StatelessWidget {
                 border: Border(
                   right: isLastColumn
                       ? BorderSide.none
-                      : BorderSide(color: colors.outline, width: 1.2),
+                      : BorderSide(
+                          color: CalendarPanelSurface.gridLine(context),
+                          width: 1.5,
+                        ),
                   bottom: isLastRow
                       ? BorderSide.none
-                      : BorderSide(color: colors.outline, width: 1.2),
+                      : BorderSide(
+                          color: CalendarPanelSurface.gridLine(context),
+                          width: 1.5,
+                        ),
                 ),
               ),
               child: Stack(

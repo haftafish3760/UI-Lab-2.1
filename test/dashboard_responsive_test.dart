@@ -176,12 +176,12 @@ void main() {
     );
 
     await pumpAt(tester, const Size(800, 1100));
-    expect(tester.getTopLeft(plan).dx, lessThan(tester.getTopLeft(entries).dx));
-    expect(tester.getTopLeft(entries).dx, tester.getTopLeft(calendar).dx);
+    expect(tester.getTopLeft(plan).dx, tester.getTopLeft(entries).dx);
     expect(
-      tester.getBottomLeft(entries).dy,
-      lessThan(tester.getTopLeft(calendar).dy),
+      tester.getTopLeft(calendar).dx,
+      greaterThan(tester.getTopLeft(entries).dx),
     );
+    expect(tester.getTopLeft(plan).dy, tester.getTopLeft(calendar).dy);
 
     await pumpAt(tester, const Size(1600, 1000));
     expect(tester.getTopLeft(attention).dx, tester.getTopLeft(plan).dx);

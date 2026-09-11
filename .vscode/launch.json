@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Windows — hot reload",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "deviceId": "windows",
+            "flutterMode": "debug"
+        },
+        {
             "name": "Dart",
             "type": "dart",
             "request": "launch",

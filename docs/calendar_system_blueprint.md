@@ -62,6 +62,16 @@ Trips own mileage and stops even when Dashboard starts or displays the workday.
 
 ## Shared presentation contract
 
+September 11 contrast correction: the shared Month/Week panel adapts the owner's
+5.7 `_CalendarPanelPainter` gradient and softly tinted ovals, inspected read-only
+in `lib/shared/calendar/app_month_calendar_widgets.dart`. Ordinary cells are
+transparent so they do not cover the panel. Selected cells retain the explicit
+selection surface; outside-month cells have a translucent overlay. Grid and outer
+borders use an explicit 1.5-LP contrasting line. Dark mode adds a dark veil to the
+same painted treatment to support light text. This is presentation only: no 5.7
+data, date logic, permissions or records are copied. Visual acceptance remains
+with the owner; painted similarity is not a contrast or workflow certification.
+
 One shared component owns:
 
 - Month and Week presentation;

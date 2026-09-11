@@ -1,0 +1,6 @@
+# Local compatibility with Flutter 3.44.4's older meta pin.
+dependency_overrides:
+  meta: ^1.18.3
+  # Keep the workspace-owned Android handoff adaptation from pubspec.yaml.
+  image_picker_android:
+    path: third_party/image_picker_android

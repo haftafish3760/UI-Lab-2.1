@@ -11,11 +11,13 @@ class EmployeeStatusStrip extends StatelessWidget {
     required this.employees,
     required this.selectedId,
     required this.onSelected,
+    this.compact = false,
   });
 
   final List<EmployeeStatus> employees;
   final String? selectedId;
   final ValueChanged<EmployeeStatus> onSelected;
+  final bool compact;
 
   static const _nameStyle = TextStyle(
     fontWeight: FontWeight.w600,
@@ -30,6 +32,24 @@ class EmployeeStatusStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (compact) {
+      return Wrap(
+        key: const ValueKey('employee-status-strip'),
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final employee in employees)
+            FilterChip(
+              key: ValueKey('employee-${employee.id}'),
+              selected: employee.id == selectedId,
+              onSelected: (_) => onSelected(employee),
+              avatar: Icon(employee.icon, size: 18),
+              label: Text('${employee.name} · ${employee.status}'),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            ),
+        ],
+      );
+    }
     final scale = MediaQuery.textScalerOf(context).scale(12) / 12;
     final growth = (scale - 1).clamp(0.0, 1.0);
     final cardWidth = 96 + growth * 74;
