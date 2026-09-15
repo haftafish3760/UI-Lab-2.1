@@ -12,7 +12,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get selectVehicleLabel => 'Sélectionner un véhicule';
 
   @override
-  String get appTitle => 'Maintainiac UI Lab 2.1';
+  String get appTitle => 'Tame Your Biz';
 
   @override
   String get navDashboard => 'Tableau de bord';
@@ -140,11 +140,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les notifications présentent les rappels et les mises à jour. Les décisions restent dans À vérifier.';
 
   @override
-  String get nativeReminderTitle => 'Rappel Maintainiac';
+  String get nativeReminderTitle => 'Rappel Tame Your Biz';
 
   @override
   String get nativeReminderBody =>
-      'Ouvrez Maintainiac pour consulter un rappel programmé.';
+      'Ouvrez Tame Your Biz pour consulter un rappel programmé.';
 
   @override
   String get deviceRemindersUnavailableTitle =>
@@ -159,7 +159,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deviceRemindersOffBody =>
-      'Les rappels dans l’application fonctionnent toujours. Activez les notifications de l’appareil pour recevoir des rappels lorsque Maintainiac est fermé.';
+      'Les rappels dans l’application fonctionnent toujours. Activez les notifications de l’appareil pour recevoir des rappels lorsque Tame Your Biz est fermé.';
 
   @override
   String get deviceRemindersEnable => 'Activer les rappels de l’appareil';
@@ -169,7 +169,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deviceRemindersDenied =>
-      'Les rappels de l’appareil sont toujours désactivés. Vous pouvez autoriser les notifications Maintainiac dans les réglages du système.';
+      'Les rappels de l’appareil sont toujours désactivés. Vous pouvez autoriser les notifications Tame Your Biz dans les réglages du système.';
 
   @override
   String get deviceRemindersFailed =>
@@ -386,7 +386,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   AppLocalizationsFrCa() : super('fr_CA');
 
   @override
-  String get appTitle => 'Maintainiac UI Lab 2.1';
+  String get appTitle => 'Tame Your Biz';
 
   @override
   String get navDashboard => 'Tableau de bord';

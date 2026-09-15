@@ -12,8 +12,10 @@
 		<string>es</string>
 		<string>fr</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array><dict><key>CFBundleURLSchemes</key><array><string>com.googleusercontent.apps.849024951967-n48029k7i6tddfaqobuqalb76i681hcl</string></array></dict></array>
 	<key>CFBundleDisplayName</key>
-	<string>Ui Lab 2 1</string>
+	<string>Tame Your Biz</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

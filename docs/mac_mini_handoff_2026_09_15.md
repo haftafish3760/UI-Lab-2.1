@@ -6,6 +6,12 @@ any local work. Maintainiac 5.7 is protected read-only reference material.
 
 ## Start here
 
+The subsequent Firebase/account and product-name slice is documented in
+`docs/firebase_connection_checkpoint.md`. That checkpoint supersedes older
+statements below about Firebase not being connected. Android has optional
+email/password account code; company membership, cloud backup and production
+security rules are still pending. Do not mistake Authentication for authorization.
+
 Read `docs/README.md`, the current product blueprint, decision register,
 UI foundation, Product Control and the relevant screen blueprint. Screen-first
 organization, shared primitives and at most 500 lines per production Dart file

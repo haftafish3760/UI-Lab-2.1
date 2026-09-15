@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>849024951967-n48029k7i6tddfaqobuqalb76i681hcl.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.849024951967-n48029k7i6tddfaqobuqalb76i681hcl</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCxvbBLjNVO_LfYNARbEO-y-L0ttfhpY_g</string>
+	<key>GCM_SENDER_ID</key>
+	<string>849024951967</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.tameyourbiz.app</string>
+	<key>PROJECT_ID</key>
+	<string>maintainiac-aafec</string>
+	<key>STORAGE_BUCKET</key>
+	<string>maintainiac-aafec.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:849024951967:ios:6538beb94d287bd666a4aa</string>
+</dict>
+</plist>

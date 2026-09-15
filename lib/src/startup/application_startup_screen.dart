@@ -142,7 +142,7 @@ class _ApplicationStartupScreenState extends State<ApplicationStartupScreen>
                 children: [
                   Text(
                     _failed
-                        ? 'Unable to open Maintainiac'
+                        ? 'Unable to open Tame Your Biz'
                         : 'Opening your saved work…',
                     style: AppTheme.light.textTheme.headlineSmall,
                   ),

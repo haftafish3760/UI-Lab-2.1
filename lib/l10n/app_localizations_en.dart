@@ -12,7 +12,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectVehicleLabel => 'Select vehicle';
 
   @override
-  String get appTitle => 'Maintainiac UI Lab 2.1';
+  String get appTitle => 'Tame Your Biz';
 
   @override
   String get navDashboard => 'Dashboard';
@@ -31,7 +31,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardMileageUnavailable =>
-      'Business mileage totals are not connected in this UI Lab preview yet. No zero total has been assumed.';
+      'Business mileage totals are not connected yet. No zero total has been assumed.';
 
   @override
   String get navDashboardCompact => 'Dashboard';
@@ -138,11 +138,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notifications report reminders and updates. Decisions remain in Needs attention.';
 
   @override
-  String get nativeReminderTitle => 'Maintainiac reminder';
+  String get nativeReminderTitle => 'Tame Your Biz reminder';
 
   @override
   String get nativeReminderBody =>
-      'Open Maintainiac to review a scheduled reminder.';
+      'Open Tame Your Biz to review a scheduled reminder.';
 
   @override
   String get deviceRemindersUnavailableTitle => 'Device reminders unavailable';
@@ -155,7 +155,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceRemindersOffBody =>
-      'In-app reminders still work. Enable device notifications to receive reminders when Maintainiac is closed.';
+      'In-app reminders still work. Enable device notifications to receive reminders when Tame Your Biz is closed.';
 
   @override
   String get deviceRemindersEnable => 'Enable device reminders';
@@ -165,7 +165,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceRemindersDenied =>
-      'Device reminders are still off. You can allow Maintainiac notifications in system settings.';
+      'Device reminders are still off. You can allow Tame Your Biz notifications in system settings.';
 
   @override
   String get deviceRemindersFailed =>
@@ -380,7 +380,7 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
   AppLocalizationsEnUs() : super('en_US');
 
   @override
-  String get appTitle => 'Maintainiac UI Lab 2.1';
+  String get appTitle => 'Tame Your Biz';
 
   @override
   String get navDashboard => 'Dashboard';

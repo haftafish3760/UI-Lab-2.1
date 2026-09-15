@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "849024951967",
+    "project_id": "maintainiac-aafec",
+    "storage_bucket": "maintainiac-aafec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:849024951967:android:37876bfb5e25493666a4aa",
+        "android_client_info": {
+          "package_name": "com.tameyourbiz.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "849024951967-mjamlcqjbpjmb9mbh77e6i0o2hpsiii3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-N2MLyOuq4hxUjkj3fZDUezqfuu57tSg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "849024951967-mjamlcqjbpjmb9mbh77e6i0o2hpsiii3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "849024951967-n48029k7i6tddfaqobuqalb76i681hcl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tameyourbiz.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.maintainiac" "\0"
-            VALUE "FileDescription", "ui_lab_2_1" "\0"
+            VALUE "FileDescription", "Tame Your Biz" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "ui_lab_2_1" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.maintainiac. All rights reserved." "\0"
             VALUE "OriginalFilename", "ui_lab_2_1.exe" "\0"
-            VALUE "ProductName", "ui_lab_2_1" "\0"
+            VALUE "ProductName", "Tame Your Biz" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

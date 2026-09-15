@@ -109,7 +109,7 @@ class EmployeeEditorScreenState extends State<EmployeeEditorScreen>
                       ),
                       const SizedBox(height: 5),
                       const Text(
-                        'These access choices are saved with the profile. Account access is not connected in UI Lab yet.',
+                        'These access choices are saved with the profile. Company account permissions are not connected yet.',
                       ),
                       const SizedBox(height: 14),
                       SectionCard(

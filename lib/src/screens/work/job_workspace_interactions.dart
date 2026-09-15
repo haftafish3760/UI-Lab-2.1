@@ -279,7 +279,7 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'No job photo was attached. $source storage is not connected in UI Lab yet.',
+          'No job photo was attached. $source storage is not connected yet.',
         ),
       ),
     );

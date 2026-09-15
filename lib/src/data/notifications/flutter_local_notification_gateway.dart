@@ -54,7 +54,7 @@ class FlutterLocalNotificationGateway implements NativeNotificationGateway {
           defaultPresentBadge: false,
         ),
         windows: WindowsInitializationSettings(
-          appName: 'Maintainiac',
+          appName: 'Tame Your Biz',
           appUserModelId: 'Maintainiac.Operations',
           guid: _windowsGuid,
         ),

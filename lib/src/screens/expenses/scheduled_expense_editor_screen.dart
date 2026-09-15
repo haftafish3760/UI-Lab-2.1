@@ -267,7 +267,7 @@ class _ScheduledExpenseEditorScreenState
                     SwitchListTile(
                       title: const Text('Device notification'),
                       subtitle: const Text(
-                        'Show this reminder even when Maintainiac is closed.',
+                        'Show this reminder even when Tame Your Biz is closed.',
                       ),
                       value: _push,
                       onChanged: (value) => _change(() {

@@ -112,7 +112,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Maintainiac UI Lab 2.1'**
+  /// **'Tame Your Biz'**
   String get appTitle;
 
   /// No description provided for @navDashboard.
@@ -148,7 +148,7 @@ abstract class AppLocalizations {
   /// No description provided for @dashboardMileageUnavailable.
   ///
   /// In en, this message translates to:
-  /// **'Business mileage totals are not connected in this UI Lab preview yet. No zero total has been assumed.'**
+  /// **'Business mileage totals are not connected yet. No zero total has been assumed.'**
   String get dashboardMileageUnavailable;
 
   /// No description provided for @navDashboardCompact.
@@ -334,13 +334,13 @@ abstract class AppLocalizations {
   /// No description provided for @nativeReminderTitle.
   ///
   /// In en, this message translates to:
-  /// **'Maintainiac reminder'**
+  /// **'Tame Your Biz reminder'**
   String get nativeReminderTitle;
 
   /// No description provided for @nativeReminderBody.
   ///
   /// In en, this message translates to:
-  /// **'Open Maintainiac to review a scheduled reminder.'**
+  /// **'Open Tame Your Biz to review a scheduled reminder.'**
   String get nativeReminderBody;
 
   /// No description provided for @deviceRemindersUnavailableTitle.
@@ -364,7 +364,7 @@ abstract class AppLocalizations {
   /// No description provided for @deviceRemindersOffBody.
   ///
   /// In en, this message translates to:
-  /// **'In-app reminders still work. Enable device notifications to receive reminders when Maintainiac is closed.'**
+  /// **'In-app reminders still work. Enable device notifications to receive reminders when Tame Your Biz is closed.'**
   String get deviceRemindersOffBody;
 
   /// No description provided for @deviceRemindersEnable.
@@ -382,7 +382,7 @@ abstract class AppLocalizations {
   /// No description provided for @deviceRemindersDenied.
   ///
   /// In en, this message translates to:
-  /// **'Device reminders are still off. You can allow Maintainiac notifications in system settings.'**
+  /// **'Device reminders are still off. You can allow Tame Your Biz notifications in system settings.'**
   String get deviceRemindersDenied;
 
   /// No description provided for @deviceRemindersFailed.

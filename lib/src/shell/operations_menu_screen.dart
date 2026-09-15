@@ -328,7 +328,7 @@ class _AppearanceSettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
         children: [
           const Text(
-            'Choose how Maintainiac looks on this device. This does not change company records.',
+            'Choose how Tame Your Biz looks on this device. This does not change company records.',
           ),
           const SizedBox(height: 12),
           if (preferences.isSaving) const Text('Saving on this device…'),

@@ -53,7 +53,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = if (storageQa) "com.maintainiac.ui_lab_2_1.storageqa" else "com.maintainiac.ui_lab_2_1"
+        applicationId = if (storageQa) "com.maintainiac.ui_lab_2_1.storageqa" else "com.tameyourbiz.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

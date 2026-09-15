@@ -12,7 +12,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get selectVehicleLabel => 'Seleccionar vehículo';
 
   @override
-  String get appTitle => 'Maintainiac UI Lab 2.1';
+  String get appTitle => 'Tame Your Biz';
 
   @override
   String get navDashboard => 'Panel';
@@ -139,11 +139,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'Las notificaciones muestran recordatorios y novedades. Las decisiones permanecen en Necesita atención.';
 
   @override
-  String get nativeReminderTitle => 'Recordatorio de Maintainiac';
+  String get nativeReminderTitle => 'Recordatorio de Tame Your Biz';
 
   @override
   String get nativeReminderBody =>
-      'Abra Maintainiac para revisar un recordatorio programado.';
+      'Abra Tame Your Biz para revisar un recordatorio programado.';
 
   @override
   String get deviceRemindersUnavailableTitle =>
@@ -158,7 +158,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deviceRemindersOffBody =>
-      'Los recordatorios dentro de la aplicación siguen funcionando. Active las notificaciones del dispositivo para recibir recordatorios cuando Maintainiac esté cerrado.';
+      'Los recordatorios dentro de la aplicación siguen funcionando. Active las notificaciones del dispositivo para recibir recordatorios cuando Tame Your Biz esté cerrado.';
 
   @override
   String get deviceRemindersEnable => 'Activar recordatorios del dispositivo';
@@ -169,7 +169,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deviceRemindersDenied =>
-      'Los recordatorios del dispositivo siguen desactivados. Puede permitir las notificaciones de Maintainiac en la configuración del sistema.';
+      'Los recordatorios del dispositivo siguen desactivados. Puede permitir las notificaciones de Tame Your Biz en la configuración del sistema.';
 
   @override
   String get deviceRemindersFailed =>
@@ -385,7 +385,7 @@ class AppLocalizationsEsUs extends AppLocalizationsEs {
   AppLocalizationsEsUs() : super('es_US');
 
   @override
-  String get appTitle => 'Maintainiac UI Lab 2.1';
+  String get appTitle => 'Tame Your Biz';
 
   @override
   String get navDashboard => 'Panel';

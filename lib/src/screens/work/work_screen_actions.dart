@@ -121,7 +121,7 @@ extension _WorkScreenActions on _WorkScreenState {
           builder: (context) => AlertDialog(
             title: Text(destination.label),
             content: const Text(
-              'Quotes are not connected in this UI Lab build. Estimates remain a separate workspace.',
+              'Quotes are not connected in this build. Estimates remain a separate workspace.',
             ),
             actions: [
               TextButton(

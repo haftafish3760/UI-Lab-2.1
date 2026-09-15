@@ -35,7 +35,7 @@ Latest decisions are detailed in `current_product_blueprint.md` and
 | D31 | ACCEPTED/CANONICAL | Owner selects SQLite with Drift; preserve/convert valuable Hive inventory and test throughout | Storage contract and database handoff; no implementation implied |
 | D32 | ACCEPTED/CANONICAL | Release one MUST offer local only, sync without backup, sync with backup; user controls how/when; onboarding/settings choice, UI not current scope | Storage contract; independent sync and restore evidence |
 | D33 | ACCEPTED/CANONICAL | No account for local-only operation EXCEPT downloading an inventory trade pack requires an account | Storage/identity; post-download entitlement and cloud identity unresolved |
-| D34 | ACCEPTED/CANONICAL | Brand-new isolated Firebase project; owner requests separate billing; no guarantee of credits | Storage contract; CLI installed, project/auth/deployment unfinished |
+| D34 | ACCEPTED/CANONICAL, UPDATED September 15 | Owner now chooses existing maintainiac-aafec project and billing account for Tame Your Biz; replaces earlier separate-project instruction | See firebase_connection_checkpoint.md; account flows, emulator-tested rules and deployment remain unfinished |
 | D35 | ACCEPTED/CANONICAL | Fixed realistic Aug 31–Sep 13 demo story, related records and usable edit/removal workflows | Current blueprint §4; deletion policy and proposed list layout unresolved |
 | D36 | ACCEPTED/CANONICAL | Visible sidebar tasks, full contextual handoffs, no hidden substitute; never replace normal app with preview | Current blueprint §§6,8; no new sidebar task created here |
 

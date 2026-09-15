@@ -2,7 +2,9 @@
 
 **Current working plan (September 11):** [Workflow delivery roadmap](workflow_delivery_roadmap.md).
 Start with its owner corrections and [Start Workday review](start_workday_workflow_review.md).
-Product name is not selected. Historical titles/technical IDs are not a branding decision.
+Owner-selected product name: **Tame Your Biz** (September 15). Historical project IDs remain for compatibility.
+
+[Firebase connection checkpoint](firebase_connection_checkpoint.md) records the bounded connection work and remaining security/account steps.
 
 **September 14 readiness review:** [Small-business readiness audit](small_business_readiness_audit.md)
 records current source findings, known release blockers and the next complete

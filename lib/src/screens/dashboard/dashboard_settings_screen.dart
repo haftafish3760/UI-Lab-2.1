@@ -9,6 +9,8 @@ import '../../shared/section_card.dart';
 import 'active_vehicle_header.dart';
 import 'dashboard_models.dart';
 import 'dashboard_workday_models.dart';
+import '../../shared/account_scope.dart';
+import '../account/account_screen.dart';
 
 class DashboardSettingsScreen extends StatefulWidget {
   const DashboardSettingsScreen({required this.enabledActions, super.key});
@@ -100,6 +102,25 @@ class _DashboardSettingsScreenState extends State<DashboardSettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    if (AccountScope.maybeOf(context) case final gateway?) ...[
+                      SectionCard(
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.account_circle_outlined),
+                          title: const Text('Your account'),
+                          subtitle: const Text(
+                            'Sign in or create an optional account',
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => AccountScreen(gateway: gateway),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     SectionCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
