@@ -25,7 +25,11 @@ Future<void> _pumpDashboard(WidgetTester tester) async {
 
 Future<void> _openPreviousDay(WidgetTester tester) async {
   final calendar = find.byType(DashboardCalendar);
-  await tester.ensureVisible(calendar);
+  await tester.scrollUntilVisible(
+    calendar,
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
   final previousDay = dashboardToday.subtract(const Duration(days: 1));
   final target = find.byKey(
     ValueKey(
@@ -181,7 +185,7 @@ void main() {
   });
 
   testWidgets(
-    'calendar uses a top-right date and unboxed lower-left record count',
+    'calendar uses a top-centered date and unboxed lower-left record count',
     (tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -213,8 +217,11 @@ void main() {
       final cellRect = tester.getRect(cell);
       final dayRect = tester.getRect(dayNumber);
       final countRect = tester.getRect(count);
-      expect(dayRect.width, closeTo(dayRect.height, .1));
-      expect(dayRect.right, closeTo(cellRect.right - 6, .1));
+      expect(dayRect.center.dx, closeTo(cellRect.center.dx, .1));
+      expect(
+        find.descendant(of: dayNumber, matching: find.byType(Container)),
+        findsNothing,
+      );
       expect(dayRect.top, closeTo(cellRect.top + 6, .1));
       expect(countRect.left, closeTo(cellRect.left + 7, .1));
       expect(countRect.bottom, closeTo(cellRect.bottom - 7, .1));

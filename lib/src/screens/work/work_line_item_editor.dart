@@ -248,15 +248,22 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                           controller: _description,
                           maxLines: 3,
                           decoration: const InputDecoration(
-                            labelText: 'Customer-facing description',
+                            labelText: 'Description for the customer',
                           ),
                         ),
                         const SizedBox(height: 10),
                         _NumberAndUnitRow(
                           quantity: _quantity,
                           unit: _unit,
-                          onUnitChanged: (value) =>
-                              _changeInput(() => _unit = value),
+                          onUnitChanged: (value) => _changeInput(() {
+                            _unit = value;
+                            if (value == 'hour' &&
+                                widget.allowedTypes.contains(
+                                  WorkLineItemType.labor,
+                                )) {
+                              _type = WorkLineItemType.labor;
+                            }
+                          }),
                         ),
                         const SizedBox(height: 10),
                         if (_jobMaterialMode) ...[
@@ -299,8 +306,10 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
-                            decoration: const InputDecoration(
-                              labelText: 'Customer price per unit',
+                            decoration: InputDecoration(
+                              labelText: _unit == 'hour'
+                                  ? 'Price per hour'
+                                  : 'Price per $_unit',
                               suffixText: 'USD',
                             ),
                           )

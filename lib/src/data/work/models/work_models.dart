@@ -68,12 +68,14 @@ class WorkRecord {
     required this.id,
     required this.kind,
     required this.number,
+    this.purchaseOrderNumber = '',
     required this.title,
     required this.client,
     required this.detail,
     required this.pricing,
     this.sourceId,
     this.assignee,
+    this.assignedEmployeeIds = const [],
     this.vehicle,
     this.serviceLocation = '',
     this.jobNotes = '',
@@ -109,12 +111,14 @@ class WorkRecord {
   final String id;
   final WorkRecordKind kind;
   final String number;
+  final String purchaseOrderNumber;
   final String title;
   final String client;
   final String detail;
   final WorkPricingModel pricing;
   final String? sourceId;
   final String? assignee;
+  final List<String> assignedEmployeeIds;
   final String? vehicle;
   final String serviceLocation;
   final String jobNotes;
@@ -204,6 +208,7 @@ class WorkRecord {
 
   WorkRecord copyWith({
     String? assignee,
+    List<String>? assignedEmployeeIds,
     String? vehicle,
     WorkRecordStatus? status,
     DateTime? scheduledStart,
@@ -222,12 +227,16 @@ class WorkRecord {
     id: id,
     kind: kind,
     number: number,
+    purchaseOrderNumber: purchaseOrderNumber,
     title: title,
     client: client,
     detail: detail,
     pricing: pricing,
     sourceId: sourceId,
     assignee: assignee ?? this.assignee,
+    assignedEmployeeIds: List.unmodifiable(
+      assignedEmployeeIds ?? this.assignedEmployeeIds,
+    ),
     vehicle: vehicle ?? this.vehicle,
     serviceLocation: serviceLocation ?? this.serviceLocation,
     jobNotes: jobNotes ?? this.jobNotes,
@@ -337,6 +346,7 @@ class WorkRecord {
     String signedBy,
     DateTime signedOn, {
     SignatureInk? ink,
+    String? onlineEvidence,
   }) {
     assert(kind == WorkRecordKind.estimate);
     if (!companyReviewAllowsCustomerApproval) {
@@ -360,11 +370,11 @@ class WorkRecord {
       deliveries: [
         ...estimateDeliveries,
         EstimateDeliveryRecord(
-          method: EstimateDeliveryMethod.inPerson,
+          method: onlineEvidence == null ? EstimateDeliveryMethod.inPerson : EstimateDeliveryMethod.deviceShare,
           recipient: signedBy,
           occurredOn: signedOn,
           revision: revision,
-          description: 'Customer approved revision $revision in person.',
+          description: onlineEvidence ?? 'Customer approved revision $revision in person.',
         ),
       ],
     );
@@ -381,12 +391,14 @@ class WorkRecord {
     id: id,
     kind: kind,
     number: number,
+    purchaseOrderNumber: purchaseOrderNumber,
     title: title,
     client: client,
     detail: detail,
     pricing: pricing,
     sourceId: sourceId,
     assignee: assignee,
+    assignedEmployeeIds: assignedEmployeeIds,
     vehicle: vehicle,
     serviceLocation: serviceLocation,
     jobNotes: jobNotes,

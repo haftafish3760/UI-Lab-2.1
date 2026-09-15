@@ -9,6 +9,7 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
   InvoiceDraftInput _draftInput() => InvoiceDraftInput(
     creatorId: _creatorId,
     number: _number,
+    purchaseOrderNumber: _purchaseOrder.text,
     baseStorageRevision: _baseStorageRevision,
     title: _title.text,
     discount: _discount.text,
@@ -54,42 +55,10 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
     }
     try {
       _baseStorageRevision = work.storageRevisionFor(_recordId);
-      String? recoveryId;
-      if (widget.initialRecord == null && widget.recoveredWorkflow == null) {
-        final candidates = await work.invoiceDraftRecovery.list();
-        if (!mounted) return;
-        if (candidates.isNotEmpty) {
-          final chosen = await showDialog<String>(
-            context: context,
-            builder: (dialogContext) => SimpleDialog(
-              title: const Text('Continue an unfinished invoice?'),
-              children: [
-                for (final draft in candidates)
-                  SimpleDialogOption(
-                    onPressed: () =>
-                        Navigator.of(dialogContext).pop(draft.draftId),
-                    child: Text(draft.label),
-                  ),
-                SimpleDialogOption(
-                  onPressed: () => Navigator.of(dialogContext).pop('new'),
-                  child: const Text('Start another invoice'),
-                ),
-              ],
-            ),
-          );
-          if (!mounted) return;
-          if (chosen == null) {
-            await _popEditor();
-            return;
-          }
-          if (chosen != 'new') recoveryId = chosen;
-        }
-      }
       final workflow =
           widget.recoveredWorkflow ??
           await work.openInvoiceDraft(
             existingRecordId: widget.initialRecord?.id,
-            recoveryDraftId: recoveryId,
           );
       if (widget.recoveredWorkflow != null) {
         work.validateInvoiceHandoff(
@@ -125,6 +94,7 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
   void _restoreDraft(InvoiceDraftInput input) {
     _creatorId = input.creatorId;
     _number = input.number;
+    _purchaseOrder.text = input.purchaseOrderNumber;
     _baseStorageRevision = input.baseStorageRevision;
     _title.text = input.title;
     _discount.text = input.discount;

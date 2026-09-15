@@ -33,6 +33,7 @@ extension _ExpenseSettingsDraftRecovery on _ExpensesSettingsScreenState {
       _workflow = workflow;
       final input = workflow.input;
       final restored = input.preferences;
+      _weekStartsOn = restored.weekStartsOn;
       _showJobLinks = restored.showJobLinks;
       _categoryMode = restored.categoryMode;
       _customCategories

@@ -4,6 +4,7 @@ import 'models/work_models.dart';
 extension EstimateRecordEditing on WorkRecord {
   WorkRecord reviseEstimate({
     required String title,
+    String? purchaseOrderNumber,
     required String client,
     required String scope,
     required WorkPricingModel pricing,
@@ -18,6 +19,8 @@ extension EstimateRecordEditing on WorkRecord {
   }) {
     assert(kind == WorkRecordKind.estimate);
     final customerVisibleChange =
+        (purchaseOrderNumber != null &&
+            purchaseOrderNumber != this.purchaseOrderNumber) ||
         title != this.title ||
         client != this.client ||
         scope != detail ||
@@ -55,6 +58,7 @@ extension EstimateRecordEditing on WorkRecord {
       id: id,
       kind: kind,
       number: number,
+      purchaseOrderNumber: purchaseOrderNumber ?? this.purchaseOrderNumber,
       title: title,
       client: client,
       detail: scope,

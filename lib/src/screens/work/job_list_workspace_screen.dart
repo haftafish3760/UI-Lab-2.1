@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../shared/calendar_width_section.dart';
 
 import '../../data/operational_attention.dart';
 import '../../data/prototype_operations_store.dart';
@@ -21,6 +22,8 @@ import 'work_selected_date_bar.dart';
 
 part 'job_day_screen.dart';
 part 'job_list_workspace_widgets.dart';
+
+part 'job_list_workspace_actions.dart';
 
 class JobListWorkspaceScreen extends StatefulWidget {
   const JobListWorkspaceScreen({
@@ -93,101 +96,126 @@ class _JobListWorkspaceScreenState extends State<JobListWorkspaceScreen> {
               attentionItems,
             );
             return ListView(
-              padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
+              padding: const EdgeInsets.fromLTRB(0, 10, 0, 96),
               children: [
-                SizedBox(
-                  width: availableWidth,
-                  child: OperationsWorkspaceFrame(
-                    layout: layout,
-                    primaryContent: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        WorkScopeHeader(
-                          view: _view,
-                          selectedDay: _selectedDay,
-                          selectedEmployeeId: _employeeId,
-                          workspaceLabel: 'Jobs',
-                          showBackButton: true,
-                          showDateContext: false,
-                          showEmployeeStrip: false,
-                          onBack: () => Navigator.of(context).pop(),
-                          onViewChanged: OperationalScope.of(context).setView,
-                          onEmployeeChanged: OperationalScope.of(
-                            context,
-                          ).selectEmployee,
-                          onSettings: _openSettings,
-                        ),
-                        const SizedBox(height: 12),
-                        WorkSelectedDateBar(
-                          key: const ValueKey('job-selected-date'),
-                          selectedDay: _selectedDay,
-                          onPrevious: () => _selectDay(
-                            _selectedDay.subtract(const Duration(days: 1)),
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: insets.left,
+                    right: insets.right,
+                  ),
+                  child: SizedBox(
+                    width: availableWidth,
+                    child: OperationsWorkspaceFrame(
+                      layout: layout,
+                      primaryContent: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          WorkScopeHeader(
+                            view: _view,
+                            selectedDay: _selectedDay,
+                            selectedEmployeeId: _employeeId,
+                            workspaceLabel: 'Jobs',
+                            showBackButton: true,
+                            showDateContext: false,
+                            showEmployeeStrip: false,
+                            onBack: () => Navigator.of(context).pop(),
+                            onViewChanged: OperationalScope.of(context).setView,
+                            onEmployeeChanged: OperationalScope.of(
+                              context,
+                            ).selectEmployee,
+                            onSettings: _openSettings,
                           ),
-                          onNext: () => _selectDay(
-                            _selectedDay.add(const Duration(days: 1)),
-                          ),
-                        ),
-                        if (!compactActions) ...[
-                          const SizedBox(height: 10),
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: FilledButton.icon(
-                              key: const ValueKey('new-job-inline'),
-                              onPressed: _createJob,
-                              icon: const Icon(Icons.add_rounded),
-                              label: const Text('New job'),
+                          const SizedBox(height: 12),
+                          WorkSelectedDateBar(
+                            key: const ValueKey('job-selected-date'),
+                            selectedDay: _selectedDay,
+                            onPrevious: () => _selectDay(
+                              _selectedDay.subtract(const Duration(days: 1)),
+                            ),
+                            onNext: () => _selectDay(
+                              _selectedDay.add(const Duration(days: 1)),
                             ),
                           ),
-                        ],
-                        if (showAttention) ...[
-                          const SizedBox(height: 10),
-                          OperationsLaneGrid(
-                            key: const ValueKey('job-attention'),
-                            layout: layout,
-                            children: [
-                              OperationalAttentionPanel(
-                                items: attentionItems,
-                                rowKeyFor: (item) =>
-                                    ValueKey('job-attention-${item.sourceId}'),
-                                onOpen: _openAttentionItem,
-                                onOpenAll: () =>
-                                    _openAttentionList(attentionItems),
-                                onDismiss: () => attentionCenter.dismiss(
-                                  attentionQuery,
-                                  attentionItems,
-                                ),
+                          if (!compactActions) ...[
+                            const SizedBox(height: 10),
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: FilledButton.icon(
+                                key: const ValueKey('new-job-inline'),
+                                onPressed: _createJob,
+                                icon: const Icon(Icons.add_rounded),
+                                label: const Text('New job'),
                               ),
-                            ],
-                          ),
-                        ],
-                        const SizedBox(height: 10),
-                        TextField(
-                          key: const ValueKey('job-search'),
-                          controller: _search,
-                          onChanged: (_) => setState(() {}),
-                          decoration: InputDecoration(
-                            labelText: 'Search jobs',
-                            hintText: 'Customer, work, or job number',
-                            prefixIcon: const Icon(Icons.search_rounded),
-                            suffixIcon: query.isEmpty
-                                ? null
-                                : IconButton(
-                                    tooltip: 'Clear search',
-                                    onPressed: () {
-                                      _search.clear();
-                                      setState(() {});
-                                    },
-                                    icon: const Icon(Icons.close_rounded),
+                            ),
+                          ],
+                          if (showAttention) ...[
+                            const SizedBox(height: 10),
+                            OperationsLaneGrid(
+                              key: const ValueKey('job-attention'),
+                              layout: layout,
+                              children: [
+                                OperationalAttentionPanel(
+                                  items: attentionItems,
+                                  rowKeyFor: (item) => ValueKey(
+                                    'job-attention-${item.sourceId}',
                                   ),
+                                  onOpen: _openAttentionItem,
+                                  onOpenAll: () =>
+                                      _openAttentionList(attentionItems),
+                                  onDismiss: () => attentionCenter.dismiss(
+                                    attentionQuery,
+                                    attentionItems,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          const SizedBox(height: 10),
+                          TextField(
+                            key: const ValueKey('job-search'),
+                            controller: _search,
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              labelText: 'Search jobs',
+                              hintText: 'Customer, work, or job number',
+                              prefixIcon: const Icon(Icons.search_rounded),
+                              suffixIcon: query.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: 'Clear search',
+                                      onPressed: () {
+                                        _search.clear();
+                                        setState(() {});
+                                      },
+                                      icon: const Icon(Icons.close_rounded),
+                                    ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSections(layout, query),
-                      ],
+                          const SizedBox(height: 12),
+                          _buildSections(layout, query),
+                        ],
+                      ),
+                      followingContent: layout.columns == 1
+                          ? null
+                          : WorkMonthCalendar(
+                              maximumWidth: layout.laneWidth,
+                              selectedDay: _selectedDay,
+                              onDaySelected: _openDay,
+                              entryCountForDay: (day) => _scopedJobs
+                                  .where((record) => record.occursOn(day))
+                                  .length,
+                              needsApprovalForDay: (day) =>
+                                  _attentionItemsForDay(day).isNotEmpty,
+                              recordKind: CalendarRecordKind.job,
+                            ),
                     ),
-                    followingContent: WorkMonthCalendar(
-                      maximumWidth: layout.laneWidth,
+                  ),
+                ),
+                if (layout.columns == 1) ...[
+                  SizedBox(height: layout.gap),
+                  CalendarWidthSection(
+                    child: WorkMonthCalendar(
+                      maximumWidth: AppLayoutEngine.calendarMaximum,
                       selectedDay: _selectedDay,
                       onDaySelected: _openDay,
                       entryCountForDay: (day) => _scopedJobs
@@ -198,7 +226,7 @@ class _JobListWorkspaceScreenState extends State<JobListWorkspaceScreen> {
                       recordKind: CalendarRecordKind.job,
                     ),
                   ),
-                ),
+                ],
               ],
             );
           },
@@ -305,17 +333,13 @@ class _JobListWorkspaceScreenState extends State<JobListWorkspaceScreen> {
         record.status == WorkRecordStatus.completed) {
       return false;
     }
-    if (_view == AppViewMode.technician) {
-      final employee = dashboardEmployeeById(
-        _employeeId ?? demoEmployees.first.id,
-      );
-      return record.createdByEmployeeId == employee.id ||
-          record.assignee == employee.name;
-    }
-    if (_employeeId == null) return true;
-    final employee = dashboardEmployeeById(_employeeId!);
-    return record.createdByEmployeeId == employee.id ||
-        record.assignee == employee.name;
+    final employeeId =
+        _employeeId ?? (_view == AppViewMode.technician ? 'alex' : null);
+    if (employeeId == null) return true;
+    final legacy = demoEmployees.where((e) => e.id == employeeId).firstOrNull;
+    return record.createdByEmployeeId == employeeId ||
+        record.assignedEmployeeIds.contains(employeeId) ||
+        (legacy != null && record.assignee == legacy.name);
   }).toList();
 
   List<OperationalAttentionItem> _attentionItemsForDay(DateTime day) =>
@@ -418,67 +442,5 @@ class _JobListWorkspaceScreenState extends State<JobListWorkspaceScreen> {
     );
   }
 
-  Future<void> _createJob() async {
-    final job = await Navigator.of(context).push<WorkRecord>(
-      MaterialPageRoute(
-        builder: (_) => WorkJobEditor(initialDay: _selectedDay),
-      ),
-    );
-    if (mounted && job != null) _store.addWorkRecord(job);
-  }
-
-  Future<void> _openSettings() async {
-    final updated = await Navigator.of(context)
-        .push<WorkRecordDisplayPreferences>(
-          MaterialPageRoute(
-            builder: (_) => WorkRecordSettingsScreen(
-              workspaceId: 'jobs',
-              workspaceLabel: 'Jobs',
-              initial: _preferences,
-            ),
-          ),
-        );
-    if (mounted && updated != null) {
-      setState(() => _fixturePreferences = updated);
-    }
-  }
-
-  Future<void> _openJob(WorkRecord record) async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => JobWorkspaceScreen(
-          workRecord: record,
-          onWorkRecordUpdated: _store.updateWorkRecord,
-          permissions: widget.permissions,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openAttentionItem(OperationalAttentionItem item) async {
-    final matches = _scopedJobs.where((record) => record.id == item.sourceId);
-    if (matches.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This job is no longer available.')),
-      );
-      return;
-    }
-    await _openJob(matches.first);
-  }
-
-  void _openAttentionList(List<OperationalAttentionItem> items) {
-    Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => WorkAttentionListScreen(
-          selectedDay: _selectedDay,
-          items: items,
-          onOpen: _openAttentionItem,
-          workspaceLabel: 'Job attention',
-          screenKey: const ValueKey('job-attention-list'),
-          rowKeyPrefix: 'job-attention-list',
-          onSettings: _openSettings,
-        ),
-      ),
-    );
-  }
+  void _refresh(VoidCallback change) => setState(change);
 }

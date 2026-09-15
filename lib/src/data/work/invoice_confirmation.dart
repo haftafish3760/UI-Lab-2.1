@@ -11,16 +11,17 @@ class InvoiceInputValidation implements Exception {
 WorkRecord buildConfirmedInvoice(
   InvoiceDraftInput input, {
   WorkRecord? existing,
+  bool previewIncomplete = false,
 }) {
   if (input.pendingLineItem != null) {
     throw const InvoiceInputValidation(
       'Review and save the unfinished invoice items first.',
     );
   }
-  if (input.client == null ||
+  if (!previewIncomplete && (input.client == null ||
       input.title.trim().isEmpty ||
       input.summary.trim().isEmpty ||
-      input.items.isEmpty) {
+      input.items.isEmpty)) {
     throw const InvoiceInputValidation(
       'Choose a customer and enter the work completed with at least one invoice item.',
     );
@@ -48,8 +49,9 @@ WorkRecord buildConfirmedInvoice(
     id: input.recordId,
     kind: WorkRecordKind.invoice,
     number: input.number,
+    purchaseOrderNumber: input.purchaseOrderNumber.trim(),
     title: input.title.trim(),
-    client: input.client!,
+    client: input.client ?? 'Client not selected',
     detail: input.summary.trim(),
     pricing: input.pricing,
     sourceId: input.sourceJobId,

@@ -45,11 +45,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   Widget _buildShell(BuildContext context, Size availableSize) {
-    final navigation = AppLayoutEngine.navigationFor(
-      availableSize,
-      dashboard: _selectedIndex == 0,
-      work: _selectedIndex == 1,
-    );
+    final navigation = AppLayoutEngine.navigationFor(availableSize);
     final desktop = navigation == AppNavigationMode.rail;
     return PopScope(
       canPop: _selectedIndex == 0,

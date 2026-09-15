@@ -1,3 +1,5 @@
+import '../../shared/company_logo_field.dart';
+import '../../data/work/company_document_branding.dart';
 import '../../data/work/directory_draft_handoff.dart';
 import '../../data/work/directory_draft_workflows.dart';
 import '../../data/work/company_draft_controller.dart';
@@ -72,6 +74,7 @@ class _CompanyProfileEditScreenState extends State<CompanyProfileEditScreen>
   late final _email = TextEditingController(text: _editingProfile.email);
   late final _website = TextEditingController(text: _editingProfile.website);
   late final _address = TextEditingController(text: _editingProfile.address);
+  late String _logoReference = _editingProfile.logoReference;
   late final _terms = TextEditingController(text: _editingProfile.defaultTerms);
   late var _logoLabel = _editingProfile.logoLabel;
 
@@ -147,12 +150,12 @@ class _CompanyProfileEditScreenState extends State<CompanyProfileEditScreen>
                                 _field(_email, 'Business email'),
                                 _field(_website, 'Website'),
                                 _field(_address, 'Business address', lines: 3),
-                                _LogoSelector(
-                                  label: _logoLabel,
-                                  onChanged: (value) => _changeCompanyInput(
-                                    () => _logoLabel = value,
-                                  ),
-                                ),
+                                CompanyLogoField(reference: _logoReference,
+                                  service: _directory == null ? null : CompanyDocumentBrandingService(_directory!),
+                                  onChanged: (reference) => _changeCompanyInput(() {
+                                    _logoReference = reference;
+                                    _logoLabel = reference.isEmpty ? 'No company logo' : 'Company logo uploaded';
+                                  })),
                                 const SizedBox(height: 12),
                                 _field(
                                   _terms,
@@ -222,41 +225,3 @@ class _CompanyProfileEditScreenState extends State<CompanyProfileEditScreen>
   }
 }
 
-class _LogoSelector extends StatelessWidget {
-  const _LogoSelector({required this.label, required this.onChanged});
-
-  final String label;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Text('Company logo', style: Theme.of(context).textTheme.titleSmall),
-      const SizedBox(height: 5),
-      Text(label),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          OutlinedButton.icon(
-            onPressed: () => onChanged('Logo selected from photos'),
-            icon: const Icon(Icons.photo_library_outlined),
-            label: const Text('Choose from photos'),
-          ),
-          OutlinedButton.icon(
-            onPressed: () => onChanged('Logo captured with camera'),
-            icon: const Icon(Icons.camera_alt_outlined),
-            label: const Text('Take logo photo'),
-          ),
-          OutlinedButton.icon(
-            onPressed: () => onChanged('Logo selected from files'),
-            icon: const Icon(Icons.folder_open_outlined),
-            label: const Text('Choose logo file'),
-          ),
-        ],
-      ),
-    ],
-  );
-}

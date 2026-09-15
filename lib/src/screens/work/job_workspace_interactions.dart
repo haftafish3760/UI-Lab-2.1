@@ -1,6 +1,31 @@
 part of 'job_workspace_screen.dart';
 
 extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
+  Future<void> _createInvoice() async {
+    if (_committing || _sourceRecord.status != WorkRecordStatus.completed) {
+      return;
+    }
+    final permissions = invoicePermissionsForView(
+      OperationalScope.of(context).view,
+    );
+    if (!permissions.canCreate) return;
+    final store = PrototypeOperationsScope.of(context);
+    final invoice = await Navigator.of(context).push<WorkRecord>(
+      MaterialPageRoute(
+        builder: (_) =>
+            InvoiceEditorScreen(initialDay: _jobDay, sourceJob: _sourceRecord),
+      ),
+    );
+    if (!mounted || invoice == null) return;
+    if (store.workSession == null) store.addWorkRecord(invoice);
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) =>
+            InvoiceDetailScreen(record: invoice, permissions: permissions),
+      ),
+    );
+  }
+
   Future<void> _openJobActions() async {
     final action = await Navigator.of(context).push<_JobAction>(
       MaterialPageRoute(
@@ -288,6 +313,7 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
   Future<void> _reassignJob() async {
     if (!widget.permissions.canEditJob) return;
     final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
+    if (work != null && !work.permissions.canAssignJobs) return;
     final record = await showModalBottomSheet<WorkRecord>(
       context: context,
       showDragHandle: true,

@@ -1,3 +1,6 @@
+import 'shared/documents/document_image_scope.dart';
+import 'data/work/company_document_branding.dart';
+import 'shared/documents/customer_portal_gateway.dart';
 import 'startup/application_route_pause.dart';
 import 'data/storage/application_storage_lifecycle.dart';
 import 'data/storage/serialized_async_actions.dart';
@@ -69,6 +72,7 @@ class UiLabApp extends StatefulWidget {
     this.nativeNotificationGateway,
     this.mediaCoordinator,
     this.workSession,
+    this.customerPortal,
     this.workdaySession,
     this.dayNoteSession,
     this.directorySession,
@@ -88,6 +92,7 @@ class UiLabApp extends StatefulWidget {
   final NativeNotificationGateway? nativeNotificationGateway;
   final NativeMediaPickerCoordinator? mediaCoordinator;
   final WorkPersistenceSession? workSession;
+  final CustomerPortalGateway? customerPortal;
   final WorkdayPersistenceSession? workdaySession;
   final DayNotePersistenceSession? dayNoteSession;
   final DirectoryPersistenceSession? directorySession;

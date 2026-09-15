@@ -1,3 +1,5 @@
+import 'package:ui_lab_2_1/src/screens/work/work_drafts_screen.dart';
+import 'support/document_form_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -27,7 +29,7 @@ void main() {
         scope.dispose();
         await harness.dispose();
       });
-      Future<void> openEditor() async {
+      Future<void> openEditor({bool drafts = false}) async {
         await tester.pumpWidget(
           PrototypeOperationsScope(
             store: store,
@@ -40,9 +42,11 @@ void main() {
                     body: TextButton(
                       onPressed: () => Navigator.of(context).push<void>(
                         MaterialPageRoute(
-                          builder: (_) => EstimateEditorScreen(
-                            initialDay: DateTime(2026, 9, 9),
-                          ),
+                          builder: (_) => drafts
+                              ? const WorkDraftsScreen()
+                              : EstimateEditorScreen(
+                                  initialDay: DateTime(2026, 9, 9),
+                                ),
                         ),
                       ),
                       child: const Text('New estimate'),
@@ -54,24 +58,30 @@ void main() {
           ),
         );
         await tester.tap(find.text('New estimate'));
-        await tester.pumpAndSettle();
+        if (drafts) {
+          await waitForNativeSave(
+            tester,
+            () => find.text('Interrupted pump repair').evaluate().isNotEmpty,
+          );
+        } else {
+          await tester.pumpAndSettle();
+        }
       }
 
       await openEditor();
-      await waitForNativeSave(
-        tester,
-        () =>
-            find.byKey(const ValueKey('estimate-title')).evaluate().isNotEmpty,
-      );
+      await openDocumentSection(tester, 'estimate-information');
       await tester.enterText(
         find.byKey(const ValueKey('estimate-title')),
         'Interrupted pump repair',
       );
+      await closeDocumentSection(tester);
       final discount = find.byWidgetPredicate(
         (widget) =>
             widget is TextField && widget.decoration?.labelText == 'Discount',
       );
+      await openDocumentSection(tester, 'estimate-discount');
       await tester.enterText(discount, '12.');
+      await closeDocumentSection(tester);
       await waitForNativeSave(
         tester,
         () => find.text('Draft saved on this device').evaluate().isNotEmpty,
@@ -122,24 +132,25 @@ void main() {
       database = (await tester.runAsync(harness.open))!;
       session = (await tester.runAsync(() => openUiLabWorkSession(database)))!;
       store = PrototypeOperationsStore(workSession: session);
-      await openEditor();
+      await openEditor(drafts: true);
       await waitForNativeSave(
         tester,
-        () =>
-            find.text('Continue an unfinished estimate?').evaluate().isNotEmpty,
+        () => find.text('Interrupted pump repair').evaluate().isNotEmpty,
       );
       expect(
         find.text('Saved input unavailable — kept on this device'),
         findsOneWidget,
       );
-      expect(find.text('Start another estimate'), findsOneWidget);
+      expect(find.text('Continue an unfinished estimate?'), findsNothing);
       await tester.tap(find.text('Interrupted pump repair'));
-      await tester.pumpAndSettle();
       await waitForNativeSave(
         tester,
-        () =>
-            find.byKey(const ValueKey('estimate-title')).evaluate().isNotEmpty,
+        () => find
+            .byKey(const ValueKey('estimate-information'))
+            .evaluate()
+            .isNotEmpty,
       );
+      await openDocumentSection(tester, 'estimate-information');
       expect(
         tester
             .widget<TextField>(find.byKey(const ValueKey('estimate-title')))
@@ -147,8 +158,12 @@ void main() {
             .text,
         'Interrupted pump repair',
       );
+      await openDocumentSection(tester, 'estimate-discount');
       expect(tester.widget<TextField>(discount).controller!.text, '12.');
+      await closeDocumentSection(tester);
       // Discard is a separate explicit decision; route disposal above retained it.
+      await tester.ensureVisible(find.text('Discard unfinished input'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Discard unfinished input'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Discard input'));

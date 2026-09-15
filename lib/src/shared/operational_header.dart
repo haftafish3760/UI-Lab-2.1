@@ -110,7 +110,9 @@ class OperationalHeader extends StatelessWidget {
       color: AppColors.header,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.surface),
+        borderRadius: dashboardWide
+            ? BorderRadius.zero
+            : BorderRadius.circular(AppRadii.surface),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {

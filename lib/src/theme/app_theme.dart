@@ -21,7 +21,7 @@ abstract final class AppColors {
   static const blueSoft = Color(0xFF91B8CD);
   static const green = Color(0xFF0B6B50);
   static const greenSoft = Color(0xFF95BFA8);
-  static const startWorkday = Color(0xFF6AD39B);
+  static const startWorkday = Color(0xFF35E878);
   static const pickerBlue = Color(0xFF1E5A78);
   static const pickerBlueDeep = Color(0xFF102D3D);
   static const warning = Color(0xFF8B5A12);
@@ -255,8 +255,17 @@ abstract final class AppTheme {
         indicatorColor: blueSoft,
         surfaceTintColor: Colors.transparent,
         height: 66,
-        labelTextStyle: WidgetStatePropertyAll(
-          TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w600),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            color: ink,
+            fontSize: 12,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w800
+                : FontWeight.w500,
+            decoration: states.contains(WidgetState.selected)
+                ? TextDecoration.underline
+                : null,
+          ),
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(

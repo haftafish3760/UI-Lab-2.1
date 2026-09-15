@@ -36,10 +36,12 @@ void main() {
 
     expect(find.text('My expenses'), findsOneWidget);
     expect(find.text('Daily total'), findsOneWidget);
-    expect(find.text(r'$336.41'), findsOneWidget);
     expect(
-      tester.getSize(find.byKey(const ValueKey('daily-expense-total'))).height,
-      lessThanOrEqualTo(64),
+      find.descendant(
+        of: find.byKey(const ValueKey('expense-spending-day')),
+        matching: find.text(r'$336.41'),
+      ),
+      findsOneWidget,
     );
     expect(find.text('View day'), findsNothing);
     expect(
@@ -58,8 +60,8 @@ void main() {
     expect(find.text('Expense categories'), findsNothing);
     expect(find.text('Choose date'), findsNothing);
     expect(find.text('Reports and recap'), findsNothing);
-    expect(find.text('Record expense'), findsOneWidget);
-    expect(find.text('Add fuel'), findsOneWidget);
+    expect(find.text('Add expense'), findsOneWidget);
+    expect(find.text('Add fuel'), findsNothing);
     expect(find.text('Add receipt'), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsNothing);
 
@@ -72,26 +74,6 @@ void main() {
     expect(find.textContaining('Central Supply'), findsWidgets);
     expect(find.text('CleanPro Wholesale'), findsNothing);
 
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Expenses uses one labeled add menu on compact layouts', (
-    tester,
-  ) async {
-    await _pumpAt(tester, const Size(390, 844));
-    await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
-    await tester.pumpAndSettle();
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-    expect(find.text('Add expense'), findsOneWidget);
-    await tester.tap(find.text('Add expense'));
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('expense-add-actions-screen')),
-      findsOneWidget,
-    );
-    expect(find.text('Record expense'), findsOneWidget);
-    expect(find.text('Add fuel'), findsOneWidget);
-    expect(find.text('Add receipt'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -128,8 +110,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Add expense'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Record expense'));
-    await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('expense-editor-screen')), findsOneWidget);
     await tester.enterText(
@@ -150,7 +130,13 @@ void main() {
 
     expect(find.byKey(const ValueKey('expense-editor-screen')), findsNothing);
     expect(find.textContaining('Neighborhood Hardware'), findsOneWidget);
-    expect(find.text(r'$346.41'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('expense-spending-day')),
+        matching: find.text(r'$346.41'),
+      ),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -165,6 +151,8 @@ void main() {
     expect(record, findsOneWidget);
     expect(tester.getSize(record).height, lessThanOrEqualTo(65));
     expect(tester.takeException(), isNull);
+    await tester.ensureVisible(record);
+    await tester.pumpAndSettle();
     await tester.tap(record);
     await tester.pumpAndSettle();
 
@@ -384,8 +372,6 @@ void main() {
     await _pumpAt(tester, const Size(390, 844));
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Add expense'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Add receipt'));
     await tester.pumpAndSettle();
 
@@ -407,8 +393,6 @@ void main() {
   ) async {
     await _pumpAt(tester, const Size(390, 844));
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Add expense'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Add receipt'));
     await tester.pumpAndSettle();
@@ -439,6 +423,10 @@ void main() {
     await tester.pumpAndSettle();
 
     final calendar = find.byKey(const ValueKey('work-5-7-calendar'));
+    for (var i = 0; i < 8 && calendar.evaluate().isEmpty; i++) {
+      await tester.drag(find.byType(ListView).first, const Offset(0, -400));
+      await tester.pumpAndSettle();
+    }
     await tester.ensureVisible(calendar);
     await tester.pumpAndSettle();
     final suffix =

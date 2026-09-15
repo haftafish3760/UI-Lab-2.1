@@ -321,8 +321,12 @@ class _EstimateSitePhotosScreenState extends State<EstimateSitePhotosScreen>
 
   void _showPickerError(Object error) {
     if (!mounted) return;
-    final message =
-        error is PlatformException && error.message?.isNotEmpty == true
+    final permissionDenied = error is PlatformException &&
+        {'camera_access_denied', 'camera_access_denied_without_prompt',
+         'camera_access_restricted', 'photo_access_denied', 'photo_access_restricted'}.contains(error.code);
+    final message = permissionDenied
+        ? 'Access was not allowed. You can allow Camera in your phone Settings, or choose an existing photo. Your saved work is unchanged.'
+        : error is PlatformException && error.message?.isNotEmpty == true
         ? error.message!
         : 'The photo could not be retained. Existing photos and input have been kept. Please try again.';
     ScaffoldMessenger.of(

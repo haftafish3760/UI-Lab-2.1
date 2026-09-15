@@ -6,16 +6,12 @@ class _JobQueuePanel extends StatelessWidget {
     required this.records,
     required this.onOpen,
     required this.onAssign,
-    this.onCreate,
-    this.onOpenAll,
   });
 
   final AppViewMode view;
   final List<WorkRecord> records;
   final ValueChanged<WorkRecord> onOpen;
   final ValueChanged<WorkRecord> onAssign;
-  final VoidCallback? onCreate;
-  final VoidCallback? onOpenAll;
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +26,6 @@ class _JobQueuePanel extends StatelessWidget {
       records: visible,
       totalCount: records.length,
       emptyMessage: 'No jobs are available in this view.',
-      onOpenAll: onOpenAll,
-      onCreate: onCreate,
-      createLabel: 'New job',
       rowBuilder: (record) => _WorkRecordRow(
         rowKey: ValueKey('work-job-row-${record.id}'),
         record: record,
@@ -66,16 +59,12 @@ class _DocumentQueuePanel extends StatelessWidget {
     required this.records,
     required this.onOpenRecord,
     required this.onOpenAll,
-    this.onCreate,
-    this.drafts = const [],
   });
 
   final WorkRecordKind kind;
   final List<WorkRecord> records;
-  final List<WorkRecord> drafts;
   final ValueChanged<WorkRecord> onOpenRecord;
   final VoidCallback onOpenAll;
-  final VoidCallback? onCreate;
 
   @override
   Widget build(BuildContext context) {
@@ -92,29 +81,17 @@ class _DocumentQueuePanel extends StatelessWidget {
       accent: accent,
       headerSurface: headerSurface,
       records: records.take(3).toList(),
-      totalCount: records.length + drafts.length,
+      totalCount: records.length,
       emptyMessage: estimate
           ? 'No estimates are available in this scope.'
           : 'No invoices are available in this scope.',
       onOpenAll: onOpenAll,
-      onCreate: onCreate,
-      createLabel: estimate ? 'New estimate' : 'New invoice',
       rowBuilder: (record) => _WorkRecordRow(
         rowKey: ValueKey('work-${kind.name}-row-${record.id}'),
         record: record,
         icon: _recordIcon(record.kind),
         subtitle: _documentSubtitle(record),
         accent: accent,
-        onOpen: () => onOpenRecord(record),
-      ),
-      drafts: drafts.take(3).toList(),
-      draftBuilder: (record) => _WorkRecordRow(
-        rowKey: ValueKey('work-estimate-draft-${record.id}'),
-        record: record,
-        icon: Icons.edit_note_rounded,
-        subtitle: '${record.client} · ${record.number}',
-        accent: semantic.draft,
-        background: semantic.draftSurface,
         onOpen: () => onOpenRecord(record),
       ),
     );
@@ -131,11 +108,7 @@ class _WorkRecordSection extends StatelessWidget {
     required this.totalCount,
     required this.rowBuilder,
     this.onOpenAll,
-    this.onCreate,
-    this.createLabel,
     this.emptyMessage,
-    this.drafts = const [],
-    this.draftBuilder,
     super.key,
   });
 
@@ -147,11 +120,7 @@ class _WorkRecordSection extends StatelessWidget {
   final int totalCount;
   final String? emptyMessage;
   final VoidCallback? onOpenAll;
-  final VoidCallback? onCreate;
-  final String? createLabel;
   final Widget Function(WorkRecord record) rowBuilder;
-  final List<WorkRecord> drafts;
-  final Widget Function(WorkRecord record)? draftBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -170,10 +139,8 @@ class _WorkRecordSection extends StatelessWidget {
             accent: accent,
             background: headerSurface,
             onOpenAll: onOpenAll,
-            onCreate: onCreate,
-            createLabel: createLabel,
           ),
-          if (records.isEmpty && drafts.isEmpty)
+          if (records.isEmpty)
             Padding(
               padding: const EdgeInsets.all(14),
               child: Text(
@@ -195,23 +162,6 @@ class _WorkRecordSection extends StatelessWidget {
                   ],
                 ),
               ),
-            if (drafts.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                child: _DraftHeading(count: drafts.length),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-                child: Column(
-                  children: [
-                    for (var index = 0; index < drafts.length; index++) ...[
-                      draftBuilder!(drafts[index]),
-                      if (index != drafts.length - 1) const SizedBox(height: 8),
-                    ],
-                  ],
-                ),
-              ),
-            ],
             const SizedBox(height: 10),
           ],
         ],
@@ -228,7 +178,6 @@ class _WorkRecordRow extends StatelessWidget {
     required this.accent,
     required this.onOpen,
     required this.rowKey,
-    this.background,
     this.trailing,
   });
 
@@ -236,7 +185,6 @@ class _WorkRecordRow extends StatelessWidget {
   final IconData icon;
   final String subtitle;
   final Color accent;
-  final Color? background;
   final VoidCallback onOpen;
   final Key rowKey;
   final Widget? trailing;
@@ -250,7 +198,7 @@ class _WorkRecordRow extends StatelessWidget {
         return SectionCard(
           key: rowKey,
           padding: EdgeInsets.zero,
-          backgroundColor: background ?? colors.surface,
+          backgroundColor: colors.surface,
           borderColor: accent.withValues(alpha: .58),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: type.operationRowHeight),

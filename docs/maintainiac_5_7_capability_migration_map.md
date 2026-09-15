@@ -1,5 +1,23 @@
 # Maintainiac 5.7 Capability Migration Map
 
+September 14 owner authorization D38 starts the inventory/parsing transfer in
+UI Lab. See [the extraction checkpoint](inventory_migration/README.md) for
+the local source comparison, bounded catalog conversion and unresolved work.
+The historical pre-migration status below is not a claim that no extraction
+has occurred. All 5.7 originals remain read-only.
+
+September 14 additional owner authorization starts shared device capability
+adaptation and image OCR integration. Read-only inspection covered
+`shared/device_capabilities/device_capability.dart`, its service and scope,
+the Android/iOS `DeviceCapabilityBridge` implementations, the receipt adapter
+and `receipt_ocr_service.dart` in 5.7 Active. Reuse assessment: adapt runtime
+memory/power/thermal facts and conservative workload budgets; replace advisory
+receipt-only limits with a shared admission gate. Keep ML Kit's native Latin
+recognition behind an image-only adapter. Exclude old stitching, camera
+implementation, PDF processing and broad hardware identity collection. Original
+5.7 code was inspected, not executed or changed. The owning behavior and current
+limitations are in Receipt/material intake's shared device workload section.
+
 Status: pre-migration control document 0.1  
 Historical discovery date: 2026-09-01; not revalidated in this documentation pass.
 Purpose: map candidate capabilities to accepted application contracts before
@@ -540,6 +558,43 @@ revision of reviewed fields while retaining source text/region provenance.
 9. Search is repository-backed by vendor, item description, category, job,
    vehicle, employee, date range, amount, approval, and receipt presence.
 10. Counts and money summaries apply the same permission predicate as records.
+
+### September 14, 2026: Invoice/Estimate form presentation slice
+
+Owner authorized adapting the 5.7 create-form arrangement into UI Lab, retaining
+5.7 read-only, and installing UI Lab on the S25 Ultra. Inventory parsing and the
+materials integration are explicitly deferred. This slice changes presentation,
+not the Work ledger schema or ownership. No 5.7 source file was copied or edited.
+
+Fresh local reference: `C:/Users/noneya/Documents/5.7 rebuild`, particularly
+`lib/screens/invoices/home/invoice_form_screen.dart`, `invoice_form_details.dart`
+and `invoice_form_sheets.dart`. The inspected form uses separate summary tiles
+for document/client information, template, items, money, terms and payment.
+The discount/tax/terms sheet Save handler only pops its route and the totals
+sheet contains static zero values; those handlers are not transplantation targets.
+
+| Capability | Disposition in this slice |
+| --- | --- |
+| 5.7 first-form summary containers | Adapt presentation using shared UI Lab primitives |
+| 5.7 document/client/item section organization | Adapt; keep focused editors and current record links |
+| 5.7 sheet handlers and local-only status selector | Replace with existing UI Lab draft and payment commands |
+| UI Lab invoice/estimate draft recovery and atomic confirmation | Retain and regression-test through new section routes |
+| UI Lab linked invoice payment workflow | Retain; validate balance, partial payment and permission regressions |
+| 5.7 PDF renderer and reader | Separate shared Document Platform task; not imported here |
+| Inventory intake/parser and Quote lifecycle | Not implemented by this presentation slice |
+
+Source inspection establishes suitability, not legacy runtime correctness. No
+5.7 build or test was run. Owner visual acceptance remains required after install.
+
+Verification: 77 focused tests passed across 17 files, covering form routes,
+invoice source imports, linked payments, failed confirmation, nested item/photo
+recovery and database reopen. The nine shared-form tests passed again after the
+final action-color change. Android debug APK built and updated the S25 Ultra
+successfully with `adb install -r`; no uninstall or data clearing was needed.
+The owner deferred launch and visual review until later, so the app was not
+launched. Gradle was stopped after the build. Analysis reported one pre-existing
+Dashboard braces-style lint; the build also reported the existing pdfx Kotlin
+plugin migration warning. These checks are not production-release certification.
 
 ## 9. Pre-migration UI readiness gate
 

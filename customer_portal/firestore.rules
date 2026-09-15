@@ -1,0 +1,7 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Only the reviewed server routes may read or write capability snapshots.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

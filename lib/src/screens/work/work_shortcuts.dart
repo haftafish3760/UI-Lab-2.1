@@ -16,7 +16,7 @@ enum WorkDestination {
   final String label;
   final IconData icon;
 
-  bool get isConnected => this != scheduling && this != quotes;
+  bool get isConnected => this != quotes;
 }
 
 class WorkShortcutGrid extends StatelessWidget {

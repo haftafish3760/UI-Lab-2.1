@@ -8,6 +8,7 @@ import 'invoice_actions_screen.dart';
 import 'invoice_permissions.dart';
 import 'work_detail_header.dart';
 import 'work_models.dart';
+import 'work_activity_screen.dart';
 
 part 'invoice_detail_sections.dart';
 
@@ -61,14 +62,6 @@ class InvoiceDetailScreen extends StatelessWidget {
         .firstOrNull;
     return Scaffold(
       key: ValueKey('invoice-detail-${invoice.id}'),
-      floatingActionButton: permissions.hasActions
-          ? FloatingActionButton.extended(
-              key: const ValueKey('invoice-actions-fab'),
-              onPressed: () => _openActions(context, invoice, balanceCents),
-              icon: const Icon(Icons.bolt_rounded),
-              label: const Text('Invoice actions'),
-            )
-          : null,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -103,6 +96,15 @@ class InvoiceDetailScreen extends StatelessWidget {
                           showFinancials: permissions.canViewFinancials,
                         ),
                         const SizedBox(height: 12),
+                        InvoiceActionsScreen(
+                          invoice: invoice,
+                          balanceCents: balanceCents,
+                          permissions: permissions,
+                          embedded: true,
+                        ),
+                        const SizedBox(height: 12),
+                        WorkActivityButton(record: invoice),
+                        const SizedBox(height: 12),
                         _InvoiceDetailLayout(
                           layout: layout,
                           invoice: invoice,
@@ -119,23 +121,6 @@ class InvoiceDetailScreen extends StatelessWidget {
               ],
             );
           },
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openActions(
-    BuildContext context,
-    WorkRecord invoice,
-    int balanceCents,
-  ) async {
-    if (!permissions.hasActions) return;
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => InvoiceActionsScreen(
-          invoice: invoice,
-          balanceCents: balanceCents,
-          permissions: permissions,
         ),
       ),
     );

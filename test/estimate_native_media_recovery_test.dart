@@ -1,3 +1,5 @@
+import 'package:ui_lab_2_1/src/screens/work/work_drafts_screen.dart';
+import 'support/document_form_navigation.dart';
 import 'dart:convert';
 import 'package:ui_lab_2_1/src/data/receipts/receipt_draft_ui_lab_policy.dart';
 import 'dart:io';
@@ -120,7 +122,7 @@ void main() {
         Future<void> openEditor({bool restoring = false}) async {
           Navigator.of(tester.element(find.byType(AppShell))).push(
             MaterialPageRoute<void>(
-              builder: (_) => EstimateEditorScreen(initialDay: DateTime(2030)),
+              builder: (_) => restoring ? const WorkDraftsScreen() : EstimateEditorScreen(initialDay: DateTime(2030)),
             ),
           );
           await tester.pumpAndSettle();
@@ -128,31 +130,29 @@ void main() {
             await waitForNativeSave(
               tester,
               () => find
-                  .text('Continue an unfinished estimate?')
+                  .text('Interrupted site estimate')
                   .evaluate()
                   .isNotEmpty,
             );
             await tester.tap(find.text('Interrupted site estimate'));
           }
-          await waitForNativeSave(
-            tester,
-            () => find
-                .byKey(const ValueKey('estimate-title'))
-                .evaluate()
-                .isNotEmpty,
-          );
+          await openDocumentSection(tester, 'estimate-information');
           if (!restoring) {
             await tester.enterText(
               find.byKey(const ValueKey('estimate-title')),
               'Interrupted site estimate',
             );
+            await closeDocumentSection(tester);
             final discount = find.byWidgetPredicate(
               (widget) =>
                   widget is TextField &&
                   widget.decoration?.labelText == 'Discount',
             );
+            await openDocumentSection(tester, 'estimate-discount');
             await tester.enterText(discount, '7.');
+            await closeDocumentSection(tester);
           }
+          if (restoring) await closeDocumentSection(tester);
           FocusManager.instance.primaryFocus?.unfocus();
           await tester.pumpAndSettle();
           final openPhotos = find.byKey(const ValueKey('estimate-site-photos'));

@@ -10,6 +10,16 @@ turning notifications into a second business-record store.
 
 ## 1. Product boundary
 
+September 14 owner requirement (planning, not implementation evidence): provide
+Android system notification categories so each device user can choose sounds,
+vibration or silence by category. Alert settings should link to the appropriate
+system category settings. Keep stable channel identities and respect user changes;
+do not recreate channels to override a user's choices. Business urgency and
+approval rules remain separate from device sound preferences. Exact category
+names/grouping remain to be settled, including distinguishing urgent alerts
+from routine updates. iOS must use its supported notification controls; its
+action categories are not equivalent to Android's per-channel sound settings.
+
 A notification reports a reminder or committed record change to one stable
 employee recipient. It never owns the Job, Estimate, Invoice, Payment, Expense,
 Material, Maintenance record, or approval decision that caused it.

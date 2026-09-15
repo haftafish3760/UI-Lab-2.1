@@ -26,7 +26,7 @@ DashboardDayData withWorkPlanProjections({
         // transitional assignment representation, not an authorization boundary.
         return employeeId == null ||
             record.createdByEmployeeId == employeeId ||
-            (employee != null && record.assignee == employee.name);
+            (record.assignedEmployeeIds.contains(employeeId) || (employee != null && record.assignee == employee.name));
       }).toList()..sort((a, b) {
         final time = a.scheduledStart!.compareTo(b.scheduledStart!);
         return time == 0 ? a.id.compareTo(b.id) : time;
@@ -77,7 +77,7 @@ DashboardDayData withWorkStatusProjections({
         if (sameDashboardDay(event.at.toLocal(), day) &&
             (employeeId == null ||
                 event.record.createdByEmployeeId == employeeId ||
-                (employee != null && event.record.assignee == employee.name)))
+                (event.record.assignedEmployeeIds.contains(employeeId) || (employee != null && event.record.assignee == employee.name))))
           projectWorkStatusEvent(event),
     ],
   );

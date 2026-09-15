@@ -1,0 +1,86 @@
+{
+  "scope": "eight synthetic smoke cases, not receipt acceptance",
+  "catalogItems": 3334,
+  "cases": [
+    {
+      "input": "14/2 NM-B Cable",
+      "tradeScope": "Electrical",
+      "expectedId": "MI-13214",
+      "actualId": "MI-13214",
+      "actualName": "14/2 NM-B Cable",
+      "confidence": 0.9349999999999999,
+      "needsReview": true,
+      "passed": true
+    },
+    {
+      "input": "12/2 NM-B Cable",
+      "tradeScope": "Electrical",
+      "expectedId": "MI-13216",
+      "actualId": "MI-13216",
+      "actualName": "12/2 NM-B Cable",
+      "confidence": 0.9349999999999999,
+      "needsReview": true,
+      "passed": true
+    },
+    {
+      "input": "1/2 in Copper 90 Elbow",
+      "tradeScope": "Plumbing",
+      "expectedId": "MI-003",
+      "actualId": "MI-003",
+      "actualName": "1/2 in Copper 90 Elbow",
+      "confidence": 0.95,
+      "needsReview": true,
+      "passed": true
+    },
+    {
+      "input": "3/4 in Copper 90 Elbow",
+      "tradeScope": "Plumbing",
+      "expectedId": "MI-004",
+      "actualId": "MI-004",
+      "actualName": "3/4 in Copper 90 Elbow",
+      "confidence": 0.95,
+      "needsReview": true,
+      "passed": true
+    },
+    {
+      "input": "",
+      "tradeScope": null,
+      "expectedId": null,
+      "actualId": null,
+      "actualName": null,
+      "confidence": null,
+      "needsReview": null,
+      "passed": true
+    },
+    {
+      "input": "THANK YOU FOR SHOPPING",
+      "tradeScope": null,
+      "expectedId": null,
+      "actualId": null,
+      "actualName": null,
+      "confidence": null,
+      "needsReview": null,
+      "passed": true
+    },
+    {
+      "input": "SUBTOTAL 125.99",
+      "tradeScope": null,
+      "expectedId": null,
+      "actualId": null,
+      "actualName": null,
+      "confidence": null,
+      "needsReview": null,
+      "passed": true
+    },
+    {
+      "input": "BANANAS 2 LB",
+      "tradeScope": null,
+      "expectedId": null,
+      "actualId": null,
+      "actualName": null,
+      "confidence": null,
+      "needsReview": null,
+      "passed": true
+    }
+  ]
+}

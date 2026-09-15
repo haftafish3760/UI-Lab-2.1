@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations_extension.dart';
-import '../layout/app_layout_engine.dart';
+
 import '../theme/app_semantic_colors.dart';
 import 'calendar_panel_surface.dart';
 
@@ -80,8 +80,6 @@ class ModuleCalendarDayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final semantic = _semanticColors(context);
     final materialCopy = MaterialLocalizations.of(context);
     final copy = context.l10n;
     final suffix = '${day.year}-${day.month}-${day.day}';
@@ -97,87 +95,121 @@ class ModuleCalendarDayCell extends StatelessWidget {
           '${entryCount == 0 ? copy.calendarNoRecords(countedLabel) : copy.calendarRecordCount(entryCount, countedLabel)}',
       child: KeyedSubtree(
         key: ValueKey('calendar-day-$suffix'),
-        child: Material(
-          color: outsideMonth
-              ? colors.surfaceContainerHigh.withValues(alpha: .4)
-              : selected
-              ? semantic.currentSurface
-              : Colors.transparent,
-          child: InkWell(
-            key: ValueKey('work-calendar-day-$suffix'),
-            onTap: onTap,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border(
-                  right: isLastColumn
-                      ? BorderSide.none
-                      : BorderSide(
-                          color: CalendarPanelSurface.gridLine(context),
-                          width: 1.5,
-                        ),
-                  bottom: isLastRow
-                      ? BorderSide.none
-                      : BorderSide(
-                          color: CalendarPanelSurface.gridLine(context),
-                          width: 1.5,
-                        ),
-                ),
-              ),
-              child: Stack(
-                children: [
-                  PositionedDirectional(
-                    top: 6,
-                    end: 6,
-                    child: KeyedSubtree(
-                      key: ValueKey('calendar-day-number-$suffix'),
-                      child: _DateNumber(
-                        key: ValueKey('module-calendar-day-number-$suffix'),
-                        day: day.day,
-                        selected: selected,
-                        today: today,
-                        outsideMonth: outsideMonth,
-                      ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            boxShadow: selected
+                ? const [
+                    BoxShadow(
+                      color: Color(0xAA20F060),
+                      blurRadius: 9,
+                      spreadRadius: -1,
                     ),
+                    BoxShadow(
+                      color: Color(0x66000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                : today
+                ? const [
+                    BoxShadow(
+                      color: Color(0xAA20F060),
+                      blurRadius: 8,
+                      spreadRadius: -2,
+                    ),
+                  ]
+                : const [],
+          ),
+          child: Material(
+            // Exact 5.7 Active overlays: theme fills must not mask the painter.
+            color: selected
+                ? const Color(0xFF29D86D)
+                : today
+                ? const Color(0x2E20F060)
+                : outsideMonth
+                ? const Color(0x55000000)
+                : Colors.transparent,
+            child: InkWell(
+              key: ValueKey('work-calendar-day-$suffix'),
+              onTap: onTap,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    right: isLastColumn
+                        ? BorderSide.none
+                        : BorderSide(
+                            color: CalendarPanelSurface.gridLine(context),
+                            width: 1.5,
+                          ),
+                    bottom: isLastRow
+                        ? BorderSide.none
+                        : BorderSide(
+                            color: CalendarPanelSurface.gridLine(context),
+                            width: 1.5,
+                          ),
                   ),
-                  if (!outsideMonth && entryCount > 0)
+                ),
+                child: Stack(
+                  children: [
                     PositionedDirectional(
-                      start: 7,
-                      bottom: 7,
-                      child: KeyedSubtree(
-                        key: ValueKey('calendar-entry-count-$suffix'),
-                        child: _CalendarEntryCount(
-                          key: ValueKey('module-calendar-entry-count-$suffix'),
-                          needsApproval: needsApproval,
-                          count: entryCount,
-                        ),
-                      ),
-                    ),
-                  if (today)
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 7),
+                      top: 6,
+                      start: 0,
+                      end: 0,
+                      child: Center(
                         child: KeyedSubtree(
-                          key: const ValueKey('calendar-today-indicator'),
-                          child: const _TodayMarker(),
-                        ),
-                      ),
-                    ),
-                  if (selected)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: DecoratedBox(
-                          key: const ValueKey('calendar-selected-outline'),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: semantic.current,
-                              width: 2.2,
-                            ),
+                          key: ValueKey('calendar-day-number-$suffix'),
+                          child: _DateNumber(
+                            key: ValueKey('module-calendar-day-number-$suffix'),
+                            day: day.day,
+                            selected: selected,
+                            today: today,
+                            outsideMonth: outsideMonth,
                           ),
                         ),
                       ),
                     ),
-                ],
+                    if (!outsideMonth && entryCount > 0)
+                      PositionedDirectional(
+                        start: 7,
+                        bottom: 7,
+                        child: KeyedSubtree(
+                          key: ValueKey('calendar-entry-count-$suffix'),
+                          child: _CalendarEntryCount(
+                            key: ValueKey(
+                              'module-calendar-entry-count-$suffix',
+                            ),
+                            needsApproval: needsApproval,
+                            count: entryCount,
+                          ),
+                        ),
+                      ),
+                    if (today)
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 7),
+                          child: KeyedSubtree(
+                            key: const ValueKey('calendar-today-indicator'),
+                            child: const _TodayMarker(),
+                          ),
+                        ),
+                      ),
+                    if (selected)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            key: const ValueKey('calendar-selected-outline'),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: const Color(0xFF29D86D),
+                                width: 2.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -203,45 +235,36 @@ class _DateNumber extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final semantic = _semanticColors(context);
-    final extent = AppLayoutEngine.calendarDateNumberExtentFor(
-      MediaQuery.textScalerOf(context),
-    );
     final foreground = selected
-        ? colors.onPrimary
+        ? const Color(0xFF07100A)
         : today
-        ? semantic.current
+        ? const Color(0xFF50FF7A)
         : outsideMonth
-        ? colors.onSurfaceVariant.withValues(alpha: .48)
-        : colors.onSurface;
-    return Container(
-      width: extent,
-      height: extent,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: selected
-            ? semantic.current
-            : today
-            ? semantic.currentSurface
-            : colors.surfaceContainerLow,
-        border: Border.all(
-          color: selected
-              ? semantic.current
-              : today
-              ? semantic.current
-              : colors.outline,
-        ),
-        borderRadius: BorderRadius.circular(3),
-      ),
-      child: Text(
-        '$day',
-        style: TextStyle(
-          color: foreground,
-          fontSize: 11,
-          fontWeight: selected || today ? FontWeight.w700 : FontWeight.w600,
-          height: 1,
-        ),
+        ? const Color(0xB8F4F7F2)
+        : Colors.white;
+    return Text(
+      '$day',
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: foreground,
+        fontSize: 16,
+        fontWeight: FontWeight.w900,
+        height: 1,
+        shadows: selected
+            ? const [
+                Shadow(
+                  color: Color(0x88FFFFFF),
+                  blurRadius: 1,
+                  offset: Offset(0, 1),
+                ),
+              ]
+            : const [
+                Shadow(color: Color(0xEE000000), offset: Offset(0, 1)),
+                Shadow(color: Color(0xEE000000), offset: Offset(1, 0)),
+                Shadow(color: Color(0xCC000000), offset: Offset(-1, 0)),
+                Shadow(color: Color(0xCC000000), offset: Offset(0, -1)),
+                Shadow(color: Color(0xAA20F060), blurRadius: 7),
+              ],
       ),
     );
   }

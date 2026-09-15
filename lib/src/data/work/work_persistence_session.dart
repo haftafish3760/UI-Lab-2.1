@@ -20,8 +20,11 @@ import 'work_record_codec.dart';
 import 'work_record_detail_codec.dart';
 import 'work_session_permissions.dart';
 import 'work_status_history.dart';
+import 'work_draft_repository.dart';
+import 'work_assignment_validation.dart';
 
 part 'work_job_conversion.dart';
+part 'work_draft_deletion.dart';
 
 /// The single Work read-model cache for an app session. SQLite is authoritative;
 /// listeners see committed changes only. Failed commands preserve this cache.
@@ -187,6 +190,7 @@ class WorkPersistenceSession extends ChangeNotifier {
             );
           }
           final current = _records[record.id];
+
           if (current != null &&
               current.createdByEmployeeId != record.createdByEmployeeId) {
             throw StateError('The record creator cannot be rewritten.');
@@ -234,6 +238,21 @@ class WorkPersistenceSession extends ChangeNotifier {
             permissionRevision: permissions.permissionRevision,
             occurredAt: occurredAt,
             mutations: changes,
+            validateBeforeCommit: () async {
+              for (final change in changes) {
+                final saved = await repository.find(
+                  organizationId: permissions.organizationId,
+                  recordId: change.record.id,
+                  visibleCreatorIds: permissions.visibleCreatorIds,
+                );
+                await validateWorkAssignment(
+                  repository: repository,
+                  permissions: permissions,
+                  next: change.record,
+                  previous: saved?.record,
+                );
+              }
+            },
             unchangedRecords: [
               for (final record in proposed)
                 if (!changes.any((change) => change.record.id == record.id))

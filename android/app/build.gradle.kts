@@ -1,4 +1,5 @@
 import java.util.Base64
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -11,10 +12,31 @@ val storageQa = (project.findProperty("dart-defines") as? String)
     ?.split(",")
     ?.any { String(Base64.getDecoder().decode(it)) == "STORAGE_QA=true" } == true
 
+// Optional, machine-local shared development key. Keep private keys out of Git
+// and do not replace the user's global Android debug key for other projects.
+val localSigningProperties = Properties().apply {
+    val propertiesFile = rootProject.file("debug-signing.properties")
+    if (propertiesFile.exists()) propertiesFile.inputStream().use { load(it) }
+}
+val developmentKeyPath = localSigningProperties.getProperty("uiLab.debugKeystore")
+
 android {
     namespace = "com.maintainiac.ui_lab_2_1"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+
+    if (!developmentKeyPath.isNullOrBlank()) {
+        val developmentKey = rootProject.file(developmentKeyPath)
+        require(developmentKey.isFile) {
+            "Configured UI Lab development signing key is missing: $developmentKey"
+        }
+        signingConfigs.getByName("debug") {
+            storeFile = developmentKey
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
 
     if (storageQa) {
         sourceSets.getByName("debug") {

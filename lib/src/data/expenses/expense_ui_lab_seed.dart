@@ -5,7 +5,7 @@ import 'expense_ui_lab_policy.dart';
 
 const expenseUiLabDemoDataEnabled = bool.fromEnvironment(
   'MAINTAINIAC_UI_LAB_DEMO_DATA',
-  defaultValue: true,
+  defaultValue: false,
 );
 
 Future<void> seedExpenseUiLabDemoDataIfEmpty(

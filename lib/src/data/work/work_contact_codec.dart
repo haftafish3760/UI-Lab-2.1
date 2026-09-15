@@ -48,6 +48,7 @@ WorkServiceLocation decodeWorkServiceLocation(Map<String, Object?> json) =>
     );
 
 Map<String, Object?> encodeWorkCompanyProfile(WorkCompanyProfile value) => {
+  'requireEstimateApproval': value.requireEstimateApproval,
   'companyName': value.companyName,
   'businessCategory': value.businessCategory,
   'phone': value.phone,
@@ -55,12 +56,19 @@ Map<String, Object?> encodeWorkCompanyProfile(WorkCompanyProfile value) => {
   'website': value.website,
   'address': value.address,
   'logoLabel': value.logoLabel,
+  'logoReference': value.logoReference,
+  'licenseNumber': value.licenseNumber,
+  'businessIdentifier': value.businessIdentifier,
+  'documentFooter': value.documentFooter,
+  'documentAccentColor': value.documentAccentColor,
   'defaultTerms': value.defaultTerms,
   'defaultCurrency': value.defaultCurrency,
 };
 
 WorkCompanyProfile decodeWorkCompanyProfile(Map<String, Object?> json) =>
     WorkCompanyProfile(
+      requireEstimateApproval:
+          json['requireEstimateApproval'] as bool? ?? false,
       companyName: json['companyName'] as String,
       businessCategory: json['businessCategory'] as String,
       phone: json['phone'] as String,
@@ -68,6 +76,11 @@ WorkCompanyProfile decodeWorkCompanyProfile(Map<String, Object?> json) =>
       website: json['website'] as String,
       address: json['address'] as String,
       logoLabel: json['logoLabel'] as String,
+      logoReference: json['logoReference'] as String? ?? '',
+      licenseNumber: json['licenseNumber'] as String? ?? '',
+      businessIdentifier: json['businessIdentifier'] as String? ?? '',
+      documentFooter: json['documentFooter'] as String? ?? '',
+      documentAccentColor: json['documentAccentColor'] as int?,
       defaultTerms: json['defaultTerms'] as String,
       defaultCurrency: json['defaultCurrency'] as String,
     );

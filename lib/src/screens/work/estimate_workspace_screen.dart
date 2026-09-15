@@ -1,4 +1,6 @@
+import 'work_drafts_screen.dart';
 import 'package:flutter/material.dart';
+import '../../shared/calendar_width_section.dart';
 
 import '../../data/operational_attention.dart';
 import '../../data/prototype_operations_store.dart';
@@ -22,6 +24,8 @@ import 'work_selected_date_bar.dart';
 import 'work_scope_header.dart';
 
 part 'estimate_workspace_widgets.dart';
+
+part 'estimate_workspace_actions.dart';
 
 class EstimateWorkspaceScreen extends StatefulWidget {
   const EstimateWorkspaceScreen({
@@ -112,113 +116,164 @@ class _EstimateWorkspaceScreenState extends State<EstimateWorkspaceScreen> {
             final query = _search.text.trim().toLowerCase();
             return ListView(
               controller: _scrollController,
-              padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
+              padding: const EdgeInsets.fromLTRB(0, 10, 0, 96),
               children: [
-                SizedBox(
-                  width: availableWidth,
-                  child: OperationsWorkspaceFrame(
-                    layout: layout,
-                    primaryContent: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        WorkScopeHeader(
-                          view: _view,
-                          selectedDay: _selectedDay,
-                          selectedEmployeeId: _employeeId,
-                          workspaceLabel: 'Estimates',
-                          showBackButton: true,
-                          showDateContext: false,
-                          showEmployeeStrip: false,
-                          onBack: () => Navigator.of(context).pop(),
-                          onViewChanged: OperationalScope.of(context).setView,
-                          onEmployeeChanged: OperationalScope.of(
-                            context,
-                          ).selectEmployee,
-                          onSettings: _openSettings,
-                        ),
-                        if (widget.permissions.canCreate &&
-                            !compactActions) ...[
-                          const SizedBox(height: 10),
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: FilledButton.icon(
-                              key: const ValueKey('new-estimate-inline'),
-                              onPressed: _createEstimate,
-                              icon: const Icon(Icons.add_rounded),
-                              label: const Text('New estimate'),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 12),
-                        KeyedSubtree(
-                          key: _dateAnchorKey,
-                          child: WorkSelectedDateBar(
-                            key: const ValueKey('estimate-selected-date'),
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: insets.left,
+                    right: insets.right,
+                  ),
+                  child: SizedBox(
+                    width: availableWidth,
+                    child: OperationsWorkspaceFrame(
+                      layout: layout,
+                      primaryContent: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          WorkScopeHeader(
+                            view: _view,
                             selectedDay: _selectedDay,
-                            onPrevious: () => _selectDay(
-                              _selectedDay.subtract(const Duration(days: 1)),
+                            selectedEmployeeId: _employeeId,
+                            workspaceLabel: 'Estimates',
+                            showBackButton: true,
+                            showDateContext: false,
+                            showEmployeeStrip: false,
+                            onBack: () => Navigator.of(context).pop(),
+                            onViewChanged: OperationalScope.of(context).setView,
+                            onEmployeeChanged: OperationalScope.of(
+                              context,
+                            ).selectEmployee,
+                            onSettings: _openSettings,
+                          ),
+                          FilledButton.icon(
+                            key: const ValueKey('open-work-drafts'),
+                            onPressed: () => Navigator.of(context).push<void>(
+                              MaterialPageRoute(
+                                builder: (_) => const WorkDraftsScreen(
+                                  kind: WorkRecordKind.estimate,
+                                ),
+                              ),
                             ),
-                            onNext: () => _selectDay(
-                              _selectedDay.add(const Duration(days: 1)),
+                            icon: const Icon(Icons.edit_note_outlined),
+                            label: const Text(
+                              'Drafts — continue or delete an estimate',
                             ),
                           ),
-                        ),
-                        if (showAttention) ...[
-                          const SizedBox(height: 10),
-                          OperationalAttentionPanel(
-                            key: const ValueKey('estimate-attention'),
-                            items: attentionItems,
-                            rowKeyFor: (item) => ValueKey(
-                              'estimate-attention-row-${item.sourceId}',
+                          if (widget.permissions.canCreate &&
+                              !compactActions) ...[
+                            const SizedBox(height: 10),
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: FilledButton.icon(
+                                key: const ValueKey('new-estimate-inline'),
+                                onPressed: _createEstimate,
+                                icon: const Icon(Icons.add_rounded),
+                                label: const Text('New estimate'),
+                              ),
                             ),
-                            onOpen: _openAttentionItem,
-                            onOpenAll: () => _openAttentionList(attentionItems),
-                            onDismiss: () => _store.attentionCenter.dismiss(
-                              attentionQuery,
-                              attentionItems,
+                          ],
+                          const SizedBox(height: 12),
+                          KeyedSubtree(
+                            key: _dateAnchorKey,
+                            child: WorkSelectedDateBar(
+                              key: const ValueKey('estimate-selected-date'),
+                              selectedDay: _selectedDay,
+                              onPrevious: () => _selectDay(
+                                _selectedDay.subtract(const Duration(days: 1)),
+                              ),
+                              onNext: () => _selectDay(
+                                _selectedDay.add(const Duration(days: 1)),
+                              ),
+                            ),
+                          ),
+                          if (showAttention) ...[
+                            const SizedBox(height: 10),
+                            OperationalAttentionPanel(
+                              key: const ValueKey('estimate-attention'),
+                              items: attentionItems,
+                              rowKeyFor: (item) => ValueKey(
+                                'estimate-attention-row-${item.sourceId}',
+                              ),
+                              onOpen: _openAttentionItem,
+                              onOpenAll: () =>
+                                  _openAttentionList(attentionItems),
+                              onDismiss: () => _store.attentionCenter.dismiss(
+                                attentionQuery,
+                                attentionItems,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 10),
+                          TextField(
+                            key: const ValueKey('estimate-search'),
+                            controller: _search,
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              labelText: 'Search estimates',
+                              hintText:
+                                  'Customer, work, description, or estimate number',
+                              prefixIcon: const Icon(Icons.search_rounded),
+                              suffixIcon: query.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: 'Clear search',
+                                      onPressed: () {
+                                        _search.clear();
+                                        setState(() {});
+                                      },
+                                      icon: const Icon(Icons.close_rounded),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _EstimateHomeSections(
+                            layout: layout,
+                            dateRecords: _recordsForSelectedDay,
+                            drafts: _drafts,
+                            searchResults: query.isEmpty
+                                ? null
+                                : _searchResults,
+                            showAllDrafts: _showAllDrafts,
+                            showStatusDetails: _preferences.showStatusDetails,
+                            showTotals:
+                                widget.permissions.canViewEstimateTotals,
+                            canCreate: widget.permissions.canCreate,
+                            onOpen: _openEstimate,
+                            onToggleDrafts: () => setState(
+                              () => _showAllDrafts = !_showAllDrafts,
                             ),
                           ),
                         ],
-                        const SizedBox(height: 10),
-                        TextField(
-                          key: const ValueKey('estimate-search'),
-                          controller: _search,
-                          onChanged: (_) => setState(() {}),
-                          decoration: InputDecoration(
-                            labelText: 'Search estimates',
-                            hintText:
-                                'Customer, work, description, or estimate number',
-                            prefixIcon: const Icon(Icons.search_rounded),
-                            suffixIcon: query.isEmpty
-                                ? null
-                                : IconButton(
-                                    tooltip: 'Clear search',
-                                    onPressed: () {
-                                      _search.clear();
-                                      setState(() {});
-                                    },
-                                    icon: const Icon(Icons.close_rounded),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _EstimateHomeSections(
-                          layout: layout,
-                          dateRecords: _recordsForSelectedDay,
-                          drafts: _drafts,
-                          searchResults: query.isEmpty ? null : _searchResults,
-                          showAllDrafts: _showAllDrafts,
-                          showStatusDetails: _preferences.showStatusDetails,
-                          showTotals: widget.permissions.canViewEstimateTotals,
-                          canCreate: widget.permissions.canCreate,
-                          onOpen: _openEstimate,
-                          onToggleDrafts: () =>
-                              setState(() => _showAllDrafts = !_showAllDrafts),
-                        ),
-                      ],
+                      ),
+                      followingContent: layout.columns == 1
+                          ? null
+                          : WorkMonthCalendar(
+                              maximumWidth: layout.laneWidth,
+                              selectedDay: _selectedDay,
+                              onDaySelected: _openCalendarDay,
+                              entryCountForDay: (day) => _scopedEstimates
+                                  .where(
+                                    (record) =>
+                                        record.resolvedEstimateStage !=
+                                            EstimateStage.draft &&
+                                        record.occursOn(day),
+                                  )
+                                  .length,
+                              needsApprovalForDay: (day) =>
+                                  _scopedEstimates.any(
+                                    (record) => record.occursOn(day),
+                                  ) &&
+                                  _attentionItemsForDay(day).isNotEmpty,
+                              recordKind: CalendarRecordKind.estimate,
+                            ),
                     ),
-                    followingContent: WorkMonthCalendar(
-                      maximumWidth: layout.laneWidth,
+                  ),
+                ),
+                if (layout.columns == 1) ...[
+                  SizedBox(height: layout.gap),
+                  CalendarWidthSection(
+                    child: WorkMonthCalendar(
+                      maximumWidth: AppLayoutEngine.calendarMaximum,
                       selectedDay: _selectedDay,
                       onDaySelected: _openCalendarDay,
                       entryCountForDay: (day) => _scopedEstimates
@@ -237,7 +292,7 @@ class _EstimateWorkspaceScreenState extends State<EstimateWorkspaceScreen> {
                       recordKind: CalendarRecordKind.estimate,
                     ),
                   ),
-                ),
+                ],
               ],
             );
           },
@@ -248,17 +303,13 @@ class _EstimateWorkspaceScreenState extends State<EstimateWorkspaceScreen> {
 
   List<WorkRecord> get _scopedEstimates => _store.workRecords.where((record) {
     if (record.kind != WorkRecordKind.estimate) return false;
-    if (_view == AppViewMode.technician) {
-      final employee = dashboardEmployeeById(
-        _employeeId ?? demoEmployees.first.id,
-      );
-      return record.createdByEmployeeId == employee.id ||
-          record.assignee == employee.name;
-    }
-    if (_employeeId == null) return true;
-    final employee = dashboardEmployeeById(_employeeId!);
-    return record.createdByEmployeeId == employee.id ||
-        record.assignee == employee.name;
+    final employeeId =
+        _employeeId ?? (_view == AppViewMode.technician ? 'alex' : null);
+    if (employeeId == null) return true;
+    final legacy = demoEmployees.where((e) => e.id == employeeId).firstOrNull;
+    return record.createdByEmployeeId == employeeId ||
+        record.assignedEmployeeIds.contains(employeeId) ||
+        (legacy != null && record.assignee == legacy.name);
   }).toList();
 
   List<WorkRecord> _recordsForDay(DateTime day) => _sorted(
@@ -379,8 +430,12 @@ class _EstimateWorkspaceScreenState extends State<EstimateWorkspaceScreen> {
       ),
     );
     if (mounted && record != null) {
-      _store.addWorkRecord(record);
+      final saved = await _store.addWorkRecord(record);
+      if (!mounted || !saved) {
+        return;
+      }
       setState(() => _selectedDay = DateUtils.dateOnly(record.createdOn!));
+      await _openEstimate(record);
     }
   }
 
@@ -398,88 +453,5 @@ class _EstimateWorkspaceScreenState extends State<EstimateWorkspaceScreen> {
     if (mounted) setState(() {});
   }
 
-  void _openAttentionItem(OperationalAttentionItem item) {
-    final matches = _scopedEstimates.where(
-      (record) => record.id == item.sourceId,
-    );
-    if (matches.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This estimate is no longer available.')),
-      );
-      return;
-    }
-    _openEstimate(matches.first);
-  }
-
-  void _openAttentionList(List<OperationalAttentionItem> items) {
-    Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => WorkAttentionListScreen(
-          selectedDay: _selectedDay,
-          items: items,
-          onOpen: _openAttentionItem,
-          workspaceLabel: 'Estimate attention',
-          screenKey: const ValueKey('estimate-attention-list'),
-          rowKeyPrefix: 'estimate-attention-list',
-          onSettings: _openSettings,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _planJob(WorkRecord estimate) async {
-    if (!widget.permissions.canConvertToJob) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'You do not have permission to create a job from an estimate.',
-          ),
-        ),
-      );
-      return;
-    }
-    if (!estimate.hasCurrentCustomerSignature ||
-        estimate.resolvedEstimateStage != EstimateStage.approved) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'The current estimate must be approved before creating a job.',
-          ),
-        ),
-      );
-      return;
-    }
-    final job = await Navigator.of(context).push<WorkRecord>(
-      MaterialPageRoute(
-        builder: (_) => WorkJobEditor(
-          sourceEstimate: estimate,
-          initialDay: estimate.estimateDates?.proposedServiceOn ?? _selectedDay,
-        ),
-      ),
-    );
-    if (!mounted || job == null) return;
-    if (_store.workSession == null) {
-      _store.addWorkRecord(job);
-      _store.updateWorkRecord(
-        estimate.withEstimateStage(EstimateStage.converted, DateTime.now()),
-      );
-    }
-    setState(() {});
-  }
-
-  Future<void> _openSettings() async {
-    final updated = await Navigator.of(context)
-        .push<WorkRecordDisplayPreferences>(
-          MaterialPageRoute(
-            builder: (_) => WorkRecordSettingsScreen(
-              workspaceId: 'estimates',
-              workspaceLabel: 'Estimates',
-              initial: _preferences,
-            ),
-          ),
-        );
-    if (mounted && updated != null) {
-      setState(() => _fixturePreferences = updated);
-    }
-  }
+  void _refresh(VoidCallback change) => setState(change);
 }

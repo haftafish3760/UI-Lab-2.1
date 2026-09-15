@@ -1,3 +1,4 @@
+import 'support/document_form_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -82,14 +83,12 @@ void main() {
       }
 
       await openInvoice();
-      await waitForNativeSave(
-        tester,
-        () => find.byKey(const ValueKey('invoice-title')).evaluate().isNotEmpty,
-      );
+      await openDocumentSection(tester, 'invoice-information');
       await tester.enterText(
         find.byKey(const ValueKey('invoice-title')),
         'Nested draft',
       );
+      await closeDocumentSection(tester);
       await openItems();
       await tester.tap(find.text('Add line item'));
       await tester.pumpAndSettle();

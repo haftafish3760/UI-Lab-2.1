@@ -238,7 +238,7 @@ class _SignaturePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 2.2
+      ..strokeWidth = 1.25
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
     for (final stroke in strokes) {

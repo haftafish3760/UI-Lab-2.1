@@ -3,24 +3,31 @@ import 'package:flutter/material.dart';
 import '../../data/prototype_operations_store.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
+import '../../data/work/work_persistence_session.dart';
+import '../../theme/operational_card_palette.dart';
+import 'work_pdf_delivery.dart';
+import '../../shared/documents/pdf/pdf_export_feedback.dart';
 import 'invoice_editor_screen.dart';
 import 'invoice_payment_entry_screen.dart';
 import 'invoice_permissions.dart';
 import 'work_detail_header.dart';
 import 'work_document_preview_screen.dart';
 import 'work_models.dart';
+part 'invoice_primary_actions.dart';
 
 class InvoiceActionsScreen extends StatelessWidget {
   const InvoiceActionsScreen({
     required this.invoice,
     required this.balanceCents,
     required this.permissions,
+    this.embedded = false,
     super.key,
   });
 
   final WorkRecord invoice;
   final int balanceCents;
   final InvoicePermissions permissions;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +37,7 @@ class InvoiceActionsScreen extends StatelessWidget {
             .where((candidate) => candidate.id == invoice.id)
             .firstOrNull ??
         invoice;
+    if (embedded) return _primaryCard(context, current);
     return Scaffold(
       key: const ValueKey('invoice-actions-screen'),
       body: SafeArea(
@@ -139,7 +147,7 @@ class InvoiceActionsScreen extends StatelessWidget {
     final saved = await store.updateWorkRecord(updated);
     if (!context.mounted) return;
     if (saved) {
-      Navigator.of(context).pop();
+      if (!embedded) Navigator.of(context).pop();
     } else {
       _showSaveFailure(context, store);
     }
@@ -156,6 +164,20 @@ class InvoiceActionsScreen extends StatelessWidget {
 
   Future<void> _issue(BuildContext context, WorkRecord current) async {
     if (!permissions.canIssue) return;
+    if (current.items.isEmpty ||
+        current.client.trim().isEmpty ||
+        current.client == 'Client not selected' ||
+        current.title.trim().isEmpty ||
+        current.title == 'Untitled invoice') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Add the customer, invoice title and items before sending.',
+          ),
+        ),
+      );
+      return;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -199,7 +221,7 @@ class InvoiceActionsScreen extends StatelessWidget {
     );
     if (!context.mounted) return;
     if (saved) {
-      Navigator.of(context).pop();
+      if (!embedded) Navigator.of(context).pop();
     } else {
       _showSaveFailure(context, store);
     }
@@ -221,7 +243,7 @@ class InvoiceActionsScreen extends StatelessWidget {
     final saved = await store.recordInvoicePayment(current, payment);
     if (!context.mounted) return;
     if (saved) {
-      Navigator.of(context).pop();
+      if (!embedded) Navigator.of(context).pop();
     } else {
       _showSaveFailure(context, store);
     }

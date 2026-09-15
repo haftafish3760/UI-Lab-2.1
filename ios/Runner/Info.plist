@@ -33,9 +33,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Maintainiac uses the camera only when you choose to photograph receipt evidence.</string>
+	<string>Use the camera when you choose to photograph receipts or job-site evidence for an estimate or job.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Maintainiac opens your photo library only when you choose existing receipt evidence.</string>
+	<string>Choose existing photos to attach as receipt or job-site evidence. Only selected photos are imported.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

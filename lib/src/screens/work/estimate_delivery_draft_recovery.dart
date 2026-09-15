@@ -60,7 +60,9 @@ extension _DeliveryRecovery on _EstimateDeliveryScreenState {
   }
 
   void _recipientChanged() {
-    if (_bindingRecipient || !_ready || _saving) return;
+    if (_bindingRecipient || !_ready || _saving || _preparedRecord != null) {
+      return;
+    }
     if (_workflow != null) {
       _workflow!.updateRecipient(_recipient.text);
     } else {
@@ -70,7 +72,7 @@ extension _DeliveryRecovery on _EstimateDeliveryScreenState {
   }
 
   void _captureDelivery() {
-    if (!_ready || _saving) return;
+    if (!_ready || _saving || _preparedRecord != null) return;
     if (_workflow != null) {
       _workflow!.setReviewed(_reviewed);
     } else {
@@ -87,8 +89,10 @@ extension _DeliveryRecovery on _EstimateDeliveryScreenState {
     _captureDelivery();
     setState(() => _saving = true);
     try {
-      WorkRecord? record;
-      if (_workflow != null) {
+      WorkRecord? record = _preparedRecord;
+      if (record != null) {
+        // A native export retry reuses the already saved preparation.
+      } else if (_workflow != null) {
         record = await _workflow!.confirm();
       } else {
         _previewInput = _previewInput!.prepare();
@@ -99,13 +103,23 @@ extension _DeliveryRecovery on _EstimateDeliveryScreenState {
           _work?.failureMessage ?? 'Delivery preparation was not saved.',
         );
       }
-      if (mounted) await finishDraftRoute(record);
+      _preparedRecord = record;
+      if (mounted) {
+        await deliverWorkPdf(context, record, switch (_method) {
+          EstimateDeliveryMethod.print => WorkPdfAction.print,
+          EstimateDeliveryMethod.savedPdf => WorkPdfAction.save,
+          _ => WorkPdfAction.share,
+        });
+        if (mounted) await finishDraftRoute(record);
+      }
     } on Object catch (error) {
       if (mounted) {
         setState(() {
           _saving = false;
           _error = error is StateError
               ? error.message.toString()
+              : _preparedRecord != null
+              ? 'The sharing app could not open. Your estimate is saved; try again.'
               : 'Delivery preparation was not saved. Your input is retained.';
         });
       }

@@ -1,3 +1,5 @@
+import '../../data/prototype_operations_store.dart';
+import '../../data/work/directory_persistence_session.dart';
 import 'package:flutter/material.dart';
 
 import '../../layout/app_layout_engine.dart';
@@ -38,7 +40,12 @@ class WorkScopeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selected = _selectedOption;
+    final options = _options(context);
+    final selected =
+        options
+            .where((o) => o.id == (selectedEmployeeId ?? 'company'))
+            .firstOrNull ??
+        options.first;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -46,7 +53,7 @@ class WorkScopeHeader extends StatelessWidget {
           view: view,
           onViewChanged: onViewChanged,
           selectedContext: selected,
-          contextOptions: _options,
+          contextOptions: options,
           onContextChanged: (option) =>
               onEmployeeChanged(option.id == 'company' ? null : option.id),
           leadingIcon: showBackButton
@@ -65,7 +72,7 @@ class WorkScopeHeader extends StatelessWidget {
         if (view == AppViewMode.admin && showEmployeeStrip) ...[
           const SizedBox(height: 14),
           EmployeeStatusStrip(
-            employees: demoEmployees,
+            employees: workEmployeeOptions(context),
             selectedId: selectedEmployeeId,
             onSelected: (employee) => onEmployeeChanged(employee.id),
           ),
@@ -102,9 +109,10 @@ class WorkScopeHeader extends StatelessWidget {
     );
   }
 
-  List<OperationalHeaderContextOption> get _options {
+  List<OperationalHeaderContextOption> _options(BuildContext context) {
+    final employees = workEmployeeOptions(context);
     final employeeOptions = [
-      for (final employee in demoEmployees)
+      for (final employee in employees)
         OperationalHeaderContextOption(
           id: employee.id,
           kind: OperationalContextKind.employee,
@@ -114,7 +122,18 @@ class WorkScopeHeader extends StatelessWidget {
           iconColor: employee.color,
         ),
     ];
-    if (view == AppViewMode.technician) return [employeeOptions.first];
+    if (view == AppViewMode.technician) {
+      return [
+        employeeOptions.where((e) => e.id == selectedEmployeeId).firstOrNull ??
+            OperationalHeaderContextOption(
+              id: selectedEmployeeId ?? 'alex',
+              kind: OperationalContextKind.employee,
+              title: 'My work',
+              detail: '',
+              icon: Icons.person_outline,
+            ),
+      ];
+    }
     return [
       const OperationalHeaderContextOption(
         id: 'company',
@@ -128,13 +147,20 @@ class WorkScopeHeader extends StatelessWidget {
     ];
   }
 
-  OperationalHeaderContextOption get _selectedOption {
-    final options = _options;
-    final id = view == AppViewMode.technician
-        ? demoEmployees.first.id
-        : selectedEmployeeId ?? 'company';
-    return options.firstWhere((option) => option.id == id);
-  }
-
   static void _noop() {}
+}
+
+List<EmployeeStatus> workEmployeeOptions(BuildContext context) {
+  final directory = PrototypeOperationsScope.maybeOf(context)?.directorySession;
+  if (directory == null) return demoEmployees;
+  return [
+    for (final e in directory.employees.where((e) => e.active))
+      EmployeeStatus(
+        e.id,
+        e.name,
+        e.status,
+        Icons.person_outline,
+        Theme.of(context).colorScheme.primary,
+      ),
+  ];
 }

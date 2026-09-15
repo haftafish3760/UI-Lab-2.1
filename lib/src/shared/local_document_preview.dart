@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'documents/pdf/pdf_document_view.dart';
 import 'dart:io';
 import 'local_document_path_scope.dart';
 
@@ -45,10 +45,7 @@ class LocalDocumentPreview extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(7),
           child: kind == LocalDocumentKind.pdf
-              ? _LocalPdfPreview(
-                  key: ValueKey(resolvedPath),
-                  path: resolvedPath,
-                )
+              ? PdfDocumentView(key: ValueKey(resolvedPath), open: () => PdfDocument.openFile(resolvedPath))
               : _LocalImagePreview(path: resolvedPath),
         ),
       ),
@@ -74,83 +71,6 @@ class _LocalImagePreview extends StatelessWidget {
         ),
       ),
     ),
-  );
-}
-
-class _LocalPdfPreview extends StatefulWidget {
-  const _LocalPdfPreview({required this.path, super.key});
-
-  final String path;
-
-  @override
-  State<_LocalPdfPreview> createState() => _LocalPdfPreviewState();
-}
-
-class _LocalPdfPreviewState extends State<_LocalPdfPreview> {
-  late final Future<PdfDocument> _document;
-  late final PdfController _controller;
-  var _page = 1;
-  int? _pageCount;
-
-  @override
-  void initState() {
-    super.initState();
-    _document = PdfDocument.openFile(widget.path);
-    _controller = PdfController(document: _document);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    unawaited(
-      _document.then<void>((document) => document.close(), onError: (_) {}),
-    );
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Stack(
-    fit: StackFit.expand,
-    children: [
-      PdfView(
-        controller: _controller,
-        backgroundDecoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        ),
-        builders: PdfViewBuilders<DefaultBuilderOptions>(
-          options: const DefaultBuilderOptions(),
-          documentLoaderBuilder: (_) =>
-              const Center(child: CircularProgressIndicator()),
-          pageLoaderBuilder: (_) =>
-              const Center(child: CircularProgressIndicator()),
-          errorBuilder: (_, _) => const _DocumentUnavailable(
-            message: 'This receipt PDF could not be opened.',
-          ),
-        ),
-        onDocumentLoaded: (document) {
-          if (mounted) setState(() => _pageCount = document.pagesCount);
-        },
-        onPageChanged: (page) {
-          if (mounted) setState(() => _page = page);
-        },
-      ),
-      if (_pageCount case final count?)
-        PositionedDirectional(
-          end: 10,
-          bottom: 10,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withAlpha(232),
-              border: Border.all(color: Theme.of(context).colorScheme.outline),
-              borderRadius: BorderRadius.circular(7),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-              child: Text('Page $_page of $count'),
-            ),
-          ),
-        ),
-    ],
   );
 }
 

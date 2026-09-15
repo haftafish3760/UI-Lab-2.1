@@ -1,3 +1,4 @@
+import 'support/document_form_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -58,19 +59,19 @@ void main() {
       }
 
       await openEditor();
-      await waitForNativeSave(
-        tester,
-        () => find.byKey(const ValueKey('invoice-title')).evaluate().isNotEmpty,
-      );
+      await openDocumentSection(tester, 'invoice-information');
       await tester.enterText(
         find.byKey(const ValueKey('invoice-title')),
         'Interrupted pump repair',
       );
+      await closeDocumentSection(tester);
       final discount = find.byWidgetPredicate(
         (widget) =>
             widget is TextField && widget.decoration?.labelText == 'Discount',
       );
+      await openDocumentSection(tester, 'invoice-discount');
       await tester.enterText(discount, '12.');
+      await closeDocumentSection(tester);
       await waitForNativeSave(
         tester,
         () => find.text('Draft saved on this device').evaluate().isNotEmpty,
@@ -115,10 +116,7 @@ void main() {
       );
       await tester.tap(find.text('Interrupted pump repair'));
       await tester.pumpAndSettle();
-      await waitForNativeSave(
-        tester,
-        () => find.byKey(const ValueKey('invoice-title')).evaluate().isNotEmpty,
-      );
+      await openDocumentSection(tester, 'invoice-information');
       expect(
         tester
             .widget<TextField>(find.byKey(const ValueKey('invoice-title')))
@@ -126,8 +124,12 @@ void main() {
             .text,
         'Interrupted pump repair',
       );
+      await openDocumentSection(tester, 'invoice-discount');
       expect(tester.widget<TextField>(discount).controller!.text, '12.');
+      await closeDocumentSection(tester);
       // Discard is a separate explicit decision; route disposal above retained it.
+      await tester.ensureVisible(find.text('Discard unfinished input'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Discard unfinished input'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Discard input'));

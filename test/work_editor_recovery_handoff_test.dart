@@ -1,3 +1,4 @@
+import 'support/document_form_navigation.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -68,6 +69,7 @@ void main() {
           await tester.tap(find.text('Resume selected work'));
           await tester.pumpAndSettle();
           expect(find.textContaining('Continue an unfinished'), findsNothing);
+          if (!job) await openDocumentSection(tester, 'invoice-information');
           final title = find.byKey(
             ValueKey(job ? 'job-title-field' : 'invoice-title'),
           );
@@ -75,6 +77,7 @@ void main() {
           if (!job) expect(session.input['discount'], '12.');
           await tester.enterText(title, 'Selected work updated');
           await finishNativeOperation(tester, session.flush);
+          if (!job) await closeDocumentSection(tester);
           await tester.ensureVisible(find.byTooltip('Back to Work'));
           await tester.pumpAndSettle();
           await tester.tap(find.byTooltip('Back to Work'));

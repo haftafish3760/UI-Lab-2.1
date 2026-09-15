@@ -1,3 +1,4 @@
+import 'support/document_form_navigation.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -64,6 +65,7 @@ void main() {
             );
             expect(workflow.session.input, before);
           } else {
+            await openDocumentSection(tester, 'estimate-information');
             final title = find.byKey(const ValueKey('estimate-title'));
             expect(title, findsOneWidget);
             expect(workflow.session.input['discount'], '0.');

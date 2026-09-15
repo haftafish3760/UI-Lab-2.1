@@ -79,19 +79,20 @@ class _WorkMonthCalendarState extends State<WorkMonthCalendar> {
     final first = _showWeek
         ? _firstVisibleDay(_focusedDay)
         : _firstVisibleDay(_focusedMonth);
-    final itemCount = _showWeek ? 7 : 42;
-    final colors = Theme.of(context).colorScheme;
+    final daysInMonth = DateTime(
+      _focusedMonth.year,
+      _focusedMonth.month + 1,
+      0,
+    ).day;
+    final leadingDays = _focusedMonth.weekday - DateTime.monday;
+    final itemCount = _showWeek
+        ? 7
+        : ((leadingDays + daysInMonth + 6) ~/ 7) * 7;
     final materialCopy = MaterialLocalizations.of(context);
-    return DecoratedBox(
+    return KeyedSubtree(
       key: const ValueKey('work-5-7-calendar'),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border.all(
-          color: CalendarPanelSurface.gridLine(context),
-          width: 1.5,
-        ),
-      ),
       child: CalendarPanelSurface(
+        includeSurround: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -125,7 +126,11 @@ class _WorkMonthCalendarState extends State<WorkMonthCalendar> {
                     childAspectRatio: dayWidth / rowHeight,
                   ),
                   itemBuilder: (context, index) {
-                    final day = first.add(Duration(days: index));
+                    final day = DateTime(
+                      first.year,
+                      first.month,
+                      first.day + index,
+                    );
                     final outsideMonth =
                         !_showWeek && day.month != _focusedMonth.month;
                     final entryCount = outsideMonth
@@ -164,7 +169,11 @@ class _WorkMonthCalendarState extends State<WorkMonthCalendar> {
   void _changeMonth(int amount) {
     setState(() {
       if (_showWeek) {
-        final next = _focusedDay.add(Duration(days: amount * 7));
+        final next = DateTime(
+          _focusedDay.year,
+          _focusedDay.month,
+          _focusedDay.day + amount * 7,
+        );
         _focusedDay = next;
         _focusedMonth = DateTime(next.year, next.month);
       } else {
@@ -218,10 +227,9 @@ class _CalendarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     final copy = context.l10n;
     return ColoredBox(
-      color: colors.surfaceContainerHigh,
+      color: Colors.transparent,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 50),
         child: Row(
@@ -231,18 +239,21 @@ class _CalendarHeader extends StatelessWidget {
               tooltip: showingWeek
                   ? copy.calendarPreviousWeek
                   : copy.calendarPreviousMonth,
-              color: colors.onSurface,
+              color: CalendarPanelSurface.headerForeground,
               icon: const Icon(Icons.chevron_left_rounded),
             ),
             Expanded(
               child: TextButton(
                 onPressed: onTitle,
-                style: TextButton.styleFrom(foregroundColor: colors.onSurface),
+                style: TextButton.styleFrom(
+                  foregroundColor: CalendarPanelSurface.headerForeground,
+                ),
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: colors.onSurface,
+                    color: CalendarPanelSurface.headerForeground,
+                    shadows: CalendarPanelSurface.textShadows,
                     fontSize: 17,
                     fontWeight: FontWeight.w900,
                   ),
@@ -251,6 +262,9 @@ class _CalendarHeader extends StatelessWidget {
             ),
             TextButton(
               key: const ValueKey('calendar-view-toggle'),
+              style: TextButton.styleFrom(
+                foregroundColor: CalendarPanelSurface.headerForeground,
+              ),
               onPressed: onToggleView,
               child: Text(
                 showingWeek ? copy.calendarMonthView : copy.calendarWeekView,
@@ -261,7 +275,7 @@ class _CalendarHeader extends StatelessWidget {
               tooltip: showingWeek
                   ? copy.calendarNextWeek
                   : copy.calendarNextMonth,
-              color: colors.onSurface,
+              color: CalendarPanelSurface.headerForeground,
               icon: const Icon(Icons.chevron_right_rounded),
             ),
           ],
@@ -276,7 +290,6 @@ class _WeekdayHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     final copy = context.l10n;
     final labels = [
       copy.calendarMondayShort,
@@ -290,9 +303,12 @@ class _WeekdayHeader extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(minHeight: 26),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerLow,
+        color: Colors.transparent,
         border: Border.symmetric(
-          horizontal: BorderSide(color: colors.outline, width: 1.2),
+          horizontal: BorderSide(
+            color: CalendarPanelSurface.gridLine(context),
+            width: 1.2,
+          ),
         ),
       ),
       child: Row(
@@ -303,7 +319,8 @@ class _WeekdayHeader extends StatelessWidget {
                 child: Text(
                   label,
                   style: TextStyle(
-                    color: colors.onSurfaceVariant,
+                    color: CalendarPanelSurface.headerForeground,
+                    shadows: CalendarPanelSurface.textShadows,
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                   ),
@@ -318,7 +335,11 @@ class _WeekdayHeader extends StatelessWidget {
 
 DateTime _firstVisibleDay(DateTime month) {
   final first = DateTime(month.year, month.month, month.day);
-  return first.subtract(Duration(days: first.weekday - DateTime.monday));
+  return DateTime(
+    first.year,
+    first.month,
+    first.day - (first.weekday - DateTime.monday),
+  );
 }
 
 bool _sameDay(DateTime left, DateTime right) =>
@@ -327,6 +348,6 @@ bool _sameDay(DateTime left, DateTime right) =>
     left.day == right.day;
 
 String _weekLabel(MaterialLocalizations copy, DateTime first) {
-  final last = first.add(const Duration(days: 6));
+  final last = DateTime(first.year, first.month, first.day + 6);
   return '${copy.formatShortMonthDay(first)} – ${copy.formatShortDate(last)}';
 }

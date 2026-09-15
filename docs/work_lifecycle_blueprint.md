@@ -73,6 +73,8 @@ Required capabilities include:
 
 - person or company name, preferred name, billing identity, and tax fields;
 - phone, email, preferred contact method, and communication consent;
+- optional customer website; address entry exposes street, city, state/region
+  and ZIP/postal code with the appropriate country format;
 - billing address and one or more service locations;
 - access instructions, site notes, pets/hazards, and authorized contacts;
 - linked estimates, jobs, invoices, payments, attachments, and history;
@@ -83,6 +85,12 @@ Forms use one column on narrow constraints. Wider constraints may pair logically
 related fields, but label order, validation, and keyboard traversal remain stable.
 Customer details must not be copied into every workflow as editable parallel truth;
 documents store the required historical snapshot plus the stable customer/site ID.
+
+Owner clarification, September 14, 2026: Quotes, Estimates, and Invoices link
+to the customer and appear in that customer's authorized history. They also
+remain visible through the relevant day's Work entries and calendar activity;
+these are views of the same record, not separately maintained copies. A customer
+link does not grant the customer access to the company's internal record.
 
 Customer storage checkpoint, September 9, 2026: saved contacts and all existing
 service locations now persist in SQLite. The client editor retains raw unfinished
@@ -128,9 +136,18 @@ That section is the shared operational attention panel: at most three compact
 rows, a real `Show all N` route, an X dismiss control, and exact Estimate opening.
 It does not use private Estimate warning chrome or merge attention records into
 the normal dated list after dismissal.
-Drafts remain in a separately colored `Unfinished drafts` section. Every
-estimate is its own bordered 60-LP-class record container; rows grow only for
-accessibility text instead of merging into one large list surface.
+Drafts have a clearly labeled route reachable from Work and the document
+workspaces. New Estimate and New Invoice open fresh forms immediately; existing
+unfinished input never interrupts that action. The Drafts route presents saved
+draft records and unfinished input in one destination, associates recovered edits
+with their existing record, and shows customer/work identity and last-edited dates.
+Returning to Work never automatically opens a draft. Resume is an explicit choice.
+An estimate draft opens its editing form; its saved record also exposes permitted
+deletion, editing, items, PDF preview and sending without an obscuring floating menu.
+Saved draft deletion retains a tombstone and history, rejects linked or issued
+records, and prevents stale editors from bringing a deleted draft back. Every
+estimate is its own bordered 60-LP-class record container; rows grow for
+accessibility text.
 
 Before any broad 5.7 capability migration, the Work operating surface is
 completed in four reviewable slices: Work home, Active Jobs, Estimates, and
@@ -184,8 +201,59 @@ and assignment review. SQLite-backed creation now commits the job and estimate
 conversion together, checks the captured source revision/current signature, and
 rejects competing conversions. The editor stays open if confirmation fails; raw
 job main-form and nested item input now autosave separately, retain on Back,
-and are consumed only with successful confirmation. Job-detail mutation forms
-and app-wide recovery entry points remain unfinished. See `data_storage_sync_contract.md`.
+and are consumed only with successful confirmation.
+
+September 14 repair checkpoint: Work now exposes Employees and a separate Drafts
+route. Job creation and assignment select active saved employee profiles by stable
+ID, including multiple employees. Add employee opens the shared profile editor
+from job assignment after flushing unfinished job input; a newly saved profile is
+selected on return. Assignment changes recheck the explicit assignment grant and
+active profile identities inside the SQLite commit transaction. The dashboard
+Plan projection and Work employee filters recognize these IDs. Regression tests
+cover new profiles, approved-estimate conversion, two-person assignment across
+reopen, reassignment, missing/inactive profiles, denied assignment, and assignment
+save failure with retained input and retry. Employee profile editor tests cover
+creation, recovery, failed save/retry and denied private routes.
+
+This is local profile and Work persistence wiring, not employee authentication,
+cross-device dispatch, skill/availability scheduling, or owner visual acceptance.
+Those dependencies remain required; see `data_storage_sync_contract.md` and
+`scheduling_system_blueprint.md`.
+
+Current repair checkpoint: Estimate and Invoice details expose inline Edit,
+Preview PDF, Send, and permitted draft deletion. Estimate details also expose
+customer approval and Create and assign job, enabled only when the recorded
+revision permits them. A confirmed form Save opens document review; leaving a
+form or returning to Work does not automatically reopen unfinished input.
+Drafts are reached through one dedicated destination filtered by document type,
+with last-edited dates and saved/recoverable versions grouped by record identity.
+The initial client section precedes document details, template and PDF preview.
+
+Scheduling now projects existing authorized Jobs, including overnight windows,
+with employee filtering and screen-specific display settings. It links to the
+existing persisted job schedule and assignment editors. It does not assert that
+employees are available or that a crew has sufficient skills/capacity.
+New owner-requested debug Work examples use distinct customers for draft, ready,
+approved, scheduled, completed and invoiced examples. Replacement is once-only,
+company-scoped, and preserves other modules. Plan is scheduled work; Entries
+shows dated recorded activity, with document numbers, status and time visible.
+
+Employee/activity repair checkpoint: Estimate, Invoice and Job details expose
+People and activity. Creator and current assigned employee IDs are separate from
+the actual mutation actor on each committed SQLite revision. The history reader
+checks company/owner boundaries, payload hashes, identity and revision sequence,
+and pages older changes without creating a second source of document history.
+Names resolve through the authorized current directory; stable IDs remain visible
+when a profile is renamed, unavailable or no longer active. This does not claim
+employee login/authentication is connected in the development shell.
+
+PDF exports now persist a Work-owned attempt before launching external sharing,
+saving or printing, followed by completed/cancelled/unconfirmed/failed outcome.
+An interrupted attempt remains explicitly unresolved. Exporting checks the stored
+source revision again around rendering. The shared exporter returns technical
+outcomes only; Work owns the business audit. A share-app handoff never claims
+customer delivery, reading or approval. Quote integration remains unfinished and
+must adopt these same boundaries when its own workflow is connected.
 
 Company review is a separate revision-bound lifecycle when the owner's policy
 requires it. The creator submits the exact estimate revision. An authorized
@@ -224,6 +292,16 @@ material cost history, or from a recorded expense/receipt. Linking evidence
 never silently turns the full receipt total into a customer charge; the human
 reviews and edits quantity, description, cost, markup, and price.
 
+September 14 owner direction: Add items for Estimates, Invoices and itemized
+Quotes must offer clearly labeled Add from materials and Add from previous
+receipt. Materials opens the Materials home screen in a selection context;
+receipt selection opens previously saved authorized receipts and their items.
+Selecting items returns to the original document draft with its existing input
+preserved. Review quantities, units, cost and customer price before confirming.
+Cancel returns without adding items. Preserve source IDs; do not duplicate an
+expense or consume stock merely by inserting a document line. Quote lifecycle
+decisions remain open independently of this required item-source workflow.
+
 Creating an estimate is a phone-complete field workflow. An authorized user can
 start the draft at the job site, capture and label condition photos, save the
 draft offline, and finish scope and pricing later without losing the customer,
@@ -232,14 +310,30 @@ permission is granted. Tablet and desktop may arrange the same information into
 bounded additional lanes, but they do not expose required capabilities that are
 missing from the phone flow.
 
-Estimate and invoice presentation uses a shared PDF document engine with exact
+Quote, Estimate, and Invoice presentation uses a shared PDF document engine with exact
 preview before delivery. Provide restrained professional templates first, then
 optional trade-filtered decorative templates such as plumbing, HVAC, lawn care,
 or masonry. Company identity, logo, customer, job location, item table, totals,
 terms, signatures, and payment details come from confirmed records; the visual
 template never owns or rewrites that data.
 
+Owner requirement, September 14, 2026: build the shared PDF generator and reader
+as application-wide infrastructure, reusable for these documents and Expenses.
+A formal document preview is complete only when it renders the actual generated
+PDF that can be saved and shared, not a screen imitation or placeholder.
+Generation, local reading, and saved-copy retrieval must work offline. Document
+templates consume the same confirmed revision, including items, totals, company
+and customer snapshots, and terms; changing graphics must not change its content.
+This is a required build dependency, not a claim that the current engine exists.
+
 ### Estimate and Invoice terms
+
+Quotes also require editable, reusable terms copied into the document revision;
+their acceptance and conversion rules remain subject to U04. Estimates must
+include applicable payment expectations as well as service conditions, for
+example company-authored wording such as "Payment is due at time of service."
+That example is not an automatic default. Show the reviewed terms in both the
+formal PDF and any customer web view of that same revision.
 
 The contractor can maintain reusable company-authored terms templates, but a
 template is never the historical agreement. Creating or revising a document
@@ -273,6 +367,28 @@ were the contractor's approved terms. Starter wording, if offered later, is an
 editable proposal and must be clearly identified for professional review.
 
 ## Sharing and acceptance
+
+Owner clarification, September 14: Send estimate begins from the working draft.
+The user must not first discover a separate Mark ready action. Leaving delivery
+preparation before confirmation preserves Draft status; confirming preparation
+finalizes the customer copy without falsely claiming the customer received it.
+Company approval remains enforced when enabled. Estimate settings expose that
+company-owned default for new estimates, restricted to company-profile managers;
+existing issued records retain their recorded requirements and history.
+
+Owner clarification, September 14, 2026: Quotes, Estimates, and Invoices need
+customer-understandable delivery through email and text-message sharing, as well
+as saving the actual PDF. Channel capabilities determine whether an attachment
+or secure document link can be used; unavailable channels must offer another
+supported method without losing the document. Customers must not need to install
+Maintainiac to read their copy. Use everyday labels and spell out Quote,
+Estimate, and Invoice in customer-facing presentation.
+
+Presentation recommendation under discussion: keep the PDF as the formal,
+downloadable and printable copy, and offer a phone-friendly browser view of the
+same revision through the planned portal below. That view must show the same
+items, totals and terms without exposing internal information. This does not
+settle portal release timing, customer verification, or Quote acceptance policy.
 
 Sharing is a delivery record, not merely opening an operating-system share sheet.
 Store document version, recipient, method, actor, time, delivery result, and any
@@ -473,6 +589,21 @@ resume, complete, or require a return visit. A return-visit Job stays visibly in
 that state until rescheduled, and a confirmed reschedule moves it back to
 Scheduled rather than showing Pause or Complete actions before the next visit.
 
+September 14 owner requirement: the three-dot menu on a job in Today's Plan
+must offer recording arrival time. It sends the same authorized job command as
+arrival from Job detail; the actual Job owns the event, not the Dashboard row.
+Record the arrival's actual date/time, employee/actor and stable Job and visit
+identities. Jobs lasting days, weeks or months retain separate arrivals for
+each visit, including multiple visits in a day; never overwrite an earlier
+arrival with the newest one. Job history and the relevant calendar day project
+those same events. Later corrections retain who changed what and when.
+Repeated taps/retries must not create duplicate arrivals for one command.
+
+The owner also requires an odometer prompt on arrival. Whether an absent
+reading blocks continuation or leaves a follow-up reminder remains unanswered.
+Arrival must remain distinct from work-start and must not silently start billed
+labor time. Current status-only handlers do not fulfill this event contract.
+
 ## Receipt attachment and parsing boundary
 
 The complete field, package, allocation, confirmation, permission, offline, and
@@ -513,6 +644,60 @@ unassigned destination. The system does not infer an even split or silently
 allocate lines. Every allocation retains the original receipt and line linkage.
 
 ## Company and saved-customer presentation
+
+September 14 form review: use the demonstrated Maintainiac form's separate,
+visibly tappable summary containers as the design reference. Each shows its
+section name and current value/status, and opens that section's editor. Inspect
+the relevant latest local reference implementation before adapting; do not copy
+the whole form, its incorrect labels, or unverified behavior wholesale.
+
+Owner clarification: reproduce substantially this form arrangement, not 5.7's
+colors or decorative skin. Support both the current app's light theme and a
+dark theme through shared theme components. Preview must render the current
+Invoice, Estimate or Quote document with its actual current content and chosen
+template, rather than a generic sample. Generation and viewing belong to the
+shared document/PDF system; its separate assignment is controlled by the owner.
+
+September 14 repair checkpoint, superseding the rejected earlier arrangement:
+New/Edit Invoice and Estimate open individually bordered, tappable summary
+containers with Client information first, then document information (including
+number and optional purchase order), template near the top, dates, and a unified
+Items entry. Client and document information open separate editors without
+nested decorated cards. Dates, discount, tax,
+template and terms open focused editors; item editing retains the existing
+labor/material/source workflows. Invoice source and expected payment method
+remain separate from issuing or receiving a payment. Subtotal and total are
+calculated summaries, not editable amounts. The 5.7 invoice source was inspected
+read-only as the structural reference; UI Lab retains its shared theme and
+persistence. This implementation checkpoint is not owner visual acceptance.
+
+The shared `DocumentFormOverview` assembles the same ordered section groups into
+one, two or three lanes using `AppLayoutEngine.workFor` and local `TextScaler`.
+`DocumentSectionEditor` keeps the owning draft's controllers and autosave session;
+Back/Done waits for the latest local save, retains failed input and offers retry.
+Saving the enclosing document remains the existing validated atomic command.
+Neither opening a section nor selecting a payment method issues an invoice,
+records a payment, shares a document or marks it paid. Payments retain their
+existing exact invoice ID and balance-aware form. Full PDF delivery, Quote
+lifecycle policy and production inventory intake remain separate dependencies;
+the owner explicitly deferred materials integration and receipt parsing here.
+
+PDF delivery feedback: invoice actions expose Save PDF copy beside Send invoice.
+Both use the same current-record authorization, PDF generation and export audit.
+Drafts still require the existing explicit finalization flow before final-copy
+delivery. Validation failures retain actionable messages; native failures do not
+expose private platform details. Cancellation and an unconfirmed system result
+are distinct from completion. A successful share handoff never claims that a
+customer received the document. Preview delivery uses the same feedback rules.
+
+Company information comes from the account owner's confirmed business profile;
+do not make the user enter it again for each document. The owner tentatively
+prefers removing the Company Information card from ordinary document creation.
+Final card visibility remains open; missing required profile details must still
+have a clear setup/review path. Client Information selects or creates the client
+with name, street, city, state/region, postal code, email, optional website and
+phone, reusing the customer/site ownership rules above. Historical document
+identity remains a snapshot, not a live rewrite when the profile changes.
 
 My Info and Saved Clients open read-only detail first. My Info shows confirmed
 company identity, contact and billing details, logo, tax/document defaults, and
@@ -688,7 +873,7 @@ such as location or odometer sharing remain separate from role grants.
 - Work home order is shared header, six labeled destinations, localized date,
   genuine Needs Attention, optional Admin employee strip, compact daily record
   summaries, then the calendar on narrow screens (alongside records on wide).
-  Destination ownership and unconnected Quotes/Scheduling states are specified
+  Destination ownership and the remaining unconnected Quotes state are specified
   in the Work home section of `operations_screen_blueprint.md`. Redundant date and employee
   helper paragraphs are omitted. `Add work` pushes a full-screen labeled action
   grid and returns the chosen action; it is not a modal list sheet.

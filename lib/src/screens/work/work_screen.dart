@@ -1,3 +1,10 @@
+import '../../shell/employee_directory_screen.dart';
+import '../../theme/operational_card_palette.dart';
+import '../../shared/operational_section_heading.dart';
+import '../../shared/recorded_entries_section.dart';
+import 'work_drafts_screen.dart';
+import 'work_schedule_screen.dart';
+import 'work_saved_document_route.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/operational_attention.dart';
@@ -40,6 +47,7 @@ import 'work_shortcuts.dart';
 part 'work_home_widgets.dart';
 part 'work_section_chrome.dart';
 part 'work_home_lanes.dart';
+part 'work_daily_sections.dart';
 part 'work_actions_screen.dart';
 part 'work_screen_actions.dart';
 part 'work_day_screen.dart';
@@ -101,7 +109,7 @@ class _WorkScreenState extends State<WorkScreen> {
         final employeeStrip =
             _view == AppViewMode.admin && _preferences.showEmployeeCards
             ? EmployeeStatusStrip(
-                employees: demoEmployees,
+                employees: workEmployeeOptions(context),
                 selectedId: _selectedEmployeeId,
                 onSelected: (employee) =>
                     OperationalScope.of(context).selectEmployee(employee.id),
@@ -143,6 +151,29 @@ class _WorkScreenState extends State<WorkScreen> {
                           showDateDescription: false,
                         ),
                         const SizedBox(height: 14),
+                        OutlinedButton.icon(
+                          key: const ValueKey('open-work-drafts'),
+                          onPressed: () => Navigator.of(context).push<void>(
+                            MaterialPageRoute(
+                              builder: (_) => const WorkDraftsScreen(),
+                            ),
+                          ),
+                          icon: const Icon(Icons.edit_note_outlined),
+                          label: const Text('Drafts'),
+                        ),
+                        if (PrototypeOperationsScope.of(
+                              context,
+                            ).directorySession?.permissions.canViewEmployees ==
+                            true)
+                          OutlinedButton.icon(
+                            onPressed: () => Navigator.of(context).push<void>(
+                              MaterialPageRoute(
+                                builder: (_) => const EmployeeDirectoryScreen(),
+                              ),
+                            ),
+                            icon: const Icon(Icons.people_outline),
+                            label: const Text('Employees'),
+                          ),
                         WorkShortcutGrid(
                           key: const ValueKey('work-primary-destinations'),
                           destinations: const [
@@ -276,17 +307,14 @@ class _WorkScreenState extends State<WorkScreen> {
         record.status == WorkRecordStatus.completed) {
       return false;
     }
-    if (_view == AppViewMode.technician) {
-      final employee = dashboardEmployeeById(
-        _selectedEmployeeId ?? demoEmployees.first.id,
-      );
-      return record.createdByEmployeeId == employee.id ||
-          record.assignee == employee.name;
-    }
-    if (_selectedEmployeeId == null) return true;
-    final employee = dashboardEmployeeById(_selectedEmployeeId!);
-    return record.createdByEmployeeId == employee.id ||
-        record.assignee == employee.name;
+    final employeeId =
+        _selectedEmployeeId ??
+        (_view == AppViewMode.technician ? 'alex' : null);
+    if (employeeId == null) return true;
+    final legacy = demoEmployees.where((e) => e.id == employeeId).firstOrNull;
+    return record.createdByEmployeeId == employeeId ||
+        record.assignedEmployeeIds.contains(employeeId) ||
+        (legacy != null && record.assignee == legacy.name);
   }
 
   OperationalAttentionQuery _attentionQuery() => OperationalAttentionQuery(

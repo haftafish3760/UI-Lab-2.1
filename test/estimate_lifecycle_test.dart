@@ -1,3 +1,4 @@
+import 'support/document_form_navigation.dart';
 import 'package:ui_lab_2_1/src/app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -88,8 +89,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await openDocumentSection(tester, 'estimate-terms');
     final helper = find.text(
-      'Include validity, deposit, and payment expectations.',
+      'These are the terms for this document. Review them before sharing.',
     );
     await tester.ensureVisible(helper);
     await tester.pumpAndSettle();

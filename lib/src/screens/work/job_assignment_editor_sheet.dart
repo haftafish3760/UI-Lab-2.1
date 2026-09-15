@@ -1,4 +1,7 @@
+import '../../data/work/directory_persistence_session.dart';
+import '../../data/prototype_operations_store.dart';
 import 'dart:async';
+import 'add_job_employee_button.dart';
 import 'package:flutter/material.dart';
 import '../../data/storage/draft_autosave_session.dart';
 import '../../data/work/job_assignment_draft_workflow.dart';
@@ -25,6 +28,7 @@ class JobAssignmentEditorSheet extends StatefulWidget {
 class _JobAssignmentEditorSheetState extends State<JobAssignmentEditorSheet>
     with DraftNavigationGuard {
   String _assignee = 'Unassigned';
+  Set<String> _employeeIds = {};
   String _vehicle = 'No vehicle assigned';
   late WorkRecord _base;
   late JobAssignmentDraftController? _workflow = widget.recoveredWorkflow;
@@ -63,6 +67,7 @@ class _JobAssignmentEditorSheetState extends State<JobAssignmentEditorSheet>
         }
         _workflow = workflow;
         _assignee = workflow.input.assignee;
+        _employeeIds = workflow.input.employeeIds.toSet();
         _vehicle = workflow.input.vehicle;
         final draft = workflow.session;
         _subscription = draft.changes.listen((_) {
@@ -70,6 +75,7 @@ class _JobAssignmentEditorSheetState extends State<JobAssignmentEditorSheet>
         });
       } else {
         _assignee = _base.assignee ?? 'Unassigned';
+        _employeeIds = _base.assignedEmployeeIds.toSet();
         _vehicle = _base.vehicle ?? 'No vehicle assigned';
       }
       if (!mounted) return;
@@ -89,7 +95,11 @@ class _JobAssignmentEditorSheetState extends State<JobAssignmentEditorSheet>
 
   void _capture() {
     if (!_ready || _saving) return;
-    _workflow?.updateAssignment(assignee: _assignee, vehicle: _vehicle);
+    _workflow?.updateAssignment(
+      assignee: _assignee,
+      vehicle: _vehicle,
+      employeeIds: _employeeIds.toList(),
+    );
   }
 
   Future<void> _save() async {
@@ -98,9 +108,13 @@ class _JobAssignmentEditorSheetState extends State<JobAssignmentEditorSheet>
     setState(() => _saving = true);
     try {
       final record = _workflow == null
-          ? _base.copyWith(assignee: _assignee, vehicle: _vehicle)
+          ? _base.copyWith(
+              assignee: _assignee,
+              vehicle: _vehicle,
+              assignedEmployeeIds: _employeeIds.toList(),
+            )
           : await _workflow!.confirm();
-      if (record == null) throw StateError('Assignment were not saved.');
+      if (record == null) throw StateError('Assignment was not saved.');
       if (mounted) await finishDraftRoute(record);
     } on Object {
       if (mounted) {
@@ -108,7 +122,7 @@ class _JobAssignmentEditorSheetState extends State<JobAssignmentEditorSheet>
           _saving = false;
           _error =
               widget.work?.failureMessage ??
-              'The assignment were not saved. Your unfinished input has been kept. Retry saving.';
+              'The assignment was not saved. Your unfinished input has been kept. Retry saving.';
         });
       }
     }
@@ -189,10 +203,7 @@ class _JobAssignmentEditorSheetState extends State<JobAssignmentEditorSheet>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Reassign job',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text('Assign job', style: Theme.of(context).textTheme.titleLarge),
               if (_draft != null)
                 EditorDraftStatus(
                   state: _draft!.state,
@@ -203,16 +214,84 @@ class _JobAssignmentEditorSheetState extends State<JobAssignmentEditorSheet>
               if (!_ready && _error == null) const Text('Opening saved input…'),
               if (_ready) ...[
                 const SizedBox(height: 16),
-                _choice('Technician', _assignee, const [
-                  'Alex Morgan',
-                  'Jordan Lee',
-                  'Unassigned',
-                ], (value) => _change(() => _assignee = value)),
+                Text(
+                  'Assign employees',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const Text('Select one or more people for this job.'),
+                if ((PrototypeOperationsScope.of(
+                          context,
+                        ).directorySession?.employees ??
+                        [])
+                    .where((e) => e.active)
+                    .isEmpty)
+                  const Text(
+                    'No active employees yet. Add an employee to assign this job.',
+                  ),
+                for (final employee
+                    in (PrototypeOperationsScope.of(
+                              context,
+                            ).directorySession?.employees ??
+                            [])
+                        .where((e) => e.active || _employeeIds.contains(e.id)))
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      employee.active
+                          ? employee.name
+                          : "${employee.name} (inactive)",
+                    ),
+                    value:
+                        _employeeIds.contains(employee.id) ||
+                        (_employeeIds.isEmpty && _assignee == employee.name),
+                    onChanged: (selected) => _change(() {
+                      if (_employeeIds.isEmpty) {
+                        _employeeIds.addAll(
+                          (PrototypeOperationsScope.of(
+                                    context,
+                                  ).directorySession?.employees ??
+                                  [])
+                              .where((e) => e.name == _assignee)
+                              .map((e) => e.id),
+                        );
+                      }
+                      if (selected == true) {
+                        _employeeIds.add(employee.id);
+                      } else {
+                        _employeeIds.remove(employee.id);
+                      }
+                      _assignee =
+                          (PrototypeOperationsScope.of(
+                                    context,
+                                  ).directorySession?.employees ??
+                                  [])
+                              .where((e) => _employeeIds.contains(e.id))
+                              .map((e) => e.name)
+                              .join(', ');
+                      if (_assignee.isEmpty) _assignee = 'Unassigned';
+                    }),
+                  ),
+                AddJobEmployeeButton(
+                  beforeOpen: () async {
+                    _capture();
+                    await _draft?.flush();
+                  },
+                  onCreated: (employee) => _change(() {
+                    _employeeIds.add(employee.id);
+                    _assignee = PrototypeOperationsScope.of(context)
+                        .directorySession!
+                        .employees
+                        .where((e) => _employeeIds.contains(e.id))
+                        .map((e) => e.name)
+                        .join(', ');
+                  }),
+                ),
                 const SizedBox(height: 12),
-                _choice('Vehicle', _vehicle, const [
-                  'Transit 12',
-                  'Service Van 4',
+                _choice('Vehicle', _vehicle, [
                   'No vehicle assigned',
+                  ...?PrototypeOperationsScope.of(
+                    context,
+                  ).directorySession?.vehicles.map((v) => v.name),
                 ], (value) => _change(() => _vehicle = value)),
               ],
               const SizedBox(height: 18),

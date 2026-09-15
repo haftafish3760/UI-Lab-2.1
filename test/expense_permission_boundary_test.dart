@@ -56,7 +56,9 @@ void main() {
     );
 
     expect(find.text('Daily total'), findsNothing);
-    expect(find.byKey(const ValueKey('daily-expense-total')), findsNothing);
+    for (final period in ['day', 'week', 'month', 'year']) {
+      expect(find.byKey(ValueKey('expense-spending-$period')), findsNothing);
+    }
     expect(find.text(r'$231.50'), findsNothing);
     expect(
       find.byKey(const ValueKey('expenses-settings-button')),
@@ -108,15 +110,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Add receipt'), findsOneWidget);
-    await tester.tap(find.text('Add receipt'));
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('expense-add-actions-screen')),
-      findsOneWidget,
-    );
-    expect(find.text('Record expense'), findsNothing);
-    expect(find.text('Add fuel'), findsNothing);
+    expect(find.text('Add expense'), findsNothing);
     expect(find.text('Add receipt'), findsOneWidget);
     await tester.tap(find.text('Add receipt'));
     await tester.pumpAndSettle();

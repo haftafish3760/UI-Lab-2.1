@@ -1,3 +1,4 @@
+import 'support/document_form_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -208,12 +209,14 @@ void main() {
     expect(find.text('Direct invoice'), findsOneWidget);
     expect(find.text('Save invoice draft'), findsOneWidget);
 
+    await openDocumentSection(tester, 'invoice-source');
     await tester.tap(find.byKey(const ValueKey('invoice-source-job')));
     await tester.pumpAndSettle();
     expect(find.textContaining('JOB-1038'), findsNothing);
     await tester.tap(find.textContaining('JOB-1026').last);
     await tester.pumpAndSettle();
 
+    await openDocumentSection(tester, 'invoice-information');
     final title = tester.widget<TextField>(
       find.byKey(const ValueKey('invoice-title')),
     );
@@ -225,6 +228,7 @@ void main() {
       summary.controller!.text,
       contains('installed the approved replacement'),
     );
+    await closeDocumentSection(tester);
     expect(find.text(r'4 items · $685.00'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -266,11 +270,13 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('new-invoice')));
       await tester.pumpAndSettle();
+      await openDocumentSection(tester, 'invoice-source');
       await tester.tap(find.byKey(const ValueKey('invoice-source-job')));
       await tester.pumpAndSettle();
       expect(find.textContaining('JOB-1038'), findsNothing);
       await tester.tap(find.textContaining('JOB-1026').last);
       await tester.pumpAndSettle();
+      await closeDocumentSection(tester);
       await tester.tap(find.byKey(const ValueKey('save-invoice-draft')));
       await tester.pumpAndSettle();
 
@@ -283,7 +289,11 @@ void main() {
       expect(saved.client, 'Maya Thompson');
       expect(saved.items, hasLength(4));
       expect(saved.total, 685);
-      expect(find.byKey(const ValueKey('invoice-drafts')), findsOneWidget);
+      expect(find.byKey(const ValueKey('invoice-drafts')), findsNothing);
+      expect(
+        find.byKey(ValueKey('invoice-detail-${saved.id}')),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     },
   );
@@ -322,7 +332,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('invoice-editor-screen')), findsOneWidget);
-    expect(find.text('Prepare an invoice'), findsOneWidget);
+    expect(find.text('Invoice information'), findsOneWidget);
     expect(find.text('Save invoice draft'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -347,6 +357,11 @@ void main() {
       view: AppViewMode.admin,
     );
 
+    await tester.enterText(
+      find.byKey(const ValueKey('invoice-search')),
+      'INV-2300',
+    );
+    await tester.pumpAndSettle();
     final draftRow = find.byKey(const ValueKey('invoice-row-draft-to-issue'));
     await tester.dragUntilVisible(
       draftRow,
@@ -357,9 +372,7 @@ void main() {
       find.ancestor(of: draftRow, matching: find.byType(InkWell)).first,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('invoice-actions-fab')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('issue-invoice')));
+    await tester.tap(find.byKey(const ValueKey('invoice-primary-finalize')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('confirm-issue-invoice')));
     await tester.pumpAndSettle();
@@ -403,9 +416,7 @@ void main() {
       find.ancestor(of: invoiceRow, matching: find.byType(InkWell)).first,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('invoice-actions-fab')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('record-invoice-payment')));
+    await tester.tap(find.byKey(const ValueKey('invoice-primary-payment')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('save-invoice-payment')));
     await tester.pumpAndSettle();
@@ -435,7 +446,7 @@ void main() {
       find.byKey(const ValueKey('invoice-detail-inv-2088')),
       findsOneWidget,
     );
-    expect(find.text('Invoice actions'), findsOneWidget);
+    expect(find.text('Manage this invoice'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -485,4 +496,14 @@ WorkRecord _invoice({
   dueOn: dueOn,
   status: status,
   total: 425,
+  items: const [
+    WorkLineItem(
+      id: 'service-valve',
+      type: WorkLineItemType.labor,
+      name: 'Replace damaged service valve',
+      quantity: 1,
+      unit: 'service',
+      customerPrice: 425,
+    ),
+  ],
 );

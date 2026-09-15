@@ -47,8 +47,14 @@ class SqliteWorkRepository {
       domain: 'work/records',
       ownerIds: visibleCreatorIds,
     );
+    final deleted = await LocalRecordStore(database).read(
+      organizationId: organizationId,
+      domain: 'work/deleted',
+      ownerIds: visibleCreatorIds,
+    );
+    final deletedIds = deleted.map((row) => row.recordId).toSet();
     return List.unmodifiable(
-      rows.map((row) {
+      rows.where((row) => !deletedIds.contains(row.recordId)).map((row) {
         final record = decodeWorkRecord(LocalRecordStore(database).decode(row));
         if (record.id != row.recordId ||
             record.createdByEmployeeId != row.ownerId) {
@@ -72,6 +78,7 @@ class SqliteWorkRepository {
     List<PrototypeFinancialEntry> financialEntries = const [],
     List<WorkRecordMutation> unchangedRecords = const [],
     LocalDraftCheckpoint? draftCheckpoint,
+    Future<void> Function()? validateBeforeCommit,
   }) async {
     if (actorEmployeeId.trim().isEmpty || permissionRevision.trim().isEmpty) {
       throw ArgumentError(
@@ -89,6 +96,19 @@ class SqliteWorkRepository {
       }
     }
     await database.transaction(() async {
+      await validateBeforeCommit?.call();
+      for (final mutation in [...mutations, ...unchangedRecords]) {
+        final deleted = await LocalRecordStore(database).read(
+          organizationId: organizationId,
+          domain: 'work/deleted',
+          ownerIds: {mutation.record.createdByEmployeeId},
+          recordIds: {mutation.record.id},
+        );
+        if (deleted.isNotEmpty) {
+          throw const LocalRecordConflict('This draft was deleted.');
+        }
+      }
+
       // Equality against a session cache is not a current SQL acknowledgment.
       // Validate unchanged submitted records before consuming their input.
       for (final expected in unchangedRecords) {
@@ -187,6 +207,13 @@ class SqliteWorkRepository {
     required Set<String> visibleCreatorIds,
   }) async {
     if (visibleCreatorIds.isEmpty) return null;
+    final deleted = await LocalRecordStore(database).read(
+      organizationId: organizationId,
+      domain: 'work/deleted',
+      ownerIds: visibleCreatorIds,
+      recordIds: {recordId},
+    );
+    if (deleted.isNotEmpty) return null;
     final row =
         await (database.select(database.localRecords)..where(
               (row) =>

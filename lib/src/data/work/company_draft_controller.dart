@@ -10,7 +10,7 @@ class CompanyDraftInput {
   const CompanyDraftInput({
     required this.baseProfile,
     required this.baseRevision,
-    required this.logoLabel,
+    required this.logoLabel, this.logoReference = '',
     required this.name,
     required this.category,
     required this.phone,
@@ -23,6 +23,7 @@ class CompanyDraftInput {
   final WorkCompanyProfile baseProfile;
   final int baseRevision;
   final String logoLabel;
+  final String logoReference;
   final String name;
   final String category;
   final String phone;
@@ -45,7 +46,7 @@ class CompanyDraftInput {
       email: email.trim(),
       website: website.trim(),
       address: address.trim(),
-      logoLabel: logoLabel,
+      logoLabel: logoLabel, logoReference: logoReference,
       defaultTerms: terms.trim(),
     );
   }
@@ -53,7 +54,7 @@ class CompanyDraftInput {
   Map<String, Object?> toPayload() => {
     'baseProfile': encodeWorkCompanyProfile(baseProfile),
     'baseRevision': baseRevision,
-    'logoLabel': logoLabel,
+    'logoLabel': logoLabel, 'logoReference': logoReference,
     'name': name,
     'category': category,
     'phone': phone,
@@ -69,7 +70,7 @@ class CompanyDraftInput {
           (input['baseProfile'] as Map).cast<String, Object?>(),
         ),
         baseRevision: input['baseRevision'] as int,
-        logoLabel: input['logoLabel'] as String,
+        logoLabel: input['logoLabel'] as String, logoReference: input['logoReference'] as String? ?? (input['baseProfile'] as Map)['logoReference'] as String? ?? '',
         name: input['name'] as String,
         category: input['category'] as String,
         phone: input['phone'] as String,

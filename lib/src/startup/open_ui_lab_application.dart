@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import '../data/work/work_review_examples.dart';
 import 'dart:io';
 import '../data/notifications/native_notification_gateway.dart';
 import 'package:flutter/material.dart';
@@ -40,8 +42,12 @@ Future<Widget> openUiLabApplication({
     persistence = await LocalPersistence.open(
       directory: storageDirectory,
       resolveRetainedPath: resolveRetainedPath,
+      removeOwnerDemoData: false,
     );
     await persistence.seedDemoIfNew();
+    if (kDebugMode && const bool.fromEnvironment('UI_LAB_REVIEW_EXAMPLES', defaultValue: true)) {
+      await loadRequestedWorkExamples(persistence.database);
+    }
     workSession = await openUiLabWorkSession(persistence.database);
     directory = await openUiLabDirectory(persistence.database);
     workday = await openUiLabWorkdaySession(persistence.database);

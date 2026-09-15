@@ -28,6 +28,9 @@ Latest decisions are detailed in `current_product_blueprint.md` and
 
 | ID | Status | Decision / owner evidence | Owning contract / verification |
 | --- | --- | --- | --- |
+| D39 | ACCEPTED/CANONICAL | September 14: independent receipt generator must be a separate native Flutter Android/iOS app; delete the web generator. Business receipts only; rebuild Expense presentation. PDF work belongs to the other model | Receipt/material intake and Expense/inventory roadmap; native generator is separate from all target catalog/parser logic; no launch in replacement pass |
+| D38 | ACCEPTED/CANONICAL | September 14: transfer 5.7 inventory and parsing to UI Lab with SQLite; ship electrical, plumbing and HVAC core packages; improve mobile workflow without treating passing tests as acceptance | Receipt/material intake §12 and inventory extraction checkpoint; 5.7 stays read-only, cloud setup deferred in this slice, complete ledger/parser/UI integration still pending |
+| D37 | ACCEPTED/CANONICAL | September 13 Dashboard-only execution: mobile Admin/Technician, distinct Company Overview, horizontal scope, bounded safe-width calendar and selected navigation clarity | Technician Dashboard September 13 contract; development permissions and incomplete cost/feed coverage remain explicit; visual acceptance pending |
 | D30 | ACCEPTED/CANONICAL | Owner: “2.1 is the new production app”; replacement destination selected, not readiness certified | Current blueprint §1; migration gates retain 5.7 protection |
 | D31 | ACCEPTED/CANONICAL | Owner selects SQLite with Drift; preserve/convert valuable Hive inventory and test throughout | Storage contract and database handoff; no implementation implied |
 | D32 | ACCEPTED/CANONICAL | Release one MUST offer local only, sync without backup, sync with backup; user controls how/when; onboarding/settings choice, UI not current scope | Storage contract; independent sync and restore evidence |

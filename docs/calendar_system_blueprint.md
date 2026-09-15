@@ -30,6 +30,17 @@ concurrent-entry tests before any shared-store/calendar integration.
 
 ## Plain-language model
 
+September 14 owner review: each module calendar must support looking back through
+that module's dated records and authorized daily totals on its day screen.
+Technician and Admin share presentation, but must query the correct own/assigned,
+selected-employee or company scope. Identical records must be justified by actual
+scope overlap, never by ignoring a view change. The reported identical day views
+require verification and repair; this note does not claim they are fixed.
+
+Owner requests removal of existing demo records and replacement with fictional
+company records created through normal durable workflows. This is pending data
+cleanup work; no reset has been performed during this blueprint discussion.
+
 - The module owns the record.
 - The calendar shows when that record happened, is planned, or is due.
 - The Dashboard combines authorized calendar entries from all modules into one
@@ -62,15 +73,32 @@ Trips own mileage and stops even when Dashboard starts or displays the workday.
 
 ## Shared presentation contract
 
-September 11 contrast correction: the shared Month/Week panel adapts the owner's
-5.7 `_CalendarPanelPainter` gradient and softly tinted ovals, inspected read-only
-in `lib/shared/calendar/app_month_calendar_widgets.dart`. Ordinary cells are
-transparent so they do not cover the panel. Selected cells retain the explicit
-selection surface; outside-month cells have a translucent overlay. Grid and outer
-borders use an explicit 1.5-LP contrasting line. Dark mode adds a dark veil to the
-same painted treatment to support light text. This is presentation only: no 5.7
-data, date logic, permissions or records are copied. Visual acceptance remains
-with the owner; painted similarity is not a contrast or workflow certification.
+September 13 readability correction: outside-month cells now use `0x55000000`
+shading, superseding the donor's `0x22000000` overlay below. Selected and Today
+priority is unchanged. The painter itself retains the reference background.
+
+September 12 subsequent owner review: the current background is not visually
+approved, even when source parity with 5.7 exists. Retain the reference below
+as provenance while a revised background is reviewed. Immediately use shared
+near-white header ink for weekdays, period title, navigation arrows and the
+Month/Week action in both themes; inherited dark light-theme ink is unreadable
+on this fixed shaded surface. Preserve text scaling and the existing layout.
+
+September 12 owner correction: copy the exact 5.7 Active background, not a
+theme-adjusted approximation. The reference is `_CalendarPanelPainter` in
+`lib/shared/calendar/app_month_calendar_widgets.dart`, composed by
+`lib/shared/calendar/app_month_calendar.dart`. UI Lab's shared
+`CalendarPanelSurface` preserves that painter and composition in both themes:
+top-left to bottom-right colors `#E0E4DC`, `#B6B9AB`, `#C9D0D3`, `#8F9A9D`,
+`#D5D0BE`, stops `0, .22, .48, .73, 1`, and the original two blurred ovals.
+The painter is beneath the Container decoration: border `#111517` at 1.4 LP,
+black `0x88` shadow, blur 7, offset (0, 3). Preserve this paint order.
+No additional dark veil, opaque panel fill, or theme tint is permitted.
+Header/weekday surfaces and ordinary cells are transparent. Exact donor cell
+overlays are selected `0xFF29D86D`, Today `0x2E20F060`, outside month
+`0x22000000`, in that priority order. Date typography, markers and other layout
+work remain separate from this background correction. No 5.7 records or business
+logic are copied. Automated painter/layer checks are not owner visual acceptance.
 
 One shared component owns:
 
@@ -83,12 +111,29 @@ One shared component owns:
 - logical-width and accessibility reflow;
 - keyboard, pointer, touch, and semantic behavior.
 
-Every day cell follows one scan order: the date is a compact outlined square in
-the upper-right, the authorized record count is a small unboxed dot-and-number
+September 12 latest owner direction: remove individual date boxes and center
+dates at the top using 5.7's 16-LP bright number treatment with dark edging and
+subtle glow. Retain its subdued outside-month dates and cell overlays. Weekday
+labels remain near-white with shadow for clarity. The shared calendar includes
+the actual 5.7 AppScreenShell charcoal background gradient behind the panel,
+within the panel bounds, with no extra surround or inset. This is an
+owner-requested exception to the general light-workspace surface rule; visual
+acceptance remains pending. The surrounding gradient colors are #2A3337,
+#354147 and #222B30, traced to app_background_painter.dart. The panel painter
+and opacity remain unchanged. Dashboard uses a shared 500-LP trial upper width,
+outside padded record lanes on narrow layouts;
+do not infer a full-width calendar across an arbitrarily wide workspace.
+
+The complete painted surface is clipped at all four outer edges. Blurred
+shading and the retained donor shadow must not protrude above, below or beside
+the calendar. Removing padding alone does not enforce this paint boundary.
+
+Every day cell follows one scan order: the date is unboxed and top-centered,
+the authorized record count is a small unboxed dot-and-number
 in the lower-left, and the center remains visually quiet. Routine counts are
 gray; only genuine attention may recolor the count. Selected date uses a tinted
 full-cell surface plus outline, while the actual current date uses a separate
-bottom underline and never writes `Today` inside the grid. The date square and
+bottom underline and never writes `Today` inside the grid. The date text and
 period/weekday headers grow with accessibility text rather than clipping it.
 Month/Week changes use one short shared size transition; selection still occurs
 only after a date tap.

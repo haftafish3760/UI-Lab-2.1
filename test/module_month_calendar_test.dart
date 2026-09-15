@@ -131,7 +131,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('date square grows without clipping accessibility text', (
+  testWidgets('unboxed date grows without clipping accessibility text', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(320, 844);
@@ -166,7 +166,8 @@ void main() {
       find.byKey(const ValueKey('module-calendar-day-number-2026-8-29')),
     );
     expect(date.width, greaterThan(24));
-    expect(date.width, closeTo(date.height, .1));
+    // Plain centered date text, not a bordered square.
+    expect(date.height, greaterThan(24));
     expect(tester.takeException(), isNull);
   });
 }

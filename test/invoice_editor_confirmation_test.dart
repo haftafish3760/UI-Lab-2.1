@@ -1,3 +1,4 @@
+import 'support/document_form_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -88,6 +89,7 @@ void main() {
       );
       await tester.tap(find.text('Edit invoice'));
       await tester.pumpAndSettle();
+      await openDocumentSection(tester, 'invoice-information');
       await waitForNativeSave(
         tester,
         () => find.byKey(const ValueKey('invoice-title')).evaluate().isNotEmpty,
@@ -96,6 +98,7 @@ void main() {
         find.byKey(const ValueKey('invoice-title')),
         'Repair completed',
       );
+      await closeDocumentSection(tester);
       await tester.tap(find.byKey(const ValueKey('save-invoice-draft')));
       await waitForNativeSave(tester, () => work.failureMessage != null);
       expect(

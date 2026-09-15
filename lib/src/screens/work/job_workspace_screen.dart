@@ -1,3 +1,6 @@
+import 'invoice_editor_screen.dart';
+import 'invoice_detail_screen.dart';
+import 'invoice_permissions.dart';
 import 'dart:async';
 import '../../data/work/work_items_draft_input.dart';
 import '../../shared/editor_input_lock.dart';
@@ -24,6 +27,8 @@ import 'work_item_source_picker.dart';
 import 'work_items_editor.dart';
 import 'work_models.dart';
 import 'work_scope_header.dart';
+import 'work_activity_screen.dart';
+import 'job_attention_summary.dart';
 
 part 'job_workspace_sections.dart';
 part 'job_workspace_action_sections.dart';
@@ -163,6 +168,42 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
                           ),
                           const SizedBox(height: 12),
                           _JobIdentity(job: _job),
+                          JobAttentionSummary(record: _sourceRecord),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              WorkActivityButton(record: _sourceRecord),
+                              if (widget.permissions.canEditJob &&
+                                  (PrototypeOperationsScope.of(context)
+                                          .workSession
+                                          ?.permissions
+                                          .canAssignJobs ??
+                                      true))
+                                OutlinedButton.icon(
+                                  onPressed: _reassignJob,
+                                  icon: const Icon(Icons.group_add_outlined),
+                                  label: const Text('Assign employees'),
+                                ),
+                              if (widget.permissions.canChangeStatus)
+                                OutlinedButton.icon(
+                                  onPressed: _rescheduleJob,
+                                  icon: const Icon(Icons.event_outlined),
+                                  label: const Text('Schedule job'),
+                                ),
+                              if (_sourceRecord.status ==
+                                      WorkRecordStatus.completed &&
+                                  invoicePermissionsForView(
+                                    scope.view,
+                                  ).canCreate)
+                                FilledButton.icon(
+                                  onPressed: _createInvoice,
+                                  icon: const Icon(Icons.receipt_long_outlined),
+                                  label: const Text('Create invoice'),
+                                ),
+                            ],
+                          ),
                           SizedBox(height: layout.gap),
                           if (layout.columns == 1)
                             _singleColumn(layout.gap)

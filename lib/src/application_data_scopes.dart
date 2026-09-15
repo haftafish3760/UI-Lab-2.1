@@ -17,6 +17,14 @@ extension _ApplicationDataScopes on _UiLabAppState {
         child: documentScope,
       ),
     );
+    final directory = widget.directorySession;
+    if (directory != null) {
+      scoped = DocumentImageScope(load: CompanyDocumentBrandingService(directory).readLogo, child: scoped);
+    }
+    final portal = widget.customerPortal;
+    if (portal != null) {
+      scoped = CustomerPortalScope(gateway: portal, child: scoped);
+    }
     final workday = widget.workdaySession;
     if (workday != null) {
       scoped = WorkdayPersistenceScope(

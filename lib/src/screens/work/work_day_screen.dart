@@ -103,7 +103,8 @@ class _WorkDayScreenState extends State<WorkDayScreen> {
           .where(
             (record) =>
                 record.createdByEmployeeId == employee.id ||
-                record.assignee == employee.name,
+                (record.assignedEmployeeIds.contains(employee.id) ||
+                    record.assignee == employee.name),
           )
           .toList();
     }
@@ -113,7 +114,8 @@ class _WorkDayScreenState extends State<WorkDayScreen> {
         .where(
           (record) =>
               record.createdByEmployeeId == employee.id ||
-              record.assignee == employee.name,
+              (record.assignedEmployeeIds.contains(employee.id) ||
+                  record.assignee == employee.name),
         )
         .toList();
   }

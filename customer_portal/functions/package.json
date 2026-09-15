@@ -1,0 +1,23 @@
+{
+  "name": "ui-lab-customer-review",
+  "private": true,
+  "type": "module",
+  "main": "index.mjs",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "test": "node --test *.test.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^14.4.0",
+    "firebase-functions": "^7.3.2",
+    "uuid": "11.1.1"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  },
+  "overrides": {
+    "uuid": "$uuid"
+  }
+}

@@ -409,7 +409,7 @@ class PrototypeAttentionCenter {
     final employeeId = query.selectedEmployeeId ?? demoEmployees.first.id;
     final employee = dashboardEmployeeById(employeeId);
     return record.createdByEmployeeId == employee.id ||
-        record.assignee == employee.name;
+        (record.assignedEmployeeIds.contains(employee.id) || record.assignee == employee.name);
   }
 
   String _fingerprint(List<OperationalAttentionItem> items) {

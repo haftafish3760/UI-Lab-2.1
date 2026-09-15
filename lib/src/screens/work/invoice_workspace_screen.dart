@@ -1,4 +1,6 @@
+import 'work_drafts_screen.dart';
 import 'package:flutter/material.dart';
+import '../../shared/calendar_width_section.dart';
 
 import '../../data/operational_attention.dart';
 import '../../data/prototype_operations_store.dart';
@@ -42,7 +44,6 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
   final _search = TextEditingController();
   var _showAllDateInvoices = false;
   var _showAllOpenInvoices = false;
-  var _showAllDrafts = false;
   var _fixturePreferences = const WorkRecordDisplayPreferences();
   WorkRecordDisplayPreferences get _preferences =>
       readWorkRecordDisplayPreferences(
@@ -110,98 +111,140 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
               textScaler: MediaQuery.textScalerOf(context),
             );
             return ListView(
-              padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
+              padding: const EdgeInsets.fromLTRB(0, 10, 0, 96),
               children: [
-                SizedBox(
-                  width: availableWidth,
-                  child: OperationsWorkspaceFrame(
-                    layout: layout,
-                    primaryContent: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        WorkScopeHeader(
-                          view: _view,
-                          selectedDay: _selectedDay,
-                          selectedEmployeeId: _employeeId,
-                          workspaceLabel: 'Invoices',
-                          showBackButton: true,
-                          showDateContext: false,
-                          showEmployeeStrip: false,
-                          onBack: () => Navigator.of(context).pop(),
-                          onViewChanged: OperationalScope.of(context).setView,
-                          onEmployeeChanged: OperationalScope.of(
-                            context,
-                          ).selectEmployee,
-                          onSettings: _openSettings,
-                        ),
-                        if (widget.permissions.canCreate &&
-                            !compactActions) ...[
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: insets.left,
+                    right: insets.right,
+                  ),
+                  child: SizedBox(
+                    width: availableWidth,
+                    child: OperationsWorkspaceFrame(
+                      layout: layout,
+                      primaryContent: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          WorkScopeHeader(
+                            view: _view,
+                            selectedDay: _selectedDay,
+                            selectedEmployeeId: _employeeId,
+                            workspaceLabel: 'Invoices',
+                            showBackButton: true,
+                            showDateContext: false,
+                            showEmployeeStrip: false,
+                            onBack: () => Navigator.of(context).pop(),
+                            onViewChanged: OperationalScope.of(context).setView,
+                            onEmployeeChanged: OperationalScope.of(
+                              context,
+                            ).selectEmployee,
+                            onSettings: _openSettings,
+                          ),
+                          if (widget.permissions.canCreate &&
+                              !compactActions) ...[
+                            const SizedBox(height: 10),
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: FilledButton.icon(
+                                key: const ValueKey('new-invoice-inline'),
+                                onPressed: _createInvoice,
+                                icon: const Icon(Icons.add_rounded),
+                                label: const Text('New invoice'),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            key: const ValueKey('open-work-drafts'),
+                            onPressed: () => Navigator.of(context).push<void>(
+                              MaterialPageRoute(
+                                builder: (_) => const WorkDraftsScreen(
+                                  kind: WorkRecordKind.invoice,
+                                ),
+                              ),
+                            ),
+                            icon: const Icon(Icons.edit_note_outlined),
+                            label: const Text(
+                              'Drafts — continue or delete an invoice',
+                            ),
+                          ),
+                          WorkSelectedDateBar(
+                            key: const ValueKey('invoice-selected-date'),
+                            selectedDay: _selectedDay,
+                            onPrevious: () => _selectDay(
+                              _selectedDay.subtract(const Duration(days: 1)),
+                            ),
+                            onNext: () => _selectDay(
+                              _selectedDay.add(const Duration(days: 1)),
+                            ),
+                          ),
+                          if (showAttention) ...[
+                            const SizedBox(height: 10),
+                            OperationalAttentionPanel(
+                              key: const ValueKey('invoice-attention'),
+                              items: attentionItems,
+                              rowKeyFor: (item) => ValueKey(
+                                'invoice-attention-row-${item.sourceId}',
+                              ),
+                              onOpen: _openAttentionItem,
+                              onOpenAll: () =>
+                                  _openAttentionList(attentionItems),
+                              onDismiss: () => _store.attentionCenter.dismiss(
+                                attentionQuery,
+                                attentionItems,
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 10),
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: FilledButton.icon(
-                              key: const ValueKey('new-invoice-inline'),
-                              onPressed: _createInvoice,
-                              icon: const Icon(Icons.add_rounded),
-                              label: const Text('New invoice'),
+                          TextField(
+                            key: const ValueKey('invoice-search'),
+                            controller: _search,
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              labelText: 'Search invoices',
+                              hintText:
+                                  'Customer, job, invoice number, or work title',
+                              prefixIcon: const Icon(Icons.search_rounded),
+                              suffixIcon: query.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: 'Clear search',
+                                      onPressed: () {
+                                        _search.clear();
+                                        setState(() {});
+                                      },
+                                      icon: const Icon(Icons.close_rounded),
+                                    ),
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          _buildSections(layout, query),
                         ],
-                        const SizedBox(height: 12),
-                        WorkSelectedDateBar(
-                          key: const ValueKey('invoice-selected-date'),
-                          selectedDay: _selectedDay,
-                          onPrevious: () => _selectDay(
-                            _selectedDay.subtract(const Duration(days: 1)),
-                          ),
-                          onNext: () => _selectDay(
-                            _selectedDay.add(const Duration(days: 1)),
-                          ),
-                        ),
-                        if (showAttention) ...[
-                          const SizedBox(height: 10),
-                          OperationalAttentionPanel(
-                            key: const ValueKey('invoice-attention'),
-                            items: attentionItems,
-                            rowKeyFor: (item) => ValueKey(
-                              'invoice-attention-row-${item.sourceId}',
+                      ),
+                      followingContent: layout.columns == 1
+                          ? null
+                          : WorkMonthCalendar(
+                              maximumWidth: layout.laneWidth,
+                              selectedDay: _selectedDay,
+                              onDaySelected: _openCalendarDay,
+                              entryCountForDay: (day) => _scopedInvoices
+                                  .where((record) => record.occursOn(day))
+                                  .length,
+                              needsApprovalForDay: (day) =>
+                                  _scopedInvoices.any(
+                                    (record) => record.occursOn(day),
+                                  ) &&
+                                  _attentionItemsForDay(day).isNotEmpty,
+                              recordKind: CalendarRecordKind.invoice,
                             ),
-                            onOpen: _openAttentionItem,
-                            onOpenAll: () => _openAttentionList(attentionItems),
-                            onDismiss: () => _store.attentionCenter.dismiss(
-                              attentionQuery,
-                              attentionItems,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 10),
-                        TextField(
-                          key: const ValueKey('invoice-search'),
-                          controller: _search,
-                          onChanged: (_) => setState(() {}),
-                          decoration: InputDecoration(
-                            labelText: 'Search invoices',
-                            hintText:
-                                'Customer, job, invoice number, or work title',
-                            prefixIcon: const Icon(Icons.search_rounded),
-                            suffixIcon: query.isEmpty
-                                ? null
-                                : IconButton(
-                                    tooltip: 'Clear search',
-                                    onPressed: () {
-                                      _search.clear();
-                                      setState(() {});
-                                    },
-                                    icon: const Icon(Icons.close_rounded),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSections(layout, query),
-                      ],
                     ),
-                    followingContent: WorkMonthCalendar(
-                      maximumWidth: layout.laneWidth,
+                  ),
+                ),
+                if (layout.columns == 1) ...[
+                  SizedBox(height: layout.gap),
+                  CalendarWidthSection(
+                    child: WorkMonthCalendar(
+                      maximumWidth: AppLayoutEngine.calendarMaximum,
                       selectedDay: _selectedDay,
                       onDaySelected: _openCalendarDay,
                       entryCountForDay: (day) => _scopedInvoices
@@ -215,7 +258,7 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
                       recordKind: CalendarRecordKind.invoice,
                     ),
                   ),
-                ),
+                ],
               ],
             );
           },
@@ -246,7 +289,6 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
     }
     final dateInvoices = _visible(_dateInvoices, _showAllDateInvoices);
     final openInvoices = _visible(_openInvoices, _showAllOpenInvoices);
-    final drafts = _visible(_draftInvoices, _showAllDrafts);
     return OperationsLaneGrid(
       layout: layout,
       children: [
@@ -288,26 +330,6 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
               showingAll: _showAllOpenInvoices,
               onPressed: () =>
                   setState(() => _showAllOpenInvoices = !_showAllOpenInvoices),
-            ),
-          ),
-        if (_draftInvoices.isNotEmpty)
-          _InvoiceListSection(
-            key: const ValueKey('invoice-drafts'),
-            title: 'Unfinished drafts',
-            icon: Icons.edit_note_rounded,
-            records: drafts,
-            totalCount: _draftInvoices.length,
-            emptyMessage: 'No invoice drafts need finishing.',
-            headerColor: _semantic.draftSurface,
-            borderColor: _semantic.draft,
-            rowAccent: _semantic.draft,
-            preferences: _preferences,
-            showFinancials: widget.permissions.canViewFinancials,
-            onOpen: _openInvoice,
-            footer: _toggleFooter(
-              records: _draftInvoices,
-              showingAll: _showAllDrafts,
-              onPressed: () => setState(() => _showAllDrafts = !_showAllDrafts),
             ),
           ),
       ],
@@ -415,7 +437,10 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
       ),
     );
     if (!mounted || invoice == null) return;
-    _store.addWorkRecord(invoice);
+    final saved = await _store.addWorkRecord(invoice);
+    if (mounted && saved) {
+      await _openInvoice(invoice);
+    }
   }
 
   Future<void> _openInvoice(WorkRecord record) async {

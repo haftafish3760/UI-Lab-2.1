@@ -6,6 +6,7 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
 
   Map<String, TextEditingController> get _inputControllers => {
     'title': _title,
+    'purchaseOrderNumber': _purchaseOrder,
     'scope': _scope,
     'discount': _discount,
     'tax': _tax,
@@ -19,6 +20,7 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
   EstimateDraftInput get _estimateInput => EstimateDraftInput(
     creatorId: _creatorId,
     number: _number,
+    purchaseOrderNumber: _purchaseOrder.text,
     baseStorageRevision: _baseStorageRevision,
     title: _title.text,
     discount: _discount.text,
@@ -67,43 +69,11 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
         _applyCurrentEstimate(work.editableEstimate(_estimateId));
       }
       _baseStorageRevision = work.storageRevisionFor(_estimateId);
-      String? recoveryId;
-      if (widget.initialRecord == null && widget.recoveredWorkflow == null) {
-        final candidates = await work.estimateDraftRecovery(_creatorId).list();
-        if (!mounted) return;
-        if (candidates.isNotEmpty) {
-          final chosen = await showDialog<String>(
-            context: context,
-            builder: (dialogContext) => SimpleDialog(
-              title: const Text('Continue an unfinished estimate?'),
-              children: [
-                for (final row in candidates)
-                  SimpleDialogOption(
-                    onPressed: () =>
-                        Navigator.of(dialogContext).pop(row.draftId),
-                    child: Text(row.label),
-                  ),
-                SimpleDialogOption(
-                  onPressed: () => Navigator.of(dialogContext).pop('new'),
-                  child: const Text('Start another estimate'),
-                ),
-              ],
-            ),
-          );
-          if (!mounted) return;
-          if (chosen == null) {
-            await leaveDraftRoute();
-            return;
-          }
-          if (chosen != 'new') recoveryId = chosen;
-        }
-      }
       final workflow =
           widget.recoveredWorkflow ??
           await work.openEstimateDraft(
             creatorId: _creatorId,
             existingRecordId: widget.initialRecord?.id,
-            recoveryDraftId: recoveryId,
           );
       if (widget.recoveredWorkflow != null) {
         work.validateEstimateHandoff(
@@ -143,6 +113,7 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
   void _applyCurrentEstimate(WorkRecord record) {
     _baseRecord = record;
     _number = record.number;
+    _purchaseOrder.text = record.purchaseOrderNumber;
     _creatorId = record.createdByEmployeeId;
     _title.text = record.title;
     _scope.text = record.detail;
@@ -168,6 +139,7 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
   void _restoreEstimateInput(EstimateDraftInput input) {
     _creatorId = input.creatorId;
     _number = input.number;
+    _purchaseOrder.text = input.purchaseOrderNumber;
     _baseStorageRevision = input.baseStorageRevision;
     _title.text = input.title;
     _discount.text = input.discount;

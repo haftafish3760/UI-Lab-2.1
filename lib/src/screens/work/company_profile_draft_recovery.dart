@@ -14,7 +14,7 @@ extension _CompanyProfileDraftRecovery on _CompanyProfileEditScreenState {
   CompanyDraftInput get _currentInput => CompanyDraftInput(
     baseProfile: _editingProfile,
     baseRevision: _baseRevision,
-    logoLabel: _logoLabel,
+    logoLabel: _logoLabel, logoReference: _logoReference,
     name: _name.text,
     category: _category.text,
     phone: _phone.text,
@@ -75,7 +75,7 @@ extension _CompanyProfileDraftRecovery on _CompanyProfileEditScreenState {
       if (input != null) {
         _draftBaseProfile = input.baseProfile;
         _baseRevision = input.baseRevision;
-        _logoLabel = input.logoLabel;
+        _logoLabel = input.logoLabel; _logoReference = input.logoReference;
         _name.text = input.name;
         _category.text = input.category;
         _phone.text = input.phone;

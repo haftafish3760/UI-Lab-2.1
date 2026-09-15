@@ -1,0 +1,30 @@
+[
+  {
+    "source": "C:\\Users\\noneya\\Documents\\5.7 rebuild",
+    "head": "729187647cff7d2ed1e259f55d992d91abfef9a1",
+    "comparedFiles": 275,
+    "totalFiles": 275,
+    "mismatches": []
+  },
+  {
+    "source": "C:\\Users\\noneya\\Documents\\Maintainiac 5.7 copy",
+    "head": "729187647cff7d2ed1e259f55d992d91abfef9a1",
+    "comparedFiles": 275,
+    "totalFiles": 275,
+    "mismatches": []
+  },
+  {
+    "source": "C:\\Users\\noneya\\Documents\\Maintainiac_5.7_Active",
+    "head": "80afbad9efea1644cb7556c863c2fd06e9f0a88f",
+    "comparedFiles": 275,
+    "totalFiles": 275,
+    "mismatches": []
+  },
+  {
+    "source": "C:\\Users\\noneya\\Documents\\Maintainiac_5.7_W_2026-08-03",
+    "head": "38775d02c047709c97ae6a0ba9ad98e28237a6ff",
+    "comparedFiles": 275,
+    "totalFiles": 275,
+    "mismatches": []
+  }
+]

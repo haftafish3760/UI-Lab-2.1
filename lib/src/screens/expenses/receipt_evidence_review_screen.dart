@@ -19,6 +19,8 @@ import 'expense_permission_denied.dart';
 import 'expense_permissions.dart';
 import 'expenses_scope_header.dart';
 import 'receipt_source_picker.dart';
+import 'receipt_photo_text_panel.dart';
+import 'receipt_photo_preview.dart';
 
 part 'receipt_evidence_review_widgets.dart';
 part 'receipt_evidence_draft_recovery.dart';

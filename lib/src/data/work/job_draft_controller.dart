@@ -12,6 +12,8 @@ class JobDraftInput {
   const JobDraftInput({
     required this.jobId,
     required this.number,
+    this.purchaseOrderNumber = '',
+    this.assignedEmployeeIds = const [],
     required this.sourceEstimate,
     required this.sourceStorageRevision,
     required this.scheduledStart,
@@ -30,6 +32,8 @@ class JobDraftInput {
 
   final String jobId;
   final String number;
+  final String purchaseOrderNumber;
+  final List<String> assignedEmployeeIds;
   final WorkRecord? sourceEstimate;
   final int sourceStorageRevision;
   final DateTime scheduledStart;
@@ -48,6 +52,8 @@ class JobDraftInput {
   Map<String, Object?> toPayload() => {
     'jobId': jobId,
     'number': number,
+    'purchaseOrderNumber': purchaseOrderNumber,
+    'assignedEmployeeIds': assignedEmployeeIds,
     'source': sourceEstimate == null ? null : encodeWorkRecord(sourceEstimate!),
     'sourceStorageRevision': sourceStorageRevision,
     'start': scheduledStart.toIso8601String(),
@@ -68,6 +74,9 @@ class JobDraftInput {
       JobDraftInput(
         jobId: input['jobId'] as String,
         number: input['number'] as String,
+        purchaseOrderNumber: input['purchaseOrderNumber'] as String? ?? '',
+        assignedEmployeeIds:
+            (input['assignedEmployeeIds'] as List?)?.cast<String>() ?? const [],
         sourceEstimate: input['source'] == null
             ? null
             : decodeWorkRecord(

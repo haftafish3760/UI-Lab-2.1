@@ -14,7 +14,7 @@ class _InvoiceSourceSection extends StatelessWidget {
   final ValueChanged<String?> onChanged;
 
   @override
-  Widget build(BuildContext context) => SectionCard(
+  Widget build(BuildContext context) => UtilityFormSection(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -54,7 +54,9 @@ class _InvoiceSourceSection extends StatelessWidget {
 class _InvoiceIdentitySection extends StatelessWidget {
   const _InvoiceIdentitySection({
     required this.number,
+    this.customerOnly = false,
     required this.title,
+    required this.purchaseOrder,
     required this.summary,
     required this.customers,
     required this.selectedClient,
@@ -68,7 +70,9 @@ class _InvoiceIdentitySection extends StatelessWidget {
   });
 
   final String number;
+  final bool customerOnly;
   final TextEditingController title;
+  final TextEditingController purchaseOrder;
   final TextEditingController summary;
   final List<WorkCustomerProfile> customers;
   final String? selectedClient;
@@ -81,119 +85,137 @@ class _InvoiceIdentitySection extends StatelessWidget {
   final ValueChanged<WorkPricingModel> onPricingChanged;
 
   @override
-  Widget build(BuildContext context) => SectionCard(
+  Widget build(BuildContext context) => UtilityFormSection(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Customer and work',
+          customerOnly ? 'Client information' : 'Invoice information',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 4),
         Text('$number · Saved as a draft until it is issued to the customer.'),
         const SizedBox(height: 10),
-        DropdownButtonFormField<String>(
-          key: ValueKey('invoice-client-${selectedClient ?? 'none'}'),
-          initialValue: selectedClient,
-          isExpanded: true,
-          decoration: const InputDecoration(labelText: 'Customer'),
-          items: [
-            // Preserve a recovered name even if its customer directory entry
-            // is currently unavailable; recovery must not invalidate raw input.
-            if (selectedClient != null &&
-                !customers.any((customer) => customer.name == selectedClient))
-              DropdownMenuItem(
-                value: selectedClient!,
-                child: Text(selectedClient!),
-              ),
-            for (final customer in customers)
-              DropdownMenuItem(
-                value: customer.name,
-                child: Text(customer.name),
-              ),
-          ],
-          onChanged: onClientChanged,
-        ),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton.icon(
-            key: const ValueKey('invoice-add-client'),
-            onPressed: onAddClient,
-            icon: const Icon(Icons.person_add_alt_1_outlined),
-            label: const Text('Add new customer'),
-          ),
-        ),
-        if (locations.isNotEmpty) ...[
-          const SizedBox(height: 4),
+        if (customerOnly) ...[
           DropdownButtonFormField<String>(
-            key: ValueKey('invoice-location-${selectedLocation ?? 'none'}'),
-            initialValue:
-                locations.any(
-                  (location) => location.address == selectedLocation,
-                )
-                ? selectedLocation
-                : null,
+            key: ValueKey('invoice-client-${selectedClient ?? 'none'}'),
+            initialValue: selectedClient,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Service location'),
+            decoration: const InputDecoration(labelText: 'Customer'),
             items: [
-              for (final location in locations)
+              // Preserve a recovered name even if its customer directory entry
+              // is currently unavailable; recovery must not invalidate raw input.
+              if (selectedClient != null &&
+                  !customers.any((customer) => customer.name == selectedClient))
                 DropdownMenuItem(
-                  value: location.address,
-                  child: Text(location.label),
+                  value: selectedClient!,
+                  child: Text(selectedClient!),
+                ),
+              for (final customer in customers)
+                DropdownMenuItem(
+                  value: customer.name,
+                  child: Text(customer.name),
                 ),
             ],
-            onChanged: onLocationChanged,
+            onChanged: onClientChanged,
           ),
-          if (selectedLocation?.isNotEmpty == true) ...[
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const ValueKey('invoice-add-client'),
+              onPressed: onAddClient,
+              icon: const Icon(Icons.person_add_alt_1_outlined),
+              label: const Text('Add new customer'),
+            ),
+          ),
+          if (locations.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(
-              selectedLocation!,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            DropdownButtonFormField<String>(
+              key: ValueKey('invoice-location-${selectedLocation ?? 'none'}'),
+              initialValue:
+                  locations.any(
+                    (location) => location.address == selectedLocation,
+                  )
+                  ? selectedLocation
+                  : null,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Service location'),
+              items: [
+                for (final location in locations)
+                  DropdownMenuItem(
+                    value: location.address,
+                    child: Text(location.label),
+                  ),
+              ],
+              onChanged: onLocationChanged,
+            ),
+            if (selectedLocation?.isNotEmpty == true) ...[
+              const SizedBox(height: 4),
+              Text(
+                selectedLocation!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
+            ],
           ],
+          const SizedBox(height: 10),
         ],
-        const SizedBox(height: 10),
-        TextField(
-          key: const ValueKey('invoice-title'),
-          controller: title,
-          decoration: const InputDecoration(
-            labelText: 'Invoice title',
-            hintText: 'Example: Replace kitchen faucet',
+        if (!customerOnly) ...[
+          TextFormField(
+            initialValue: number,
+            readOnly: true,
+            decoration: const InputDecoration(labelText: 'Document number'),
           ),
-        ),
-        const SizedBox(height: 10),
-        TextField(
-          key: const ValueKey('invoice-summary'),
-          controller: summary,
-          minLines: 3,
-          maxLines: 6,
-          decoration: const InputDecoration(
-            labelText: 'Work completed',
-            helperText: 'State what the customer is being billed for.',
+          const SizedBox(height: 10),
+          TextField(
+            controller: purchaseOrder,
+            decoration: const InputDecoration(
+              labelText: 'Purchase order number (optional)',
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        DropdownButtonFormField<WorkPricingModel>(
-          key: const ValueKey('invoice-pricing'),
-          initialValue: pricing,
-          isExpanded: true,
-          decoration: const InputDecoration(labelText: 'Pricing method'),
-          items: const [
-            DropdownMenuItem(
-              value: WorkPricingModel.flatRate,
-              child: Text('Flat rate'),
+          const SizedBox(height: 10),
+
+          TextField(
+            key: const ValueKey('invoice-title'),
+            controller: title,
+            decoration: const InputDecoration(
+              labelText: 'Invoice title',
+              hintText: 'Example: Replace kitchen faucet',
             ),
-            DropdownMenuItem(
-              value: WorkPricingModel.timeAndMaterials,
-              child: Text('Time and materials'),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            key: const ValueKey('invoice-summary'),
+            controller: summary,
+            minLines: 3,
+            maxLines: 6,
+            decoration: const InputDecoration(
+              labelText: 'Work completed',
+              helperText: 'State what the customer is being billed for.',
             ),
-          ],
-          onChanged: (value) {
-            if (value != null) onPricingChanged(value);
-          },
-        ),
+          ),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<WorkPricingModel>(
+            key: const ValueKey('invoice-pricing'),
+            initialValue: pricing,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Pricing method'),
+            items: const [
+              DropdownMenuItem(
+                value: WorkPricingModel.flatRate,
+                child: Text('Flat rate'),
+              ),
+              DropdownMenuItem(
+                value: WorkPricingModel.timeAndMaterials,
+                child: Text('Time and materials'),
+              ),
+            ],
+            onChanged: (value) {
+              if (value != null) onPricingChanged(value);
+            },
+          ),
+        ],
       ],
     ),
   );
@@ -243,7 +265,7 @@ class _InvoiceDatesSection extends StatelessWidget {
   final VoidCallback onDueOn;
 
   @override
-  Widget build(BuildContext context) => SectionCard(
+  Widget build(BuildContext context) => UtilityFormSection(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -263,174 +285,16 @@ class _InvoiceDatesSection extends StatelessWidget {
   );
 }
 
-class _InvoiceCustomerCopySection extends StatelessWidget {
-  const _InvoiceCustomerCopySection({
-    required this.subtotal,
-    required this.total,
-    required this.discount,
-    required this.tax,
-    required this.terms,
-    required this.template,
-    required this.paymentMethod,
-    required this.onTemplateChanged,
-    required this.onPaymentMethodChanged,
-    required this.onMoneyChanged,
-  });
-
-  final double subtotal;
-  final double total;
-  final TextEditingController discount;
-  final TextEditingController tax;
-  final TextEditingController terms;
-  final String template;
-  final String paymentMethod;
-  final ValueChanged<String> onTemplateChanged;
-  final ValueChanged<String> onPaymentMethodChanged;
-  final VoidCallback onMoneyChanged;
-
-  @override
-  Widget build(BuildContext context) => SectionCard(
-    child: LayoutBuilder(
-      builder: (context, constraints) {
-        final stack = AppLayoutEngine.stackFormFieldsFor(
-          constraints.maxWidth,
-          textScaler: MediaQuery.textScalerOf(context),
-        );
-        final fields = [
-          TextField(
-            controller: discount,
-            onChanged: (_) => onMoneyChanged(),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Discount',
-              prefixText: r'$ ',
-            ),
-          ),
-          TextField(
-            controller: tax,
-            onChanged: (_) => onMoneyChanged(),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Tax',
-              prefixText: r'$ ',
-            ),
-          ),
-        ];
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Price and customer copy',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 10),
-            _InvoiceValueRow(label: 'Subtotal', value: _invoiceMoney(subtotal)),
-            if (stack) ...[
-              fields.first,
-              const SizedBox(height: 10),
-              fields.last,
-            ] else
-              Row(
-                children: [
-                  Expanded(child: fields.first),
-                  const SizedBox(width: 10),
-                  Expanded(child: fields.last),
-                ],
-              ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              initialValue: template,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Customer template'),
-              items: const [
-                DropdownMenuItem(
-                  value: 'Plain professional',
-                  child: Text('Plain professional'),
-                ),
-                DropdownMenuItem(
-                  value: 'Service standard',
-                  child: Text('Service standard'),
-                ),
-                DropdownMenuItem(
-                  value: 'Detailed commercial',
-                  child: Text('Detailed commercial'),
-                ),
-              ],
-              selectedItemBuilder: (context) => const [
-                Text('Plain'),
-                Text('Standard'),
-                Text('Detailed'),
-              ],
-              onChanged: (value) {
-                if (value != null) onTemplateChanged(value);
-              },
-            ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              initialValue: paymentMethod,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: 'Expected payment method',
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: 'Not selected',
-                  child: Text('Not selected'),
-                ),
-                DropdownMenuItem(value: 'Card', child: Text('Card')),
-                DropdownMenuItem(value: 'Check', child: Text('Check')),
-                DropdownMenuItem(value: 'Cash', child: Text('Cash')),
-                DropdownMenuItem(
-                  value: 'Bank transfer',
-                  child: Text('Bank transfer'),
-                ),
-              ],
-              selectedItemBuilder: (context) => const [
-                Text('Not selected'),
-                Text('Card'),
-                Text('Check'),
-                Text('Cash'),
-                Text('Bank transfer'),
-              ],
-              onChanged: (value) {
-                if (value != null) onPaymentMethodChanged(value);
-              },
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: terms,
-              minLines: 3,
-              maxLines: 6,
-              decoration: const InputDecoration(
-                labelText: 'Payment terms',
-                helperText: 'State when payment is due and any accepted terms.',
-              ),
-            ),
-            const Divider(height: 24),
-            _InvoiceValueRow(
-              label: 'Invoice total',
-              value: _invoiceMoney(total),
-              strong: true,
-            ),
-          ],
-        );
-      },
-    ),
-  );
-}
-
 class _InvoiceValueRow extends StatelessWidget {
   const _InvoiceValueRow({
     required this.label,
     required this.value,
     this.onTap,
-    this.strong = false,
   });
 
   final String label;
   final String value;
   final VoidCallback? onTap;
-  final bool strong;
 
   @override
   Widget build(BuildContext context) {
@@ -440,12 +304,7 @@ class _InvoiceValueRow extends StatelessWidget {
         contentPadding: EdgeInsets.zero,
         minTileHeight: 52,
         title: Text(label),
-        subtitle: Text(
-          value,
-          style: TextStyle(
-            fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
+        subtitle: Text(value, style: TextStyle(fontWeight: FontWeight.w500)),
         trailing: onTap == null
             ? null
             : const Icon(Icons.edit_calendar_outlined),
@@ -459,12 +318,7 @@ class _InvoiceValueRow extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
-            ),
-          ),
+          Text(value, style: TextStyle(fontWeight: FontWeight.w500)),
           if (onTap != null) ...[
             const SizedBox(width: 8),
             const Icon(Icons.edit_calendar_outlined),

@@ -13,7 +13,7 @@ import '../../layout/app_layout_engine.dart';
 import '../../shared/app_view_mode.dart';
 import '../../shared/localized_date.dart';
 import '../../shared/operational_scope.dart';
-import '../../shared/section_card.dart';
+import '../../shared/utility_form_section.dart';
 import '../dashboard/dashboard_models.dart';
 import 'expense_line_item_editor.dart';
 import 'expense_line_items_editor.dart';
@@ -261,7 +261,7 @@ class _ExpenseEditorScreenState extends State<ExpenseEditorScreen>
                                   operationalDateLabel(context, _expenseDate),
                                 ),
                                 const SizedBox(height: 14),
-                                SectionCard(
+                                UtilityFormSection(
                                   child: Form(
                                     key: _formKey,
                                     child: Column(

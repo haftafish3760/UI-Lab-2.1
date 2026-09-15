@@ -1,0 +1,33 @@
+import 'dart:convert';
+import 'dart:io';
+import 'source/inventory_parser.dart';
+import 'source/work_supply_trade_pack_tiers.dart';
+
+void main() {
+  final items = [for (final trade in ['Electrical', 'Plumbing', 'HVAC'])
+    ...buildWorkSupplyTradePackItems(trade, WorkSupplyTradePackTier.core)];
+  final parser = InventoryParser(catalogItems: items);
+  final cases = <({String text, String? trade, String? expected})>[
+    (text: '14/2 NM-B Cable', trade: 'Electrical', expected: 'MI-13214'),
+    (text: '12/2 NM-B Cable', trade: 'Electrical', expected: 'MI-13216'),
+    (text: '1/2 in Copper 90 Elbow', trade: 'Plumbing', expected: 'MI-003'),
+    (text: '3/4 in Copper 90 Elbow', trade: 'Plumbing', expected: 'MI-004'),
+    (text: '', trade: null, expected: null),
+    (text: 'THANK YOU FOR SHOPPING', trade: null, expected: null),
+    (text: 'SUBTOTAL 125.99', trade: null, expected: null),
+    (text: 'BANANAS 2 LB', trade: null, expected: null),
+  ];
+  final results = <Map<String, Object?>>[];
+  for (final scenario in cases) {
+    final result = parser.matchReceiptLine(scenario.text, tradeScope: scenario.trade);
+    results.add({'input': scenario.text, 'tradeScope': scenario.trade,
+      'expectedId': scenario.expected, 'actualId': result?.item.id,
+      'actualName': result?.item.name, 'confidence': result?.confidence,
+      'needsReview': result?.needsReview,
+      'passed': result?.item.id == scenario.expected && (result == null || result.needsReview)});
+  }
+  File('docs/inventory_migration/parser_characterization.json').writeAsStringSync(
+    const JsonEncoder.withIndent('  ').convert({'scope': 'eight synthetic smoke cases, not receipt acceptance',
+      'catalogItems': items.length, 'cases': results}), flush: true);
+  stdout.writeln('Parser characterization: ${results.where((r) => r['passed'] == true).length}/${results.length}.');
+}

@@ -72,6 +72,7 @@ WorkRecord buildConfirmedEstimate(
   if (existing != null) {
     return existing.reviseEstimate(
       title: title,
+      purchaseOrderNumber: input.purchaseOrderNumber.trim(),
       client: client,
       scope: scope,
       pricing: input.pricing,
@@ -89,6 +90,7 @@ WorkRecord buildConfirmedEstimate(
     id: input.estimateId,
     kind: WorkRecordKind.estimate,
     number: input.number,
+    purchaseOrderNumber: input.purchaseOrderNumber.trim(),
     title: title,
     client: client,
     detail: scope,

@@ -13,6 +13,7 @@ class EstimateDraftInput {
   const EstimateDraftInput({
     required this.creatorId,
     required this.number,
+    this.purchaseOrderNumber = '',
     required this.baseStorageRevision,
     required this.title,
     required this.discount,
@@ -36,6 +37,7 @@ class EstimateDraftInput {
 
   final String creatorId;
   final String number;
+  final String purchaseOrderNumber;
   final int baseStorageRevision;
   final String title;
   final String discount;
@@ -59,6 +61,7 @@ class EstimateDraftInput {
   Map<String, Object?> toPayload() => {
     'creatorId': creatorId,
     'number': number,
+    'purchaseOrderNumber': purchaseOrderNumber,
     'baseStorageRevision': baseStorageRevision,
     'title': title,
     'discount': discount,
@@ -86,6 +89,7 @@ class EstimateDraftInput {
       EstimateDraftInput(
         creatorId: input['creatorId'] as String,
         number: input['number'] as String,
+        purchaseOrderNumber: input['purchaseOrderNumber'] as String? ?? '',
         baseStorageRevision: input['baseStorageRevision'] as int,
         title: input['title'] as String,
         discount: input['discount'] as String,

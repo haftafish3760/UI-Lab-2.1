@@ -129,8 +129,8 @@ class WorkShortcutLayout {
 /// physical-pixel branches here.
 abstract final class AppLayoutEngine {
   static const railWidth = 220.0;
-  static const railMinimumWindowWidth = 1338.0;
-  static const dashboardRailMinimumWindowWidth = 1000.0;
+  static const railMinimumWindowWidth = 1000.0;
+  static const dashboardRailMinimumWindowWidth = railMinimumWindowWidth;
   static const gap = 18.0;
   static const maximumGap = 48.0;
 
@@ -156,7 +156,8 @@ abstract final class AppLayoutEngine {
   static const laneMaximum = 600.0;
   static const maximumFormWorkspaceWidth = 760.0;
 
-  static const _controlExtent = 42.0;
+  // IconButton reserves a 48-LP tap target even with a 42-LP visual face.
+  static const _controlExtent = 48.0;
   static const _headerGap = 8.0;
   static const _vehicleMinimum = 176.0;
   static const _vehicleMaximum = 240.0;
@@ -165,12 +166,7 @@ abstract final class AppLayoutEngine {
     Size window, {
     bool dashboard = false,
     bool work = false,
-  }) =>
-      window.width >=
-              (dashboard || work
-                  ? dashboardRailMinimumWindowWidth
-                  : railMinimumWindowWidth) &&
-          (work || window.height >= 600)
+  }) => window.width >= railMinimumWindowWidth
       ? AppNavigationMode.rail
       : AppNavigationMode.bottom;
 
@@ -362,6 +358,15 @@ abstract final class AppLayoutEngine {
     final scalePenalty = _layoutScalePenalty(textScaler);
     return 70 + scalePenalty * 20;
   }
+
+  /// Trial upper bound; narrow calendar sections use the full safe viewport.
+  static bool stackDashboardHeaderFor(
+    double width, {
+    required TextScaler textScaler,
+  }) => width < 280 || textScaler.scale(13) > 18;
+
+  static const calendarMaximum = 500.0;
+  static const compactHeaderMaximum = 550.0;
 
   static double calendarDateNumberExtentFor(TextScaler textScaler) =>
       math.max(24, textScaler.scale(11) + 8);

@@ -46,7 +46,11 @@ class AppDestination {
     return NavigationDestination(
       key: ValueKey('app-destination-${module.name}'),
       icon: Icon(icon, color: tone),
-      selectedIcon: Icon(selectedIcon, color: tone),
+      selectedIcon: Icon(
+        selectedIcon,
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+        size: 28,
+      ),
       label: compactLabel(context),
     );
   }
@@ -205,32 +209,29 @@ class DesktopAppNavigation extends StatelessWidget {
       width: AppLayoutEngine.railWidth,
       color: AppColors.header,
       padding: const EdgeInsets.fromLTRB(14, 24, 14, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ListTile(
-            leading: const CircleAvatar(
-              backgroundColor: AppColors.green,
-              foregroundColor: AppColors.onHeader,
-              child: Icon(Icons.handyman),
-            ),
-            title: const Text(
-              'MAINTAINIAC',
-              style: TextStyle(
-                color: AppColors.onHeader,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            subtitle: Text(
-              context.l10n.fieldRecords,
-              style: const TextStyle(color: AppColors.onHeaderMuted),
-            ),
-          ),
-          const SizedBox(height: 22),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const Icon(Icons.handyman, color: AppColors.green, size: 30),
+                const SizedBox(height: 8),
+                const Text(
+                  'MAINTAINIAC',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.onHeader,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  context.l10n.fieldRecords,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.onHeaderMuted),
+                ),
+                const SizedBox(height: 22),
                 for (var index = 0; index < appDestinations.length; index++)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
@@ -266,18 +267,19 @@ class DesktopAppNavigation extends StatelessWidget {
                       ),
                     ),
                   ),
+                const SizedBox(height: 16),
+                Text(
+                  context.l10n.offlineRecordsAvailable,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.onHeaderMuted,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           ),
-          Text(
-            context.l10n.offlineRecordsAvailable,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.onHeaderMuted,
-              fontSize: 12,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

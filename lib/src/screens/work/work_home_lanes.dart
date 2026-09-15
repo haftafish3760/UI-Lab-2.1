@@ -39,63 +39,67 @@ class _WorkLanes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scopedRecords = records
-        .where((record) => record.occursOn(selectedDay))
-        .toList();
-    final jobs = scopedRecords
-        .where(
-          (record) =>
-              record.kind == WorkRecordKind.job &&
-              !attentionRecordIds.contains(record.id),
-        )
-        .toList();
-    final estimateRecords = scopedRecords
-        .where(
-          (record) =>
-              record.kind == WorkRecordKind.estimate &&
-              !attentionRecordIds.contains(record.id),
-        )
-        .toList();
-    final estimateDrafts = estimateRecords
-        .where((record) => record.resolvedEstimateStage == EstimateStage.draft)
-        .toList();
-    final estimates = estimateRecords
-        .where((record) => record.resolvedEstimateStage != EstimateStage.draft)
-        .toList();
-    final invoices = scopedRecords
-        .where(
-          (record) =>
-              record.kind == WorkRecordKind.invoice &&
-              !attentionRecordIds.contains(record.id),
-        )
-        .toList();
     if (!showDailySummaries) return const SizedBox.shrink();
+    final jobs =
+        records
+            .where(
+              (record) =>
+                  record.kind == WorkRecordKind.job &&
+                  record.status != WorkRecordStatus.draft &&
+                  record.status != WorkRecordStatus.completed &&
+                  record.scheduledStart != null &&
+                  record.occursOn(selectedDay),
+            )
+            .toList()
+          ..sort((a, b) => a.scheduledStart!.compareTo(b.scheduledStart!));
+    final entries = records.where((record) {
+      if (record.status == WorkRecordStatus.draft) return false;
+      final date = record.kind == WorkRecordKind.job
+          ? record.completedOn
+          : record.kind == WorkRecordKind.invoice
+          ? record.issuedOn
+          : record.createdOn;
+      return date != null && DateUtils.isSameDay(date, selectedDay);
+    }).toList();
+    DateTime entryTime(WorkRecord record) => (record.kind == WorkRecordKind.job
+        ? record.completedOn
+        : record.kind == WorkRecordKind.invoice
+        ? record.issuedOn
+        : record.createdOn)!;
+    entries.sort((a, b) => entryTime(a).compareTo(entryTime(b)));
+    void open(WorkRecord record) {
+      switch (record.kind) {
+        case WorkRecordKind.job:
+          onOpenJob(record);
+        case WorkRecordKind.estimate:
+          onOpenEstimate(record);
+        case WorkRecordKind.invoice:
+          onOpenInvoice(record);
+      }
+    }
+
     return OperationsLaneGrid(
       key: ValueKey('work-${layout.columns}-column-queues'),
       layout: layout,
       children: [
-        _JobQueuePanel(
-          view: view,
+        _WorkDailySection(
+          title: 'Plan',
+          plan: true,
           records: jobs,
-          onOpen: onOpenJob,
-          onAssign: onAssignJob,
-          onOpenAll: onOpenJobs,
-          onCreate: onCreateJob,
+          onOpen: open,
+          onAssign:
+              (PrototypeOperationsScope.of(
+                    context,
+                  ).workSession?.permissions.canAssignJobs ??
+                  (view == AppViewMode.admin))
+              ? onAssignJob
+              : null,
         ),
-        _DocumentQueuePanel(
-          kind: WorkRecordKind.estimate,
-          records: estimates,
-          drafts: estimateDrafts,
-          onOpenRecord: onOpenEstimate,
-          onOpenAll: onOpenEstimates,
-          onCreate: onCreateEstimate,
-        ),
-        _DocumentQueuePanel(
-          kind: WorkRecordKind.invoice,
-          records: invoices,
-          onOpenRecord: onOpenInvoice,
-          onOpenAll: onOpenInvoices,
-          onCreate: onCreateInvoice,
+        _WorkDailySection(
+          title: 'Entries',
+          plan: false,
+          records: entries,
+          onOpen: open,
         ),
       ],
     );

@@ -7,17 +7,13 @@ extension _InvoiceWorkspaceQueries on _InvoiceWorkspaceScreenState {
         record.status == WorkRecordStatus.paid) {
       return false;
     }
-    if (_view == AppViewMode.technician) {
-      final employee = dashboardEmployeeById(
-        _employeeId ?? demoEmployees.first.id,
-      );
-      return record.createdByEmployeeId == employee.id ||
-          record.assignee == employee.name;
-    }
-    if (_employeeId == null) return true;
-    final employee = dashboardEmployeeById(_employeeId!);
-    return record.createdByEmployeeId == employee.id ||
-        record.assignee == employee.name;
+    final employeeId =
+        _employeeId ?? (_view == AppViewMode.technician ? 'alex' : null);
+    if (employeeId == null) return true;
+    final legacy = demoEmployees.where((e) => e.id == employeeId).firstOrNull;
+    return record.createdByEmployeeId == employeeId ||
+        record.assignedEmployeeIds.contains(employeeId) ||
+        (legacy != null && record.assignee == legacy.name);
   }).toList();
 
   List<WorkRecord> get _dateInvoices {
@@ -53,10 +49,6 @@ extension _InvoiceWorkspaceQueries on _InvoiceWorkspaceScreenState {
       ),
     );
   }
-
-  List<WorkRecord> get _draftInvoices => _sort(
-    _scopedInvoices.where((record) => record.status == WorkRecordStatus.draft),
-  );
 
   List<WorkRecord> get _searchResults {
     final query = _search.text.trim().toLowerCase();

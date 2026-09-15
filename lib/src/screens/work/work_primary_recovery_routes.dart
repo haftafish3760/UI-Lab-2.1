@@ -4,6 +4,8 @@ import '../../data/work/work_primary_draft_recovery.dart';
 import 'estimate_editor_screen.dart';
 import 'invoice_editor_screen.dart';
 import 'work_job_editor.dart';
+import 'work_models.dart';
+import 'work_saved_document_route.dart';
 
 /// Presents an already-authorized workflow without rebuilding its saved input.
 /// Taking ownership includes closing it when navigation fails or finishes.
@@ -57,9 +59,12 @@ Future<void> openPrimaryWorkRecovery(
           recoveredWorkflow: controller,
         );
     }
-    await Navigator.of(
+    final saved = await Navigator.of(
       context,
-    ).push<void>(MaterialPageRoute(builder: (_) => editor));
+    ).push<WorkRecord>(MaterialPageRoute(builder: (_) => editor));
+    if (saved != null && context.mounted) {
+      await openSavedWorkDocument(context, saved);
+    }
   } finally {
     await session.close();
   }

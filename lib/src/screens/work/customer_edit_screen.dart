@@ -13,7 +13,7 @@ import '../../data/storage/local_record_identity.dart';
 import '../../data/work/directory_persistence_session.dart';
 import '../../shared/draft_navigation_guard.dart';
 import '../../shared/editor_draft_status.dart';
-import '../../shared/section_card.dart';
+import '../../shared/utility_form_section.dart';
 import 'work_contact_models.dart';
 import 'work_detail_header.dart';
 
@@ -85,7 +85,7 @@ class _CustomerEditScreenState extends State<CustomerEditScreen>
     text: widget.initialCustomer?.notes ?? '',
   );
   late final _locationLabel = TextEditingController(
-    text: _firstLocation?.label ?? 'Primary service location',
+    text: _firstLocation?.label ?? '',
   );
   late final _locationAddress = TextEditingController(
     text: _firstLocation?.address ?? '',
@@ -137,12 +137,16 @@ class _CustomerEditScreenState extends State<CustomerEditScreen>
                 children: [
                   Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 760),
+                      constraints: BoxConstraints(
+                        maxWidth: AppLayoutEngine.formWorkspaceWidthFor(
+                          constraints.maxWidth - insets.horizontal,
+                        ),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           WorkDetailHeader(
-                            label: editing ? 'Edit Client' : 'Add Client',
+                            label: editing ? 'Edit Customer' : 'Add Customer',
                             selectedDay: widget.selectedDay,
                             onBack: () => leaveDraftRoute(),
                           ),
@@ -156,22 +160,7 @@ class _CustomerEditScreenState extends State<CustomerEditScreen>
                           if (!_draftReady && _saveError == null)
                             const Text('Opening saved input…'),
                           if (_draftReady) ...[
-                            const SizedBox(height: 18),
-                            Text(
-                              editing
-                                  ? 'Edit client information'
-                                  : 'Add a new saved client',
-                              style: Theme.of(context).textTheme.headlineSmall,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              editing
-                                  ? _draft == null
-                                        ? 'The existing confirmed information is prefilled. Cancel or Back discards changes.'
-                                        : 'Back keeps unfinished input on this device. Use Discard unfinished input to remove it.'
-                                  : 'Save contact, billing, and service-location information once, then reuse it in Work records.',
-                            ),
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 12),
                             _IdentityForm(
                               name: _name,
                               company: _company,
@@ -196,14 +185,15 @@ class _CustomerEditScreenState extends State<CustomerEditScreen>
                               ),
                             ),
                             const SizedBox(height: 14),
-                            SectionCard(
+                            UtilityFormSection(
                               child: TextField(
                                 controller: _notes,
+                                minLines: 1,
                                 maxLines: 4,
                                 decoration: const InputDecoration(
-                                  labelText: 'Client notes',
+                                  labelText: 'Customer notes (optional)',
                                   helperText:
-                                      'Keep sensitive notes to the minimum needed for service.',
+                                      'About the customer, not the service address.',
                                 ),
                               ),
                             ),
@@ -271,12 +261,12 @@ class _IdentityForm extends StatelessWidget {
   final ValueChanged<String> onPreferredContactChanged;
 
   @override
-  Widget build(BuildContext context) => SectionCard(
+  Widget build(BuildContext context) => UtilityFormSection(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Client identity and contact',
+          'Customer information',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 12),
@@ -343,7 +333,7 @@ class _AddressForm extends StatelessWidget {
   final int additionalLocationCount;
 
   @override
-  Widget build(BuildContext context) => SectionCard(
+  Widget build(BuildContext context) => UtilityFormSection(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -354,26 +344,33 @@ class _AddressForm extends StatelessWidget {
         const SizedBox(height: 12),
         TextField(
           controller: billing,
+          minLines: 1,
           maxLines: 3,
           decoration: const InputDecoration(labelText: 'Billing address'),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: locationLabel,
-          decoration: const InputDecoration(labelText: 'Location name'),
+          decoration: const InputDecoration(
+            labelText: 'Address label (optional)',
+            hintText: 'Home, office, or another name',
+          ),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: locationAddress,
+          minLines: 1,
           maxLines: 3,
           decoration: const InputDecoration(labelText: 'Service address'),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: accessNotes,
+          minLines: 1,
           maxLines: 3,
           decoration: const InputDecoration(
-            labelText: 'Access instructions or site notes',
+            labelText: 'Getting into the property (optional)',
+            hintText: 'Gate code, parking, or entry instructions',
           ),
         ),
         if (additionalLocationCount > 0) ...[

@@ -52,7 +52,6 @@ class ActiveVehicleHeader extends StatelessWidget {
     kind: OperationalContextKind.employee,
     title: 'Company Overview',
     titleKind: OperationalContextTitleKind.companyOverview,
-    detail: '3 active · 1 available',
     icon: Icons.business_outlined,
   );
 
@@ -85,9 +84,9 @@ class ActiveVehicleHeader extends StatelessWidget {
                 Text(
                   _odometerLabel(scope, scope.selectedVehicleId),
                   key: const ValueKey('dashboard-header-odometer'),
-                  style: const TextStyle(
-                    color: Color(0xFF6AD39B),
-                    fontSize: 19,
+                  style: TextStyle(
+                    color: const Color(0xFF6AD39B),
+                    fontSize: dashboardWide ? 13 : 19,
                     height: 1.15,
                     fontWeight: FontWeight.w600,
                   ),

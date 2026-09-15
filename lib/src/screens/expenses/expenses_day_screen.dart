@@ -55,7 +55,7 @@ class _ExpensesDayScreenState extends State<ExpensesDayScreen> {
               children: [
                 Center(
                   child: SizedBox(
-                    width: layout.workspaceWidth,
+                    width: layout.columnWidth,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -117,13 +117,10 @@ class _ExpensesDayScreenState extends State<ExpensesDayScreen> {
   bool _visibleForScope(ExpenseRecord item, OperationalScopeController scope) {
     final date = item.resolvedDate;
     if (date == null || !sameDashboardDay(date, widget.day)) return false;
-    if (scope.view == AppViewMode.technician) {
-      return item.owner ==
-          dashboardEmployeeById(scope.selectedEmployeeId ?? 'alex').name;
-    }
-    if (scope.selectedEmployeeId == null) return true;
-    final employee = dashboardEmployeeById(scope.selectedEmployeeId!);
-    return item.owner == employee.name;
+    final employeeId = scope.view == AppViewMode.technician
+        ? scope.selectedEmployeeId ?? widget.permissions.actorEmployeeId
+        : scope.selectedEmployeeId;
+    return employeeId == null || item.paidByEmployeeId == employeeId;
   }
 
   Future<void> _recordExpense(BuildContext context) async {

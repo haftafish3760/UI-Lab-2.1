@@ -67,25 +67,21 @@ class _DashboardBody extends StatelessWidget {
           hasEntries: data.entries.isNotEmpty,
         );
         final type = AppLayoutEngine.typographyFor(layout.workspaceWidth);
-        final employeeStrip = view == AppViewMode.admin
-            ? EmployeeStatusStrip(
-                compact: layout.columns > 1,
-                employees: demoEmployees,
-                selectedId: employee?.id,
-                onSelected: onEmployeeSelected,
-              )
-            : null;
         return CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
               child: Center(
                 child: SizedBox(
-                  width: math.min(
-                    bodyConstraints.maxWidth,
-                    layout.workspaceWidth + pageInsets.horizontal,
-                  ),
+                  width:
+                      bodyConstraints.maxWidth <=
+                          AppLayoutEngine.compactHeaderMaximum
+                      ? bodyConstraints.maxWidth
+                      : math.min(
+                          bodyConstraints.maxWidth,
+                          layout.workspaceWidth + pageInsets.horizontal,
+                        ),
                   child: ActiveVehicleHeader(
-                    dashboardWide: layout.columns > 1,
+                    dashboardWide: true,
                     ownerPresentation: true,
                     view: view,
                     onViewChanged: onViewChanged,
@@ -100,7 +96,10 @@ class _DashboardBody extends StatelessWidget {
               ),
             ),
             SliverPadding(
-              padding: pageInsets.copyWith(top: 12, bottom: 92),
+              padding: pageInsets.copyWith(
+                top: 12,
+                bottom: layout.columns == 1 ? 16 : 92,
+              ),
               sliver: SliverToBoxAdapter(
                 child: SizedBox(
                   width: availableWidth.toDouble(),
@@ -123,69 +122,86 @@ class _DashboardBody extends StatelessWidget {
                               ),
                             ),
                           ),
-                        if (layout.columns == 1 &&
-                            view == AppViewMode.technician &&
-                            workday == null) ...[
+                        if (layout.columns == 1) ...[
                           const SizedBox(height: 12),
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: FilledButton.icon(
-                              key: const ValueKey('start-workday-button'),
-                              onPressed: onStartWorkday,
-                              icon: const Icon(Icons.play_arrow_rounded),
-                              label: Text(context.l10n.dashboardStartWorkday),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.startWorkday,
-                                foregroundColor: AppColors.ink,
-                                minimumSize: const Size(0, 48),
-                              ),
-                            ),
-                          ),
-                        ],
-                        if (employeeStrip != null) ...[
-                          const SizedBox(height: 12),
-                          employeeStrip,
-                        ],
-                        const SizedBox(height: 12),
-                        DashboardSummaryStrip(
-                          wide: layout.columns > 1,
-                          date: selectedDate,
-                          data: data,
-                          attentionCount: attentionItems.length,
-                          onAttention: onOpenAllAttention,
-                          onPayments: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  PaymentsScreen(initialDay: selectedDate),
-                            ),
-                          ),
-                          onExpenses: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  ExpensesDayScreen(day: selectedDate),
-                            ),
-                          ),
-                          onWork: () => onDateSelected(selectedDate),
-                          onMiles: () => showDialog<void>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text(context.l10n.dashboardMilesLabel),
-                              content: Text(
-                                context.l10n.dashboardMileageUnavailable,
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text(
-                                    MaterialLocalizations.of(
-                                      context,
-                                    ).closeButtonLabel,
+                          Row(
+                            children: [
+                              if (view == AppViewMode.technician &&
+                                  workday == null)
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    key: const ValueKey('start-workday-button'),
+                                    onPressed: onStartWorkday,
+                                    icon: const Icon(Icons.play_arrow_rounded),
+                                    label: Text(
+                                      context.l10n.dashboardStartWorkday,
+                                    ),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: AppColors.startWorkday,
+                                      foregroundColor: AppColors.ink,
+                                      minimumSize: const Size(0, 48),
+                                    ),
                                   ),
                                 ),
-                              ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DashboardViewSelector(
+                                  view: view,
+                                  onChanged: onViewChanged,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        if (view == AppViewMode.admin) ...[
+                          const SizedBox(height: 12),
+                          DashboardScopeSelector(
+                            selectedId: employee?.id,
+                            onEmployee: onEmployeeSelected,
+                            onCompany: onCompanyOverview,
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        if (view != AppViewMode.admin)
+                          DashboardSummaryStrip(
+                            wide: layout.columns > 1,
+                            date: selectedDate,
+                            data: data,
+                            attentionCount: attentionItems.length,
+                            onAttention: onOpenAllAttention,
+                            onPayments: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) =>
+                                    PaymentsScreen(initialDay: selectedDate),
+                              ),
+                            ),
+                            onExpenses: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) =>
+                                    ExpensesDayScreen(day: selectedDate),
+                              ),
+                            ),
+                            onWork: () => onDateSelected(selectedDate),
+                            onMiles: () => showDialog<void>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text(context.l10n.dashboardMilesLabel),
+                                content: Text(
+                                  context.l10n.dashboardMileageUnavailable,
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text(
+                                      MaterialLocalizations.of(
+                                        context,
+                                      ).closeButtonLabel,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
                         const SizedBox(height: 16),
                         if (workday != null) ...[
                           ActiveWorkdayOverview(
@@ -213,12 +229,50 @@ class _DashboardBody extends StatelessWidget {
                             needsApprovalForDay: needsApprovalForDay,
                           ),
                         ),
+                        if (view == AppViewMode.admin)
+                          const SizedBox(height: 20),
+                        if (view == AppViewMode.admin && employee != null) ...[
+                          AdminEmployeeOverview(
+                            employee: employee!,
+                            date: selectedDate,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        if (view == AppViewMode.admin && employee == null)
+                          AdminDashboardOverview(
+                            date: selectedDate,
+                            permissions:
+                                const DashboardPermissions.development(),
+                            onOpenPlan: onOpenPlan,
+                            onAttention: onOpenAllAttention,
+                            attentionCount: attentionItems.length,
+                          ),
                       ],
                     ),
                   ),
                 ),
               ),
             ),
+            if (layout.columns == 1)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 92),
+                  child: CalendarWidthSection(
+                    child: DashboardCalendar(
+                      key: ValueKey(
+                        view == AppViewMode.admin && employee == null
+                            ? 'admin-company-calendar'
+                            : 'dashboard-technician-calendar',
+                      ),
+                      maximumWidth: AppLayoutEngine.calendarMaximum,
+                      selectedDay: selectedDate,
+                      onDaySelected: onDateSelected,
+                      entryCountForDay: entryCountForDay,
+                      needsApprovalForDay: needsApprovalForDay,
+                    ),
+                  ),
+                ),
+              ),
           ],
         );
       },
@@ -321,7 +375,7 @@ class _DashboardLanes extends StatelessWidget {
         ),
       );
     }
-    final lanes = [plan, if (data.entries.isNotEmpty) entries, calendarLane];
+    final lanes = [plan, if (data.entries.isNotEmpty) entries];
     return KeyedSubtree(
       key: ValueKey('dashboard-${layout.columns}-lane-row'),
       child: OperationsLaneGrid(layout: layout, children: lanes),

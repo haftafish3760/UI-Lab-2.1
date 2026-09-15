@@ -96,15 +96,9 @@ void main() {
           const Size(62, 62),
         );
       }
-      expect(find.byKey(const ValueKey('work-jobs-section')), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('work-estimates-section')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('work-invoices-section')),
-        findsOneWidget,
-      );
+      expect(find.text('Plan'), findsOneWidget);
+      expect(find.text('Entries'), findsOneWidget);
+      expect(find.text('Drafts'), findsOneWidget);
       expect(tester.takeException(), isNull);
     }
   });
@@ -114,9 +108,9 @@ void main() {
   ) async {
     await _pumpWork(tester, const Size(390, 844));
     const workspaceKeys = {
-      'open-my-jobs': 'job',
-      'open-estimates': 'estimate',
-      'open-invoices': 'invoice',
+      'quick-jobs': 'job',
+      'quick-estimates': 'estimate',
+      'quick-invoices': 'invoice',
     };
     for (final actionKey in workspaceKeys.keys) {
       await _tapVisible(tester, find.byKey(ValueKey(actionKey)));
@@ -136,7 +130,7 @@ void main() {
     await _pumpWork(tester, const Size(390, 844));
     expect(find.bySemanticsLabel(RegExp(r'5 work records\.')), findsOneWidget);
 
-    await _tapVisible(tester, find.byKey(const ValueKey('open-estimates')));
+    await _tapVisible(tester, find.byKey(const ValueKey('quick-estimates')));
     expect(find.bySemanticsLabel(RegExp(r'2 estimates\.')), findsWidgets);
     expect(tester.takeException(), isNull);
   });
@@ -231,7 +225,7 @@ void main() {
     tester,
   ) async {
     await _pumpWork(tester, const Size(390, 844));
-    await _tapVisible(tester, find.byKey(const ValueKey('open-estimates')));
+    await _tapVisible(tester, find.byKey(const ValueKey('quick-estimates')));
     expect(find.text('Approved'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('work-settings-button')));
@@ -267,7 +261,7 @@ void main() {
     tester,
   ) async {
     await _pumpWork(tester, const Size(390, 844));
-    expect(find.text('My Jobs'), findsOneWidget);
+    expect(find.text('Plan'), findsOneWidget);
     expect(find.text('Work Calendar'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('work-settings-button')));
@@ -277,7 +271,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('save-work-settings')));
     await tester.pumpAndSettle();
 
-    expect(find.text('My Jobs'), findsNothing);
+    expect(find.text('Plan'), findsNothing);
     expect(find.text('Jobs'), findsWidgets);
     expect(find.text('Work Calendar'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -287,7 +281,7 @@ void main() {
     tester,
   ) async {
     await _pumpWork(tester, const Size(390, 844), view: AppViewMode.admin);
-    await _tapVisible(tester, find.byKey(const ValueKey('open-estimates')));
+    await _tapVisible(tester, find.byKey(const ValueKey('quick-estimates')));
 
     expect(
       find.byKey(const ValueKey('work-estimate-workspace')),
@@ -301,9 +295,7 @@ void main() {
     await tester.tap(estimate);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('estimate-actions-fab')));
-    await tester.pumpAndSettle();
-    final plan = find.byKey(const ValueKey('preview-create-job'));
+    final plan = find.byKey(const ValueKey('estimate-primary-job'));
     await tester.tap(plan);
     await tester.pumpAndSettle();
     expect(find.text('Create Job'), findsWidgets);
@@ -316,7 +308,7 @@ void main() {
     tester,
   ) async {
     await _pumpWork(tester, const Size(390, 844), view: AppViewMode.admin);
-    await _tapVisible(tester, find.byKey(const ValueKey('open-estimates')));
+    await _tapVisible(tester, find.byKey(const ValueKey('quick-estimates')));
     final estimate = find.byKey(const ValueKey('estimate-row-est-1042'));
     await tester.tap(estimate);
     await tester.pumpAndSettle();
@@ -331,13 +323,11 @@ void main() {
     );
     expect(find.textContaining('Single-handle kitchen faucet'), findsOneWidget);
     expect(find.textContaining('Braided faucet supply line'), findsOneWidget);
-    expect(find.byKey(const ValueKey('estimate-actions-fab')), findsOneWidget);
+    expect(find.byKey(const ValueKey('estimate-actions-fab')), findsNothing);
     expect(find.text('Customer approval is current'), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('estimate-actions-fab')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('preview-create-job')), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('estimate-delivery-action')));
+    expect(find.byKey(const ValueKey('estimate-primary-job')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('estimate-primary-send')));
     await tester.pumpAndSettle();
     expect(find.text('Email PDF to customer'), findsOneWidget);
     expect(find.text('Share from this device'), findsOneWidget);
@@ -354,13 +344,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('work-action-createEstimate')));
     await tester.pumpAndSettle();
-    final items = find.byKey(const ValueKey('estimate-materials-section'));
+    final items = find.byKey(const ValueKey('estimate-items'));
     await tester.ensureVisible(items);
     await tester.pumpAndSettle();
     await tester.tap(items);
     await tester.pumpAndSettle();
 
-    expect(find.text('Materials and charges'), findsWidgets);
+    expect(find.text('Estimate items'), findsWidgets);
     expect(find.byKey(const ValueKey('add-estimate-material')), findsOneWidget);
     expect(find.byKey(const ValueKey('link-receipt-expense')), findsOneWidget);
 
@@ -369,8 +359,8 @@ void main() {
     expect(find.text('Item type'), findsOneWidget);
     expect(find.text('Item name'), findsOneWidget);
     expect(find.text('Quantity'), findsOneWidget);
-    expect(find.text('Unit'), findsOneWidget);
-    expect(find.text('Customer price per unit'), findsOneWidget);
+    expect(find.text('Unit of measure'), findsOneWidget);
+    expect(find.text('Price per item'), findsOneWidget);
     expect(find.text('Internal cost per unit (optional)'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -383,7 +373,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('work-action-createEstimate')));
     await tester.pumpAndSettle();
-    final items = find.byKey(const ValueKey('estimate-materials-section'));
+    final items = find.byKey(const ValueKey('estimate-items'));
     await tester.ensureVisible(items);
     await tester.pumpAndSettle();
     await tester.tap(items);
@@ -448,7 +438,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('work-action-createEstimate')));
     await tester.pumpAndSettle();
     expect(
-      tester.getSize(find.byType(ListView).first).width,
+      tester.getSize(find.byKey(const ValueKey('estimate-information'))).width,
       lessThanOrEqualTo(620),
     );
     expect(tester.takeException(), isNull);

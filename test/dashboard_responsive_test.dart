@@ -33,6 +33,53 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadMaterialTestFont);
   testWidgets(
+    'Admin company and employee views are reachable at narrow and wide widths',
+    (tester) async {
+      for (final size in [
+        const Size(320, 844),
+        const Size(844, 390),
+        const Size(1440, 900),
+      ]) {
+        await pumpAt(tester, size);
+        await tester.tap(find.byKey(const ValueKey('dashboard-view-selector')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Admin').last);
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('admin-company-overview')),
+          findsOneWidget,
+        );
+        final collections = find.text('Collected money');
+        await tester.ensureVisible(collections);
+        await tester.pumpAndSettle();
+        await tester.tap(collections);
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('report-sources-screen')),
+          findsOneWidget,
+        );
+        await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+        await tester.pumpAndSettle();
+        final employee = find.byKey(const ValueKey('employee-alex'));
+        await tester.ensureVisible(employee);
+        await tester.pumpAndSettle();
+        await tester.tap(employee);
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('admin-employee-overview')),
+          findsOneWidget,
+        );
+        expect(find.text('Employee contribution · Incomplete'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('admin-company-overview')),
+          findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+    },
+  );
+  testWidgets(
     'transient zero-size startup does not build invalid constraints',
     (tester) async {
       await pumpAt(tester, Size.zero);
@@ -50,7 +97,10 @@ void main() {
     await pumpAt(tester, const Size(412, 915));
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.text('ACTIVE VEHICLE'), findsOneWidget);
-    expect(find.byKey(const ValueKey('dashboard-view-selector')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('dashboard-view-selector')),
+      findsOneWidget,
+    );
     expect(find.text("Today's Plan"), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -113,7 +163,11 @@ void main() {
   ) async {
     await pumpAt(tester, const Size(412, 915));
     final action = find.byKey(const ValueKey('calendar-view-toggle'));
-    await tester.ensureVisible(action);
+    await tester.scrollUntilVisible(
+      action,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('inline-month-grid')), findsOneWidget);
@@ -169,6 +223,11 @@ void main() {
     expect(
       tester.getBottomLeft(plan).dy,
       lessThan(tester.getTopLeft(entries).dy),
+    );
+    await tester.scrollUntilVisible(
+      calendar,
+      300,
+      scrollable: find.byType(Scrollable).first,
     );
     expect(
       tester.getBottomLeft(entries).dy,
@@ -272,6 +331,7 @@ void main() {
       1440,
       1920,
     ]) {
+      await tester.pumpWidget(const SizedBox.shrink());
       await pumpAt(tester, Size(width, 900));
 
       final expectsRail =
@@ -286,6 +346,11 @@ void main() {
         tester.getSize(find.byType(ActiveVehicleHeader)).height,
         lessThanOrEqualTo(125),
         reason: 'Header exceeded its two-row limit at $width logical pixels.',
+      );
+      await tester.scrollUntilVisible(
+        find.byType(DashboardCalendar),
+        300,
+        scrollable: find.byType(Scrollable).first,
       );
       expect(
         tester.getSize(find.byType(DashboardCalendar)).width,
@@ -309,7 +374,7 @@ void main() {
         await pumpAt(tester, Size(width, 844));
 
         final selector = find.byKey(const ValueKey('dashboard-view-selector'));
-        expect(selector, findsNothing);
+        expect(selector, findsOneWidget);
         final startRect = tester.getRect(
           find.byKey(const ValueKey('start-workday-button')),
         );
@@ -331,7 +396,7 @@ void main() {
       );
       expect(
         find.byKey(const ValueKey('dashboard-view-selector')),
-        findsNothing,
+        findsOneWidget,
       );
       expect(find.text('ACTIVE VEHICLE'), findsOneWidget);
       final error = tester.takeException();

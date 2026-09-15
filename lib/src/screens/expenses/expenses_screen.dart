@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'expense_spending_summary.dart';
+import 'expense_period_screen.dart';
 
 import '../../data/operational_attention.dart';
 import '../../data/prototype_operations_store.dart';
@@ -19,7 +21,6 @@ import '../../shared/module_month_calendar.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../dashboard/dashboard_models.dart';
-import '../dashboard/employee_status_strip.dart';
 import 'expense_attention_screen.dart';
 import 'expense_category_screen.dart';
 import 'expense_detail_screen.dart';
@@ -37,8 +38,9 @@ import 'scheduled_expense_editor_screen.dart';
 import 'scheduled_expenses_screen.dart';
 
 part 'expenses_widgets.dart';
+part 'expenses_home_layout.dart';
 part 'expenses_collection_widgets.dart';
-part 'expenses_add_actions_screen.dart';
+
 part 'expenses_day_screen.dart';
 part 'expenses_day_widgets.dart';
 
@@ -77,189 +79,21 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       _injectedExpenses ?? PrototypeOperationsScope.of(context).expenses;
 
   @override
-  Widget build(BuildContext context) {
-    final permissions = _permissions;
-    if (!permissions.canView) {
-      return const Scaffold(
-        key: ValueKey('expenses-module-screen'),
-        body: SafeArea(
-          child: Center(
-            child: Text('You do not have permission to view expenses.'),
-          ),
-        ),
-      );
-    }
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
-        final availableWidth = constraints.maxWidth - insets.horizontal;
-        final layout = AppLayoutEngine.operationsFor(
-          availableWidth,
-          textScaler: MediaQuery.textScalerOf(context),
-        );
-        final showInlineActions = layout.showsInlineModuleActions;
-        final recurringController = RecurringExpenseUiScope.maybeOf(context);
-        final showRecurringStatus =
-            recurringController != null &&
-            (recurringController.isLoading ||
-                recurringController.phase == RecurringExpenseUiPhase.failed ||
-                recurringController.showRecoveryNotice);
-        final attentionQuery = _attentionQuery();
-        final attentionCenter = PrototypeOperationsScope.of(
-          context,
-        ).attentionCenter;
-        final attentionItems = attentionCenter.itemsFor(attentionQuery);
-        final showAttention =
-            permissions.canViewAmounts &&
-            attentionCenter.shouldShow(attentionQuery, attentionItems);
-        return Scaffold(
-          key: const ValueKey('expenses-module-screen'),
-          floatingActionButton: showInlineActions || !permissions.hasAddActions
-              ? null
-              : FloatingActionButton.extended(
-                  heroTag: 'expenses-record-fab',
-                  onPressed: _showExpenseActions,
-                  icon: const Icon(Icons.add_rounded),
-                  label: Text(
-                    permissions.canCreate ? 'Add expense' : 'Add receipt',
-                  ),
-                ),
-          body: SafeArea(
-            child: ListView(
-              padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
-              children: [
-                SizedBox(
-                  width: availableWidth,
-                  child: OperationsWorkspaceFrame(
-                    layout: layout,
-                    primaryContent: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ExpensesScopeHeader(
-                          view: _view,
-                          selectedEmployeeId: _selectedEmployeeId,
-                          onViewChanged: _changeView,
-                          onEmployeeChanged: _changeEmployee,
-                          onSettings: _openSettings,
-                          showSettings: permissions.canConfigureDisplay,
-                          showEmployeeStrip: false,
-                        ),
-                        const SizedBox(height: 14),
-                        _ExpensesHeading(
-                          view: _view,
-                          selectedDate: _selectedDate,
-                          dailyTotal: _visibleExpenses.fold<double>(
-                            0,
-                            (sum, item) => sum + item.amount,
-                          ),
-                          showDailyTotal: permissions.canViewAmounts,
-                          showWideActions: showInlineActions,
-                          onRecordExpense: permissions.canCreate
-                              ? () => _recordExpense()
-                              : null,
-                          onRecordFuel: permissions.canCreate
-                              ? () => _recordExpense(
-                                  initialCategory: ExpenseCategory.fuel,
-                                )
-                              : null,
-                          onAttachReceipt: permissions.canAttachReceipt
-                              ? _openReceiptIntake
-                              : null,
-                        ),
-                        if (showRecurringStatus) ...[
-                          const SizedBox(height: 12),
-                          const RecurringExpenseRepositoryStatus(),
-                        ],
-                        if (showAttention) ...[
-                          const SizedBox(height: 12),
-                          OperationsLaneGrid(
-                            key: ValueKey(
-                              'expenses-${layout.columns}-column-attention',
-                            ),
-                            layout: layout,
-                            children: [
-                              OperationalAttentionPanel(
-                                key: const ValueKey('expenses-needs-attention'),
-                                items: attentionItems,
-                                rowKeyFor: (item) => ValueKey(
-                                  'expense-attention-${item.sourceId}',
-                                ),
-                                onOpen: _openAttentionItem,
-                                onOpenAll: () => _openAttention(attentionItems),
-                                onDismiss: () => attentionCenter.dismiss(
-                                  attentionQuery,
-                                  attentionItems,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        if (permissions.canAttachReceipt) ...[
-                          const SizedBox(height: 12),
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 600),
-                              child: _ReceiptDraftSummary(
-                                drafts: _visibleDrafts,
-                                onOpen: _openReceiptDrafts,
-                              ),
-                            ),
-                          ),
-                        ],
-                        if (_view == AppViewMode.admin) ...[
-                          const SizedBox(height: 14),
-                          EmployeeStatusStrip(
-                            employees: demoEmployees,
-                            selectedId: _selectedEmployeeId,
-                            onSelected: (employee) =>
-                                _changeEmployee(employee.id),
-                          ),
-                        ],
-                        const SizedBox(height: 14),
-                        _ExpenseLanes(
-                          layout: layout,
-                          expenses: _visibleExpenses,
-                          selectedDate: _selectedDate,
-                          preferences: _preferences,
-                          scheduledExpenses: _visibleScheduledExpenses,
-                          showScheduled: permissions.canManageScheduledExpenses,
-                          showAmounts: permissions.canViewAmounts,
-                          removedExpenseCount: _visibleDeletedExpenses.length,
-                          onOpenScheduled: _openScheduledExpenses,
-                          onAddScheduled: _addScheduledExpense,
-                          onOpenExpense: _openExpense,
-                          onOpenCategory: _openCategory,
-                          onOpenRemoved: _openRemovedExpenses,
-                        ),
-                      ],
-                    ),
-                    followingContent: _ExpensesCalendar(
-                      view: _view,
-                      maximumWidth: layout.laneWidth,
-                      expenses: _expenses,
-                      selectedDate: _selectedDate,
-                      selectedEmployeeId: _selectedEmployeeId,
-                      onDaySelected: _openExpenseDay,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => _buildExpenseHome(context);
 
-  List<ExpenseRecord> get _visibleExpenses => _expenses.where((item) {
+  List<ExpenseRecord> get _scopeExpenses => _expenses
+      .where(
+        (record) => _view == AppViewMode.technician
+            ? record.paidByEmployeeId ==
+                  (_selectedEmployeeId ?? _permissions.actorEmployeeId)
+            : _selectedEmployeeId == null ||
+                  record.paidByEmployeeId == _selectedEmployeeId,
+      )
+      .toList();
+
+  List<ExpenseRecord> get _visibleExpenses => _scopeExpenses.where((item) {
     final date = item.resolvedDate;
-    if (date == null || !sameDashboardDay(date, _selectedDate)) return false;
-    if (_view == AppViewMode.technician) {
-      return item.paidByEmployeeId == (_selectedEmployeeId ?? 'alex');
-    }
-    if (_selectedEmployeeId == null) return true;
-    return item.paidByEmployeeId == _selectedEmployeeId;
+    return date != null && sameDashboardDay(date, _selectedDate);
   }).toList();
 
   List<ExpenseRecord> get _visibleDeletedExpenses {
@@ -340,31 +174,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     if (mounted && result != null) setState(() => _fixturePreferences = result);
   }
 
-  Future<void> _showExpenseActions() async {
-    if (!_permissions.hasAddActions) return;
-    final action = await Navigator.of(context).push<_ExpenseAction>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => _ExpenseAddActionsScreen(
-          date: _selectedDate,
-          permissions: _permissions,
-        ),
-      ),
-    );
-    if (!mounted || action == null) return;
-    switch (action) {
-      case _ExpenseAction.expense:
-        if (!_permissions.canCreate) return;
-        await _recordExpense();
-      case _ExpenseAction.fuel:
-        if (!_permissions.canCreate) return;
-        await _recordExpense(initialCategory: ExpenseCategory.fuel);
-      case _ExpenseAction.receipt:
-        if (!_permissions.canAttachReceipt) return;
-        _openReceiptIntake();
-    }
-  }
-
   Future<void> _recordExpense({
     ExpenseCategory initialCategory = ExpenseCategory.materials,
   }) async {
@@ -386,6 +195,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         ),
       ),
     );
+  }
+
+  void _openSpendingPeriod(String period) {
+    if (!_permissions.canView || !_permissions.canViewAmounts) return;
+    if (period == 'Day') { _openExpenseDay(_selectedDate); return; }
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) =>
+      ExpensePeriodScreen(period: period, anchor: _selectedDate,
+        firstWeekday: _preferences.weekStartsOn, permissions: _permissions)));
   }
 
   void _openReceiptIntake() {

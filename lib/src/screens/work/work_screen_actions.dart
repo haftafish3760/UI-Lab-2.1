@@ -42,7 +42,12 @@ extension _WorkScreenActions on _WorkScreenState {
           ),
         );
         if (mounted && record != null) {
-          PrototypeOperationsScope.of(context).addWorkRecord(record);
+          final saved = await PrototypeOperationsScope.of(
+            context,
+          ).addWorkRecord(record);
+          if (mounted && saved) {
+            await openSavedWorkDocument(context, record);
+          }
         }
       case _WorkAction.createInvoice:
         if (!_invoicePermissions.canCreate) return;
@@ -56,7 +61,12 @@ extension _WorkScreenActions on _WorkScreenState {
           ),
         );
         if (invoice != null && mounted) {
-          PrototypeOperationsScope.of(context).addWorkRecord(invoice);
+          final saved = await PrototypeOperationsScope.of(
+            context,
+          ).addWorkRecord(invoice);
+          if (mounted && saved) {
+            await openSavedWorkDocument(context, invoice);
+          }
         }
       case _WorkAction.createJob:
         await _createJob();
@@ -100,15 +110,18 @@ extension _WorkScreenActions on _WorkScreenState {
       case WorkDestination.payments:
         _openPayments();
       case WorkDestination.scheduling:
+        Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => WorkScheduleScreen(initialDay: _selectedDay),
+          ),
+        );
       case WorkDestination.quotes:
         showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
             title: Text(destination.label),
-            content: Text(
-              destination == WorkDestination.scheduling
-                  ? 'Scheduling is not connected in this UI Lab build. The Work calendar still opens your dated records; it does not calculate availability.'
-                  : 'Quotes are not connected in this UI Lab build. Estimates remain a separate workspace.',
+            content: const Text(
+              'Quotes are not connected in this UI Lab build. Estimates remain a separate workspace.',
             ),
             actions: [
               TextButton(
@@ -250,7 +263,11 @@ extension _WorkScreenActions on _WorkScreenState {
     if (mounted) _updateState(() {});
   }
 
-  EstimatePermissions get _estimatePermissions => _view == AppViewMode.admin
+  EstimatePermissions get _estimatePermissions =>
+      (PrototypeOperationsScope.of(
+            context,
+          ).workSession?.permissions.canManageOtherCreators ??
+          (_view == AppViewMode.admin))
       ? const EstimatePermissions.development()
       : const EstimatePermissions.technicianDevelopment();
 

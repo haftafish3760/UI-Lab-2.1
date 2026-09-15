@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_store.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_permissions.dart';
+import 'package:ui_lab_2_1/src/data/work/employee_directory_profile.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_persistence_session.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_ui_lab_bootstrap.dart';
 import 'package:ui_lab_2_1/src/shell/employee_directory_screen.dart';
@@ -92,7 +93,7 @@ void main() {
         tester,
         () => find.byType(EmployeeEditorScreen).evaluate().isEmpty,
       );
-      expect(directory.employees, hasLength(3));
+      expect(directory.employees, isEmpty);
       await tester.pumpWidget(const SizedBox.shrink());
       store.dispose();
       directory.dispose();
@@ -127,7 +128,7 @@ void main() {
       await save();
       await waitForNativeSave(tester, () => directory.failureMessage != null);
       expect(find.byType(EmployeeEditorScreen), findsOneWidget);
-      expect(directory.employees, hasLength(3));
+      expect(directory.employees, isEmpty);
       expect(await tester.runAsync(drafts), hasLength(1));
       await tester.runAsync(
         () => db.customStatement('DROP TRIGGER fail_employee_confirmation'),
@@ -137,7 +138,7 @@ void main() {
         tester,
         () => find.byType(EmployeeEditorScreen).evaluate().isEmpty,
       );
-      expect(directory.employees, hasLength(4));
+      expect(directory.employees, hasLength(1));
       final employee = directory.employees.singleWhere(
         (e) => e.name == 'New employee',
       );
@@ -164,6 +165,20 @@ void main() {
       final harness = (await tester.runAsync(DatabaseHarness.create))!;
       final db = (await tester.runAsync(harness.open))!;
       final owner = (await tester.runAsync(() => openUiLabDirectory(db)))!;
+      await tester.runAsync(
+        () => owner.saveEmployee(
+          const EmployeeDirectoryProfile(
+            id: 'private-employee',
+            name: 'Private employee',
+            phone: '',
+            emergencyContact: '',
+            role: 'Technician',
+            pay: 'Private pay',
+            status: 'Available',
+          ),
+          expectedRevision: 0,
+        ),
+      );
       final denied = (await tester.runAsync(
         () => DirectoryPersistenceSession.open(
           db,

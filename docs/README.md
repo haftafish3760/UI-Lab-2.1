@@ -4,6 +4,11 @@
 Start with its owner corrections and [Start Workday review](start_workday_workflow_review.md).
 Product name is not selected. Historical titles/technical IDs are not a branding decision.
 
+**September 14 readiness review:** [Small-business readiness audit](small_business_readiness_audit.md)
+records current source findings, known release blockers and the next complete
+workflow slices. It distinguishes implemented code from native verification and
+owner acceptance; it is not a release certification.
+
 **Laptop continuation:** [Current Codex handoff — September 10](codex_continuation_handoff_2026_09_10.md). Main contains the migration checkpoint; implementation is not complete.
 
 Updated 2026-09-09. This is the canonical documentation entry point, not a
@@ -62,7 +67,7 @@ different concepts; see [storage contracts](data_storage_sync_contract.md).
 | Storage, sync, evidence location, backup, retention | [Data/storage/sync](data_storage_sync_contract.md) | Per-record authority decisions not inferred from legacy optional-backup code |
 | Notifications, Needs Attention and record activity | [Notifications](notification_system_blueprint.md) | Separate systems; dismissal is not business approval or delivery proof |
 | Languages, regional variants and units | [Localization/measurement](localization_measurement_blueprint.md) | Mandatory throughout; catalog coverage is not full localization |
-| Shared document reader and PDF generation | Receipt/material intake §Shared document platform boundary; Work §Sharing and acceptance | Share infrastructure, not receipt and invoice domain schemas |
+| Shared document reader and PDF generation | Receipt/material intake §Shared document platform boundary; Work §Sharing and acceptance | Share infrastructure, not receipt and invoice domain schemas; [implementation evidence and remaining gates](shared_document_implementation_status.md) |
 | Customer portal / QR / signatures / delivery | Work §Release-one customer portal and QR handoff | Existing design retained as PLANNED; release timing, expiry and identity policy need owner evidence |
 | Settings hierarchy | Product control §2 | Page gear is page-specific; company/account/privacy preferences have separate ownership |
 | AI-agent planning | Work §Internationalization, measurements, accounting, and AI | Optional command-facing assistant, not a record owner or scheduler dependency |

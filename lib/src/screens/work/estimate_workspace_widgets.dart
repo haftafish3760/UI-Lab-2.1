@@ -85,40 +85,7 @@ class _EstimateHomeSections extends StatelessWidget {
       showTotals: showTotals,
       onOpen: onOpen,
     );
-    final visibleDrafts = showAllDrafts ? drafts : drafts.take(3).toList();
-    final draftSection = _EstimateListSection(
-      key: const ValueKey('estimate-drafts'),
-      title: 'Unfinished drafts',
-      icon: Icons.edit_note_rounded,
-      records: visibleDrafts,
-      totalCount: drafts.length,
-      emptyMessage: 'No estimate drafts need finishing.',
-      headerColor: semantic.draftSurface,
-      borderColor: semantic.draft,
-      rowAccent: semantic.draft,
-      showStatusDetails: showStatusDetails,
-      showTotals: showTotals,
-      onOpen: onOpen,
-      footer: drafts.length > 3
-          ? TextButton.icon(
-              key: const ValueKey('toggle-all-estimate-drafts'),
-              onPressed: onToggleDrafts,
-              icon: Icon(
-                showAllDrafts
-                    ? Icons.keyboard_arrow_up_rounded
-                    : Icons.keyboard_arrow_down_rounded,
-              ),
-              label: Text(
-                showAllDrafts ? 'Show only 3' : 'Show all ${drafts.length}',
-              ),
-            )
-          : null,
-    );
-
-    return OperationsLaneGrid(
-      layout: layout,
-      children: [draftSection, dateSection],
-    );
+    return OperationsLaneGrid(layout: layout, children: [dateSection]);
   }
 }
 
@@ -134,15 +101,14 @@ class _EstimateListSection extends StatelessWidget {
     required this.showTotals,
     required this.onOpen,
     this.rowAccent,
-    this.totalCount,
-    this.footer,
+
     super.key,
   });
 
   final String title;
   final IconData icon;
   final List<WorkRecord> records;
-  final int? totalCount;
+
   final String emptyMessage;
   final Color headerColor;
   final Color borderColor;
@@ -150,14 +116,12 @@ class _EstimateListSection extends StatelessWidget {
   final bool showTotals;
   final ValueChanged<WorkRecord> onOpen;
   final Color? rowAccent;
-  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.surfaceContainerLow,
+        color: headerColor,
         border: Border.all(color: borderColor),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -184,7 +148,7 @@ class _EstimateListSection extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${totalCount ?? records.length}',
+                      '${records.length}',
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ],
@@ -221,12 +185,6 @@ class _EstimateListSection extends StatelessWidget {
                       ],
                     ),
             ),
-            if (footer case final footer?) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
-                child: Align(alignment: Alignment.centerLeft, child: footer),
-              ),
-            ],
           ],
         ),
       ),

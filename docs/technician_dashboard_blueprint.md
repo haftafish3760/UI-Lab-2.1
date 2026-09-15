@@ -2,15 +2,123 @@
 
 ## Purpose
 
+Today's Plan job-menu arrival is governed by the repeated-visit arrival contract
+in Work lifecycle's Active job workspace section. The Dashboard projects the
+saved Job event; it never owns an independent arrival timestamp.
+
 Give an employee technician or solo owner-technician the information and actions
 needed before, during, and after today's field work. The UI Lab demonstrates the
 screen and interactions; production data architecture belongs to the main app.
 
-## Approved dashboard regions
+## September 13 Dashboard review contract
 
-- Dark operational header: compact title/navigation/settings row, followed by
-  vehicle and odometer. Owner presentation has no View/Technician selector;
-  Start workday is below the header, not inside it.
+September 14 owner correction: compact Dashboard header background is square
+and spans the safe available width through the shared 550-LP compact cutoff.
+Menu/settings have equal 8-LP outer insets and equal 48-LP control slots.
+Vehicle selection has a visible bordered surface and centered text; the labeled
+odometer is a separate area to its right. Technician/Admin moves out of the
+header to the row opposite Start workday. Header minimum height is 76 LP with
+content/accessibility growth, not a hard height cap. Start workday uses the
+shared brighter green token. This supersedes the previous header View placement.
+
+Employee monthly results and incomplete contribution are governed by Operations
+screen blueprint section 8. Employee results remain distinct from the selected
+day's schedule; every supported total opens its supporting records.
+
+September 14 owner correction: Admin uses the same daily Plan/Entries/calendar
+composition as Technician, including full blue Plan and jade Entries containers,
+shared headings, row hierarchy and responsive lane widths. Company review is
+additional content below those daily lanes, not a replacement dashboard. The
+wide calendar remains in the same supporting lane; compact calendars remain
+below the content. Admin company review uses the same whole-card primitives,
+with amber for action queues and jade for recorded financial summaries.
+Employee monthly review follows that same presentation, below the daily work.
+The selected-day projection and all-date open queues/monthly money totals must
+remain explicitly distinguished. Existing permission limitations below remain.
+
+September 14 voice planning correction (required behavior, not yet implemented):
+hide Needs attention completely when there are no authorized urgent items.
+On mobile, show one individually bordered `Needs attention` container with the
+actual count, whether there is one item or many. Tapping it opens a separate
+Needs attention list screen with a Back button; tapping a list item opens its
+exact owning record. This supersedes the proposed two/three-item mobile preview
+and the earlier permanently visible inline job-category lists. Desktop may use
+its extra space differently; its detailed presentation is still under discussion.
+No permanent example warnings or zero-count groups should masquerade as actual
+problems. Affected Jobs appear once, with all applicable issues in their details;
+normally progressing jobs are not attention items. Draft/completed Jobs are not
+overdue active work. Overdue compares the saved scheduled finish (or start when
+finish is absent) with the beginning of today; a date later today is not overdue.
+Reminder lead times are separate owner preferences, still to be wired. This does
+not imply completed cancellation/void handling or production permission binding.
+
+Latest voice correction: routine receipt, Estimate or Invoice approvals belong
+in a separate approval flow; awaiting approval alone does not qualify as urgent
+Needs attention. This supersedes earlier suggestions that every actionable
+record should enter that queue. The account owner must be able to configure
+which business conditions qualify as urgent and their applicable thresholds.
+Examples discussed were overdue customer payments and an employee unable to
+finish a Job because of a problem. Exact defaults and controls remain to be
+designed; these examples are not automatic blanket urgency rules. A record's
+actual overdue/blocked state remains separate from whether the owner's urgency
+rule surfaces it. Approval escalation, if offered, must meet a separately
+defined urgency rule rather than treating all pending approvals as alerts.
+
+### Money destination — owner proposal under discussion
+
+The owner proposed one individually bordered `Money` container below Needs
+attention. Tapping it would open a dedicated Money screen with a full financial
+recap rather than placing every financial breakdown on the Dashboard. The owner
+also raised selecting individual employees, then explicitly paused that idea;
+employee breakdown details remain unresolved. Record this proposal without
+implementing it until the current planning conversation settles the flow.
+
+The requested recap should help an authorized owner understand money coming in,
+money going out, and how much the company is making over daily/monthly periods.
+Exact metrics, averages, period defaults, and presentation remain to be settled.
+Existing Operations section 8 owns financial source and permission rules;
+collections, invoicing, cash difference, and profit must not be conflated.
+Earlier assistant suggestions for a `Business performance` heading and separate
+Dashboard profit tiles are proposals, not accepted replacements for this idea.
+
+Current owner direction supersedes the older mobile-header and company Plan/Entries rules below.
+Dashboard alone is this implementation slice, on the existing Windows checkout.
+Technician and Admin are primary perspectives, with separate Scheduling/Reports
+workspaces still required; this does not limit the product to two screens.
+
+- The shared Dashboard header exposes Technician/Admin at every width, menu at
+  left and page settings at right, with relevant vehicle/odometer or company scope.
+  No redundant Dashboard title. Normal text shares one row; accessibility reflows.
+- Admin defaults to Company Overview. A horizontal scope selector puts Company
+  Overview first, then demo employees; returning to company never changes actor.
+- Company Overview shows current unfinished/unassigned/overdue/paused-return work,
+  pending customer estimates, unpaid invoices, outstanding balance, selected-month
+  collections/invoicing/spending and assigned workload. Rows open owning records.
+  Paused/return states are explicit; there is no invented generic blocked state.
+- Partial payments reduce individual outstanding balances; drafts are excluded.
+  USD is the current ledger currency. Profit remains unavailable because labor,
+  materials and overhead are incomplete. No implied production authentication:
+  Work queries use current session creator grants; the UI capability preset and
+  employee identities remain development fixtures. Broader team authorization,
+  currency/reconciliation and revocation remain release gates.
+- Narrow calendars occupy safe viewport width up to shared 500 LP, outside record
+  padding. This is a trial cap: seven cells get about 71 LP without stretching
+  across a wide workspace. Wide Technician composition retains a supporting lane;
+  company daily content uses that same supporting lane. Additional company
+  review sections use the shared engine's bounded grid below the daily content.
+- Calendar currently receives job plan/status, expense, workday and day-note
+  projections plus residual demo entries. Badges count entries, not every planned
+  job. Full live dated estimate/invoice/payment, inventory, maintenance and repair
+  feeds still need integration; do not describe this as complete module coverage.
+- Icon and label both signal the selected bottom destination. FAB size is unchanged.
+
+These rules are implemented for review, not owner visual acceptance. Android build
+and widget checks cannot establish iOS/device accessibility or production readiness.
+
+## Dashboard regions
+
+- Dark operational header follows the September 13 contract above; Start workday
+  remains below the header.
 - Selected date as the first orientation label below the header. Dashboard has
   no competing notification bell; Needs attention is its one action queue.
 - Today's Plan: scheduled work still requiring action.
@@ -21,7 +129,7 @@ screen and interactions; production data architecture belongs to the main app.
   separate Calendar Day screen for that date; it never replaces Dashboard
   content in place.
 - Wide layouts follow the September 10 composition below: record columns have
-  more reading room than the supporting calendar. Portrait is unchanged.
+  more reading room than the supporting calendar. Narrow calendar width follows the September 13 contract.
 
 The date is the first content below the shared operational header. Needs
 attention, when it exists, follows the date and precedes ordinary work. A
@@ -59,7 +167,7 @@ shared `AppLayoutEngine` and uses this exact contract:
 
 | Available Dashboard width | Composition |
 | --- | --- |
-| below 748 LP | one centered lane, maximum 400 LP: attention, Plan, Entries, Calendar |
+| below 748 LP | bounded record lane; separate safe-width calendar up to 500 LP |
 | 748-1131 LP | work column (Plan then Entries), supporting Calendar aligned at the top; 16-LP gap; total maximum 1016 LP |
 | 1132 LP and above | Plan and Entries side by side, Calendar at top-right; 16-LP gaps; total maximum 1432 LP |
 
@@ -92,10 +200,9 @@ form geometry through the legacy `dashboardFor` adapter. It must not consume
 the asymmetric `dashboardOperationsFor` result. Regression explicitly starts
 and opens End workday review from a wide dashboard without ending the session.
 
-The 220-LP labeled navigation rail begins on Dashboard at a 1000-LP full-window
-width and a 600-LP height, after two useful Dashboard lanes fit. Other modules
-retain the shared shell's 1338-LP threshold until their own complete-screen
-repair pass confirms an earlier transition. Surplus desktop width becomes outer
+The 220-LP labeled navigation rail follows UI foundation's shared shell rule:
+1000 LP of full-window width for every module, independent of window height.
+Switching modules must not change navigation placement. Surplus desktop width becomes outer
 breathing room; it never stretches Dashboard cards or the calendar to 600-800
 LP.
 
@@ -127,9 +234,8 @@ compact bordered control; neighboring records must not visually merge.
   ordinary entry without requiring an app restart.
 - Local day notes and telemetry that have no separate owning module use a
   Dashboard-owned detail route and must be labeled as such.
-- Technician, selected-employee Admin, and Company Overview use the same Plan
-  and Entries components. Scope changes the authorized query, not the visual
-  grammar.
+- Technician and selected-employee Admin reuse Plan/Entries. Company Overview
+  uses the distinct business queues defined above. Scope never grants authority.
 
 The exact palette, type, breakpoint, header, calendar, and accessibility rules
 are owned by `ui_foundation_blueprint.md`.

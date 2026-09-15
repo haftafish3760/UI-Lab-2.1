@@ -21,7 +21,7 @@ class ReceiptDetailChoice extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       const Text(
-        'How much receipt detail do you need?',
+        'Expense details',
         style: TextStyle(fontWeight: FontWeight.w700),
       ),
       const SizedBox(height: 8),
@@ -29,7 +29,7 @@ class ReceiptDetailChoice extends StatelessWidget {
         key: const ValueKey('receipt-total-only-choice'),
         selected: value == ExpenseReceiptType.basic,
         icon: Icons.receipt_outlined,
-        title: 'Save the receipt total',
+        title: 'Summary',
         description:
             'Keep the vendor, category, final total, and receipt image.',
         onTap: () => onChanged(ExpenseReceiptType.basic),
@@ -39,9 +39,8 @@ class ReceiptDetailChoice extends StatelessWidget {
         key: const ValueKey('receipt-every-item-choice'),
         selected: value == ExpenseReceiptType.detailed,
         icon: Icons.format_list_numbered_rounded,
-        title: 'Review every item on the receipt',
-        description:
-            'Use for materials or any receipt where each purchased item must be searchable and editable.',
+        title: 'Itemized',
+        description: 'Include each item, its quantity, and its price.',
         onTap: () => onChanged(ExpenseReceiptType.detailed),
       ),
     ],

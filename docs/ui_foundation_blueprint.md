@@ -11,6 +11,12 @@ rules, but it may not contradict this file or create private breakpoints.
 
 ## 1. Design Thesis
 
+September 14 Dashboard header override: square full-width compact background,
+equal menu/settings edge insets, a visibly tappable vehicle selector and separate
+labeled odometer. Dashboard View selection belongs beside Start workday. See the
+Dashboard blueprint for the shared compact cutoff and accessibility behavior.
+Start workday's brighter shared green is `#35E878`, superseding `#6AD39B` below.
+
 **Visual thesis:** a calm blue-gray light workspace and neutral-charcoal dark
 workspace anchored by a stable charcoal operational header; compact, high
 contrast, restrained, and built for work rather than entertainment.
@@ -172,6 +178,10 @@ when all color is removed. A blue/green current-versus-planned alternative may
 be tested, but its planned green must remain visibly separate from the darker
 confirmed-success green; hue alone is never the distinction.
 
+Header layout budgets must include the complete 48-LP icon-button tap target,
+even when the visible icon control is 42 LP. Reflow decisions must account for
+that width at accessibility text sizes; do not reduce touch targets to fit.
+
 The top operational header intentionally remains `#162326`. Header controls use
 `#24353A` or `#162529`, `#607B82` borders, `#F2F5F4` primary content, and
 `#D0D9DA` secondary content. Header-owned menus remain dark so opening a menu
@@ -269,15 +279,14 @@ contract, not a claim that every existing route already complies.
 
 ### Existing shell rules
 
-- Dashboard may use the 220-LP labeled rail when the full window is at least
-  1000 LP wide and 600 LP high, because its two compact lanes still fit after
-  the rail and page insets. Other modules retain the 1338-LP shared threshold
-  until their complete-screen repair verifies an earlier transition. The shell
-  reevaluates navigation when the selected top-level module changes.
-- Work's repaired landing screen uses the rail from 1000 LP of shell width,
-  independent of height. Its existing scrollable destination list handles short
-  windows; resizing height does not move navigation to another edge. Other
-  modules retain their existing transition until reviewed separately.
+- September 14 owner correction: every module uses the same shell navigation
+  at the same logical window width. The 220-LP labeled rail begins at 1000 LP;
+  below that use bottom navigation. Selecting a module or changing only height
+  must not move navigation to another edge. This supersedes the prior
+  Dashboard/Work exceptions and the 1338-LP threshold for other modules.
+    Module content reflows within the remaining width; it cannot change the shell.
+    Rail branding, destinations and supporting text scroll together when height
+    or accessibility text requires it. Every destination remains reachable.
 - Otherwise use bottom navigation. Its height interpolates from 62 LP on a
   narrow phone to 66 LP on wider windows.
 - Show every destination name at every mobile width. A user must not select a
@@ -307,6 +316,13 @@ contract, not a claim that every existing route already complies.
 - Compact module workspaces may use one labeled FAB for their permitted add
   menu. Wide/rail workspaces normally replace it with visible labeled actions;
   the same capability list drives both presentations.
+
+Dashboard September 13 review: its narrow calendar is a sibling of the padded
+record workspace, spanning safe local width up to `AppLayoutEngine.calendarMaximum`
+(500 LP trial). Its supporting wide Technician calendar remains bounded by the
+Dashboard engine. This supersedes the earlier universal 400-LP Dashboard calendar
+wording. Bottom navigation uses a filled selected icon plus emphasized, underlined
+selected label. Current exact styling remains subject to owner review.
 
 ## 7. Workspace and Lane Contract
 

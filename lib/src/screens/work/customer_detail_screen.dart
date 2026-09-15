@@ -1,3 +1,5 @@
+import 'invoice_detail_screen.dart';
+import 'job_workspace_screen.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -96,11 +98,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
   List<WorkRecord> get _customerEstimates =>
       PrototypeOperationsScope.of(context).workRecords
-          .where(
-            (record) =>
-                record.kind == WorkRecordKind.estimate &&
-                record.client == _customer.name,
-          )
+          .where((record) => record.client == _customer.name)
           .toList()
         ..sort(
           (left, right) => (right.createdOn ?? DateTime(0)).compareTo(
@@ -124,6 +122,21 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   }
 
   Future<void> _openEstimate(WorkRecord estimate) async {
+    if (estimate.kind != WorkRecordKind.estimate) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => estimate.kind == WorkRecordKind.invoice
+              ? InvoiceDetailScreen(record: estimate)
+              : JobWorkspaceScreen(
+                  workRecord: estimate,
+                  onWorkRecordUpdated: PrototypeOperationsScope.of(
+                    context,
+                  ).updateWorkRecord,
+                ),
+        ),
+      );
+      return;
+    }
     final store = PrototypeOperationsScope.of(context);
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
@@ -171,9 +184,6 @@ class _CustomerEstimates extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final active = estimates
-        .where((estimate) => estimate.resolvedEstimateStage.isOpen)
-        .toList();
     return SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -185,10 +195,10 @@ class _CustomerEstimates extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Active estimates',
+                      'Work history',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    Text('${active.length} active · ${estimates.length} total'),
+                    Text('${estimates.length} records · Newest first'),
                   ],
                 ),
               ),
@@ -201,14 +211,14 @@ class _CustomerEstimates extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           if (estimates.isEmpty)
-            const Text('No estimates are linked to this client yet.')
+            const Text('No work is linked to this customer yet.')
           else
             for (final estimate in estimates) ...[
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(estimate.title),
                 subtitle: Text(
-                  '${estimate.number} · ${estimate.resolvedEstimateStage.label}',
+                  '${estimate.number} · ${estimate.status.label}\n${estimate.createdOn == null ? '' : MaterialLocalizations.of(context).formatMediumDate(estimate.createdOn!)}',
                 ),
                 trailing: Text('\$${estimate.total.toStringAsFixed(2)}'),
                 onTap: () => onOpen(estimate),

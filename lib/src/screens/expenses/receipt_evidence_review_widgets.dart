@@ -31,20 +31,31 @@ class _EvidencePreviewPane extends StatelessWidget {
           const SizedBox(height: 10),
           SizedBox(
             height: height,
-            child: LocalDocumentPreview(
-              key: ValueKey('receipt-evidence-preview-${item.identity}'),
-              path: item.path,
-              kind: item.kind == ReceiptEvidenceKind.pdf
-                  ? LocalDocumentKind.pdf
-                  : LocalDocumentKind.image,
-              semanticsLabel: 'Preview of ${item.name}',
-            ),
+            child: item.kind == ReceiptEvidenceKind.photo
+                ? ReceiptPhotoPreview(
+                    path: item.path,
+                    name: item.name,
+                    key: ValueKey('receipt-evidence-preview-${item.identity}'),
+                  )
+                : LocalDocumentPreview(
+                    key: ValueKey('receipt-evidence-preview-${item.identity}'),
+                    path: item.path,
+                    kind: item.kind == ReceiptEvidenceKind.pdf
+                        ? LocalDocumentKind.pdf
+                        : LocalDocumentKind.image,
+                    semanticsLabel: 'Preview of ${item.name}',
+                  ),
           ),
           const SizedBox(height: 6),
           Text(
             'Pinch, scroll, or drag to inspect the original.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
+          if (item.kind == ReceiptEvidenceKind.photo)
+            ReceiptPhotoTextPanel(
+              key: ValueKey(item.identity),
+              path: item.path,
+            ),
         ],
       ],
     ),

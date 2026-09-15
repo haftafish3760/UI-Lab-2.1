@@ -1,16 +1,5 @@
 part of 'expenses_screen.dart';
 
-enum _ExpenseAction { expense, fuel, receipt }
-
-Color _expenseModuleColor(BuildContext context) {
-  final theme = Theme.of(context);
-  final extension = theme.extension<AppModuleColors>();
-  if (extension != null) return extension.expenses;
-  return theme.brightness == Brightness.dark
-      ? AppModuleColors.dark.expenses
-      : AppModuleColors.light.expenses;
-}
-
 AppSemanticColors _expenseSemanticColors(BuildContext context) =>
     Theme.of(context).extension<AppSemanticColors>() ??
     (Theme.of(context).brightness == Brightness.dark
@@ -18,147 +7,41 @@ AppSemanticColors _expenseSemanticColors(BuildContext context) =>
         : AppSemanticColors.light);
 
 class _ExpensesHeading extends StatelessWidget {
-  const _ExpensesHeading({
-    required this.view,
-    required this.selectedDate,
-    required this.dailyTotal,
-    required this.showDailyTotal,
-    required this.showWideActions,
-    required this.onRecordExpense,
-    required this.onRecordFuel,
-    required this.onAttachReceipt,
-  });
+  const _ExpensesHeading({required this.view, required this.selectedDate});
 
   final AppViewMode view;
   final DateTime selectedDate;
-  final double dailyTotal;
-  final bool showWideActions;
-  final bool showDailyTotal;
-  final VoidCallback? onRecordExpense;
-  final VoidCallback? onRecordFuel;
-  final VoidCallback? onAttachReceipt;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final type = AppLayoutEngine.typographyFor(constraints.maxWidth);
-      final colors = Theme.of(context).colorScheme;
-      final module = _expenseModuleColor(context);
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: constraints.maxWidth,
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 12,
-              runSpacing: 8,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      operationalDateLabel(
-                        context,
-                        selectedDate,
-                        year: selectedDate.year != DateTime.now().year,
-                      ),
-                      key: const ValueKey('expenses-date-heading'),
-                      style: TextStyle(
-                        fontSize: type.pageTitle,
-                        fontWeight: FontWeight.w600,
-                        height: 1.15,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      view == AppViewMode.admin
-                          ? 'Company expenses'
-                          : 'My expenses',
-                      style: TextStyle(
-                        color: colors.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                if (showDailyTotal)
-                  DecoratedBox(
-                    key: const ValueKey('daily-expense-total'),
-                    decoration: BoxDecoration(
-                      color: Color.alphaBlend(
-                        module.withValues(alpha: .16),
-                        colors.surface,
-                      ),
-                      border: Border.all(
-                        color: module.withValues(alpha: .72),
-                        width: 1.25,
-                      ),
-                      borderRadius: BorderRadius.circular(AppRadii.control),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 7,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            'Daily total',
-                            style: TextStyle(
-                              color: colors.onSurfaceVariant,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            expenseMoney(dailyTotal),
-                            style: TextStyle(
-                              color: colors.onSurface,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              height: 1.05,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+    builder: (context, constraints) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          operationalDateLabel(
+            context,
+            selectedDate,
+            year: selectedDate.year != DateTime.now().year,
           ),
-          if (showWideActions) ...[
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (onRecordExpense != null)
-                  FilledButton.icon(
-                    onPressed: onRecordExpense,
-                    icon: const Icon(Icons.add_card_outlined),
-                    label: const Text('Record expense'),
-                  ),
-                if (onRecordFuel != null)
-                  OutlinedButton.icon(
-                    onPressed: onRecordFuel,
-                    icon: const Icon(Icons.local_gas_station_outlined),
-                    label: const Text('Add fuel'),
-                  ),
-                if (onAttachReceipt != null)
-                  OutlinedButton.icon(
-                    onPressed: onAttachReceipt,
-                    icon: const Icon(Icons.receipt_long_outlined),
-                    label: const Text('Add receipt'),
-                  ),
-              ],
-            ),
-          ],
-        ],
-      );
-    },
+          key: const ValueKey('expenses-date-heading'),
+          style: TextStyle(
+            fontSize: AppLayoutEngine.typographyFor(
+              constraints.maxWidth,
+            ).pageTitle,
+            fontWeight: FontWeight.w600,
+            height: 1.15,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          view == AppViewMode.admin ? 'Company expenses' : 'My expenses',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -205,70 +88,6 @@ class _ReceiptDraftSummary extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ExpenseLanes extends StatelessWidget {
-  const _ExpenseLanes({
-    required this.layout,
-    required this.expenses,
-    required this.selectedDate,
-    required this.preferences,
-    required this.scheduledExpenses,
-    required this.showScheduled,
-    required this.showAmounts,
-    required this.removedExpenseCount,
-    required this.onOpenScheduled,
-    required this.onAddScheduled,
-    required this.onOpenExpense,
-    required this.onOpenCategory,
-    required this.onOpenRemoved,
-  });
-
-  final OperationsWorkspaceLayout layout;
-  final List<ExpenseRecord> expenses;
-  final DateTime selectedDate;
-  final ExpenseDisplayPreferences preferences;
-  final List<ScheduledExpenseRecord> scheduledExpenses;
-  final bool showScheduled;
-  final bool showAmounts;
-  final int removedExpenseCount;
-  final VoidCallback onOpenScheduled;
-  final VoidCallback onAddScheduled;
-  final ValueChanged<ExpenseRecord> onOpenExpense;
-  final ValueChanged<ExpenseCategory> onOpenCategory;
-  final VoidCallback onOpenRemoved;
-
-  @override
-  Widget build(BuildContext context) {
-    final children = <Widget>[
-      if (showScheduled)
-        _ScheduledExpenseShortcuts(
-          records: scheduledExpenses,
-          onOpen: onOpenScheduled,
-          onAdd: onAddScheduled,
-        ),
-      _ExpenseEntriesSection(
-        expenses: expenses,
-        showJobLinks: preferences.showJobLinks,
-        showAmounts: showAmounts,
-        removedExpenseCount: removedExpenseCount,
-        onOpen: onOpenExpense,
-        onOpenRemoved: onOpenRemoved,
-      ),
-      if (preferences.categoryMode != ExpenseCategoryDisplayMode.off)
-        _ExpenseCategoriesSection(
-          mode: preferences.categoryMode,
-          customCategories: preferences.customCategories,
-          records: expenses,
-          showAmounts: showAmounts,
-          onOpen: onOpenCategory,
-        ),
-    ];
-    return KeyedSubtree(
-      key: ValueKey('expenses-${layout.columns}-column-layout'),
-      child: OperationsLaneGrid(layout: layout, children: children),
     );
   }
 }

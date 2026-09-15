@@ -1,0 +1,25 @@
+import 'dart:convert';
+import 'dart:io';
+import 'source/work_supply_catalog_pack_payload.dart';
+import 'source/work_supply_trade_pack_tiers.dart';
+
+void main() {
+  final output = Directory('assets/inventory');
+  output.createSync(recursive: true);
+  for (final trade in ['Electrical', 'Plumbing', 'HVAC']) {
+    if (File('${output.path}/${trade.toLowerCase()}_core.json.gz').existsSync()) {
+      throw StateError('Preserve existing core exports before extracting again.');
+    }
+  }
+  for (final trade in ['Electrical', 'Plumbing', 'HVAC']) {
+    final items = buildWorkSupplyTradePackItems(trade, WorkSupplyTradePackTier.core);
+    final payloads = [for (final item in items) buildWorkSupplyCatalogPackItemPayload(item).toMap()];
+    payloads.sort((a, b) => (a['id'] as String).compareTo(b['id'] as String));
+    File('${output.path}/${trade.toLowerCase()}_core.json.gz').writeAsBytesSync(
+      gzip.encode(utf8.encode(jsonEncode({'schemaVersion': 1, 'sourceSchemaVersion': workSupplyCatalogPackSchemaVersion,
+        'trade': trade, 'tier': 'core', 'marketScope': 'all',
+        'selection': 'legacy buildWorkSupplyTradePackItems core; unreviewed trade coverage',
+        'items': payloads}))), flush: true);
+    stdout.writeln('$trade: ${items.length} core catalog items exported');
+  }
+}

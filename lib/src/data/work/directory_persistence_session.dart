@@ -1,3 +1,4 @@
+import '../storage/local_attachment_store.dart';
 import '../storage/draft_recovery_query.dart';
 import '../storage/draft_repository.dart';
 import 'dart:collection';
@@ -233,6 +234,12 @@ class DirectoryPersistenceSession extends ChangeNotifier {
     final expected = expectedRevision ?? _companyRevision;
     return _writes.run(() async {
       try {
+        if (_disposed) throw StateError('The company session is no longer active.');
+        if (proposed.logoReference.isNotEmpty && proposed.logoReference != _company.logoReference) {
+          await LocalAttachmentStore(database).verifiedFiles(
+            organizationId: permissions.organizationId, ownerIds: {permissions.organizationId},
+            attachmentIds: {proposed.logoReference});
+        }
         if (proposed.companyName.trim().isEmpty) {
           throw StateError('Enter the company name.');
         }

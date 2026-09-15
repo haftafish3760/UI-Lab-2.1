@@ -1,3 +1,8 @@
+import 'documents/customer_pdf_screen.dart';
+import 'documents/document_template.dart';
+import 'document_template_screen.dart';
+import 'work_customer_document.dart';
+import '../../shared/utility_form_section.dart';
 import '../../data/work/work_items_draft_input.dart';
 import '../../shared/editor_input_lock.dart';
 import '../../data/work/invoice_confirmation.dart';
@@ -6,6 +11,8 @@ import '../../data/work/invoice_draft_controller.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../shared/document_form_section.dart';
+import '../../shared/document_form_fields.dart';
 
 import '../../data/prototype_operations_store.dart';
 import '../../data/storage/draft_autosave_session.dart';
@@ -20,6 +27,8 @@ import 'work_items_editor.dart';
 import 'work_models.dart';
 
 part 'invoice_editor_sections.dart';
+part 'invoice_editor_overview.dart';
+part 'invoice_editor_document_preview.dart';
 part 'invoice_editor_feedback.dart';
 part 'invoice_editor_persistence.dart';
 part 'invoice_editor_confirmation.dart';
@@ -62,6 +71,9 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
   bool _allowPop = false;
   int _baseStorageRevision = 0;
   WorkItemsDraftInput? _itemDraftInput;
+  late final _purchaseOrder = TextEditingController(
+    text: widget.initialRecord?.purchaseOrderNumber ?? '',
+  );
   late final TextEditingController _title;
   late final TextEditingController _summary;
   late final TextEditingController _discount;
@@ -78,7 +90,20 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
   var _paymentMethod = 'Not selected';
   String? _formError;
 
-  void _refresh(VoidCallback change) => setState(change);
+  final _sectionChanges = ValueNotifier<int>(0);
+  late final Listenable _formChanges = Listenable.merge([
+    _sectionChanges,
+    _purchaseOrder,
+    _title,
+    _summary,
+    _discount,
+    _tax,
+    _terms,
+  ]);
+  void _refresh(VoidCallback change) {
+    setState(change);
+    _sectionChanges.value++;
+  }
 
   PrototypeOperationsStore get _store => PrototypeOperationsScope.of(context);
 
@@ -111,7 +136,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
     _createdOn = existing?.createdOn ?? DateUtils.dateOnly(DateTime.now());
     _number =
         existing?.number ??
-        'INV-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+        'Invoice ${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
     _title = TextEditingController(
       text: existing?.title ?? source?.title ?? '',
     );
@@ -143,7 +168,14 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
     ];
     _template = existing?.template ?? 'Service standard';
     _paymentMethod = existing?.paymentMethod ?? 'Not selected';
-    for (final controller in [_title, _summary, _discount, _tax, _terms]) {
+    for (final controller in [
+      _purchaseOrder,
+      _title,
+      _summary,
+      _discount,
+      _tax,
+      _terms,
+    ]) {
       controller.addListener(_captureDraft);
     }
   }
@@ -161,6 +193,8 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
   void dispose() {
     unawaited(_draftSubscription?.cancel());
     unawaited(_draft?.close().catchError((Object _) {}));
+    _sectionChanges.dispose();
+    _purchaseOrder.dispose();
     _title.dispose();
     _summary.dispose();
     _discount.dispose();
@@ -185,9 +219,10 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
               final insets = AppLayoutEngine.pageInsetsFor(
                 constraints.maxWidth,
               );
-              final width = AppLayoutEngine.formWorkspaceWidthFor(
+              final width = AppLayoutEngine.workFor(
                 constraints.maxWidth - insets.horizontal,
-              );
+                textScaler: MediaQuery.textScalerOf(context),
+              ).workspaceWidth;
               return ListView(
                 padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
                 children: [
@@ -213,78 +248,13 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
                             ),
                           if (!_draftReady && _formError == null)
                             const Text('Opening saved input…'),
-                          if (!_draftReady && _formError != null)
+                          if (_formError != null)
                             _InvoiceFormError(message: _formError!),
                           if (_draftReady) ...[
-                            const SizedBox(height: 16),
-                            Text(
-                              widget.initialRecord == null
-                                  ? 'Prepare an invoice'
-                                  : 'Edit invoice $_number',
-                              style: Theme.of(context).textTheme.headlineSmall,
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Review the customer, completed work, charges, and due date before saving the draft.',
-                            ),
-                            if (_formError case final error?) ...[
-                              const SizedBox(height: 10),
-                              _InvoiceFormError(message: error),
-                            ],
                             const SizedBox(height: 12),
-                            _InvoiceSourceSection(
-                              jobs: _jobs,
-                              selectedValue:
-                                  _jobs.any((job) => job.id == _sourceJobId)
-                                  ? _sourceJobId!
-                                  : _directInvoice,
-                              directValue: _directInvoice,
-                              onChanged: _selectSource,
-                            ),
-                            const SizedBox(height: 12),
-                            _InvoiceIdentitySection(
-                              number: _number,
-                              title: _title,
-                              summary: _summary,
-                              customers: _store.customers,
-                              selectedClient: _client,
-                              locations: _locationsFor(_client),
-                              selectedLocation: _location,
-                              pricing: _pricing,
-                              onClientChanged: _selectClient,
-                              onLocationChanged: (value) =>
-                                  _updateInput(() => _location = value),
-                              onAddClient: _addClient,
-                              onPricingChanged: (value) =>
-                                  _updateInput(() => _pricing = value),
-                            ),
-                            const SizedBox(height: 12),
-                            _InvoiceItemsSection(
-                              itemCount: _items.length,
-                              subtotal: _subtotal,
-                              onOpen: _editItems,
-                            ),
-                            const SizedBox(height: 12),
-                            _InvoiceDatesSection(
-                              issuedOn: _issuedOn,
-                              dueOn: _dueOn,
-                              onIssuedOn: () => _pickDate(issueDate: true),
-                              onDueOn: () => _pickDate(issueDate: false),
-                            ),
-                            const SizedBox(height: 12),
-                            _InvoiceCustomerCopySection(
-                              subtotal: _subtotal,
-                              total: _total,
-                              discount: _discount,
-                              tax: _tax,
-                              terms: _terms,
-                              template: _template,
-                              paymentMethod: _paymentMethod,
-                              onTemplateChanged: (value) =>
-                                  _updateInput(() => _template = value),
-                              onPaymentMethodChanged: (value) =>
-                                  _updateInput(() => _paymentMethod = value),
-                              onMoneyChanged: () => _updateInput(() {}),
+                            AnimatedBuilder(
+                              animation: _formChanges,
+                              builder: (context, _) => _buildOverview(),
                             ),
                           ],
                         ],
@@ -304,6 +274,10 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 620),
             child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                foregroundColor: Theme.of(context).colorScheme.onSecondary,
+              ),
               key: const ValueKey('save-invoice-draft'),
               onPressed: _draftReady && !_submitting ? _save : null,
               icon: const Icon(Icons.save_outlined),
@@ -420,6 +394,8 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
       }
     });
   }
+
+
 }
 
 double _moneyValue(TextEditingController controller) =>

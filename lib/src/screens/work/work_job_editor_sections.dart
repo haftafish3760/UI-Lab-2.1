@@ -63,6 +63,7 @@ class _JobIdentitySection extends StatelessWidget {
   const _JobIdentitySection({
     required this.number,
     required this.title,
+    required this.purchaseOrder,
     required this.scope,
     required this.customers,
     required this.selectedClient,
@@ -77,6 +78,7 @@ class _JobIdentitySection extends StatelessWidget {
 
   final String number;
   final TextEditingController title;
+  final TextEditingController purchaseOrder;
   final TextEditingController scope;
   final List<WorkCustomerProfile> customers;
   final String? selectedClient;
@@ -89,7 +91,7 @@ class _JobIdentitySection extends StatelessWidget {
   final ValueChanged<WorkPricingModel>? onPricingChanged;
 
   @override
-  Widget build(BuildContext context) => SectionCard(
+  Widget build(BuildContext context) => UtilityFormSection(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -98,7 +100,14 @@ class _JobIdentitySection extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 3),
-        Text('$number · This number stays with the job history.'),
+        Text(number),
+        const SizedBox(height: 12),
+        TextField(
+          controller: purchaseOrder,
+          decoration: const InputDecoration(
+            labelText: 'Purchase order number (optional)',
+          ),
+        ),
         const SizedBox(height: 12),
         KeyedSubtree(
           key: const ValueKey('job-client-field'),
@@ -183,7 +192,7 @@ class _JobIdentitySection extends StatelessWidget {
           maxLines: 6,
           decoration: const InputDecoration(
             labelText: 'What needs to be done',
-            helperText: 'The assigned team sees this scope in the active job.',
+            helperText: 'The assigned team sees these instructions in the job.',
           ),
         ),
         const SizedBox(height: 12),
@@ -284,18 +293,24 @@ class _JobScheduleSection extends StatelessWidget {
 class _JobAssignmentSection extends StatelessWidget {
   const _JobAssignmentSection({
     required this.assignee,
+    required this.employeeIds,
+    required this.onEmployeesChanged,
+    required this.beforeAddEmployee,
     required this.vehicle,
     required this.onAssigneeChanged,
     required this.onVehicleChanged,
   });
 
   final String? assignee;
+  final List<String> employeeIds;
+  final ValueChanged<List<String>> onEmployeesChanged;
+  final Future<void> Function() beforeAddEmployee;
   final String? vehicle;
   final ValueChanged<String?> onAssigneeChanged;
   final ValueChanged<String?> onVehicleChanged;
 
   @override
-  Widget build(BuildContext context) => SectionCard(
+  Widget build(BuildContext context) => UtilityFormSection(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -303,20 +318,49 @@ class _JobAssignmentSection extends StatelessWidget {
         const SizedBox(height: 4),
         const Text('A scheduled job may remain unassigned for dispatch.'),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          key: const ValueKey('job-assignee-field'),
-          initialValue: assignee,
-          isExpanded: true,
-          decoration: const InputDecoration(labelText: 'Employee or crew'),
-          items: [
-            for (final employee in demoEmployees)
-              DropdownMenuItem(
-                value: employee.name,
-                child: Text(employee.name),
+        if (PrototypeOperationsScope.of(context).directorySession != null) ...[
+          for (final employee
+              in PrototypeOperationsScope.of(context)
+                  .directorySession!
+                  .employees
+                  .where((e) => e.active || employeeIds.contains(e.id)))
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                employee.active ? employee.name : "${employee.name} (inactive)",
               ),
-          ],
-          onChanged: onAssigneeChanged,
-        ),
+              value: employeeIds.contains(employee.id),
+              onChanged: (checked) => onEmployeesChanged([
+                ...employeeIds.where((id) => id != employee.id),
+                if (checked == true) employee.id,
+              ]),
+            ),
+          AddJobEmployeeButton(
+            beforeOpen: beforeAddEmployee,
+            onCreated: (employee) =>
+                onEmployeesChanged([...employeeIds, employee.id]),
+          ),
+          if (PrototypeOperationsScope.of(
+            context,
+          ).directorySession!.employees.isEmpty)
+            const Text(
+              'No employees added yet. You can assign this job later.',
+            ),
+        ] else
+          DropdownButtonFormField<String>(
+            key: const ValueKey('job-assignee-field'),
+            initialValue: assignee,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Employee'),
+            items: [
+              for (final employee in demoEmployees)
+                DropdownMenuItem(
+                  value: employee.name,
+                  child: Text(employee.name),
+                ),
+            ],
+            onChanged: onAssigneeChanged,
+          ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           key: const ValueKey('job-vehicle-field'),
@@ -324,8 +368,12 @@ class _JobAssignmentSection extends StatelessWidget {
           isExpanded: true,
           decoration: const InputDecoration(labelText: 'Vehicle'),
           items: [
-            for (final vehicle in demoVehicles)
-              DropdownMenuItem(value: vehicle.name, child: Text(vehicle.name)),
+            for (final name
+                in (PrototypeOperationsScope.of(
+                      context,
+                    ).directorySession?.vehicles.map((v) => v.name) ??
+                    demoVehicles.map((v) => v.name)))
+              DropdownMenuItem(value: name, child: Text(name)),
           ],
           onChanged: onVehicleChanged,
         ),

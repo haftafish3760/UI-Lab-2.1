@@ -34,7 +34,6 @@ void registerInvoiceAttentionWorkflowTests() {
     final overdue = find.byKey(
       const ValueKey('invoice-attention-row-overdue-invoice'),
     );
-    final draft = find.byKey(const ValueKey('invoice-row-draft-invoice'));
     expect(find.byKey(const ValueKey('invoice-attention')), findsOneWidget);
     expect(
       find.descendant(
@@ -50,13 +49,8 @@ void registerInvoiceAttentionWorkflowTests() {
       ),
       findsNothing,
     );
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('invoice-drafts')),
-        matching: draft,
-      ),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('invoice-drafts')), findsNothing);
+    expect(find.byKey(const ValueKey('open-work-drafts')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

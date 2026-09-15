@@ -48,7 +48,7 @@ class _ReceiptSourceCard extends StatelessWidget {
         _SourceButton(
           icon: Icons.photo_camera_outlined,
           label: 'Capture receipt photos',
-          detail: 'Use the camera with overlap guides for long receipts.',
+          detail: 'Take a photo using your device camera.',
           onPressed: openingPicker ? null : onCapture,
         ),
         const SizedBox(height: 8),

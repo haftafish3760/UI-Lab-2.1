@@ -8,8 +8,6 @@ class _WorkSectionHeading extends StatelessWidget {
     required this.accent,
     required this.background,
     this.onOpenAll,
-    this.onCreate,
-    this.createLabel,
   });
 
   final IconData icon;
@@ -18,17 +16,13 @@ class _WorkSectionHeading extends StatelessWidget {
   final Color accent;
   final Color background;
   final VoidCallback? onOpenAll;
-  final VoidCallback? onCreate;
-  final String? createLabel;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final type = AppLayoutEngine.typographyFor(constraints.maxWidth);
       final textScale = MediaQuery.textScalerOf(context).scale(1);
-      final stackAction =
-          (onCreate != null && constraints.maxWidth < 500) ||
-          (textScale >= 1.5 && constraints.maxWidth < 430);
+      final stackAction = (textScale >= 1.5 && constraints.maxWidth < 430);
       final titleWidget = Row(
         children: [
           Icon(icon, size: 20, color: accent),
@@ -71,26 +65,11 @@ class _WorkSectionHeading extends StatelessWidget {
                       ],
                     ),
             );
-      final createAction = onCreate == null
-          ? null
-          : TextButton.icon(
-              key: ValueKey(
-                'create-${title.toLowerCase().replaceAll(' ', '-')}',
-              ),
-              onPressed: onCreate,
-              style: TextButton.styleFrom(
-                foregroundColor: accent,
-                minimumSize: const Size(0, 40),
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-              ),
-              icon: const Icon(Icons.add_rounded, size: 18),
-              label: Text(createLabel ?? 'New'),
-            );
       final actions = Wrap(
         alignment: WrapAlignment.end,
         crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 2,
-        children: [?createAction, openAction],
+        children: [openAction],
       );
       return Container(
         padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
@@ -117,37 +96,4 @@ class _WorkSectionHeading extends StatelessWidget {
       );
     },
   );
-}
-
-class _DraftHeading extends StatelessWidget {
-  const _DraftHeading({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
-    return Container(
-      key: const ValueKey('work-estimate-drafts-heading'),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: semantic.draftSurface,
-        borderRadius: BorderRadius.circular(AppRadii.control),
-        border: Border.all(color: semantic.draft.withValues(alpha: .7)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.edit_note_rounded, size: 19, color: semantic.draft),
-          const SizedBox(width: 7),
-          const Expanded(
-            child: Text(
-              'Unfinished drafts',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-          Text('$count', style: const TextStyle(fontWeight: FontWeight.w700)),
-        ],
-      ),
-    );
-  }
 }

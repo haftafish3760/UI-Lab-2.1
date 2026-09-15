@@ -1,3 +1,6 @@
+import '../../data/work/directory_persistence_session.dart';
+import 'add_job_employee_button.dart';
+import '../../shared/utility_form_section.dart';
 import '../../data/work/work_items_draft_input.dart';
 import '../../data/work/job_confirmation.dart';
 import '../../data/work/job_draft_workflow.dart';
@@ -60,6 +63,10 @@ class _WorkJobEditorState extends State<WorkJobEditor>
   DraftAutosaveSession? get navigationDraft => _draft;
 
   late String _number;
+  List<String> _employeeIds = [];
+  late final _purchaseOrder = TextEditingController(
+    text: widget.sourceEstimate?.purchaseOrderNumber ?? '',
+  );
   late final TextEditingController _title;
   late final TextEditingController _scope;
   late final TextEditingController _notes;
@@ -85,7 +92,7 @@ class _WorkJobEditorState extends State<WorkJobEditor>
     final source = widget.sourceEstimate;
     _sourceEstimate = source;
     _number =
-        'JOB-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+        'Job ${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
     _title = TextEditingController(text: source?.title ?? '');
     _scope = TextEditingController(text: source?.detail ?? '');
     _notes = TextEditingController();
@@ -114,6 +121,7 @@ class _WorkJobEditorState extends State<WorkJobEditor>
   void dispose() {
     unawaited(_draftSubscription?.cancel());
     unawaited(_draft?.close().catchError((Object _) {}));
+    _purchaseOrder.dispose();
     _title.dispose();
     _scope.dispose();
     _notes.dispose();
@@ -181,6 +189,7 @@ class _WorkJobEditorState extends State<WorkJobEditor>
                             _JobIdentitySection(
                               number: _number,
                               title: _title,
+                              purchaseOrder: _purchaseOrder,
                               scope: _scope,
                               customers: _store.customers,
                               selectedClient: _client,
@@ -207,7 +216,19 @@ class _WorkJobEditorState extends State<WorkJobEditor>
                             ),
                             const SizedBox(height: 12),
                             _JobAssignmentSection(
+                              beforeAddEmployee: () async {
+                                _captureJobInput();
+                                await _draft?.flush();
+                              },
                               assignee: _assignee,
+                              employeeIds: _employeeIds,
+                              onEmployeesChanged: (ids) => _changeJobInput(() {
+                                _employeeIds = ids;
+                                _assignee = _store.directorySession?.employees
+                                    .where((e) => ids.contains(e.id))
+                                    .map((e) => e.name)
+                                    .join(', ');
+                              }),
                               vehicle: _vehicle,
                               onAssigneeChanged: (value) =>
                                   _changeJobInput(() => _assignee = value),

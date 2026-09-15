@@ -19,6 +19,7 @@ import 'local_installation_guard.dart';
 import 'local_draft_store.dart';
 import 'sqlite_domain_snapshot_store.dart';
 import 'serialized_async_actions.dart';
+import 'remove_demo_installation.dart';
 
 /// App-owned lifetime for SQLite and domain adapters. Explicit directory
 /// injection is reserved for isolated test/runtime verification environments.
@@ -47,6 +48,7 @@ class LocalPersistence {
   static Future<LocalPersistence> open({
     Directory? directory,
     String Function(String)? resolveRetainedPath,
+    bool removeOwnerDemoData = false,
   }) async {
     final root = directory ?? await defaultDirectory();
     await root.create(recursive: true);
@@ -55,6 +57,7 @@ class LocalPersistence {
     final database = LocalDatabase.file(installation.databaseFile);
     try {
       await database.verifyIntegrity();
+      if (removeOwnerDemoData) await removeDemoInstallation(database);
       final expenses =
           await SqliteDomainSnapshotStore.open<List<StoredExpenseRecord>>(
             database: database,

@@ -3,6 +3,7 @@ part of 'work_job_editor.dart';
 extension _WorkJobDraftRecovery on _WorkJobEditorState {
   Map<String, TextEditingController> get _controllers => {
     'title': _title,
+    'purchaseOrderNumber': _purchaseOrder,
     'scope': _scope,
     'notes': _notes,
   };
@@ -14,6 +15,8 @@ extension _WorkJobDraftRecovery on _WorkJobEditorState {
   JobDraftInput get _jobInput => JobDraftInput(
     jobId: _jobId,
     number: _number,
+    purchaseOrderNumber: _purchaseOrder.text,
+    assignedEmployeeIds: _employeeIds,
     sourceEstimate: _sourceEstimate,
     sourceStorageRevision: _sourceStorageRevision,
     scheduledStart: _startDateTime,
@@ -54,42 +57,9 @@ extension _WorkJobDraftRecovery on _WorkJobEditorState {
     }
     try {
       final sourceId = widget.sourceEstimate?.id;
-      String? recoveryId;
-      if (sourceId == null && widget.recoveredWorkflow == null) {
-        final candidates = await work.jobDraftRecovery.list();
-        if (!mounted) return;
-        if (candidates.isNotEmpty) {
-          final selected = await showDialog<String>(
-            context: context,
-            builder: (context) => SimpleDialog(
-              title: const Text('Continue an unfinished job?'),
-              children: [
-                for (final row in candidates)
-                  SimpleDialogOption(
-                    onPressed: () => Navigator.of(context).pop(row.draftId),
-                    child: Text(row.label),
-                  ),
-                SimpleDialogOption(
-                  onPressed: () => Navigator.of(context).pop('new'),
-                  child: const Text('Start another job'),
-                ),
-              ],
-            ),
-          );
-          if (!mounted) return;
-          if (selected == null) {
-            await leaveDraftRoute();
-            return;
-          }
-          if (selected != 'new') recoveryId = selected;
-        }
-      }
       final workflow =
           widget.recoveredWorkflow ??
-          await work.openJobDraft(
-            sourceEstimateId: sourceId,
-            recoveryDraftId: recoveryId,
-          );
+          await work.openJobDraft(sourceEstimateId: sourceId);
       if (widget.recoveredWorkflow != null) {
         work.validateJobHandoff(workflow, sourceEstimateId: sourceId);
       }
@@ -124,6 +94,8 @@ extension _WorkJobDraftRecovery on _WorkJobEditorState {
   void _restoreJobInput(JobDraftInput input) {
     _jobId = input.jobId;
     _number = input.number;
+    _purchaseOrder.text = input.purchaseOrderNumber;
+    _employeeIds = input.assignedEmployeeIds;
     _sourceEstimate = input.sourceEstimate;
     _sourceStorageRevision = input.sourceStorageRevision;
     _client = input.client;

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'estimate_approval_settings.dart';
 import 'package:flutter/material.dart';
 import '../../data/storage/draft_autosave_session.dart';
 import '../../data/preferences/work_record_display_preferences.dart';
@@ -80,6 +81,8 @@ class _WorkRecordSettingsScreenState extends State<WorkRecordSettingsScreen>
           : ListView(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
               children: [
+                if (widget.workspaceId == 'estimates')
+                  const EstimateApprovalSetting(),
                 if (_session != null)
                   EditorDraftStatus(
                     state: _session!.state,

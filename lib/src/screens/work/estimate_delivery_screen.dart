@@ -1,3 +1,5 @@
+import 'customer_portal_screen.dart';
+import 'work_pdf_delivery.dart';
 import '../../data/work/models/work_contact_models.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -32,6 +34,7 @@ class EstimateDeliveryScreen extends StatefulWidget {
 class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
     with DraftNavigationGuard {
   var _method = EstimateDeliveryMethod.email;
+  WorkRecord? _preparedRecord;
   final _recipient = TextEditingController();
   var _reviewed = false;
   var _initialized = false;
@@ -135,7 +138,10 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                                   'estimate-delivery-recipient',
                                 ),
                                 controller: _recipient,
-                                enabled: _ready,
+                                enabled:
+                                    _ready &&
+                                    !_saving &&
+                                    _preparedRecord == null,
                                 decoration: InputDecoration(
                                   labelText: _recipientLabel,
                                   helperText:
@@ -154,7 +160,10 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                                 subtitle: Text(
                                   'Approval will apply only to revision ${_base.revision}.',
                                 ),
-                                onChanged: !_ready
+                                onChanged:
+                                    !_ready ||
+                                        _saving ||
+                                        _preparedRecord != null
                                     ? null
                                     : (value) {
                                         setState(
@@ -173,17 +182,33 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                               .secondaryContainer
                               .withValues(alpha: .55),
                           child: const Text(
-                            'UI Lab records and verifies this delivery workflow. The production app must connect Email or Text to an expiring secure approval link, and Device Share, Save, or Print to the generated PDF. This screen does not pretend a network message was sent.',
+                            'Email and text open your device’s sharing options with the PDF attached. Choose the customer and send in that app. Some text apps cannot attach PDFs; a customer portal link will need the configured online service. Opening sharing does not confirm delivery.',
                           ),
                         ),
                         const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: !_ready || _saving
+                              ? null
+                              : () async {
+                                  await _draft?.flush();
+                                  if (!context.mounted) return;
+                                  await Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          CustomerPortalScreen(record: _base),
+                                    ),
+                                  );
+                                },
+                          icon: const Icon(Icons.qr_code),
+                          label: const Text('Customer review link or QR code'),
+                        ),
                         FilledButton.icon(
                           key: const ValueKey('confirm-estimate-delivery'),
                           onPressed: _ready && _reviewed && !_saving
                               ? _confirm
                               : null,
                           icon: const Icon(Icons.task_alt_outlined),
-                          label: const Text('Prepare and record delivery'),
+                          label: const Text('Continue to sharing'),
                         ),
                       ],
                     ),
@@ -207,7 +232,7 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
   };
 
   void _selectMethod(EstimateDeliveryMethod method) {
-    if (!_ready || _saving) return;
+    if (!_ready || _saving || _preparedRecord != null) return;
     if (_workflow != null) {
       _workflow!.selectMethod(method);
     } else {
@@ -267,7 +292,7 @@ class _DeliveryMethodCard extends StatelessWidget {
 
 String _methodLabel(EstimateDeliveryMethod method) => switch (method) {
   EstimateDeliveryMethod.email => 'Email PDF to customer',
-  EstimateDeliveryMethod.textMessage => 'Text secure approval link',
+  EstimateDeliveryMethod.textMessage => 'Text message',
   EstimateDeliveryMethod.deviceShare => 'Share from this device',
   EstimateDeliveryMethod.savedPdf => 'Save PDF copy',
   EstimateDeliveryMethod.print => 'Print customer copy',
@@ -276,7 +301,7 @@ String _methodLabel(EstimateDeliveryMethod method) => switch (method) {
 
 String _methodHelp(EstimateDeliveryMethod method) => switch (method) {
   EstimateDeliveryMethod.email || EstimateDeliveryMethod.textMessage =>
-    'Customer opens an expiring link and approves this exact revision.',
+    'Choose your email or messaging app. PDF attachment support depends on that app.',
   EstimateDeliveryMethod.deviceShare =>
     'Use the device share sheet after the customer PDF is generated.',
   EstimateDeliveryMethod.savedPdf => 'Keep a customer-ready PDF file.',

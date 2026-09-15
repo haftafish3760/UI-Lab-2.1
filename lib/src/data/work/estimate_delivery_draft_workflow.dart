@@ -116,7 +116,19 @@ class EstimateDeliveryInput {
         method == EstimateDeliveryMethod.inPerson) {
       throw StateError('Delivery input is not ready for preparation.');
     }
-    return base.recordEstimateDelivery(
+    if (base.items.isEmpty ||
+        base.client.trim().isEmpty ||
+        base.client == 'Client not selected' ||
+        base.title == 'Untitled estimate' ||
+        base.detail == 'Proposed work not entered yet.') {
+      throw StateError(
+        'Add the customer, proposed work and items before sending.',
+      );
+    }
+    final ready = base.resolvedEstimateStage == EstimateStage.draft
+        ? base.withEstimateStage(EstimateStage.readyToSend, preparedAt!)
+        : base;
+    return ready.recordEstimateDelivery(
       method: method,
       recipient: recipient.trim(),
       occurredOn: preparedAt!,
@@ -228,6 +240,7 @@ extension EstimateDeliveryDraftWorkflow on WorkPersistenceSession {
     );
     void validate(EstimateDeliveryInput input) {
       if (input.base.id != recordId ||
+          !permissions.canShareDocuments ||
           input.base.kind != WorkRecordKind.estimate ||
           input.base.createdByEmployeeId != current.createdByEmployeeId ||
           input.baseRevision < 1 ||

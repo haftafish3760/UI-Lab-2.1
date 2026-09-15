@@ -127,7 +127,7 @@ Dashboard answers: What vehicle am I using, what is planned, and what needs my
 attention? It shows active vehicle, selected date, notifications, plan, entries,
 calendar, Start Workday, permission-derived add actions, and sync/offline state.
 Owner presentation updates are owned by `technician_dashboard_blueprint.md`:
-no View switch on Dashboard/Start Workday; Entries appears only when records
+Dashboard view access follows the September 13 Dashboard contract; Entries appears only when records
 exist, independently of workday state; five summary cards replace the banner.
 
 ### Start Workday
@@ -323,8 +323,10 @@ least one authorized record requires review.
   engine measures label requirements and reduces columns for larger text rather
   than cutting words. Customers and Company Profile are in the Business menu,
   backed by the same existing company/customer records used by documents.
-  Quotes and Scheduling are explicitly marked Not connected in this layout-only
-  build; tapping explains the missing system and does not open an unrelated route.
+  Quotes remain explicitly marked Not connected. Scheduling now opens its own
+  authorized Job calendar, date/employee filters, scheduled and unscheduled job
+  groups, and job details for assignment and schedule editing. This is not yet
+  the availability/capacity engine required by `scheduling_system_blueprint.md`.
 - Jobs, Estimates, and Invoices are distinct destinations and record lists.
   Tapping one opens that workspace, never a create form. Each workspace offers
   a separate labeled New action.
@@ -582,6 +584,14 @@ accepted prices. Receipt extraction remains a proposal until confirmed.
 
 ## 7. Expenses
 
+September 14 owner clarification: Expenses is a complete expense application
+within the business operations system, not a miscellaneous entry screen. Its
+calendar is a historical navigator to the selected day's scoped records and
+totals. Expense rows must identify the recorded vendor when known, rather than
+use a generic entry shortcut such as Quick fuel as the record's identity. Never
+invent a vendor when it is unknown. Shared card hierarchy and entry color
+meaning remain consistent with other modules.
+
 **Purpose:** record costs, connect jobs, review evidence, explain spending.  
 **Owner:** Expenses; originals remain Document Intake evidence.  
 **Technician:** own permitted records/reviews.  
@@ -597,6 +607,29 @@ receipt, and review state.
 
 ### Expenses home layout
 
+September 14 owner direction: repair Expenses first, one screen at a time, before Work or further
+OCR/inventory engine changes. Every module uses the same navigation placement
+under UI foundation's shared shell rule. Expenses displays authorized daily,
+current-week, current-month and current-year recorded spending together below
+the date/scope heading. Week boundaries follow the app locale. Drafts and planned
+expenses are excluded until posted; refunds retain their recorded signed value.
+Unknown dates are excluded rather than guessed. Personal and company scope must
+be explicit and must filter all four totals consistently.
+
+Use direct labeled Add expense and Add receipt controls on phone and widescreen;
+do not interpose a Fuel/Record/Receipt chooser. On widescreen, group attention,
+drafts and today's entries in one lane and the dated-record calendar in the
+adjacent lane; planned expenses and optional categories share the support lane
+or occupy a third lane when space permits. On phones these groups stack in that
+order. Company overview is the authorized all-employee scope, with a visible
+return action after narrowing to one employee. The calendar opens the exact day
+for viewing and permitted creation/editing; calendar navigation is not a totals
+filter. No outer decorated card surrounds the workspace. Receipt capture and
+review are the next screens, using 5.7 Active's early flow as reference only.
+Role names do not grant permissions: keep distinct read, create, own/team edit,
+named-team/company scope, removal and approval capabilities at UI and repository
+boundaries. No new position-to-permission policy is implied by this layout.
+
 - The shared charcoal operational header comes first. It owns Technician/Admin
   View, Company Overview/employee scope, and Expense screen settings. Admin may
   use the compact employee strip below it; the body does not repeat a second
@@ -604,9 +637,8 @@ receipt, and review state.
 - The localized selected date is the first heading. The current year is omitted
   to reduce noise and returns whenever the selected date belongs to another
   year. My Expenses or Company Expenses names the current scope below it. The
-  selected-scope Daily total is a compact peer on the right whenever it fits and
-  reflows below the date under constrained text/width; it is not repeated as a
-  later content-lane card.
+  four spending totals follow in a shared responsive summary row, wrapping on
+  phones and with larger accessibility text. Daily total remains the first value.
 - Technician defaults to that person's records. Admin defaults to all authorized
   employees and may narrow the same selected date to one employee.
 - `ExpensePermissions` is the presentation contract for view, amount, create,
@@ -623,25 +655,17 @@ receipt, and review state.
   binding must call `AuthorizedExpenseService`, which re-evaluates company,
   employee, permission revision, scope, target employee, and action before the
   repository query or mutation.
-- One lane stacks expense records, receipt review, and the Expense calendar.
-- Two and three lanes keep records, review, and summaries in bounded purposes
-  through `AppLayoutEngine.workFor`; the Expense Month calendar then fills the
-  module workspace instead of becoming a narrow fourth card.
-- Compact/mobile layouts use a labeled `Add expense` FAB that opens Record an
-  expense, Record fuel purchase, and Add a receipt for review.
-- At the shared local two-lane threshold, the FAB leaves and the same labeled
-  Record expense, Add fuel, and Add receipt actions appear in the heading
-  region. Rail presence and the surrounding global window are not breakpoints.
-- Previous day, Choose date, and Next day preserve the current person/view scope.
-- Immediately after the date/total heading, real Needs Attention work appears
-  when present, then resumable Receipt Drafts, then the permission-aware compact
-  planned/recurring expense surface, Today's Entries, and optional category
-  shortcuts. `AppSemanticColors` supplies Attention, Draft, Planned, and Current
-  treatments respectively; module amber remains Expense identity rather than a
-  substitute for record state.
+- Layout uses `AppLayoutEngine.operationsFor` and the shared bounded lane grid.
+  The record lane groups Needs Attention, resumable Receipt Drafts, and Today's
+  Entries. The adjacent lane holds the Expense calendar; planned expenses and
+  optional categories follow it or occupy the third lane where space permits.
+- Both phone and widescreen use direct Add expense and Add receipt actions.
+- `AppSemanticColors` supplies Attention, Draft, Planned, and Current treatments;
+  module amber remains Expense identity rather than a substitute for record state.
 - The first summary value is explicitly `Daily total`; vague labels such as
   `Shown total` are prohibited. Record, review, job-link, employee, and category
-  totals derive from the same selected-date query.
+  totals derive from the same authorized scope; period totals use their respective
+  date boundaries, while today's record and category totals use the selected date.
 - Expense records target a compact 60-65-LP row for ordinary vendor names at
   normal text scale. That target is not a hard ceiling: long vendor names and
   accessibility text reflow the individual record container so the vendor,
@@ -706,6 +730,38 @@ price/markup, invoice, or job completion.
 
 ## 8. Reports and Recap
 
+### September 13: employee contribution on Admin Dashboard
+
+Company Overview exposes actionable work, collections, invoicing, outstanding
+balances and recorded spending. Employee scope adds their schedule and monthly
+completed jobs and expense records on both narrow and wide layouts.
+
+Employee contribution is required product work: attributed job revenue minus
+confirmed labor cost and allocated direct job costs. Overhead stays separate
+unless explicitly allocated. Preserve historical hours and effective-dated cost
+rates; customer billing rates are distinct. Missing hours, rates or allocations
+mean incomplete results, not zero costs. Unpaid owner labor is not silently free.
+
+Owner clarification, September 14: company review must also distinguish revenue
+per labor-hour, profit per labor-hour and profit margin. State the selected
+day/week/month/year, revenue basis, included costs and worked-hours denominator.
+Concurrent employee hours add together; zero or unknown hours do not produce an
+hourly rate. Effective-dated employee pay is internal labor-cost tracking, not
+payroll tax calculation. Current implementation lacks these connected measures.
+
+Revenue attribution, payment collection and expense submission are distinct.
+Collecting payment does not assign that revenue to the collector, and purchasing
+crew materials does not assign all costs to the purchaser. Shared jobs require
+confirmed allocations, exact money reconciliation and an unallocated remainder;
+never duplicate company revenue across employees. Refunds, credits, returns and
+corrections retain dated source links. Totals expose period, currency, basis,
+source records and missing inputs; sensitive results require separate grants.
+
+Implementation limit: existing employee reports supply recorded associated
+expenses and completed jobs. Labor, revenue allocation and payment collector
+relationships are not yet connected. Dashboard labels contribution incomplete;
+it does not invent a profit or describe development access as production security.
+
 **Purpose:** explain a day/week/month/year and link every total to source.  
 **Owner:** projection only.  
 **Technician:** own completed jobs, hours, miles, costs, callbacks, review items.
@@ -745,6 +801,16 @@ still show source-derived fuel, repair, and maintenance expenses without
 claiming that mileage or vehicle-health telemetry exists.
 
 ## 9. Inventory and Materials
+
+September 14 owner clarification: inventory and receipt-reading assistance are
+opt-in. Contractor/service users need understandable item, location, on-hand,
+pending-for-Estimate and available quantities, plus chosen low-stock thresholds
+and reminders. Pending is not consumed stock; release/cancellation/revision and
+insufficient availability must be handled through explicit authorized commands.
+Keep unknown counts distinct from zero. Core/Standard/Professional/Complete
+membership needs usefulness review, not arbitrary item-count quotas. The three
+launch Core packs are bundled, with other trades and custom items supported.
+Delivery and cross-model boundaries: [Expense/inventory roadmap](expense_inventory_delivery_roadmap.md).
 
 **Purpose:** remember verified vendor costs and optionally stock location.  
 **Primary value:** cost history for faster estimates; perfect truck counts are
@@ -868,6 +934,30 @@ offline/restart behavior. UI Lab proves layout and typed interactions; it does
 not claim the prototype store is the 5.7 persistence design.
 
 ## 10. Permission and Scope Matrix
+
+### Owner approval rules — September 14 voice planning
+
+Required direction, not a claim of implementation: routine approvals and urgent
+Needs attention are separate flows. Follow the latest urgency definition in the
+Technician Dashboard blueprint; awaiting approval alone is not an urgent alert.
+The owner needs independent approval choices for applicable record/document
+types, including Expenses with receipt evidence, Estimates and Invoices:
+require approval for all, require approval above a chosen amount, or require no
+approval. Receipt evidence must retain its relationship to the owning Expense;
+do not invent a duplicate financial record just to request approval.
+
+The owner also raised employee-specific approval rules. Plan for company
+defaults with explicit employee exceptions; the precise controls and precedence
+remain to be settled. Permission to enter or submit a record, permission to
+approve it, and the rule requiring approval are distinct. No approval required
+does not grant unrelated access or classify a record as manually approved.
+
+Engineering details to resolve before implementing this flow: exact threshold
+and currency handling, who can approve and whether self-approval is allowed,
+changes to amounts after approval, policy changes while requests are pending,
+unavailable reviewers, offline submissions and repeated requests. Preserve
+the actual submitting/reviewing actor, time, document revision and applicable
+policy. These safeguards are design work, not functionality proven by these notes.
 
 Employee setup asks plain-language Yes/No questions rather than presenting raw
 permission names. A dependent permission cannot survive without its parent:

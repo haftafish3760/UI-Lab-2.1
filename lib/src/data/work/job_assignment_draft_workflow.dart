@@ -13,29 +13,32 @@ class JobAssignmentInput {
     required this.baseRevision,
     required this.assignee,
     required this.vehicle,
+    this.employeeIds = const [],
   });
 
   final WorkRecord base;
   final int baseRevision;
   final String assignee;
   final String vehicle;
+  final List<String> employeeIds;
 
   Map<String, Object?> toPayload() => {
     'base': encodeWorkRecord(base),
     'baseRevision': baseRevision,
     'assignee': assignee,
     'vehicle': vehicle,
+    'employeeIds': employeeIds,
   };
 
-  factory JobAssignmentInput.fromPayload(Map<String, Object?> payload) =>
-      JobAssignmentInput(
-        base: decodeWorkRecord(
-          (payload['base'] as Map).cast<String, Object?>(),
-        ),
-        baseRevision: payload['baseRevision'] as int,
-        assignee: payload['assignee'] as String,
-        vehicle: payload['vehicle'] as String,
-      );
+  factory JobAssignmentInput.fromPayload(
+    Map<String, Object?> payload,
+  ) => JobAssignmentInput(
+    base: decodeWorkRecord((payload['base'] as Map).cast<String, Object?>()),
+    baseRevision: payload['baseRevision'] as int,
+    assignee: payload['assignee'] as String,
+    vehicle: payload['vehicle'] as String,
+    employeeIds: (payload['employeeIds'] as List?)?.cast<String>() ?? const [],
+  );
 }
 
 class JobAssignmentDraftController
@@ -51,15 +54,19 @@ class JobAssignmentDraftController
   _commit;
   JobAssignmentInput get input => recoveredInput!;
 
-  void updateAssignment({required String assignee, required String vehicle}) =>
-      updateInput(
-        JobAssignmentInput(
-          base: input.base,
-          baseRevision: input.baseRevision,
-          assignee: assignee,
-          vehicle: vehicle,
-        ),
-      );
+  void updateAssignment({
+    required String assignee,
+    required String vehicle,
+    List<String>? employeeIds,
+  }) => updateInput(
+    JobAssignmentInput(
+      base: input.base,
+      baseRevision: input.baseRevision,
+      assignee: assignee,
+      vehicle: vehicle,
+      employeeIds: employeeIds ?? input.employeeIds,
+    ),
+  );
 
   Future<WorkRecord?> confirm() async {
     WorkRecord? result;
@@ -85,7 +92,8 @@ extension JobAssignmentDraftWorkflow on WorkPersistenceSession {
         controller.input.base.id != recordId ||
         current == null ||
         current.kind != WorkRecordKind.job ||
-        !permissions.canEdit(current)) {
+        !permissions.canEdit(current) ||
+        !permissions.canAssignJobs) {
       throw StateError('Selected job assignment belongs to another workflow.');
     }
   }
@@ -97,7 +105,8 @@ extension JobAssignmentDraftWorkflow on WorkPersistenceSession {
     final current = records.where((r) => r.id == recordId).firstOrNull;
     if (current == null ||
         current.kind != WorkRecordKind.job ||
-        !permissions.canEdit(current)) {
+        !permissions.canEdit(current) ||
+        !permissions.canAssignJobs) {
       throw StateError('Job unavailable.');
     }
     final draft = DraftAutosaveSession(
@@ -114,7 +123,8 @@ extension JobAssignmentDraftWorkflow on WorkPersistenceSession {
           input.base.kind != WorkRecordKind.job ||
           input.base.createdByEmployeeId != current.createdByEmployeeId ||
           input.baseRevision < 1 ||
-          !permissions.canEdit(input.base)) {
+          !permissions.canEdit(input.base) ||
+          !permissions.canAssignJobs) {
         throw StateError('Saved job assignment identity is inconsistent.');
       }
     }
@@ -136,6 +146,7 @@ extension JobAssignmentDraftWorkflow on WorkPersistenceSession {
         final record = input.base.copyWith(
           assignee: input.assignee,
           vehicle: input.vehicle,
+          assignedEmployeeIds: input.employeeIds,
         );
         final saved = await save(
           records: [record],
@@ -151,6 +162,7 @@ extension JobAssignmentDraftWorkflow on WorkPersistenceSession {
             baseRevision: storageRevisionFor(recordId),
             assignee: current.assignee ?? 'Unassigned',
             vehicle: current.vehicle ?? 'No vehicle assigned',
+            employeeIds: current.assignedEmployeeIds,
           ),
         );
       } else {

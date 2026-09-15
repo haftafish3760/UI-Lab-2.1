@@ -7,6 +7,13 @@ Maintenance is outside this blueprint.
 
 ## 1. Purpose
 
+Owner override, September 14: this application records **business receipts
+only**. Do not ask business/personal classification or introduce a personal
+budget flow. This does not authorize relabeling historical records or silently
+including non-business lines in a business amount. Mixed source evidence needs
+explicit exclusion of unrelated lines while retaining the evidence. Category
+remains optional and must have a real selector, not a free-text substitute.
+
 Maintainiac must accept receipt evidence without assuming every receipt begins
 with a new camera photo. The same reviewed intake system supports:
 
@@ -68,6 +75,44 @@ output, remain open. No original deletion is implemented or authorized here.
 Paid receipt backup is optional; refusing backup cannot block local saving or
 manual Basic/Detailed receipts. See `data_storage_sync_contract.md`.
 
+### Shared device workload control — September 14 owner addition
+
+The capability engine is shared across the app and consulted before costly work.
+It must protect lower-resource phones using runtime memory, thermal and power
+conditions, not phone price, brand, model name or age. Receipt reading targets
+roughly 5–10 seconds; this is a performance acceptance target, not a guaranteed
+maximum or an established industry standard. Measure cold/warm runs and repeated
+receipts on physical lower-resource Android and iPhone devices. Report latency,
+memory, thermal changes, failures and recognition accuracy together. Reducing
+image quality must not be counted as success when it loses purchased items.
+
+Initial implementation adapts the 5.7 shared device capability service and native
+runtime probes, excluding camera controls, identity collection, Bluetooth and
+PDF policy. `data/device_capabilities/device_workload_service.dart` owns a shared
+heavy-work gate and refreshed admission checks. OCR is its first connected
+consumer; other modules do not yet obey this gate. Limited/standard/capable
+tiers permit 1/2/3 million pixels in temporary OCR copies, respectively, with
+12/32/32 MiB encoded-file limits. These conservative starting budgets require
+device calibration. Unknown hardware defaults to limited. Power-saving, small
+heaps, low memory or elevated temperature reduce work; serious/critical thermal
+conditions and critical memory defer new heavy work. Only one admitted heavy
+task runs at a time regardless of tier. A 10-second UI timeout does not release
+the slot while native work is still running. Native cancellation, runtime events
+during a read and sustained thermal tests remain outstanding.
+
+The photo review also uses a pixel-bounded preview rather than decoding the
+full original into the widget image cache. Other image surfaces have not yet
+been adapted. Retained references resolve through the existing installation
+file resolver. The image reader uses a bounded temporary copy, retains original photo evidence,
+and maps recognized line regions back to source dimensions. It reads only after
+an explicit `Read photo` action. Raw text is currently shown in the photo review
+session only: durable SQLite recognition history, parsing proposals, automatic
+field population and long-receipt assembly are not connected yet. This is an
+integration slice, not a complete receipt assistant. Blank text, unsupported
+desktop reading, failed reads, source changes and retries have explicit states.
+No PDF engine code is part of this slice. The app continues using the native
+camera/photo-picker path; no custom camera application is being built.
+
 ### Receipt assistance choices
 
 **Receipt Assistant** is the working customer-facing name for the optional
@@ -75,7 +120,8 @@ receipt-reading feature. `OCR` remains an internal engineering term and is
 prohibited in ordinary customer-facing labels, helper text, buttons, errors,
 onboarding, and settings.
 
-Before reading a receipt, ask in plain language:
+On first entering Expenses, offer help without blocking manual use. Before
+reading a receipt, ask in plain language unless the user already opted in:
 
 > Would you like Receipt Assistant to suggest the receipt details?
 
@@ -126,6 +172,14 @@ made, and why. Editing must not require rerunning Receipt Assistant.
   every expense or every material used.
 
 ### Current UI Lab durable draft/evidence checkpoint
+
+September 14 owner-reported workflow defect: receipt drafts are visible in the
+company view but their deletion is not discoverable. A permitted user needs a
+clearly labeled Delete draft action from the draft list/detail, explaining the
+effect before confirmation and refreshing draft counts after success. Reuse the
+authorized discard lifecycle below; do not delete a submitted Expense or shared
+evidence as a side effect. Failure must preserve the draft and show a retryable
+error. Existing discard APIs alone do not establish that this UI is usable.
 
 The current UI Lab implementation establishes Document Intake ownership before
 OCR or Materials proposals are introduced:
@@ -302,10 +356,19 @@ without claiming to maintain exact truck counts.
    behind every Receipt Assistant proposal.
 9. Offline capture and review remain available. Sync happens later if enabled.
 
-The owner reports 5.7 long-receipt stitching is unreliable. This is owner-reported
-failure, not a newly reproduced runtime finding. A reliable stitching engine is
-required; repair versus replacement requires independent assessment and tests
-for missing/duplicated sections, ordering and text legibility.
+Owner decision, September 14: leave the 5.7 long-receipt stitching engine behind.
+Build its replacement independently; do not copy the rejected preview/camera
+layout. Reuse suitable platform capture/recognition capabilities after assessment,
+not the legacy stitching implementation. Original ordered photos remain usable
+when stitching cannot establish a reliable overlap. Missing/duplicated sections,
+order and text legibility require independent image-based acceptance.
+
+Use existing native camera/picker capabilities. Ask for required OS permissions
+at the relevant action, explain denied/limited access, and preserve manual entry.
+System photo pickers grant selected-image access without a broad gallery prompt;
+do not fabricate a permission dialog or request broader access than necessary.
+Android camera-app capture and an embedded CameraX viewfinder are different
+integration options; the latter is only needed for an in-app camera interface.
 
 ## 5. Receipt-level proposal
 
@@ -407,8 +470,8 @@ specific uncertainty instead of showing only a generic warning.
 
 ### UI Lab manual-entry candidate
 
-Status: implemented for interaction and responsive review; awaiting product-
-owner visual acceptance before any 5.7 presentation port.
+Status: prior candidate rejected by the owner September 14. Rebuild the Expense
+entry/review presentation; existing durable recovery must survive the redesign.
 
 The manual path is one complete form, not a reduced fallback. Its phone order
 is receipt date and vendor, expense category and optional related job, the
@@ -418,11 +481,31 @@ working lane. Vendor/date, category/job, price/unit, quantity/package facts,
 and subtotal/tax share the foundation's text-scaling-aware two-field reflow
 rule: they sit side by side when both remain usable and stack otherwise.
 
-Customer-facing receipt-detail choices are **Save the receipt total** and
-**Review every item on the receipt**. The internal basic/detailed enum names do
-not appear as unexplained UI. Choosing item review requires at least one item
-before saving a completed expense; the user can instead choose total-only when
-itemization is unavailable or unnecessary.
+The owner rejected **Save the receipt total**, **Review every item on the
+receipt**, and the generic **Use for materials** explanation as misleading
+choices. Review is required for all confirmed facts. Preserve Basic/Detailed
+capability using an optional item list and explicit **Add item** action, not an
+implied choice to skip reviewing the receipt. Save says what record is saved.
+
+Do not enclose the whole form inside one decorated parent container. Use
+full available bounded width with separate meaningful sections, shared spacing,
+legible controls, and the application's richer blue-gray/meaning-based colors.
+No white/pale nested-card replacement or private color system. Refer to the
+Dashboard's accepted shared hierarchy without copying dashboard content.
+
+Related work must offer actual searchable selectors for an existing **Job**,
+**Estimate**, or **Invoice**, with stable IDs and authorization. Linking an
+Expense does not rewrite an accepted Estimate or issued Invoice or add a second
+purchase. Cross-record billing/stock effects require their owner's explicit
+confirmation. The other Work model owns those destination workflows.
+
+**Add expense** must open an understandable new-expense route, not Fuel or an
+unnamed draft popup. Provide a separate visible unfinished-expenses route with
+useful vendor/date/amount titles. Preserve recovery and explicit resume/discard
+without silently resuming or deleting an unrelated draft. Optional Category,
+receipt images, **Add item**, totals, related work and final review must be
+discoverable. Daily totals must show date/scope/currency and drill into the
+included confirmed records; exclude drafts and avoid mixed-currency sums.
 
 The item section says **Tap any item to review or change it**. Every item is an
 individual bordered control with an explicit Edit action and a separate Remove
@@ -568,6 +651,14 @@ cost or markup. The UI shows only authorized fields and never reveals hidden
 values through totals, exports, notifications, or error messages.
 
 ## 12. Catalog and core package strategy
+
+Owner clarification, September 14, 2026: electrical, plumbing, and HVAC core
+packages ship with the application and remain usable locally without cloud
+setup. These bundled definitions do not create owned stock or purchase costs.
+Optional later downloads remain governed by D33. Other trades and custom items
+remain supported; the three launch packs are not a restriction on who can use
+inventory. The authorized Hive-to-SQLite inventory/parsing transfer and its
+observed gaps are tracked in [the extraction checkpoint](inventory_migration/README.md).
 
 The built-in catalog is not one enormous mandatory inventory. It has layers:
 

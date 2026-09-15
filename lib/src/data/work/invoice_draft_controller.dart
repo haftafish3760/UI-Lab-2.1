@@ -11,6 +11,7 @@ class InvoiceDraftInput {
   const InvoiceDraftInput({
     required this.creatorId,
     required this.number,
+    this.purchaseOrderNumber = '',
     required this.baseStorageRevision,
     required this.title,
     required this.discount,
@@ -34,6 +35,7 @@ class InvoiceDraftInput {
 
   final String creatorId;
   final String number;
+  final String purchaseOrderNumber;
   final int baseStorageRevision;
   final String title;
   final String discount;
@@ -57,6 +59,7 @@ class InvoiceDraftInput {
   Map<String, Object?> toPayload() => {
     'creatorId': creatorId,
     'number': number,
+    'purchaseOrderNumber': purchaseOrderNumber,
     'baseStorageRevision': baseStorageRevision,
     'title': title,
     'discount': discount,
@@ -82,6 +85,7 @@ class InvoiceDraftInput {
       InvoiceDraftInput(
         creatorId: input['creatorId'] as String,
         number: input['number'] as String,
+        purchaseOrderNumber: input['purchaseOrderNumber'] as String? ?? '',
         baseStorageRevision: input['baseStorageRevision'] as int,
         title: input['title'] as String,
         discount: input['discount'] as String,

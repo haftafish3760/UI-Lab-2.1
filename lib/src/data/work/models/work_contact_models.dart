@@ -10,8 +10,14 @@ class WorkCompanyProfile {
     required this.website,
     required this.address,
     required this.logoLabel,
+    this.logoReference = '',
+    this.licenseNumber = '',
+    this.businessIdentifier = '',
+    this.documentFooter = '',
+    this.documentAccentColor,
     required this.defaultTerms,
     required this.defaultCurrency,
+    this.requireEstimateApproval = false,
   });
 
   final String companyName;
@@ -20,9 +26,15 @@ class WorkCompanyProfile {
   final String email;
   final String website;
   final String address;
-  final String logoLabel;
+  final String logoLabel,
+      logoReference,
+      licenseNumber,
+      businessIdentifier,
+      documentFooter;
+  final int? documentAccentColor;
   final String defaultTerms;
   final String defaultCurrency;
+  final bool requireEstimateApproval;
 
   WorkCompanyProfile copyWith({
     String? companyName,
@@ -32,9 +44,17 @@ class WorkCompanyProfile {
     String? website,
     String? address,
     String? logoLabel,
+    String? logoReference,
+    String? licenseNumber,
+    String? businessIdentifier,
+    String? documentFooter,
+    int? documentAccentColor,
     String? defaultTerms,
     String? defaultCurrency,
+    bool? requireEstimateApproval,
   }) => WorkCompanyProfile(
+    requireEstimateApproval:
+        requireEstimateApproval ?? this.requireEstimateApproval,
     companyName: companyName ?? this.companyName,
     businessCategory: businessCategory ?? this.businessCategory,
     phone: phone ?? this.phone,
@@ -42,6 +62,11 @@ class WorkCompanyProfile {
     website: website ?? this.website,
     address: address ?? this.address,
     logoLabel: logoLabel ?? this.logoLabel,
+    logoReference: logoReference ?? this.logoReference,
+    licenseNumber: licenseNumber ?? this.licenseNumber,
+    businessIdentifier: businessIdentifier ?? this.businessIdentifier,
+    documentFooter: documentFooter ?? this.documentFooter,
+    documentAccentColor: documentAccentColor ?? this.documentAccentColor,
     defaultTerms: defaultTerms ?? this.defaultTerms,
     defaultCurrency: defaultCurrency ?? this.defaultCurrency,
   );

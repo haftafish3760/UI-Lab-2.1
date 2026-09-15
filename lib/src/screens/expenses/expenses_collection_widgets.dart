@@ -42,15 +42,24 @@ class _ExpenseEntriesSectionState extends State<_ExpenseEntriesSection> {
           headerKey: const ValueKey('expense-entries-header'),
           background: OperationalCardPalette.entries.start,
           foreground: OperationalCardPalette.entries.foreground,
-          child: Row(
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: [
-              Icon(Icons.receipt_long_outlined, color: colors.onSurface),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  "Today's entries",
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.receipt_long_outlined, color: colors.onSurface),
+                  const SizedBox(width: 8),
+                  const Flexible(
+                    child: Text(
+                      "Today's entries",
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
               ),
               if (widget.expenses.length > 3)
                 TextButton(
@@ -59,10 +68,12 @@ class _ExpenseEntriesSectionState extends State<_ExpenseEntriesSection> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        _expanded
-                            ? 'Show less'
-                            : 'Show all ${widget.expenses.length}',
+                      Flexible(
+                        child: Text(
+                          _expanded
+                              ? 'Show less'
+                              : 'Show all ${widget.expenses.length}',
+                        ),
                       ),
                       Icon(
                         _expanded

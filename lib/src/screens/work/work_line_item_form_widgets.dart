@@ -25,32 +25,56 @@ class _NumberAndUnitRow extends StatelessWidget {
       'liter',
       'roll',
       'pack',
+      'piece',
+      'yard',
+      'box',
+      'bag',
+      'package',
+      'case',
+      'day',
+      'square foot',
+      'square meter',
     };
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: quantity,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: 'Quantity'),
-          ),
+    final fields = <Widget>[
+      TextField(
+        controller: quantity,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          labelText: unit == 'hour' ? 'Hours' : 'Quantity',
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: DropdownButtonFormField<String>(
-            initialValue: unit,
-            decoration: const InputDecoration(labelText: 'Unit'),
-            items: units
-                .map(
-                  (value) => DropdownMenuItem(value: value, child: Text(value)),
-                )
-                .toList(),
-            onChanged: (value) {
-              if (value != null) onUnitChanged(value);
-            },
-          ),
-        ),
-      ],
+      ),
+      DropdownButtonFormField<String>(
+        initialValue: unit,
+        isExpanded: true,
+        itemHeight: null,
+        decoration: const InputDecoration(labelText: 'Unit of measure'),
+        items: units
+            .map((value) => DropdownMenuItem(value: value, child: Text(value)))
+            .toList(),
+        onChanged: (value) {
+          if (value != null) onUnitChanged(value);
+        },
+      ),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (AppLayoutEngine.stackFormFieldsFor(
+          constraints.maxWidth,
+          textScaler: MediaQuery.textScalerOf(context),
+        )) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [fields[1], const SizedBox(height: 10), fields[0]],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: fields[1]),
+            const SizedBox(width: 10),
+            Expanded(child: fields[0]),
+          ],
+        );
+      },
     );
   }
 }

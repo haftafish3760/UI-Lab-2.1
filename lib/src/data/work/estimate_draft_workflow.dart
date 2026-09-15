@@ -3,8 +3,11 @@ import '../storage/draft_autosave_session.dart';
 import '../storage/draft_recovery_query.dart';
 import '../storage/local_record_identity.dart';
 import 'estimate_confirmation.dart';
+import '../storage/local_record_store.dart';
+import 'work_contact_codec.dart';
 import 'estimate_draft_controller.dart';
 import 'models/work_models.dart';
+import 'models/estimate_models.dart';
 import 'work_persistence_session.dart';
 
 extension EstimateDraftWorkflow on WorkPersistenceSession {
@@ -99,7 +102,26 @@ extension EstimateDraftWorkflow on WorkPersistenceSession {
         draft,
         confirm: (input, checkpoint) async {
           validateIdentity(input);
-          final estimate = buildConfirmedEstimate(input, now: DateTime.now());
+          var estimate = buildConfirmedEstimate(input, now: DateTime.now());
+          if (input.baseRecord == null) {
+            final companyStore = LocalRecordStore(repository.database);
+            final companies = await companyStore.read(
+              organizationId: permissions.organizationId,
+              domain: 'directory/company',
+              ownerIds: {permissions.organizationId},
+              recordIds: {'company'},
+            );
+            if (companies.isNotEmpty &&
+                decodeWorkCompanyProfile(
+                  companyStore.decode(companies.single),
+                ).requireEstimateApproval) {
+              estimate = estimate.copyWith(
+                requiresCompanyReview: true,
+                estimateCompanyReviewStatus:
+                    EstimateCompanyReviewStatus.pending,
+              );
+            }
+          }
           final saved = await save(
             records: [estimate],
             expectedStorageRevisions: {estimate.id: input.baseStorageRevision},

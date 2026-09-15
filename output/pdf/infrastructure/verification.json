@@ -1,0 +1,62 @@
+[
+  {
+    "file": "landscape-corrupt.pdf",
+    "pages": 9,
+    "checks": "passed"
+  },
+  {
+    "file": "landscape-jpeg.pdf",
+    "pages": 9,
+    "checks": "passed"
+  },
+  {
+    "file": "landscape-none.pdf",
+    "pages": 9,
+    "checks": "passed"
+  },
+  {
+    "file": "landscape-tall.pdf",
+    "pages": 9,
+    "checks": "passed"
+  },
+  {
+    "file": "landscape-transparent.pdf",
+    "pages": 9,
+    "checks": "passed"
+  },
+  {
+    "file": "landscape-wide.pdf",
+    "pages": 9,
+    "checks": "passed"
+  },
+  {
+    "file": "portrait-corrupt.pdf",
+    "pages": 7,
+    "checks": "passed"
+  },
+  {
+    "file": "portrait-jpeg.pdf",
+    "pages": 7,
+    "checks": "passed"
+  },
+  {
+    "file": "portrait-none.pdf",
+    "pages": 7,
+    "checks": "passed"
+  },
+  {
+    "file": "portrait-tall.pdf",
+    "pages": 7,
+    "checks": "passed"
+  },
+  {
+    "file": "portrait-transparent.pdf",
+    "pages": 7,
+    "checks": "passed"
+  },
+  {
+    "file": "portrait-wide.pdf",
+    "pages": 7,
+    "checks": "passed"
+  }
+]

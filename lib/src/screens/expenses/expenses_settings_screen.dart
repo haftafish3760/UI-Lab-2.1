@@ -34,6 +34,7 @@ class ExpensesSettingsScreen extends StatefulWidget {
 
 class _ExpensesSettingsScreenState extends State<ExpensesSettingsScreen>
     with DraftNavigationGuard {
+  late var _weekStartsOn = widget.initial.weekStartsOn;
   late var _showJobLinks = widget.initial.showJobLinks;
   late var _categoryMode = widget.initial.categoryMode;
   late final _customCategories = widget.initial.customCategories.toSet();
@@ -74,6 +75,7 @@ class _ExpensesSettingsScreenState extends State<ExpensesSettingsScreen>
   Set<ExpenseCategory>? _pendingCategories;
   Map<ExpenseCategory, ExpenseReceiptType>? _pendingReceiptTypes;
   ExpenseDisplayPreferences get _current => ExpenseDisplayPreferences(
+    weekStartsOn: _weekStartsOn,
     showJobLinks: _showJobLinks,
     categoryMode: _categoryMode,
     customCategories: _customCategories.toList(),
@@ -118,6 +120,20 @@ class _ExpensesSettingsScreenState extends State<ExpensesSettingsScreen>
                         child: const Text('Continue category choices'),
                       ),
 
+                    DropdownButtonFormField<int>(
+                      key: const ValueKey('expense-week-start'),
+                      initialValue: _weekStartsOn,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Business week starts on'),
+                      items: [for (var day = 1; day <= 7; day++)
+                        DropdownMenuItem(value: day, child: Text(_weekdayName(context, day)))],
+                      onChanged: _saving ? null : (day) {
+                        if (day != null) _edit(() => _weekStartsOn = day);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Text('Ends on ${_weekdayName(context, (_weekStartsOn + 5) % 7 + 1)}. Used for weekly expense totals and entries.'),
+                    const SizedBox(height: 20),
                     SwitchListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
@@ -233,3 +249,6 @@ class _ExpensesSettingsScreenState extends State<ExpensesSettingsScreen>
     ExpenseCategoryDisplayMode.custom => 'Custom',
   };
 }
+
+String _weekdayName(BuildContext context, int day) =>
+    MaterialLocalizations.of(context).formatFullDate(DateTime(2026, 6, day)).split(',').first;

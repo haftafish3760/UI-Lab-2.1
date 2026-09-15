@@ -41,6 +41,7 @@ class _DashboardCommandBar extends StatelessWidget {
                 minimumSize: const Size(0, 48),
               ),
             ),
+          DashboardViewSelector(view: body.view, onChanged: body.onViewChanged),
           if (body.onOpenActions != null)
             FilledButton.icon(
               key: const ValueKey('dashboard-inline-actions'),

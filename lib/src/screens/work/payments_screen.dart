@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../shared/calendar_width_section.dart';
 
 import '../../data/prototype_operations_store.dart';
 import '../../layout/app_layout_engine.dart';
@@ -15,6 +16,8 @@ import 'invoice_permissions.dart';
 import 'work_detail_header.dart';
 import 'work_models.dart';
 import 'work_month_calendar.dart';
+
+part 'payment_record_row.dart';
 
 class PaymentsScreen extends StatefulWidget {
   const PaymentsScreen({
@@ -78,65 +81,96 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               textScaler: MediaQuery.textScalerOf(context),
             );
             return ListView(
-              padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
+              padding: const EdgeInsets.fromLTRB(0, 10, 0, 96),
               children: [
-                OperationsWorkspaceFrame(
-                  layout: layout,
-                  primaryContent: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      WorkDetailHeader(
-                        label: 'Payments',
-                        selectedDay: _selectedDay,
-                        onBack: () => Navigator.of(context).pop(),
-                        showDateContext: true,
-                      ),
-                      const SizedBox(height: 14),
-                      _PaymentsHeading(
-                        totalCents: payments.fold(
-                          0,
-                          (sum, entry) => sum + entry.amountCents,
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: insets.left,
+                    right: insets.right,
+                  ),
+                  child: OperationsWorkspaceFrame(
+                    layout: layout,
+                    primaryContent: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        WorkDetailHeader(
+                          label: 'Payments',
+                          selectedDay: _selectedDay,
+                          onBack: () => Navigator.of(context).pop(),
+                          showDateContext: true,
                         ),
-                      ),
-                      if (widget.permissions.canRecordPayment &&
-                          !compactActions) ...[
-                        const SizedBox(height: 10),
-                        Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: FilledButton.icon(
-                            key: const ValueKey('record-payment-inline'),
-                            onPressed: _recordPayment,
-                            icon: const Icon(Icons.add_card_outlined),
-                            label: const Text('Record payment'),
+                        const SizedBox(height: 14),
+                        _PaymentsHeading(
+                          totalCents: payments.fold(
+                            0,
+                            (sum, entry) => sum + entry.amountCents,
                           ),
                         ),
+                        if (widget.permissions.canRecordPayment &&
+                            !compactActions) ...[
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: FilledButton.icon(
+                              key: const ValueKey('record-payment-inline'),
+                              onPressed: _recordPayment,
+                              icon: const Icon(Icons.add_card_outlined),
+                              label: const Text('Record payment'),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        _PaymentList(
+                          payments: payments,
+                          store: _store,
+                          permissions: widget.permissions,
+                        ),
                       ],
-                      const SizedBox(height: 12),
-                      _PaymentList(
-                        payments: payments,
-                        store: _store,
-                        permissions: widget.permissions,
-                      ),
-                    ],
-                  ),
-                  followingContent: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Payments calendar',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      WorkMonthCalendar(
-                        maximumWidth: layout.laneWidth,
-                        selectedDay: _selectedDay,
-                        recordKind: CalendarRecordKind.payment,
-                        entryCountForDay: (day) => _paymentsOn(day).length,
-                        onDaySelected: _openDay,
-                      ),
-                    ],
+                    ),
+                    followingContent: layout.columns == 1
+                        ? null
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'Payments calendar',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              WorkMonthCalendar(
+                                maximumWidth: layout.laneWidth,
+                                selectedDay: _selectedDay,
+                                recordKind: CalendarRecordKind.payment,
+                                entryCountForDay: (day) =>
+                                    _paymentsOn(day).length,
+                                onDaySelected: _openDay,
+                              ),
+                            ],
+                          ),
                   ),
                 ),
+                if (layout.columns == 1) ...[
+                  SizedBox(height: layout.gap),
+                  CalendarWidthSection(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Payments calendar',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        WorkMonthCalendar(
+                          maximumWidth: AppLayoutEngine.calendarMaximum,
+                          selectedDay: _selectedDay,
+                          recordKind: CalendarRecordKind.payment,
+                          entryCountForDay: (day) => _paymentsOn(day).length,
+                          onDaySelected: _openDay,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             );
           },
@@ -378,90 +412,6 @@ class _PaymentList extends StatelessWidget {
       ],
     ),
   );
-}
-
-class _PaymentRecordRow extends StatelessWidget {
-  const _PaymentRecordRow({
-    required this.entry,
-    required this.invoice,
-    required this.permissions,
-  });
-
-  final PrototypeFinancialEntry entry;
-  final WorkRecord? invoice;
-  final InvoicePermissions permissions;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final accent = Theme.of(context).extension<AppSemanticColors>()!.success;
-    final customer = invoice?.client ?? 'Invoice customer unavailable';
-    return Semantics(
-      button: invoice != null,
-      label:
-          '${entry.sourceId}, $customer, payment ${_moneyCents(entry.amountCents)}',
-      child: Material(
-        key: ValueKey('payment-entry-${entry.id}'),
-        color: colors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(7),
-          side: BorderSide(color: accent.withValues(alpha: .65)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: invoice == null
-              ? null
-              : () => Navigator.of(context).push<void>(
-                  MaterialPageRoute(
-                    builder: (_) => InvoiceDetailScreen(
-                      record: invoice!,
-                      permissions: permissions,
-                    ),
-                  ),
-                ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 60),
-            child: Row(
-              children: [
-                SizedBox(width: 5, child: ColoredBox(color: accent)),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 7,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          entry.sourceId,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        Text(
-                          customer,
-                          style: TextStyle(color: colors.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Text(
-                  _moneyCents(entry.amountCents),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                if (invoice != null) ...[
-                  const SizedBox(width: 4),
-                  const Icon(Icons.chevron_right_rounded, size: 22),
-                ],
-                const SizedBox(width: 6),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 WorkRecord? _invoiceFor(PrototypeOperationsStore store, String number) => store

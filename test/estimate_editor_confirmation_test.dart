@@ -1,3 +1,4 @@
+import 'support/document_form_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -99,6 +100,7 @@ void main() {
       );
       await tester.tap(find.text('Edit estimate'));
       await tester.pumpAndSettle();
+      await openDocumentSection(tester, 'estimate-information');
       await waitForNativeSave(
         tester,
         () =>
@@ -108,6 +110,7 @@ void main() {
         find.byKey(const ValueKey('estimate-title')),
         'Repair completed',
       );
+      await closeDocumentSection(tester);
       await tester.tap(find.byKey(const ValueKey('save-estimate-changes')));
       await waitForNativeSave(tester, () => work.failureMessage != null);
       expect(

@@ -59,8 +59,8 @@ class PrototypeOperationsStore extends ChangeNotifier {
          ...(workRecords ??
              (workSession == null ? prototypeDemoWorkRecords() : const [])),
        ],
-       _materialCosts = [...(materialCosts ?? demoMaterialCosts)],
-       _inventoryStock = [...(inventoryStock ?? demoInventoryStock)],
+       _materialCosts = [...(materialCosts ?? (workSession == null ? demoMaterialCosts : const []))],
+       _inventoryStock = [...(inventoryStock ?? (workSession == null ? demoInventoryStock : const []))],
        _dashboardDays = {...?dashboardDays},
        _companyProfile = companyProfile ?? demoWorkCompany,
        _customers = [...(customers ?? demoWorkCustomers)] {
@@ -121,7 +121,7 @@ class PrototypeOperationsStore extends ChangeNotifier {
   }) {
     final stored =
         _dashboardDays[_dashboardDayKey(day, contextId)] ??
-        demoDataFor(day, employeeId: employeeId);
+        (workSession == null ? demoDataFor(day, employeeId: employeeId) : const DashboardDayData());
     final work = workSession;
     final planned = work == null
         ? stored
