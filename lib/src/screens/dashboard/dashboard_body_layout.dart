@@ -153,15 +153,17 @@ class _DashboardBody extends StatelessWidget {
                             ],
                           ),
                         ],
-                        if (view == AppViewMode.admin) ...[
-                          const SizedBox(height: 12),
-                          DashboardScopeSelector(
-                            selectedId: employee?.id,
-                            onEmployee: onEmployeeSelected,
-                            onCompany: onCompanyOverview,
-                          ),
-                        ],
                         const SizedBox(height: 12),
+                        if (view == AppViewMode.admin && employee == null)
+                          AdminDashboardOverview(
+                            summaryOnly: true,
+                            date: selectedDate,
+                            permissions:
+                                const DashboardPermissions.development(),
+                            onOpenPlan: onOpenPlan,
+                            onAttention: onOpenAllAttention,
+                            attentionCount: attentionItems.length,
+                          ),
                         if (view != AppViewMode.admin)
                           DashboardSummaryStrip(
                             wide: layout.columns > 1,

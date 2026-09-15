@@ -35,7 +35,7 @@ void main() {
         records
             .singleWhere((record) => record.expenseId == 'EXP-1048')
             .total
-            .minorUnits,
+            ?.minorUnits,
         23150,
       );
       final count = records.length;

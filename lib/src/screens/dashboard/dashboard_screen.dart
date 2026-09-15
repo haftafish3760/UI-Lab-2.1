@@ -34,7 +34,6 @@ import '../work/payments_screen.dart';
 import '../expenses/expenses_screen.dart';
 import 'dashboard_workday_models.dart';
 import 'dashboard_end_workday_dialog.dart';
-import 'dashboard_scope_selector.dart';
 import '../expenses/expense_editor_screen.dart';
 import '../expenses/expense_detail_screen.dart';
 import '../expenses/expense_models.dart';

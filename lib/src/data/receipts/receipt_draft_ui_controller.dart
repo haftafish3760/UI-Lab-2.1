@@ -1,8 +1,11 @@
+import 'receipt_entry_setup.dart';
 import 'package:flutter/widgets.dart';
 
 import 'authorized_receipt_draft_service.dart';
 import 'receipt_draft_record.dart';
 import 'receipt_draft_repository.dart';
+import 'receipt_selected_details.dart';
+import 'receipt_item_read.dart';
 
 enum ReceiptDraftUiPhase { idle, loading, ready, failed }
 
@@ -153,6 +156,7 @@ class ReceiptDraftUiController extends ChangeNotifier {
     required DateTime occurredAtUtc,
     String? linkedJobId,
     String? linkedJobLabel,
+    ReceiptEntrySetup? entrySetup,
   }) => _mutate(
     draftId: draftId,
     operation: ReceiptDraftUiOperation.create,
@@ -165,6 +169,7 @@ class ReceiptDraftUiController extends ChangeNotifier {
         expenseDate: expenseDate,
         linkedJobId: linkedJobId,
         linkedJobLabel: linkedJobLabel,
+        entrySetup: entrySetup,
         evidence: const [],
         lifecycle: ReceiptDraftLifecycle(
           revision: 1,
@@ -188,6 +193,10 @@ class ReceiptDraftUiController extends ChangeNotifier {
     int? expectedRevision,
     String? linkedJobId,
     String? linkedJobLabel,
+    ReceiptSelectedDetails? selectedDetails,
+    List<ReceiptItemRead>? itemReads,
+    ReceiptEntrySetup? entrySetup,
+    bool replaceSelectedDetails = false,
   }) => _mutate(
     draftId: draftId,
     operation: ReceiptDraftUiOperation.update,
@@ -215,6 +224,11 @@ class ReceiptDraftUiController extends ChangeNotifier {
         );
       }
       final requested = current.copyWith(
+        entrySetup: entrySetup,
+        itemReads: itemReads,
+        selectedDetails: replaceSelectedDetails
+            ? selectedDetails
+            : current.selectedDetails,
         title: title.trim(),
         expenseDate: expenseDate,
         linkedJobId: linkedJobId,

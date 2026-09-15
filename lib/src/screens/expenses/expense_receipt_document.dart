@@ -83,7 +83,7 @@ class _ExpenseReceiptDocumentState extends State<ExpenseReceiptDocument> {
                   Text(expense.receiptStatus ?? 'No receipt image attached.'),
                 const SizedBox(height: 12),
                 Text(
-                  expense.vendor,
+                  expense.displayVendor,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 18,
@@ -155,15 +155,19 @@ class _ExpenseReceiptDocumentState extends State<ExpenseReceiptDocument> {
                   ],
                 ],
                 const SizedBox(height: 12),
-                ExpenseReceiptTotalRow(
-                  label: 'Subtotal',
-                  value: expense.resolvedReceiptSubtotal,
-                ),
-                ExpenseReceiptTotalRow(
-                  label: 'Sales tax',
-                  value: expense.salesTax,
-                ),
-                const Divider(height: 12),
+                if (expense.receiptType == ExpenseReceiptType.detailed ||
+                    expense.receiptSubtotal != null ||
+                    expense.salesTax != 0) ...[
+                  ExpenseReceiptTotalRow(
+                    label: 'Subtotal',
+                    value: expense.resolvedReceiptSubtotal,
+                  ),
+                  ExpenseReceiptTotalRow(
+                    label: 'Sales tax',
+                    value: expense.salesTax,
+                  ),
+                  const Divider(height: 12),
+                ],
                 ExpenseReceiptTotalRow(
                   label: 'Total',
                   value: expense.amount,
@@ -285,7 +289,7 @@ class _ReceiptPaper extends StatelessWidget {
         const Icon(Icons.receipt_long_outlined, size: 28),
         const SizedBox(height: 5),
         Text(
-          expense.vendor,
+          expense.displayVendor,
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
         Text(

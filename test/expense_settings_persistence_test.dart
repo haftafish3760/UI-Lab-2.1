@@ -222,7 +222,7 @@ void main() {
           );
           expect(
             find.text(
-              'Detailed receipts: 2 categories · Other categories: Basic',
+              'Detailed receipts: 2 categories · Other categories: Simple',
             ),
             findsOneWidget,
           );

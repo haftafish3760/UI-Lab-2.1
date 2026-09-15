@@ -188,7 +188,7 @@ void main() {
                 categoryLabelSnapshot: ExpenseCategory.materials.label,
                 packagesPurchased: ExpenseDecimalValue.fromDecimalString('2'),
                 packageStyleCode: 'each',
-                pricePerPackage: const ExpenseMoney(minorUnits: 749),
+                pricePerPackage: ExpenseUnitPrice.fromDecimalString('7.49'),
                 extendedTotal: const ExpenseMoney(minorUnits: 1498),
               ),
             ],
@@ -313,7 +313,7 @@ void main() {
       var projection = (await bridge.loadProjection(
         permissions: _technicianPermissions(),
       )).active.single;
-      expect(projection.exactTotal.minorUnits, 1099);
+      expect(projection.exactTotal?.minorUnits, 1099);
       expect(projection.expenseTimeMinutes, 615);
       expect(projection.vehicleId, 'truck-12');
       expect(projection.revision, 1);

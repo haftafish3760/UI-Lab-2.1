@@ -24,7 +24,7 @@ class ExpenseRecordAdapter {
         'Expense date must be confirmed before save.',
       );
     }
-    final total = _money(record.amount);
+    final total = record.amount == null ? null : _money(record.amount!);
     return StoredExpenseRecord(
       expenseId: record.id,
       organizationId: organizationId,
@@ -32,8 +32,8 @@ class ExpenseRecordAdapter {
       paidByEmployeeId: paidByEmployeeId,
       expenseDate: resolvedDate,
       vendorName: record.vendor,
-      categoryId: record.category.name,
-      categoryLabelSnapshot: record.category.label,
+      categoryId: record.category.storageId,
+      categoryLabelSnapshot: record.category.storageLabel,
       total: total,
       expenseTimeMinutes: expenseTimeMinutes,
       receiptId: receiptId,
@@ -47,7 +47,7 @@ class ExpenseRecordAdapter {
         record.approvalStatus,
         note: record.approvalReason,
       ),
-      itemization: _itemizationFromUi(record, total.currencyCode),
+      itemization: _itemizationFromUi(record, total?.currencyCode ?? 'USD'),
       lifecycle: ExpenseLifecycle(
         revision: revision,
         createdAtUtc: nowUtc.toUtc(),
@@ -65,8 +65,8 @@ class ExpenseRecordAdapter {
     return ExpenseRecord(
       id: record.expenseId,
       vendor: record.vendorName,
-      category: ExpenseCategory.values.byName(record.categoryId),
-      amount: record.total.minorUnits / 100,
+      category: ExpenseCategory.fromStorageId(record.categoryId),
+      amount: record.total == null ? null : record.total!.minorUnits / 100,
       date: record.expenseDate,
       owner: ownerDisplayName,
       paidByEmployeeId: record.paidByEmployeeId,
@@ -113,21 +113,26 @@ class ExpenseRecordAdapter {
     ExpenseLineItem line,
     String currencyCode,
   ) {
-    final isCountPackage =
-        line.unit == 'pack' || line.unit == 'package' || line.unit == 'box';
+    final isCountPackage = line.usesPackageContents;
     return StoredExpenseLineItem(
       lineItemId: line.id,
       description: line.description,
-      categoryId: line.category.name,
-      categoryLabelSnapshot: line.category.label,
+      categoryId: line.category.storageId,
+      categoryLabelSnapshot: line.category.storageLabel,
       packagesPurchased: _decimal(line.quantity),
       packageStyleCode: line.unit,
-      pricePerPackage: _money(line.unitPrice, currencyCode: currencyCode),
+      pricePerPackage: ExpenseUnitPrice.fromDecimalString(
+        line.unitPrice.toString(),
+        currencyCode: currencyCode,
+      ),
       extendedTotal: _money(line.total, currencyCode: currencyCode),
-      containedQuantityPerPackage: isCountPackage
-          ? _decimal(line.unitsPerPackage)
+      containedQuantityPerPackage:
+          isCountPackage && line.unitsPerPackage != null
+          ? _decimal(line.unitsPerPackage!)
           : null,
-      containedUnitCode: isCountPackage ? 'each' : null,
+      containedUnitCode: isCountPackage && line.unitsPerPackage != null
+          ? 'each'
+          : null,
       partNumber: line.partNumber,
       jobId: line.jobId,
       jobLabelSnapshot: line.jobLabel,
@@ -138,13 +143,13 @@ class ExpenseRecordAdapter {
       ExpenseLineItem(
         id: line.lineItemId,
         description: line.description,
-        category: ExpenseCategory.values.byName(line.categoryId),
+        category: ExpenseCategory.fromStorageId(line.categoryId),
         quantity: double.parse(line.packagesPurchased.decimalValue),
         unit: line.packageStyleCode,
-        unitPrice: line.pricePerPackage.minorUnits / 100,
+        unitPrice: double.parse(line.pricePerPackage.decimalValue),
         confirmedLineTotal: line.extendedTotal.minorUnits / 100,
         unitsPerPackage: line.containedQuantityPerPackage == null
-            ? 1
+            ? null
             : double.parse(line.containedQuantityPerPackage!.decimalValue),
         partNumber: line.partNumber,
         jobId: line.jobId,

@@ -137,7 +137,8 @@ class RecurringExpensePaymentCoordinator {
     final date = expense.resolvedDate;
     return expense.vendor == template.title &&
         expense.category == template.category &&
-        (expense.amount * 100).round() == (amount * 100).round() &&
+        expense.amount != null &&
+        (expense.amount! * 100).round() == (amount * 100).round() &&
         expense.paidByEmployeeId == template.ownerEmployeeId &&
         date != null &&
         date.year == paidOn.year &&

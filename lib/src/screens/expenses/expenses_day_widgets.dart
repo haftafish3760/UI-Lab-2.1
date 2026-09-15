@@ -7,24 +7,11 @@ class _ExpenseSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = expenses.fold<double>(0, (sum, item) => sum + item.amount);
-    return SectionCard(
-      child: Row(
-        children: [
-          const Icon(Icons.payments_outlined),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text(
-              'Total expenses for this day',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          Text(
-            expenseMoney(total),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-          ),
-        ],
-      ),
+    final summary = ExpenseAmountSummary(expenses);
+    return ExpenseTotalSummaryCard(
+      label: 'Total expenses for this day',
+      icon: Icons.payments_outlined,
+      summary: summary,
     );
   }
 }

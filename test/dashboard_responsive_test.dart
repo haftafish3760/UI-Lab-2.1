@@ -49,21 +49,41 @@ void main() {
           find.byKey(const ValueKey('admin-company-overview')),
           findsOneWidget,
         );
-        final collections = find.text('Collected money');
+        final collections = find.text('Business overview');
+        expect(find.text('Invoiced revenue'), findsNothing);
+        expect(find.text('Work needing action'), findsNothing);
+        expect(find.text('Money received'), findsNothing);
+        expect(find.text('Money spent'), findsNothing);
+        expect(
+          tester
+              .getTopLeft(find.byKey(const ValueKey('admin-company-summary')))
+              .dy,
+          lessThan(tester.getTopLeft(find.text("Today's Plan")).dy),
+        );
         await tester.ensureVisible(collections);
         await tester.pumpAndSettle();
         await tester.tap(collections);
         await tester.pumpAndSettle();
-        expect(
-          find.byKey(const ValueKey('report-sources-screen')),
-          findsOneWidget,
-        );
+        expect(find.byKey(const ValueKey('reports-screen')), findsOneWidget);
         await tester.tap(find.byIcon(Icons.arrow_back_rounded));
         await tester.pumpAndSettle();
-        final employee = find.byKey(const ValueKey('employee-alex'));
+        expect(find.byKey(const ValueKey('employee-alex')), findsNothing);
+        final employee = find.byKey(const ValueKey('company-overview-summary'));
+        await tester.scrollUntilVisible(
+          employee,
+          -300,
+          scrollable: find
+              .descendant(
+                of: find.byType(CustomScrollView).first,
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
         await tester.ensureVisible(employee);
         await tester.pumpAndSettle();
         await tester.tap(employee);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Alex Morgan').last);
         await tester.pumpAndSettle();
         expect(
           find.byKey(const ValueKey('admin-employee-overview')),
@@ -264,7 +284,7 @@ void main() {
   ) async {
     await pumpAt(tester, const Size(1440, 900));
     expect(find.byType(NavigationBar), findsNothing);
-    expect(find.text('MAINTAINIAC'), findsOneWidget);
+    expect(find.text('Tame Your Biz'), findsOneWidget);
     expect(find.text('Day Prep'), findsNothing);
     expect(find.text('Open day prep'), findsNothing);
     expect(find.text('14 of 16 ready'), findsNothing);
@@ -303,7 +323,7 @@ void main() {
   ) async {
     await pumpAt(tester, const Size(1107, 713));
     expect(find.byType(NavigationBar), findsNothing);
-    expect(find.text('MAINTAINIAC'), findsOneWidget);
+    expect(find.text('Tame Your Biz'), findsOneWidget);
     expect(find.text("Today's Plan"), findsOneWidget);
     expect(find.text("Today's Entries"), findsOneWidget);
     expect(tester.takeException(), isNull);

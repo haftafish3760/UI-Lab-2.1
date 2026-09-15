@@ -1,6 +1,8 @@
 import 'package:ui_lab_2_1/src/data/receipts/atomic_receipt_evidence_review.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'package:ui_lab_2_1/src/screens/expenses/receipt_photo_text_panel.dart';
+import 'receipt_selected_details_recovery_test.dart' show reviewedDetails;
 import 'package:ui_lab_2_1/src/data/receipts/authorized_receipt_draft_service.dart';
 import 'package:ui_lab_2_1/src/data/receipts/receipt_draft_ui_controller.dart';
 import 'package:ui_lab_2_1/src/data/receipts/receipt_draft_ui_lab_policy.dart';
@@ -39,7 +41,7 @@ void main() {
           final photo = File('${directory.path}/receipt.png');
           await photo.writeAsBytes(
             base64Decode(
-              'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
+              'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGOIqpgGRAwQCgAmfgWhCo6K7AAAAABJRU5ErkJggg==',
             ),
           );
           final seed = ReceiptDraftUiController(
@@ -117,6 +119,14 @@ void main() {
         }
 
         var controller = await openReview();
+        tester
+            .widget<ReceiptPhotoTextPanel>(find.byType(ReceiptPhotoTextPanel))
+            .onUseDetails!(reviewedDetails);
+        await tester.pumpAndSettle();
+        await waitForNativeSave(
+          tester,
+          () => find.text('Draft saved on this device').evaluate().isNotEmpty,
+        );
         final original = controller.recordById('intake-test')!;
         final originalIds = original.activeEvidence
             .map((e) => e.evidenceId)
@@ -135,6 +145,7 @@ void main() {
           () => LocalPersistence.open(directory: directory),
         ))!;
         controller = await openReview();
+        expect(find.text('Clear selected details'), findsOneWidget);
         expect(find.text('Undo last removal'), findsOneWidget);
         expect(find.text('Remove'), findsOneWidget);
         await press('Undo last removal');
@@ -173,6 +184,11 @@ void main() {
           () => find.text('Save order').evaluate().isEmpty,
         );
         final committed = controller.recordById('intake-test')!;
+        expect(
+          committed.activeSelectedDetails!.details.merchant,
+          'Juniper Supply',
+        );
+        expect(committed.activeSelectedDetails!.details.totalMinor, 1230);
         expect(committed.lifecycle.revision, original.lifecycle.revision + 1);
         expect(committed.activeEvidence.map((e) => e.evidenceId), [
           originalIds.first,
@@ -191,6 +207,44 @@ void main() {
           }
         });
         final permissions = receiptDraftUiLabOwnerPermissions();
+        // Reopen after the review draft has been consumed. The retained receipt
+        // must still seed the editable form without a transient route result.
+        await tester.runAsync(() => persistence.close());
+        persistence = (await tester.runAsync(
+          () => LocalPersistence.open(directory: directory),
+        ))!;
+        await openReview();
+        final continueButton = find.text('Continue to receipt details');
+        await tester.ensureVisible(continueButton);
+        await tester.pumpAndSettle();
+        await tester.tap(continueButton);
+        await waitForNativeSave(
+          tester,
+          () => find
+              .byKey(const ValueKey('expense-vendor-field'))
+              .evaluate()
+              .isNotEmpty,
+        );
+        expect(
+          tester
+              .widget<TextFormField>(
+                find.byKey(const ValueKey('expense-vendor-field')),
+              )
+              .controller!
+              .text,
+          'Juniper Supply',
+        );
+        expect(
+          tester
+              .widget<TextFormField>(
+                find.byKey(const ValueKey('expense-amount-field')),
+              )
+              .controller!
+              .text,
+          '12.30',
+        );
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
         final recoveryId = AtomicReceiptEvidenceReview.draftIdFor(
           permissions.actorEmployeeId,
           'intake-test',
@@ -203,8 +257,8 @@ void main() {
           'undoId': null,
           'undoIndex': null,
         };
-        await tester.runAsync(
-          () => persistence.drafts.save(
+        await finishNativeOperation(tester, () async {
+          await persistence.drafts.save(
             organizationId: permissions.organizationId,
             ownerId: permissions.actorEmployeeId,
             domain: AtomicReceiptEvidenceReview.draftDomain,
@@ -212,8 +266,8 @@ void main() {
             expectedRevision: 0,
             payload: staleInput,
             occurredAt: DateTime.now(),
-          ),
-        );
+          );
+        });
         controller = await openReview();
         expect(
           find.textContaining('Saved evidence review could not be opened'),
@@ -260,7 +314,8 @@ void main() {
         );
         expect(
           controller.recordById('intake-test')!.lifecycle.revision,
-          committed.lifecycle.revision,
+          committed.lifecycle.revision +
+              1, // The later Continue saved one review.
         );
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pumpAndSettle();

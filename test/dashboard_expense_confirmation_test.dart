@@ -12,6 +12,10 @@ void main() {
   testWidgets('Dashboard expense commits once through the editor', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final directory = (await tester.runAsync(
       () => Directory.systemTemp.createTemp('dashboard-expense-save-'),
     ))!;
@@ -41,7 +45,7 @@ void main() {
     final vendor = find.byKey(const ValueKey('expense-vendor-field'));
     await waitForNativeSave(tester, () => vendor.evaluate().isNotEmpty);
     await tester.enterText(vendor, 'Dashboard supplier');
-    final amount = find.widgetWithText(TextFormField, 'Final amount paid');
+    final amount = find.byKey(const ValueKey('expense-amount-field'));
     await tester.ensureVisible(amount);
     await tester.enterText(amount, '7.50');
     FocusManager.instance.primaryFocus?.unfocus();

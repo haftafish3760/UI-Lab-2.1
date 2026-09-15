@@ -98,7 +98,8 @@ class AtomicRecurringExpensePayment {
                       completed.actualAmount!,
                     ).minorUnits ==
                     RecurringExpenseUiAdapter.money(actualAmount).minorUnits &&
-                RecurringExpenseUiAdapter.money(confirmed.amount).minorUnits ==
+                confirmed.amount != null &&
+                RecurringExpenseUiAdapter.money(confirmed.amount!).minorUnits ==
                     RecurringExpenseUiAdapter.money(actualAmount).minorUnits &&
                 confirmed.vendor == template.title &&
                 confirmed.category == template.category &&

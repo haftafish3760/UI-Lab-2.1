@@ -1,5 +1,4 @@
 import '../../shared/editor_input_lock.dart';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -13,10 +12,8 @@ import '../../data/receipts/receipt_draft_ui_controller.dart';
 import '../../data/receipts/receipt_submission_session.dart';
 import '../../data/receipts/receipt_media_session.dart';
 import '../../data/storage/local_media_picker_request.dart';
-import '../../shared/localized_date.dart';
-import '../../shared/operational_scope.dart';
 import '../../shared/section_card.dart';
-import 'expenses_scope_header.dart';
+import '../../shared/operational_scope.dart';
 import 'expense_editor_screen.dart';
 import 'expense_models.dart';
 import 'expense_permission_denied.dart';
@@ -24,6 +21,10 @@ import 'expense_permissions.dart';
 import 'receipt_evidence_review_screen.dart';
 import 'receipt_intake_settings_screen.dart';
 import 'receipt_source_picker.dart';
+import 'receipt_source_choices.dart';
+import 'receipt_text_entry_screen.dart';
+import '../../data/receipts/receipt_entry_setup.dart';
+import '../../data/receipts/receipt_field_proposals.dart';
 
 part 'receipt_intake_widgets.dart';
 part 'receipt_intake_confirmation.dart';
@@ -32,6 +33,10 @@ part 'receipt_intake_media.dart';
 class ReceiptIntakeScreen extends StatefulWidget {
   const ReceiptIntakeScreen({
     required this.expenseDate,
+    this.initialReceiptType,
+    this.initialCategory = ExpenseCategory.uncategorized,
+    this.applyInitialSetup = false,
+    this.onDraftReady,
     this.draftId,
     this.draftTitle,
     this.linkedJobId,
@@ -41,6 +46,10 @@ class ReceiptIntakeScreen extends StatefulWidget {
   });
 
   final DateTime expenseDate;
+  final ExpenseReceiptType? initialReceiptType;
+  final ExpenseCategory initialCategory;
+  final bool applyInitialSetup;
+  final ValueChanged<String>? onDraftReady;
   final String? draftId;
   final String? draftTitle;
   final String? linkedJobId;
@@ -64,6 +73,19 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
   ReceiptIntakeDisplayPreferences get _preferences =>
       readReceiptIntakeDisplayPreferences(context, _fixturePreferences);
   ExpenseRecord? _reviewDraft;
+  ExpenseReceiptType? _chosenReceiptType;
+  ExpenseCategory? _chosenCategory;
+  String _pastedText = '';
+  ReceiptEntrySetup get _entrySetup => ReceiptEntrySetup(
+    category: _chosenCategory ?? widget.initialCategory,
+    type:
+        _chosenReceiptType ??
+        widget.initialReceiptType ??
+        (_preferences.detailedReceipts
+            ? ExpenseReceiptType.detailed
+            : ExpenseReceiptType.basic),
+    pastedText: _pastedText,
+  );
 
   @override
   void didChangeDependencies() {
@@ -90,6 +112,13 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
       return;
     }
     _activeDraftId = stored.draftId;
+    _chosenCategory = widget.applyInitialSetup
+        ? widget.initialCategory
+        : stored.entrySetup?.category;
+    _chosenReceiptType = widget.applyInitialSetup
+        ? widget.initialReceiptType
+        : stored.entrySetup?.type;
+    _pastedText = stored.entrySetup?.pastedText ?? '';
     _evidenceBaseRevision = stored.lifecycle.revision;
     _evidence
       ..clear()
@@ -117,126 +146,69 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
         message: 'You do not have permission to add receipts.',
       );
     }
-    final scope = OperationalScope.of(context);
     final draftController = ReceiptDraftUiScope.maybeOf(context);
-    final loadingExistingDraft =
+    final loading =
         widget.draftId != null && draftController != null && !_draftLoaded;
     return Scaffold(
       key: const ValueKey('receipt-intake-screen'),
+      appBar: AppBar(
+        title: Text(
+          widget.draftId == null ? 'Add receipt' : 'Continue receipt',
+        ),
+        actions: [
+          if (widget.permissions.canConfigureDisplay)
+            IconButton(
+              key: const ValueKey('receipt-settings-button'),
+              onPressed: () => _openSettings(context),
+              tooltip: 'Receipt settings',
+              icon: const Icon(Icons.settings_outlined),
+            ),
+        ],
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
-            final available = math.max(
-              0,
+            final width = AppLayoutEngine.formWorkspaceWidthFor(
               constraints.maxWidth - insets.horizontal,
             );
-            final layout = AppLayoutEngine.detailWorkspaceFor(
-              available.toDouble(),
-              textScaler: MediaQuery.textScalerOf(context),
-            );
             final media = ReceiptSubmissionScope.maybeOf(context)?.media;
-            final source = EditorInputLock(
-              locked: _hasPendingMedia(media),
-              child: _ReceiptSourceCard(
-                evidence: _evidence,
-                openingPicker:
-                    _openingPicker || _savingDraft || loadingExistingDraft,
-                showEvidenceReminders: _preferences.showEvidenceReminders,
-                onCapture: () => _pickMedia(MediaPickerSource.camera),
-                onChoosePhotos: () => _pickMedia(MediaPickerSource.library),
-                onChooseFiles: () => _pickMedia(MediaPickerSource.files),
-                onManualEntry: () => _openReceiptEditor(imageCount: 0),
-                onReview: _openEvidenceReview,
-                onRemove: _removeEvidence,
-              ),
-            );
             return ListView(
-              padding: insets.copyWith(top: 10, bottom: 32),
+              padding: insets.copyWith(top: 12, bottom: 32),
               children: [
                 Center(
                   child: SizedBox(
-                    width: layout.workspaceWidth,
+                    width: width,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        ExpensesScopeHeader(
-                          view: scope.view,
-                          selectedEmployeeId: scope.selectedEmployeeId,
-                          onViewChanged: scope.setView,
-                          onEmployeeChanged: scope.selectEmployee,
-                          onSettings: () => _openSettings(context),
-                          showSettings: widget.permissions.canConfigureDisplay,
-                          workspaceLabel: 'Receipt intake',
-                          showBackButton: true,
-                          onBack: () => Navigator.of(context).pop(),
-                          showEmployeeStrip: false,
-                          contextKey: const ValueKey(
-                            'receipt-context-selector',
-                          ),
-                          viewKey: const ValueKey('receipt-view-selector'),
-                          settingsKey: const ValueKey(
-                            'receipt-settings-button',
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          widget.draftTitle == null
-                              ? 'Add receipt'
-                              : 'Continue receipt draft',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          widget.draftTitle ??
-                              operationalDateLabel(context, widget.expenseDate),
-                        ),
-                        const SizedBox(height: 14),
                         if (_draftFailure case final failure?) ...[
                           Text(
                             failure,
                             key: const ValueKey('receipt-draft-failure'),
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.error,
-                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                         ],
                         if (media != null) _mediaRecoveryNotice(media),
-                        if (layout.columns == 1)
-                          Column(
-                            children: [
-                              source,
-                              if (_preferences.showReviewChecklist) ...[
-                                SizedBox(height: layout.gap),
-                                const _ReceiptReviewSteps(),
-                              ],
-                            ],
-                          )
-                        else if (_preferences.showReviewChecklist)
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                width: layout.columnWidth,
-                                child: source,
-                              ),
-                              SizedBox(width: layout.gap),
-                              SizedBox(
-                                width: layout.columnWidth,
-                                child: const _ReceiptReviewSteps(),
-                              ),
-                            ],
-                          )
-                        else
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: SizedBox(
-                              width: layout.columnWidth,
-                              child: source,
-                            ),
+                        EditorInputLock(
+                          locked: _hasPendingMedia(media),
+                          child: _ReceiptSourceCard(
+                            evidence: _evidence,
+                            openingPicker:
+                                _openingPicker || _savingDraft || loading,
+                            onCapture: () =>
+                                _pickMedia(MediaPickerSource.camera),
+                            onChoosePhotos: () =>
+                                _pickMedia(MediaPickerSource.library),
+                            onText: _openPastedText,
+                            pastedText: _pastedText,
+                            onReview: _openEvidenceReview,
+                            onRemove: _removeEvidence,
                           ),
+                        ),
                       ],
                     ),
                   ),
@@ -264,6 +236,7 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
     required int imageCount,
     bool persistFirst = true,
     draft_data.StoredReceiptDraft? sourceReceipt,
+    ReceiptFieldProposals? suggestedDetails,
   }) async {
     if (persistFirst && !await _persistDraft()) return;
     if (!mounted) return;
@@ -273,9 +246,12 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
     final record = await Navigator.of(context).push<ExpenseRecord>(
       MaterialPageRoute(
         builder: (_) => ExpenseEditorScreen(
+          suggestedDetails:
+              activeDraft?.activeSelectedDetails?.details ?? suggestedDetails,
           expenseDate: activeDraft?.expenseDate ?? widget.expenseDate,
-          initialCategory: ExpenseCategory.materials,
-          initialReceiptType: ExpenseReceiptType.detailed,
+          initialCategory:
+              activeDraft?.entrySetup?.category ?? _entrySetup.category,
+          initialReceiptType: activeDraft?.entrySetup?.type ?? _entrySetup.type,
           initialReceiptImageCount:
               activeDraft?.activeEvidence.length ?? imageCount,
           initialJobId: activeDraft?.linkedJobId ?? widget.linkedJobId,
@@ -301,6 +277,7 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
         .push<ReceiptEvidenceReviewResult>(
           MaterialPageRoute(
             builder: (_) => ReceiptEvidenceReviewScreen(
+              assistanceEnabled: _preferences.assistanceEnabled,
               evidence: List.unmodifiable(_evidence),
               permissions: widget.permissions,
               initialIndex: initialIndex,
@@ -326,6 +303,7 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
         imageCount: _evidence.length,
         persistFirst: false,
         sourceReceipt: committed,
+        suggestedDetails: result.suggestedDetails,
       );
     }
   }
@@ -390,6 +368,9 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
           .toList();
       final unchanged =
           currentIds != null &&
+          current?.entrySetup?.category == _entrySetup.category &&
+          current?.entrySetup?.type == _entrySetup.type &&
+          current?.entrySetup?.pastedText == _entrySetup.pastedText &&
           imports.isEmpty &&
           retainedIds.length == currentIds.length &&
           List.generate(
@@ -401,6 +382,7 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
           : current == null
           ? await controller.create(
               draftId: _newDraftId(occurredAtUtc),
+              entrySetup: _entrySetup,
               title: title,
               expenseDate: widget.expenseDate,
               evidence: imports,
@@ -410,6 +392,7 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
             )
           : await controller.update(
               draftId: current.draftId,
+              entrySetup: _entrySetup,
               expectedRevision: _evidenceBaseRevision,
               title: title,
               expenseDate: current.expenseDate,
@@ -426,6 +409,7 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
         return false;
       }
       if (!mounted) return false;
+      widget.onDraftReady?.call(stored.draftId);
       setState(() {
         _activeDraftId = stored.draftId;
         _evidenceBaseRevision = stored.lifecycle.revision;

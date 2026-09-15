@@ -1,3 +1,4 @@
+import 'package:ui_lab_2_1/src/screens/expenses/receipt_choice_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
@@ -25,6 +26,56 @@ Future<void> _scrollTo(WidgetTester tester, Finder target) async {
 }
 
 void main() {
+  for (final width in [320.0, 1440.0]) {
+    testWidgets(
+      'Expense FAB stays available and opens entry choices at $width',
+      (tester) async {
+        await _pumpAt(tester, Size(width, 900));
+        await tester.tap(
+          find.byKey(
+            ValueKey(
+              width == 320
+                  ? 'app-destination-expenses'
+                  : 'desktop-destination-expenses',
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final fab = find.byKey(const ValueKey('expenses-add-fab'));
+        expect(fab.hitTestable(), findsOneWidget);
+        expect(find.text('Add expense'), findsOneWidget);
+        expect(
+          find.ancestor(of: find.text('Add expense'), matching: fab),
+          findsOneWidget,
+        );
+        final scroll = find
+            .descendant(
+              of: find.byKey(const ValueKey('expenses-module-screen')),
+              matching: find.byType(ListView),
+            )
+            .first;
+        await tester.drag(scroll, const Offset(0, -900));
+        await tester.pumpAndSettle();
+        expect(fab.hitTestable(), findsOneWidget);
+        await tester.tap(fab);
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('expense-entry-choice-screen')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('continue-expense-setup')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('start-expense-without-receipt')),
+          findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets('Expenses uses shared lanes and Technician Admin views', (
     tester,
   ) async {
@@ -36,6 +87,8 @@ void main() {
 
     expect(find.text('My expenses'), findsOneWidget);
     expect(find.text('Daily total'), findsOneWidget);
+    expect(find.byKey(const ValueKey('expense-spending-month')), findsNothing);
+    expect(find.byKey(const ValueKey('expense-spending-year')), findsNothing);
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('expense-spending-day')),
@@ -62,8 +115,8 @@ void main() {
     expect(find.text('Reports and recap'), findsNothing);
     expect(find.text('Add expense'), findsOneWidget);
     expect(find.text('Add fuel'), findsNothing);
-    expect(find.text('Add receipt'), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.text('Add receipt'), findsNothing);
+    expect(find.byType(FloatingActionButton), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('expenses-view-selector')));
     await tester.pumpAndSettle();
@@ -99,6 +152,8 @@ void main() {
     expect(find.textContaining('JOB-1038'), findsNothing);
     expect(find.text('Expense categories'), findsOneWidget);
     expect(find.text('Daily total'), findsOneWidget);
+    expect(find.byKey(const ValueKey('expense-spending-month')), findsNothing);
+    expect(find.byKey(const ValueKey('expense-spending-year')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -111,6 +166,12 @@ void main() {
     await tester.tap(find.text('Add expense'));
     await tester.pumpAndSettle();
 
+    await tester.tap(find.byKey(const ValueKey('continue-expense-setup')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('receipt-source-text')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('manual-receipt-entry')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('expense-editor-screen')), findsOneWidget);
     await tester.enterText(
       find.byKey(const ValueKey('expense-vendor-field')),
@@ -372,18 +433,17 @@ void main() {
     await _pumpAt(tester, const Size(390, 844));
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Add receipt'));
+    await tester.tap(find.byKey(const ValueKey('expenses-add-fab')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('continue-expense-setup')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('receipt-intake-screen')), findsOneWidget);
-    expect(find.text('Capture receipt photos'), findsOneWidget);
-    expect(find.text('Choose existing photos'), findsOneWidget);
-    expect(find.text('Choose a receipt file'), findsOneWidget);
-    expect(find.text('Before anything is saved'), findsOneWidget);
-    expect(
-      find.textContaining('Receipt Assistant suggestions'),
-      findsOneWidget,
-    );
+    expect(find.text('Capture Photo'), findsOneWidget);
+    expect(find.text('Upload Photos'), findsOneWidget);
+    expect(find.text('Upload PDF/File'), findsOneWidget);
+    expect(find.text('Before anything is saved'), findsNothing);
+    expect(find.textContaining('Receipt Assistant suggestions'), findsNothing);
     expect(find.textContaining('OCR'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -394,13 +454,14 @@ void main() {
     await _pumpAt(tester, const Size(390, 844));
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Add receipt'));
+    await tester.tap(find.byKey(const ValueKey('expenses-add-fab')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('continue-expense-setup')));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('receipt-settings-button')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Show review checklist'));
-    await tester.tap(find.text('Show evidence reminders'));
+    await tester.tap(find.byKey(const ValueKey('receipt-detail-setting')));
     await tester.tap(
       find.byKey(const ValueKey('save-receipt-intake-settings-button')),
     );
@@ -411,7 +472,17 @@ void main() {
       find.text('Long receipts may use several photos in top-to-bottom order.'),
       findsNothing,
     );
-    expect(find.text('Choose receipt source'), findsOneWidget);
+    expect(find.text('Upload Photos'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<ReceiptChoiceCard>(
+            find.byKey(const ValueKey('receipt-every-item-choice')),
+          )
+          .selected,
+      isTrue,
+    );
     expect(tester.takeException(), isNull);
   });
 

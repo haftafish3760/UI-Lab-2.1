@@ -19,7 +19,9 @@ class LocalInstallationSelection {
   static Future<LocalInstallationSelection> open(Directory root) async {
     await root.create(recursive: true);
     final canonical = Directory(await root.resolveSymbolicLinks());
-    final control = Directory('${canonical.path}/installation_selection');
+    final control = Directory(
+      paths.join(canonical.path, 'installation_selection'),
+    );
     final marker = File('${canonical.path}/installation-selection-established');
     if (!await control.exists() && await marker.exists()) {
       throw StateError(

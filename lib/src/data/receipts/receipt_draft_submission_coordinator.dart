@@ -141,7 +141,7 @@ bool receiptSubmissionMatches(ExpenseRecord existing, ExpenseRecord requested) {
   if (existingDate == null || requestedDate == null) return false;
   return existing.vendor == requested.vendor &&
       existing.category == requested.category &&
-      _sameMoney(existing.amount, requested.amount) &&
+      _sameOptionalMoney(existing.amount, requested.amount) &&
       _sameDate(existingDate, requestedDate) &&
       existing.paidByEmployeeId == requested.paidByEmployeeId &&
       existing.jobId == requested.jobId &&
@@ -164,9 +164,9 @@ bool _sameLines(List<ExpenseLineItem> left, List<ExpenseLineItem> right) {
         a.category != b.category ||
         a.quantity != b.quantity ||
         a.unit != b.unit ||
-        !_sameMoney(a.unitPrice, b.unitPrice) ||
+        a.unitPrice != b.unitPrice ||
         !_sameMoney(a.total, b.total) ||
-        a.unitsPerPackage != b.unitsPerPackage ||
+        (a.usesPackageContents && a.unitsPerPackage != b.unitsPerPackage) ||
         a.partNumber != b.partNumber ||
         a.jobId != b.jobId) {
       return false;

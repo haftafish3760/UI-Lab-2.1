@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../data/storage/draft_autosave_session.dart';
 import '../../data/expenses/expense_line_draft_input.dart';
+import '../../data/expenses/expense_line_calculation.dart';
 import '../../data/storage/local_record_identity.dart';
 import '../../shared/draft_navigation_guard.dart';
 import '../../shared/nested_editor_draft_status.dart';
 
 import '../../layout/app_layout_engine.dart';
-import '../../shared/section_card.dart';
 import 'expense_input_validation.dart';
 import 'expense_models.dart';
 
@@ -103,10 +103,12 @@ class _ExpenseLineItemEditorScreenState
       text: item == null ? '1' : _formatNumber(item.quantity),
     );
     _unitsPerPackage = TextEditingController(
-      text: item == null ? '1' : _formatNumber(item.unitsPerPackage),
+      text: item?.unitsPerPackage == null
+          ? ''
+          : _formatNumber(item!.unitsPerPackage!),
     );
     _unitPrice = TextEditingController(
-      text: item == null ? '' : item.unitPrice.toStringAsFixed(2),
+      text: item == null ? '' : expenseUnitPriceValue(item.unitPrice),
     );
     _category = item?.category ?? widget.defaultCategory;
     _unit = item?.unit ?? 'each';
@@ -120,12 +122,14 @@ class _ExpenseLineItemEditorScreenState
     });
     _quantity.addListener(_refresh);
     _unitPrice.addListener(_refresh);
+    _unitsPerPackage.addListener(_refresh);
   }
 
   @override
   void dispose() {
     _quantity.removeListener(_refresh);
     _unitPrice.removeListener(_refresh);
+    _unitsPerPackage.removeListener(_refresh);
     _description.dispose();
     _partNumber.dispose();
     _quantity.dispose();
@@ -136,10 +140,12 @@ class _ExpenseLineItemEditorScreenState
 
   void _refresh() => setState(() {});
 
-  double get _lineTotal {
-    final quantity = double.tryParse(_quantity.text.trim()) ?? 0;
-    final price = double.tryParse(_unitPrice.text.trim()) ?? 0;
-    return quantity * price;
+  double? get _lineTotal {
+    final amount = calculateExpenseLineTotal(
+      quantity: _quantity.text,
+      unitPrice: _unitPrice.text,
+    );
+    return amount == null ? null : amount.minorUnits / 100;
   }
 
   bool get _usesPackageDetails =>
@@ -178,105 +184,108 @@ class _ExpenseLineItemEditorScreenState
                     width: formWidth,
                     child: Form(
                       key: _formKey,
-                      child: SectionCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (widget.draftSession != null)
-                              NestedEditorDraftStatus(
-                                session: widget.draftSession!,
-                              ),
-                            const Text(
-                              'Receipt item',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                              ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (widget.draftSession != null)
+                            NestedEditorDraftStatus(
+                              session: widget.draftSession!,
                             ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Use the wording printed on the receipt. You can change every field.',
+                          const Text(
+                            'Receipt item',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
                             ),
-                            const SizedBox(height: 14),
-                            TextFormField(
-                              key: const ValueKey('expense-line-description'),
-                              controller: _description,
-                              autofocus: true,
-                              textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: 'Item or material',
-                                hintText: 'Example: 20-in faucet connector',
-                              ),
-                              validator: (value) => (value ?? '').trim().isEmpty
-                                  ? 'Enter the item shown on the receipt.'
-                                  : null,
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Use the wording printed on the receipt. You can change every field.',
+                          ),
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            key: const ValueKey('expense-line-description'),
+                            controller: _description,
+                            autofocus: true,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Item or material',
+                              hintText: 'Example: 20-in faucet connector',
                             ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              key: const ValueKey('expense-line-part-number'),
-                              controller: _partNumber,
-                              textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: 'Part or item number (optional)',
-                                helperText:
-                                    'Use the SKU, model, or part number printed on the receipt.',
-                              ),
+                            validator: (value) => (value ?? '').trim().isEmpty
+                                ? 'Enter the item shown on the receipt.'
+                                : null,
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            key: const ValueKey('expense-line-part-number'),
+                            controller: _partNumber,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Part or item number (optional)',
+                              helperText:
+                                  'Use the SKU, model, or part number printed on the receipt.',
                             ),
-                            const SizedBox(height: 12),
-                            DropdownButtonFormField<ExpenseCategory>(
-                              key: const ValueKey('expense-line-category'),
-                              initialValue: _category,
-                              isExpanded: true,
-                              decoration: const InputDecoration(
-                                labelText: 'Expense category',
-                              ),
-                              items: [
-                                for (final category in ExpenseCategory.values)
-                                  DropdownMenuItem(
-                                    value: category,
-                                    child: Text(category.label),
-                                  ),
-                              ],
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() => _category = value);
-                                  _captureLineDraft();
-                                }
-                              },
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<ExpenseCategory>(
+                            key: const ValueKey('expense-line-category'),
+                            initialValue: _category,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Expense category',
                             ),
-                            const SizedBox(height: 12),
-                            _ResponsiveFieldPair(
-                              first: _PriceField(controller: _unitPrice),
-                              second: _UnitField(
-                                value: _unit,
-                                units: {..._units, _unit}.toList(),
-                                onChanged: (value) => _changeLineUnit(value),
-                              ),
+                            items: [
+                              for (final category in ExpenseCategory.values)
+                                DropdownMenuItem(
+                                  value: category,
+                                  child: Text(category.label),
+                                ),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() => _category = value);
+                                _captureLineDraft();
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _ResponsiveFieldPair(
+                            first: _PriceField(controller: _unitPrice),
+                            second: _UnitField(
+                              value: _unit,
+                              units: {..._units, _unit}.toList(),
+                              onChanged: (value) => _changeLineUnit(value),
                             ),
-                            const SizedBox(height: 12),
-                            _ResponsiveFieldPair(
-                              first: _QuantityField(
-                                controller: _quantity,
-                                onChanged: _refresh,
-                              ),
-                              second: _usesPackageDetails
-                                  ? _PackageField(controller: _unitsPerPackage)
-                                  : null,
+                          ),
+                          const SizedBox(height: 12),
+                          _ResponsiveFieldPair(
+                            first: _QuantityField(
+                              controller: _quantity,
+                              onChanged: _refresh,
                             ),
-                            const SizedBox(height: 14),
-                            _LineTotal(
-                              total: _lineTotal,
-                              quantity:
-                                  double.tryParse(_quantity.text.trim()) ?? 0,
-                              unit: _unit,
-                              unitsPerPackage:
-                                  double.tryParse(
-                                    _unitsPerPackage.text.trim(),
-                                  ) ??
-                                  0,
-                            ),
-                          ],
-                        ),
+                            second: _usesPackageDetails
+                                ? _PackageField(controller: _unitsPerPackage)
+                                : null,
+                          ),
+                          const SizedBox(height: 14),
+                          _LineTotal(
+                            total: _lineTotal,
+                            quantity:
+                                double.tryParse(
+                                  _quantity.text.replaceAll(',', '').trim(),
+                                ) ??
+                                0,
+                            unit: _unit,
+                            unitsPerPackage:
+                                double.tryParse(
+                                  _unitsPerPackage.text
+                                      .replaceAll(',', '')
+                                      .trim(),
+                                ) ??
+                                0,
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -319,6 +328,17 @@ class _ExpenseLineItemEditorScreenState
   Future<void> _save() async {
     if (_savingLine) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final lineTotal = _lineTotal;
+    if (lineTotal == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'The line total is too large. Check the quantity and price.',
+          ),
+        ),
+      );
+      return;
+    }
     _captureLineDraft();
     setState(() => _savingLine = true);
     try {
@@ -336,13 +356,14 @@ class _ExpenseLineItemEditorScreenState
         quantity: double.parse(_quantity.text.replaceAll(',', '').trim()),
         unit: _unit,
         unitPrice: double.parse(_unitPrice.text.replaceAll(',', '').trim()),
-        confirmedLineTotal: double.parse(_lineTotal.toStringAsFixed(2)),
+        confirmedLineTotal: lineTotal,
         partNumber: _partNumber.text.trim().isEmpty
             ? null
             : _partNumber.text.trim(),
-        unitsPerPackage: _usesPackageDetails
+        unitsPerPackage:
+            _usesPackageDetails && _unitsPerPackage.text.trim().isNotEmpty
             ? double.parse(_unitsPerPackage.text.replaceAll(',', '').trim())
-            : 1,
+            : null,
         jobId:
             widget.recoveryInput?.jobId ??
             widget.initial?.jobId ??

@@ -71,15 +71,19 @@ void main() {
     await _openExpenses(tester);
     await tester.tap(find.text('Add expense'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Add receipt'));
+    await tester.tap(find.byKey(const ValueKey('receipt-every-item-choice')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('continue-expense-setup')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('receipt-source-text')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('manual-receipt-entry')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('expense-editor-screen')), findsOneWidget);
-    expect(find.text('Review every item on the receipt'), findsOneWidget);
-    expect(find.textContaining('Basic receipt'), findsNothing);
-    expect(find.textContaining('Detailed receipt'), findsNothing);
+    expect(find.text('Review every item on the receipt'), findsNothing);
+    expect(find.text('Simple receipt'), findsOneWidget);
+    expect(find.text('Detailed receipt'), findsOneWidget);
 
     await tester.enterText(
       find.byKey(const ValueKey('expense-vendor-field')),
@@ -130,7 +134,11 @@ void main() {
   ) async {
     await _pumpApp(tester, const Size(390, 844));
     await _openExpenses(tester);
-    await tester.tap(find.byKey(const ValueKey('expense-record-EXP-1048')));
+    final recordCard = find.byKey(const ValueKey('expense-record-EXP-1048'));
+    await tester.ensureVisible(recordCard);
+    await tester.pumpAndSettle();
+    expect(recordCard.hitTestable(), findsOneWidget);
+    await tester.tap(recordCard);
     await tester.pumpAndSettle();
 
     final line = find.byKey(const ValueKey('expense-line-EXP-1048-L1'));

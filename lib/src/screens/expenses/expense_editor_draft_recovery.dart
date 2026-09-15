@@ -112,7 +112,9 @@ extension _ExpenseEditorDraftRecovery on _ExpenseEditorScreenState {
           'Unknown employee';
       String? draftId;
       final candidates =
-          widget.existing == null && widget.recoveredExpenseWorkflow == null
+          !widget.startNewExpense &&
+              widget.existing == null &&
+              widget.recoveredExpenseWorkflow == null
           ? await controller.manualDraftRecovery.list()
           : const <DraftRecoveryChoice>[];
       if (!mounted) return;

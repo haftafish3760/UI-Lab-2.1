@@ -85,7 +85,9 @@ void main() {
     () async {
       final original = File(receipt.activeEvidence.single.localPath);
       final relocatedRoot = Directory('${directory.path}/relocated');
-      final relative = original.path.split('/evidence/').last;
+      final relative = original.uri.pathSegments
+          .sublist(original.uri.pathSegments.lastIndexOf('evidence') + 1)
+          .join('/');
       final target = File('${relocatedRoot.path}/evidence/$relative');
       await target.parent.create(recursive: true);
       await original.copy(target.path);
@@ -137,6 +139,7 @@ void main() {
   );
 
   Future<bool> submit({
+    double? amount = 10,
     ReceiptDraftCommandPermissions? receiptPermissions,
     int revision = 1,
     LocalDraftCheckpoint inputCheckpoint = checkpoint,
@@ -153,7 +156,7 @@ void main() {
               id: 'temporary',
               vendor: 'Supplier',
               category: ExpenseCategory.office,
-              amount: 10,
+              amount: amount,
               date: now,
               owner: 'Alex Morgan',
               paidByEmployeeId: 'alex',
@@ -167,6 +170,27 @@ void main() {
             draftCheckpoint: inputCheckpoint,
           ))
           .succeeded;
+
+  test(
+    'receipt evidence and unknown amount commit together and survive restart',
+    () async {
+      final evidence = File(receipt.activeEvidence.single.localPath);
+      final bytes = await evidence.readAsBytes();
+      expect(await submit(amount: null), isTrue);
+      expect(await submit(amount: null), isTrue);
+      expect(await submit(amount: 0), isFalse);
+      await persistence.close();
+      persistence = await LocalPersistence.open(directory: directory);
+      final expenses = await persistence.expenses.query(
+        ExpenseQuery(access: permissions.readAccess!),
+      );
+      expect(expenses, hasLength(1));
+      expect(expenses.single.total, isNull);
+      expect(expenses.single.receiptId, receipt.draftId);
+      expect(expenses.single.receiptImageCount, 1);
+      expect(await evidence.readAsBytes(), bytes);
+    },
+  );
 
   test(
     'restored installation submits relocated receipt without changing original database',

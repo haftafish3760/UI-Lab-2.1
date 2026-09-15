@@ -54,7 +54,7 @@ extension _ExpenseDashboardProjection on PrototypeOperationsStore {
           _expenseTimeLabel(projection?.expenseTimeMinutes) ??
           previous?.time ??
           'Time not recorded',
-      title: record.vendor,
+      title: record.displayVendor,
       detail: [record.category.label, ?record.job].join(' · '),
       kind: DayEntryKind.expense,
       color: previous?.color ?? const Color(0xFFA55B00),

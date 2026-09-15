@@ -135,4 +135,20 @@ class DeviceWorkloadService {
       _busy = false;
     }
   }
+
+  /// Recheck between bounded sections without releasing or reacquiring the gate.
+  Future<DeviceWorkloadProfile> checkpoint() async {
+    if (!_busy) throw StateError('A checkpoint requires an admitted task.');
+    try {
+      _latest = await _probe();
+    } catch (_) {
+      _latest = const DeviceWorkloadProfile();
+    }
+    if (_latest.deferHeavyWork) {
+      throw const DeviceWorkloadUnavailable(
+        'Your device needs a moment to recover. Reading stopped; your photo is unchanged.',
+      );
+    }
+    return _latest;
+  }
 }

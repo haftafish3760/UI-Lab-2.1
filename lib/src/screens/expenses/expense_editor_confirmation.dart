@@ -15,7 +15,7 @@ extension _ExpenseEditorConfirmation on _ExpenseEditorScreenState {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Add at least one receipt item, or choose Save the receipt total.',
+            'Add at least one receipt item, or choose Simple receipt.',
           ),
         ),
       );

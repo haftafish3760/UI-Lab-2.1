@@ -40,7 +40,7 @@ class _PriceField extends StatelessWidget {
       labelText: 'Price for one',
       prefixText: r'$ ',
     ),
-    validator: validateRequiredExpenseMoney,
+    validator: validateRequiredExpenseUnitPrice,
   );
 }
 
@@ -58,6 +58,8 @@ class _UnitField extends StatelessWidget {
   Widget build(BuildContext context) => DropdownButtonFormField<String>(
     key: const ValueKey('expense-line-unit'),
     initialValue: value,
+    isExpanded: true,
+    itemHeight: null,
     decoration: const InputDecoration(labelText: 'Sold as'),
     items: [
       for (final unit in units)
@@ -94,8 +96,14 @@ class _PackageField extends StatelessWidget {
     key: const ValueKey('expense-line-units-per-package'),
     controller: controller,
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    decoration: const InputDecoration(labelText: 'Items inside each package'),
-    validator: validateRequiredExpenseQuantity,
+    decoration: const InputDecoration(
+      labelText: 'Items per package',
+      helperText: 'Optional. Leave blank if you do not know.',
+      helperMaxLines: 3,
+    ),
+    validator: (value) => (value ?? '').trim().isEmpty
+        ? null
+        : validateRequiredExpenseQuantity(value),
   );
 }
 
@@ -106,7 +114,7 @@ class _LineTotal extends StatelessWidget {
     required this.unit,
     required this.unitsPerPackage,
   });
-  final double total;
+  final double? total;
   final double quantity;
   final String unit;
   final double unitsPerPackage;
@@ -114,7 +122,8 @@ class _LineTotal extends StatelessWidget {
   bool get _hasPackageMath =>
       (unit == 'pack' || unit == 'package' || unit == 'box') &&
       quantity > 0 &&
-      unitsPerPackage > 0;
+      unitsPerPackage > 0 &&
+      total != null;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -135,10 +144,17 @@ class _LineTotal extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
-            Text(
-              expenseMoney(total),
-              key: const ValueKey('expense-line-total'),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            Flexible(
+              child: Text(
+                total == null
+                    ? 'Enter quantity and price'
+                    : expenseMoney(total!),
+                key: const ValueKey('expense-line-total'),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ],
         ),
@@ -147,7 +163,7 @@ class _LineTotal extends StatelessWidget {
           Text(
             '${_formatNumber(quantity)} $unit purchased · '
             '${_formatNumber(quantity * unitsPerPackage)} items total · '
-            '${expenseMoney(total / (quantity * unitsPerPackage))} per item',
+            '${expenseMoney(total! / (quantity * unitsPerPackage))} per item',
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 12.5,
@@ -159,6 +175,5 @@ class _LineTotal extends StatelessWidget {
   );
 }
 
-String _formatNumber(double value) => value == value.roundToDouble()
-    ? value.toStringAsFixed(0)
-    : value.toStringAsFixed(2);
+String _formatNumber(double value) =>
+    value.toStringAsFixed(6).replaceFirst(RegExp(r'\.?0+$'), '');

@@ -53,6 +53,8 @@ void main() {
     await _pumpJob(tester, store);
     await _openReceiptIntake(tester);
 
+    await tester.tap(find.byKey(const ValueKey('receipt-source-text')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('manual-receipt-entry')));
     await tester.pumpAndSettle();
 

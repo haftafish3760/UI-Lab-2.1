@@ -20,6 +20,12 @@ import 'expense_permissions.dart';
 import 'expenses_scope_header.dart';
 import 'receipt_source_picker.dart';
 import 'receipt_photo_text_panel.dart';
+import '../../data/receipts/receipt_field_proposals.dart';
+import '../../data/receipts/receipt_selected_details.dart';
+import '../../data/receipts/receipt_item_read.dart';
+import '../../data/receipts/receipt_item_proposal.dart';
+import '../../data/receipts/receipt_item_parser.dart';
+import '../../data/receipts/receipt_photo_text.dart';
 import 'receipt_photo_preview.dart';
 
 part 'receipt_evidence_review_widgets.dart';
@@ -31,11 +37,13 @@ class ReceiptEvidenceReviewResult {
     required this.orderedEvidence,
     required this.continueToDetails,
     this.committedReceipt,
+    this.suggestedDetails,
   });
 
   final List<ReceiptEvidenceSelection> orderedEvidence;
   final bool continueToDetails;
   final StoredReceiptDraft? committedReceipt;
+  final ReceiptFieldProposals? suggestedDetails;
 }
 
 class ReceiptEvidenceReviewScreen extends StatefulWidget {
@@ -46,6 +54,7 @@ class ReceiptEvidenceReviewScreen extends StatefulWidget {
     this.receiptDraftId,
     this.receiptRevision,
     this.recoveredWorkflow,
+    this.assistanceEnabled = false,
     super.key,
   });
 
@@ -55,6 +64,7 @@ class ReceiptEvidenceReviewScreen extends StatefulWidget {
   final String? receiptDraftId;
   final int? receiptRevision;
   final ReceiptEvidenceDraftController? recoveredWorkflow;
+  final bool assistanceEnabled;
 
   @override
   State<ReceiptEvidenceReviewScreen> createState() =>
@@ -73,9 +83,14 @@ class _ReceiptEvidenceReviewScreenState
   bool _initialized = false;
   bool _ready = false;
   bool _saving = false;
+  final List<ReceiptItemRead> _itemReads = [];
+  final Set<String> _readingEvidenceIds = {};
   String? _failure;
   ReceiptEvidenceSelection? _undoItem;
   int? _undoIndex;
+  ReceiptFieldProposals? _suggestedDetails;
+  ReceiptSelectedDetails? _selectedProposal;
+  String? _suggestedSourceIdentity;
   ReceiptSubmissionSession? get _submission =>
       ReceiptSubmissionScope.maybeOf(context);
   @override
@@ -162,6 +177,42 @@ class _ReceiptEvidenceReviewScreenState
                       math.max(240.0, constraints.maxHeight * 0.5),
                     );
                     final preview = _EvidencePreviewPane(
+                      onItemsRead: _recordItems,
+                      onReadingChanged: _readingChanged,
+                      initialRead: _itemReads
+                          .where(
+                            (read) => read.evidenceId == _selected?.evidenceId,
+                          )
+                          .firstOrNull,
+                      assistanceEnabled: widget.assistanceEnabled,
+                      onUseDetails: (details) {
+                        if (_saving || _selected == null) return;
+                        setState(() {
+                          _suggestedDetails = details;
+                          _suggestedSourceIdentity = _selected!.identity;
+                          final source = _workflow?.source.activeEvidence
+                              .where(
+                                (item) =>
+                                    item.evidenceId == _selected!.evidenceId,
+                              )
+                              .firstOrNull;
+                          _selectedProposal = source == null
+                              ? null
+                              : ReceiptSelectedDetails(
+                                  evidenceId: source.evidenceId,
+                                  sha256: source.sha256,
+                                  details: details,
+                                );
+                        });
+                        _capture();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Details selected. Continue to review and edit them before saving.',
+                            ),
+                          ),
+                        );
+                      },
                       evidence: _selected,
                       selectedIndex: _selectedIndex,
                       evidenceCount: _evidence.length,
@@ -222,6 +273,34 @@ class _ReceiptEvidenceReviewScreenState
                                     onDiscard: _discardDraft,
                                   ),
                                 if (_failure != null) Text(_failure!),
+                                if (_suggestedDetails != null &&
+                                    _evidence.any(
+                                      (item) =>
+                                          item.identity ==
+                                          _suggestedSourceIdentity,
+                                    )) ...[
+                                  const Text(
+                                    'Receipt details selected. Continue to review and edit them.',
+                                  ),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextButton(
+                                      onPressed: _saving
+                                          ? null
+                                          : () {
+                                              setState(() {
+                                                _selectedProposal = null;
+                                                _suggestedDetails = null;
+                                                _suggestedSourceIdentity = null;
+                                              });
+                                              _capture();
+                                            },
+                                      child: const Text(
+                                        'Clear selected details',
+                                      ),
+                                    ),
+                                  ),
+                                ],
                                 if (_undoItem != null)
                                   TextButton(
                                     onPressed: _undo,
@@ -260,6 +339,8 @@ class _ReceiptEvidenceReviewScreenState
                                   ),
                                 const SizedBox(height: 14),
                                 _ReviewActions(
+                                  busy:
+                                      _saving || _readingEvidenceIds.isNotEmpty,
                                   hasEvidence: _evidence.isNotEmpty,
                                   onSave: () =>
                                       _finish(continueToDetails: false),

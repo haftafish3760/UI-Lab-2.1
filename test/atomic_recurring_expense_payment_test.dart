@@ -135,7 +135,7 @@ void main() {
         ExpenseQuery(access: expenseUiLabOwnerPermissions().readAccess!),
       );
       expect(expenses.single.expenseId, 'EXP-RECURRING-$occurrenceId');
-      expect(expenses.single.total.minorUnits, 12550);
+      expect(expenses.single.total?.minorUnits, 12550);
       final current = controller();
       await current.load();
       expect(current.occurrencesFor('plan'), hasLength(2));

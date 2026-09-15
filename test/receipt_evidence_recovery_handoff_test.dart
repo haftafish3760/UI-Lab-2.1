@@ -25,7 +25,7 @@ void main() {
           app,
           dir,
           bytes: base64Decode(
-            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
+            'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGOIqpgGRAwQCgAmfgWhCo6K7AAAAABJRU5ErkJggg==',
           ),
         );
         final workflow = await app.openEvidenceDraft(
@@ -62,6 +62,14 @@ void main() {
           () => find.textContaining('Undo').evaluate().isNotEmpty,
         );
         expect(f.workflow.input.orderedEvidenceIds, hasLength(1));
+        // FileImage decoding uses native I/O. Finish the preview before tearing
+        // down its temporary directory, especially on Windows with file locks.
+        await waitForNativeSave(
+          tester,
+          () => tester
+              .widgetList<RawImage>(find.byType(RawImage))
+              .any((image) => image.image != null),
+        );
         expect(
           f.workflow.input.undoId,
           f.source.activeEvidence.first.evidenceId,

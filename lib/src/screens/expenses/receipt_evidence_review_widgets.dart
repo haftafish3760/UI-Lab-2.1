@@ -6,12 +6,27 @@ class _EvidencePreviewPane extends StatelessWidget {
     required this.selectedIndex,
     required this.evidenceCount,
     required this.height,
+    required this.onUseDetails,
+    required this.assistanceEnabled,
+    required this.onItemsRead,
+    required this.onReadingChanged,
+    this.initialRead,
   });
 
   final ReceiptEvidenceSelection? evidence;
   final int selectedIndex;
   final int evidenceCount;
   final double height;
+  final ValueChanged<ReceiptFieldProposals> onUseDetails;
+  final bool assistanceEnabled;
+  final void Function(
+    ReceiptEvidenceSelection,
+    ReceiptPhotoText,
+    ReceiptItemParseResult,
+  )
+  onItemsRead;
+  final void Function(String, bool) onReadingChanged;
+  final ReceiptItemRead? initialRead;
 
   @override
   Widget build(BuildContext context) => SectionCard(
@@ -53,6 +68,12 @@ class _EvidencePreviewPane extends StatelessWidget {
           ),
           if (item.kind == ReceiptEvidenceKind.photo)
             ReceiptPhotoTextPanel(
+              sourceId: item.evidenceId ?? item.identity,
+              initialRead: initialRead,
+              onItemsRead: (text, items) => onItemsRead(item, text, items),
+              onReadingChanged: (busy) => onReadingChanged(item.identity, busy),
+              autoRead: assistanceEnabled,
+              onUseDetails: onUseDetails,
               key: ValueKey(item.identity),
               path: item.path,
             ),
@@ -224,11 +245,13 @@ class _EvidenceOrderRow extends StatelessWidget {
 class _ReviewActions extends StatelessWidget {
   const _ReviewActions({
     required this.hasEvidence,
+    required this.busy,
     required this.onSave,
     required this.onContinue,
   });
 
   final bool hasEvidence;
+  final bool busy;
   final VoidCallback onSave;
   final VoidCallback onContinue;
 
@@ -238,9 +261,12 @@ class _ReviewActions extends StatelessWidget {
     spacing: 10,
     runSpacing: 8,
     children: [
-      OutlinedButton(onPressed: onSave, child: const Text('Save order')),
+      OutlinedButton(
+        onPressed: busy ? null : onSave,
+        child: const Text('Save order'),
+      ),
       FilledButton.icon(
-        onPressed: hasEvidence ? onContinue : null,
+        onPressed: hasEvidence && !busy ? onContinue : null,
         icon: const Icon(Icons.arrow_forward_rounded),
         label: const Text('Continue to receipt details'),
       ),

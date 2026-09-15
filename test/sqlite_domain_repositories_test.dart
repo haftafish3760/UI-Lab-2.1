@@ -52,7 +52,7 @@ void main() {
       );
       final totals = expenseBefore.fold(
         0,
-        (sum, row) => sum + row.total.minorUnits,
+        (sum, row) => sum + (row.total?.minorUnits ?? 0),
       );
       await persistence.close();
       persistence = await LocalPersistence.open(directory: directory);
@@ -64,7 +64,7 @@ void main() {
         expenseBefore.map((r) => r.expenseId).toSet(),
       );
       expect(
-        expenseAfter.fold(0, (sum, row) => sum + row.total.minorUnits),
+        expenseAfter.fold(0, (sum, row) => sum + (row.total?.minorUnits ?? 0)),
         totals,
       );
       final after = await persistence.database

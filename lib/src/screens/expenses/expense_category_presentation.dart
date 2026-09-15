@@ -4,6 +4,7 @@ import '../../data/expenses/expense_workflow_models.dart';
 /// Icons belong to presentation; category identities and wire names stay stable.
 extension ExpenseCategoryPresentation on ExpenseCategory {
   IconData get icon => switch (this) {
+    ExpenseCategory.uncategorized => Icons.receipt_long_outlined,
     ExpenseCategory.materials => Icons.inventory_2_outlined,
     ExpenseCategory.consumables => Icons.cleaning_services_outlined,
     ExpenseCategory.fuel => Icons.local_gas_station_outlined,
@@ -24,5 +25,6 @@ extension ExpenseCategoryPresentation on ExpenseCategory {
     ExpenseCategory.banking => Icons.credit_card_outlined,
     ExpenseCategory.travel => Icons.route_outlined,
     ExpenseCategory.other => Icons.receipt_long_outlined,
+    _ => Icons.label_outline,
   };
 }

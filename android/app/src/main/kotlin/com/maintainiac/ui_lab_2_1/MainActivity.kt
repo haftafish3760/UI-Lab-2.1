@@ -7,5 +7,6 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         DeviceWorkloadBridge(applicationContext).register(flutterEngine.dartExecutor.binaryMessenger)
+        ReceiptRegionBridge(applicationContext).register(flutterEngine.dartExecutor.binaryMessenger)
     }
 }

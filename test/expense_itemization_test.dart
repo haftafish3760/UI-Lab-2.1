@@ -73,7 +73,7 @@ void main() {
       );
       expect(restored.itemization.subtotal!.minorUnits, 3000);
       expect(restored.itemization.salesTax.minorUnits, 210);
-      expect(restored.total.minorUnits, 3210);
+      expect(restored.total?.minorUnits, 3210);
     },
   );
 
@@ -157,7 +157,7 @@ StoredExpenseLineItem _line({String extendedTotal = '30.00'}) =>
       categoryLabelSnapshot: 'Materials',
       packagesPurchased: ExpenseDecimalValue.fromDecimalString('2'),
       packageStyleCode: 'box',
-      pricePerPackage: ExpenseMoney.fromDecimalString('15.00'),
+      pricePerPackage: ExpenseUnitPrice.fromDecimalString('15.00'),
       extendedTotal: ExpenseMoney.fromDecimalString(extendedTotal),
       containedQuantityPerPackage: ExpenseDecimalValue.fromDecimalString('10'),
       containedUnitCode: 'each',

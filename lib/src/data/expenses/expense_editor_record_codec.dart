@@ -29,7 +29,7 @@ ExpenseRecord decodeExpenseEditorRecord(Map<String, Object?> value) =>
       id: value['id'] as String,
       vendor: value['vendor'] as String,
       category: ExpenseCategory.values.byName(value['category'] as String),
-      amount: (value['amount'] as num).toDouble(),
+      amount: (value['amount'] as num?)?.toDouble(),
       date: DateTime.parse(value['date'] as String),
       owner: value['owner'] as String,
       paidByEmployeeId: value['paidByEmployeeId'] as String?,
@@ -80,8 +80,15 @@ ExpenseLineItem decodeExpenseEditorLine(Map<String, Object?> line) =>
       unit: line['unit'] as String,
       unitPrice: (line['unitPrice'] as num).toDouble(),
       confirmedLineTotal: (line['confirmedLineTotal'] as num?)?.toDouble(),
-      unitsPerPackage: (line['unitsPerPackage'] as num).toDouble(),
+      unitsPerPackage: _decodePackageContents(line),
       partNumber: line['partNumber'] as String?,
       jobId: line['jobId'] as String?,
       jobLabel: line['jobLabel'] as String?,
     );
+
+double? _decodePackageContents(Map<String, Object?> line) {
+  if (!line.containsKey('unitsPerPackage')) {
+    throw const FormatException('Missing package contents field.');
+  }
+  return (line['unitsPerPackage'] as num?)?.toDouble();
+}

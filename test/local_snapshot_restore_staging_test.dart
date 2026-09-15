@@ -100,7 +100,7 @@ void main() {
     () async {
       final source = await checkpoint();
       final outside = await harness.directory.createTemp('unrelated-');
-      final marker = File('${outside.path}/keep.txt');
+      final marker = File.fromUri(outside.uri.resolve('keep.txt'));
       await marker.writeAsString('unrelated content', flush: true);
       final staging = Link('${harness.directory.path}/restore_candidates');
       await staging.create(outside.path);
@@ -168,7 +168,9 @@ void main() {
         ),
         throwsStateError,
       );
-      final newlyRetained = '${prepared.directory.path}/attachments/new/image';
+      final newlyRetained = File.fromUri(
+        prepared.directory.uri.resolve('attachments/new/image'),
+      ).path;
       expect(prepared.resolveRetainedPath(newlyRetained), newlyRetained);
       expect(
         () => prepared.resolveRetainedPath(

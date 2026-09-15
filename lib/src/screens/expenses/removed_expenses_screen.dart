@@ -189,7 +189,7 @@ class _RemovedExpenseRow extends StatelessWidget {
                   TextSpan(
                     children: [
                       TextSpan(
-                        text: record.vendor,
+                        text: record.displayVendor,
                         style: const TextStyle(
                           fontSize: 13,
                           height: 1.1,

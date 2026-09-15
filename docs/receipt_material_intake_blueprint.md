@@ -38,13 +38,92 @@ working label, not a final naming decision. Defaults remain subject to review.
 
 ### Basic and Detailed receipts — owner-confirmed
 
+Owner clarification, September 15: Tame Your Biz opens Add Expense with two
+side-by-side choices: **Total only**, explained as a simple receipt saving how
+much was spent, and **Items and total**, explained as a detailed receipt saving
+each item, its quantity and price. A separate optional category section follows.
+The only forward action on this page is green **Continue**. Do not ask about
+personal/business classification, show an expense form, offer capture/manual
+buttons here, or automatically resume an unnamed draft. App-assisted
+receipts is an opt-in saved receipt setting, changeable from the entry flow.
+An assisted receipt starts with capture/import, then photo review and proposed
+details; it must not require completing a blank expense form before reading.
+Simple receipt details are optional, including category, merchant, and amount.
+Unknown amounts must remain unknown and excluded from monetary summaries, never
+silently converted to zero. Retain the receipt evidence even when details are
+incomplete. This requires storage and summary support, not just relaxed form
+validators. Detailed mode adds reviewed individual items without opting into
+stock changes. Both modes remain business-only.
+
+Continue opens a separate source page with a two-by-two grid: **Capture Photo**,
+**Upload Photos**, **Upload PDF/File**, and **Paste/Text**, each with a short
+explanation. Photo upload opens the native multi-image selector. Do not stack
+these ordinary-phone choices; cards grow to fit accessible text. PDF import is
+visibly unavailable in this bounded UI pass; its existing storage/recovery
+contract remains intact and its implementation is separately scoped. Paste/Text
+opens explicit text entry, with an explained manual-details alternative there.
+The camera overlay, long-receipt arrangement and image-preview redesign are
+subsequent screen reviews, not completed by this source-page change.
+
+Reuse assessment: the 5.7 Active receipt category dependency contains 12 common
+and 39 other labels. The Rebuild receipt category scope panel matches the owner's
+screen reference: staged selection, search, common/all lists, Cancel and Done.
+Adapt that structure to shared AppTheme/AppLayoutEngine; do not copy its fixed
+dark colors or ellipsis. Offer the 51 receipt categories for new intake. Preserve
+earlier broader category IDs for existing records and expose a current older
+category when revisiting it; do not silently relabel historical expenses.
+
+Category, detail choice and entered source text belong to the saved receipt
+draft in SQLite. Persist them before launching an external picker. Back to setup
+and Continue must reuse the same receipt and photos, including after category
+changes; picker cancellation must not create a replacement receipt. Category
+search cancellation applies nothing. Text is retained as source input in this
+checkpoint; a completed text-reading/proposal flow is not yet claimed.
+
+First-use Expense onboarding remains required: briefly explain optional receipt
+assistance and let the user opt in or continue manually. Settings must let them
+change that decision. This source-page checkpoint does not implement or claim
+that onboarding; opening a settings screen is not a substitute.
+
+Implementation checkpoint: entry choices and durable assistance/detail defaults
+are connected. Enabled assistance starts a read when a photo is opened; source
+changes invalidate pending results. An explicit Use these details action carries
+proposed store/date/subtotal/tax/total into a new editable receipt review, never
+directly into a confirmed expense. Existing saved review input takes precedence
+over fresh suggestions. Selected header suggestions now persist with the evidence
+review input, including the stable source evidence ID, checksum, recognized rows,
+warnings and nullable proposed values. Finishing evidence review transfers this
+selection into the retained receipt in the same SQLite transaction that consumes
+the unfinished review; closing before the expense editor opens does not lose it.
+The next editable review may use it only while that exact image remains active.
+Removal/undo preserves unfinished choices; confirming removal drops the selection.
+Clear selected details explicitly clears the pending selection. These remain
+suggestions, not confirmed financial records or a complete recognition history.
+Simple receipts now allow a blank merchant and an unset
+category through form validation, persisted records, items and revision history.
+The UI's No category choice maps to null category identity/label fields in the
+stored receipt; blank merchant display labels are not saved as invented merchants.
+Category clearing survives restart and remains separate from Materials in totals.
+Simple amount now also persists as explicit null through confirmation, receipt
+attachment, revision history and restart. An entered zero remains distinct.
+Unknown amounts are excluded from monetary sums and shown as missing in expense
+recaps and day/category summaries. Detailed itemized receipts still require a
+total. These are implementation and regression results, not visual acceptance
+or proof that every reporting consumer has a completeness indicator.
+Structural OCR proposals are preliminary and not a proven form-filling system.
+Evaluation uses the separate native receipt generator, local storage only,
+rotating batches of at most 100 retained receipt images on the S25 Ultra. Keep
+independent expected answers outside the app/parser, include unfamiliar merchant
+names and repeated legitimate items, and retain compact failure measurements.
+Do not reuse 5.7 stitching or modify the separately owned PDF system.
+
 Two receipt modes are required. Detailed includes individual line items and
 line prices/quantities as applicable. Basic records the receipt without requiring
 line itemization. Category is optional: users may leave it unset or choose a
 plain general business-receipt classification. Do not force them to choose even
 that general category, invent a tax category, or block save because it is absent.
-Required header fields beyond this decision remain to be defined; “Basic” does
-not silently make vendor/date or every existing form field mandatory.
+The September 15 clarification above supersedes the previously open required
+header decision: Simple details are optional; absent values remain absent.
 
 Both modes support manual entry with receipt assistance off. Assistance does
 not select a category or commit extracted fields without confirmation. An unset
@@ -77,6 +156,18 @@ manual Basic/Detailed receipts. See `data_storage_sync_contract.md`.
 
 ### Shared device workload control — September 14 owner addition
 
+September 15 accuracy acceptance target: the owner requires approximately
+97–98% accuracy. No current measurement establishes that target. Report exact
+total/date/merchant accuracy separately from item detection precision/recall,
+description recognition, quantity/unit/price accuracy and whole-receipt exact
+match. Unknown, missing, duplicated and confidently incorrect results all count;
+do not exclude unreadable cases to inflate the score. Stratify clean, degraded,
+fuel, materials, short and long receipts and record sample sizes. Compare the
+same held-out images against unenhanced ML Kit and the full pipeline. Keep the
+generator and expected answers independent from production inference. Synthetic
+performance alone is not real-world release acceptance; independently labeled
+real receipts and lower-resource physical-device trials remain required.
+
 The capability engine is shared across the app and consulted before costly work.
 It must protect lower-resource phones using runtime memory, thermal and power
 conditions, not phone price, brand, model name or age. Receipt reading targets
@@ -97,18 +188,31 @@ device calibration. Unknown hardware defaults to limited. Power-saving, small
 heaps, low memory or elevated temperature reduce work; serious/critical thermal
 conditions and critical memory defer new heavy work. Only one admitted heavy
 task runs at a time regardless of tier. A 10-second UI timeout does not release
-the slot while native work is still running. Native cancellation, runtime events
-during a read and sustained thermal tests remain outstanding.
+the slot while native work is still running. Android long-image reads now refresh
+runtime conditions between sections and stop scheduling sections after a timeout;
+ordinary-photo preparation also checks expiration between decoding, conversion
+and file-writing stages and before recognition. Late results are rejected; image
+cleanup and recognizer closure finish before releasing the workload slot. Neither
+path cancels an already-running native recognition call. Native cancellation,
+continuous runtime events during a section and sustained thermal tests remain outstanding.
 
 The photo review also uses a pixel-bounded preview rather than decoding the
 full original into the widget image cache. Other image surfaces have not yet
 been adapted. Retained references resolve through the existing installation
-file resolver. The image reader uses a bounded temporary copy, retains original photo evidence,
-and maps recognized line regions back to source dimensions. It reads only after
-an explicit `Read photo` action. Raw text is currently shown in the photo review
-session only: durable SQLite recognition history, parsing proposals, automatic
-field population and long-receipt assembly are not connected yet. This is an
-integration slice, not a complete receipt assistant. Blank text, unsupported
+file resolver. The image reader retains original photo evidence and maps recognized
+line regions back to upright source dimensions. Android images at least three
+times taller than their width now use sequential overlapping region decoding,
+bounded by the same per-image pixel budget, on a serial native background queue.
+EXIF orientation is handled before planning. Matching text at the same source
+position is collapsed across sections; disagreements remain visible with warnings.
+Failed or interrupted section reads do not return partial results as complete.
+This is section reading of one image, not assembly of separate photos. The iPhone
+reader still uses one bounded temporary image; an equivalent long-image path,
+physical orientation/recognition checks and performance calibration remain pending.
+Reading begins through `Read photo` or the user's saved assistance opt-in. Reviewed
+header suggestions can populate a new editable expense; this does not confirm it.
+Durable SQLite recognition history and full item extraction remain unconnected.
+This is an integration slice, not a complete receipt assistant. Blank text, unsupported
 desktop reading, failed reads, source changes and retries have explicit states.
 No PDF engine code is part of this slice. The app continues using the native
 camera/photo-picker path; no custom camera application is being built.
@@ -391,6 +495,19 @@ review.
 
 ## 6. Receipt-line proposal
 
+Implementation checkpoint, September 15: a standalone structural item-candidate
+parser now groups explicit quantity/unit/price/amount rows, wrapped descriptions,
+and simple amount-bearing descriptions. Shared reading-order rows retain the OCR
+boxes behind each candidate. Missing quantities, purchase units, unit prices and
+package contents are not replaced by defaults. Measured fuel can carry exact
+decimal volume and unit price plus a separately labeled calculated amount; the
+receipt total does not become a purported printed fuel line total. Conflicting
+arithmetic, unsupported amount layouts, adjustments and unresolved fuel units
+remain review work. This parser foundation is not yet connected to the editable
+item-review handoff, durable line-proposal history or inventory adoption. Header
+suggestions continue using the existing review workflow. The two independent
+printed-text characterization cases do not establish OCR accuracy.
+
 Each proposed logical line retains:
 
 - stable receipt-line identity and original order;
@@ -427,6 +544,23 @@ Package details frequently do not appear on a receipt. If the parser cannot
 prove that a box contains 10 fittings or a carton contains 20 receptacles, the
 field remains **Needs confirmation**. It must not divide the package price by an
 invented count.
+
+Implementation checkpoint, September 15: the manual line editor, draft codec,
+UI/domain adapter and SQLite round trip now retain unknown count-package
+contents as null. An explicitly confirmed count of one remains different from
+unknown, including receipt-save retry comparison. Clearing a count removes the
+derived per-piece result; reopening preserves up to six quantity decimals.
+Grouped quantity input is normalized for calculation, and extended line amounts
+use decimal arithmetic with one half-up rounding to cents. Invalid or oversized
+amounts remain unsaved rather than becoming zero. Unit-price entry, item displays,
+SQLite records and correction snapshots now retain up to six decimal places;
+only final charged amounts are rounded to cents. An explicitly entered zero
+unit price is distinct from a blank field. Cents-only stored unit prices retain
+their existing JSON representation; fractional prices use an explicit decimal
+value, with conflicting representations rejected. UI quantity and unit-price
+entry is bounded below 1,000,000,000 to preserve all six decimal places through
+the current UI number bridge. This does not yet connect OCR item candidates to
+review or stock, and does not establish camera OCR accuracy.
 
 ### Package examples
 

@@ -29,9 +29,8 @@ class ReceiptDetailChoice extends StatelessWidget {
         key: const ValueKey('receipt-total-only-choice'),
         selected: value == ExpenseReceiptType.basic,
         icon: Icons.receipt_outlined,
-        title: 'Summary',
-        description:
-            'Keep the vendor, category, final total, and receipt image.',
+        title: 'Simple receipt',
+        description: 'Record an expense without listing individual items.',
         onTap: () => onChanged(ExpenseReceiptType.basic),
       ),
       const SizedBox(height: 8),
@@ -39,7 +38,7 @@ class ReceiptDetailChoice extends StatelessWidget {
         key: const ValueKey('receipt-every-item-choice'),
         selected: value == ExpenseReceiptType.detailed,
         icon: Icons.format_list_numbered_rounded,
-        title: 'Itemized',
+        title: 'Detailed receipt',
         description: 'Include each item, its quantity, and its price.',
         onTap: () => onChanged(ExpenseReceiptType.detailed),
       ),
@@ -121,6 +120,7 @@ class ReceiptTotalsFields extends StatelessWidget {
     required this.totalController,
     required this.onComponentsChanged,
     required this.totalValidator,
+    this.simple = false,
     super.key,
   });
 
@@ -130,86 +130,103 @@ class ReceiptTotalsFields extends StatelessWidget {
   final TextEditingController totalController;
   final VoidCallback onComponentsChanged;
   final FormFieldValidator<String> totalValidator;
+  final bool simple;
 
   @override
-  Widget build(BuildContext context) => SectionCard(
-    padding: const EdgeInsets.all(12),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text(
-          'Receipt totals',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 3),
-        const Text('Enter these amounts exactly as printed on the receipt.'),
-        if (lineSubtotal > 0) ...[
-          const SizedBox(height: 10),
-          _TotalReadout(label: 'Items add up to', value: lineSubtotal),
-        ],
-        const SizedBox(height: 12),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final subtotal = TextFormField(
-              key: const ValueKey('expense-receipt-subtotal-field'),
-              controller: subtotalController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'Receipt subtotal',
-                prefixText: r'$ ',
-                helperText: 'Before sales tax',
-              ),
-              onChanged: (_) => onComponentsChanged(),
-              validator: validateOptionalExpenseMoney,
-            );
-            final tax = TextFormField(
-              key: const ValueKey('expense-sales-tax-field'),
-              controller: salesTaxController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'Sales tax',
-                prefixText: r'$ ',
-              ),
-              onChanged: (_) => onComponentsChanged(),
-              validator: validateOptionalExpenseMoney,
-            );
-            if (AppLayoutEngine.stackFormFieldsFor(
-              constraints.maxWidth,
-              textScaler: MediaQuery.textScalerOf(context),
-            )) {
-              return Column(
-                children: [subtotal, const SizedBox(height: 12), tax],
-              );
-            }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: subtotal),
-                const SizedBox(width: 12),
-                Expanded(child: tax),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
+  Widget build(BuildContext context) => simple
+      ? TextFormField(
           key: const ValueKey('expense-amount-field'),
           controller: totalController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: const InputDecoration(
-            labelText: 'Final amount paid',
+            labelText: 'Amount paid (optional)',
             prefixText: r'$ ',
-            helperText: 'Subtotal plus tax and any printed fees',
+            helperText: 'Leave blank if you only want to keep the receipt.',
           ),
           validator: totalValidator,
-        ),
-      ],
-    ),
-  );
+        )
+      : SectionCard(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Receipt totals',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 3),
+              const Text(
+                'Enter these amounts exactly as printed on the receipt.',
+              ),
+              if (lineSubtotal > 0) ...[
+                const SizedBox(height: 10),
+                _TotalReadout(label: 'Items add up to', value: lineSubtotal),
+              ],
+              const SizedBox(height: 12),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final subtotal = TextFormField(
+                    key: const ValueKey('expense-receipt-subtotal-field'),
+                    controller: subtotalController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Receipt subtotal',
+                      prefixText: r'$ ',
+                      helperText: 'Before sales tax',
+                    ),
+                    onChanged: (_) => onComponentsChanged(),
+                    validator: validateOptionalExpenseMoney,
+                  );
+                  final tax = TextFormField(
+                    key: const ValueKey('expense-sales-tax-field'),
+                    controller: salesTaxController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Sales tax',
+                      prefixText: r'$ ',
+                    ),
+                    onChanged: (_) => onComponentsChanged(),
+                    validator: validateOptionalExpenseMoney,
+                  );
+                  if (AppLayoutEngine.stackFormFieldsFor(
+                    constraints.maxWidth,
+                    textScaler: MediaQuery.textScalerOf(context),
+                  )) {
+                    return Column(
+                      children: [subtotal, const SizedBox(height: 12), tax],
+                    );
+                  }
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: subtotal),
+                      const SizedBox(width: 12),
+                      Expanded(child: tax),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                key: const ValueKey('expense-amount-field'),
+                controller: totalController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Final amount paid',
+                  prefixText: r'$ ',
+                  helperText: 'Subtotal plus tax and any printed fees',
+                ),
+                validator: totalValidator,
+              ),
+            ],
+          ),
+        );
 }
 
 class MaterialsFollowupChoice extends StatelessWidget {

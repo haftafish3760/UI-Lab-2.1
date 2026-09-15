@@ -7,6 +7,19 @@ working plan. A checked document is not a finished application.
 
 ## How we will work
 
+Expense/OCR assignment, September 15 (Windows UI Lab task): the owner explicitly
+authorized continued local expense receipt, OCR/parsing, device workload and
+SQLite materials work, with a separate native Flutter receipt generator. This
+bounded assignment supersedes the older UI-only restriction below for these
+systems only. Preserve the other task's Dashboard/Work/PDF changes; do not touch
+the PDF engine, Firebase services, router or network settings. Windows UI Lab
+remains under the owner's VS Code session. Physical receipt-flow testing is
+limited to the S25 Ultra; no other phone is authorized. The governing receipt
+requirements and 97–98% accuracy target remain in
+`receipt_material_intake_blueprint.md`; current evidence and gaps are recorded
+in `receipt_hardening_evidence.md`. This does not authorize publishing, cloning
+or modifying the protected 5.7 reference.
+
 Latest scope clarification, September 11: this task owns **UI/UX only**. The
 owner is assigning the data layer and inventory migration to another Codex task.
 The storage observations below are handoff evidence, not authorization for this

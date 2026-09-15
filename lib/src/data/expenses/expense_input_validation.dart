@@ -28,7 +28,24 @@ String? validateRequiredExpenseQuantity(String? value) {
     return 'Use a number with no more than 6 decimal places.';
   }
   final parsed = double.tryParse(normalized.replaceAll(',', ''));
+  if (parsed != null && parsed >= 1000000000) {
+    return 'Use a quantity below 1,000,000,000.';
+  }
   return parsed == null || !parsed.isFinite || parsed <= 0
       ? 'Enter a value above zero.'
+      : null;
+}
+
+String? validateRequiredExpenseUnitPrice(String? value) {
+  final normalized = (value ?? '').trim();
+  if (!_quantityPattern.hasMatch(normalized)) {
+    return 'Enter a price with no more than 6 decimal places.';
+  }
+  final parsed = double.tryParse(normalized.replaceAll(',', ''));
+  if (parsed != null && parsed >= 1000000000) {
+    return 'Use a unit price below 1,000,000,000.';
+  }
+  return parsed == null || !parsed.isFinite || parsed < 0
+      ? 'Enter a price of zero or more.'
       : null;
 }

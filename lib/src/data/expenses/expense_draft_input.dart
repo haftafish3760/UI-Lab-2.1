@@ -119,7 +119,10 @@ class ExpenseDraftInput {
       );
 
   ExpenseRecord confirmedRecord() {
-    if (validateRequiredExpenseMoney(amount) != null ||
+    if ((receiptType == ExpenseReceiptType.basic
+                ? validateOptionalExpenseMoney(amount)
+                : validateRequiredExpenseMoney(amount)) !=
+            null ||
         validateOptionalExpenseMoney(subtotal) != null ||
         validateOptionalExpenseMoney(salesTax) != null) {
       throw StateError('Complete valid expense amounts before confirmation.');
@@ -138,10 +141,9 @@ class ExpenseDraftInput {
         money(subtotal) ??
         lines.fold<double>(0, (sum, line) => sum + line.total);
     final tax = money(salesTax) ?? 0;
-    if (vendor.trim().isEmpty ||
-        total == null ||
-        !total.isFinite ||
-        total <= 0 ||
+    if ((receiptType == ExpenseReceiptType.detailed && vendor.trim().isEmpty) ||
+        (receiptType == ExpenseReceiptType.detailed && total == null) ||
+        (total != null && (!total.isFinite || total < 0)) ||
         !sub.isFinite ||
         !tax.isFinite ||
         sub < 0 ||

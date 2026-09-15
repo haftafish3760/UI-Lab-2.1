@@ -12,6 +12,8 @@ ReceiptIntakeDisplayPreferences readReceiptIntakeDisplayPreferences(
   final saved = AppPreferencesScope.maybeOf(context);
   if (saved == null) return fallback;
   return ReceiptIntakeDisplayPreferences(
+    assistanceEnabled: saved.receiptAssistanceEnabled,
+    detailedReceipts: saved.receiptDetailedReceipts,
     showReviewChecklist: saved.receiptShowReviewChecklist,
     showEvidenceReminders: saved.receiptShowEvidenceReminders,
   );

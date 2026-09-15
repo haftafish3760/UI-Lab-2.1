@@ -53,13 +53,19 @@ extension SecondaryDisplayDraftWorkflows on AppPreferencesController {
       initial: initial,
       encode: (input) => {
         'showReviewChecklist': input.showReviewChecklist,
+        'assistanceEnabled': input.assistanceEnabled,
+        'detailedReceipts': input.detailedReceipts,
         'showEvidenceReminders': input.showEvidenceReminders,
       },
       decode: (payload) => ReceiptIntakeDisplayPreferences(
+        assistanceEnabled: payload['assistanceEnabled'] as bool? ?? false,
+        detailedReceipts: payload['detailedReceipts'] as bool? ?? false,
         showReviewChecklist: payload['showReviewChecklist'] as bool,
         showEvidenceReminders: payload['showEvidenceReminders'] as bool,
       ),
       confirm: (input, checkpoint) => setReceiptDisplay(
+        assistanceEnabled: input.assistanceEnabled,
+        detailedReceipts: input.detailedReceipts,
         showReviewChecklist: input.showReviewChecklist,
         showEvidenceReminders: input.showEvidenceReminders,
         draftCheckpoint: checkpoint,

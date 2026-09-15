@@ -19,11 +19,12 @@ Map<String, int> expensePeriodTotals(
       period: records
           .where((r) {
             final date = r.resolvedDate;
-            return date != null &&
+            return r.amount != null &&
+                date != null &&
                 !date.isBefore(ranges[period]!.start) &&
                 date.isBefore(ranges[period]!.end);
           })
-          .fold<int>(0, (sum, r) => sum + (r.amount * 100).round()),
+          .fold<int>(0, (sum, r) => sum + (r.amount! * 100).round()),
   };
 }
 
@@ -33,12 +34,14 @@ class ExpenseSpendingSummary extends StatelessWidget {
     required this.date,
     this.firstWeekday = DateTime.monday,
     this.onOpen,
+    this.periods = const ['Day', 'Week', 'Month', 'Year'],
     super.key,
   });
   final List<ExpenseRecord> records;
   final DateTime date;
   final int firstWeekday;
   final ValueChanged<String>? onOpen;
+  final List<String> periods;
 
   @override
   Widget build(BuildContext context) {
@@ -47,19 +50,31 @@ class ExpenseSpendingSummary extends StatelessWidget {
       date,
       firstWeekday: firstWeekday,
     );
+    final summaries = {
+      for (final period in totals.keys)
+        period: ExpenseAmountSummary(
+          records.where((record) {
+            final range = expensePeriodRange(period, date, firstWeekday);
+            final recordedOn = record.resolvedDate;
+            return recordedOn != null &&
+                !recordedOn.isBefore(range.start) &&
+                recordedOn.isBefore(range.end);
+          }),
+        ),
+    };
     final colors = Theme.of(context).colorScheme;
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = AppLayoutEngine.summaryMetricColumnsFor(
           constraints.maxWidth,
           textScaler: MediaQuery.textScalerOf(context),
-        );
+        ).clamp(1, periods.length);
         final width = (constraints.maxWidth - 8 * (columns - 1)) / columns;
         return Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (final period in totals.keys)
+            for (final period in periods)
               SizedBox(
                 width: width,
                 child: Material(
@@ -85,13 +100,21 @@ class ExpenseSpendingSummary extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            expenseMoney(totals[period]! / 100),
+                            expenseMoney(summaries[period]!.displayAmount),
                             style: TextStyle(
                               color: colors.onPrimaryContainer,
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
+                          if (summaries[period]!.missingMessage
+                              case final message?)
+                            Text(
+                              message,
+                              style: TextStyle(
+                                color: colors.onPrimaryContainer,
+                              ),
+                            ),
                         ],
                       ),
                     ),

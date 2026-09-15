@@ -7,6 +7,8 @@ import 'local_receipt_draft_repository.dart';
 import 'receipt_draft_record.dart';
 import 'receipt_draft_repository.dart';
 import 'receipt_draft_ui_controller.dart';
+import 'receipt_selected_details.dart';
+import 'receipt_item_read.dart';
 
 /// Confirms existing evidence metadata and recovery input in one transaction.
 /// Originals remain retained; no new files or accounting records are created.
@@ -63,7 +65,42 @@ class AtomicReceiptEvidenceReview {
             'Saved evidence review changed.',
           );
         }
+        final detailsPayload = input!['selectedDetails'];
+        final itemReads = input.containsKey('itemReads')
+            ? decodeReceiptItemReads(input)
+            : current.activeItemReads;
+        if (itemReads.any(
+          (read) => !current.activeEvidence.any(
+            (item) => read.matches(item.evidenceId, item.sha256),
+          ),
+        )) {
+          throw const ReceiptDraftRevisionConflictException(
+            'Read items do not match their retained image.',
+          );
+        }
+        final details = detailsPayload == null
+            ? null
+            : ReceiptSelectedDetails.fromJson(
+                (detailsPayload as Map).cast<String, Object?>(),
+              );
+        if (details != null &&
+            !current.activeEvidence.any(
+              (item) => details.matches(item.evidenceId, item.sha256),
+            )) {
+          throw const ReceiptDraftRevisionConflictException(
+            'Selected details do not match the retained image.',
+          );
+        }
         final updated = await controller.update(
+          itemReads: [
+            for (final read in itemReads)
+              if (ordered.contains(read.evidenceId)) read,
+          ],
+          selectedDetails:
+              details != null && ordered.contains(details.evidenceId)
+              ? details
+              : null,
+          replaceSelectedDetails: true,
           draftId: receiptId,
           title: current.title,
           expenseDate: current.expenseDate,

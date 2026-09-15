@@ -5,12 +5,12 @@ import '../../layout/app_layout_engine.dart';
 import '../../shared/app_view_mode.dart';
 import '../../shared/localized_date.dart';
 import '../../shared/operational_scope.dart';
-import '../../shared/section_card.dart';
 import '../dashboard/dashboard_models.dart';
 import 'expense_detail_screen.dart';
 import 'expense_models.dart';
 import 'expense_permissions.dart';
 import 'expense_record_card.dart';
+import 'expense_total_summary_card.dart';
 import 'expenses_scope_header.dart';
 import 'expenses_settings_screen.dart';
 
@@ -64,7 +64,7 @@ class _ExpenseCategoryScreenState extends State<ExpenseCategoryScreen> {
             a.resolvedDate ?? dashboardToday,
           ),
         );
-    final total = records.fold<double>(0, (sum, item) => sum + item.amount);
+    final summary = ExpenseAmountSummary(records);
 
     return Scaffold(
       key: const ValueKey('expense-category-screen'),
@@ -123,29 +123,11 @@ class _ExpenseCategoryScreenState extends State<ExpenseCategoryScreen> {
                               setState(() => _period = value.single),
                         ),
                         const SizedBox(height: 12),
-                        SectionCard(
-                          child: Row(
-                            children: [
-                              Icon(widget.category.icon),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  widget.category.label,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              if (widget.permissions.canViewAmounts)
-                                Text(
-                                  expenseMoney(total),
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                            ],
-                          ),
+                        ExpenseTotalSummaryCard(
+                          label: widget.category.label,
+                          icon: widget.category.icon,
+                          summary: summary,
+                          showAmounts: widget.permissions.canViewAmounts,
                         ),
                         const SizedBox(height: 12),
                         for (

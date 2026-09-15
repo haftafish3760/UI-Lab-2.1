@@ -13,6 +13,9 @@ import 'package:ui_lab_2_1/src/data/storage/local_media_picker_request.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_persistence.dart';
 import 'package:ui_lab_2_1/src/data/storage/native_media_picker_coordinator.dart';
 import 'package:ui_lab_2_1/src/screens/expenses/receipt_intake_screen.dart';
+import 'package:ui_lab_2_1/src/screens/expenses/expense_entry_flow.dart';
+import 'package:ui_lab_2_1/src/screens/expenses/expense_permissions.dart';
+import 'package:ui_lab_2_1/src/screens/expenses/expense_models.dart';
 import 'package:ui_lab_2_1/src/shell/app_shell.dart';
 import 'support/storage/native_widget_pump.dart';
 
@@ -21,13 +24,22 @@ class _Gateway implements NativeMediaPickerGateway {
   List<MediaPickerReturnedFile> lost = [];
   int recoveries = 0;
   bool failRecovery = false;
+  Object? pickFailure;
   @override
   bool get supportsRecovery => true;
   @override
   Future<List<MediaPickerReturnedFile>> pick(
     MediaPickerSource source,
     MediaPickerDestination destination,
-  ) => onPick!();
+  ) async {
+    try {
+      return await onPick!();
+    } catch (error) {
+      pickFailure = error;
+      rethrow;
+    }
+  }
+
   @override
   Future<List<MediaPickerReturnedFile>> recover() async {
     recoveries++;
@@ -44,17 +56,22 @@ class _Gateway implements NativeMediaPickerGateway {
 void main() {
   for (final scenario in [
     "capture",
+    "gallery",
     "recovery",
     "startup-failure",
     "file-capture",
     "file-recovery",
   ]) {
     final isFile = scenario.startsWith("file-");
-    final recovering = scenario != "capture" && scenario != "file-capture";
+    final isGallery = scenario == 'gallery';
+    final recovering =
+        scenario != "capture" && scenario != "file-capture" && !isGallery;
     final failsStartup = scenario == "startup-failure";
     testWidgets(
       isFile
           ? "receipt file ${recovering ? 'reselection' : 'capture'} retains PDF with its original draft"
+          : isGallery
+          ? 'gallery photos stay on the same receipt when setup is changed and SQLite reopens'
           : failsStartup
           ? 'native startup failure leaves app usable and original receipt retries recovery'
           : recovering
@@ -134,6 +151,11 @@ void main() {
           expect(receipt, isNotNull);
           expect(receipt!.activeEvidence, isEmpty);
           expect(receipt.lifecycle.revision, request.targetRevision);
+          if (isGallery) {
+            expect(request.source, MediaPickerSource.library);
+            expect(receipt.entrySetup!.category, ExpenseCategory.fuel);
+            expect(receipt.entrySetup!.type, ExpenseReceiptType.detailed);
+          }
           return [photo];
         };
         try {
@@ -171,29 +193,75 @@ void main() {
               await tester.runAsync(() => File(photo.path).delete());
             }
           }
-          Navigator.of(appContext).push(
-            MaterialPageRoute<void>(
-              builder: (_) => ReceiptIntakeScreen(
+          // PDF import UI is on hold; keep its existing media-service contract
+          // exercised without presenting a newly enabled PDF action.
+          if (scenario == 'file-capture') {
+            await finishNativeOperation(tester, () async {
+              final draft = (await receipts.create(
+                draftId: 'file-service-receipt',
+                title: 'File service receipt',
                 expenseDate: DateTime(2030),
-                draftId: target,
+                evidence: [],
+                occurredAtUtc: DateTime.utc(2030),
+              ))!;
+              target = draft.draftId;
+              await media.pick(
+                receiptId: target!,
+                revision: draft.lifecycle.revision,
+                source: MediaPickerSource.files,
+              );
+            });
+          }
+          if (isGallery) {
+            openExpenseEntryFlow(
+              appContext,
+              expenseDate: DateTime(2030),
+              initialCategory: ExpenseCategory.fuel,
+              permissions: const ExpensePermissions.development(),
+              onConfirm: (record) async => record,
+            );
+            await tester.pumpAndSettle();
+            await tester.tap(
+              find.byKey(const ValueKey('receipt-every-item-choice')),
+            );
+            await tester.pump();
+            await tester.tap(
+              find.byKey(const ValueKey('continue-expense-setup')),
+            );
+          } else {
+            Navigator.of(appContext).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ReceiptIntakeScreen(
+                  expenseDate: DateTime(2030),
+                  draftId: target,
+                ),
               ),
-            ),
-          );
+            );
+          }
           await tester.pumpAndSettle();
           final action = recovering
               ? find.byKey(const ValueKey('recover-receipt-photos'))
-              : find.text(
-                  isFile ? 'Choose a receipt file' : 'Capture receipt photos',
+              : find.byKey(
+                  ValueKey(
+                    isGallery
+                        ? 'receipt-source-photos'
+                        : 'receipt-source-camera',
+                  ),
                 );
-          await tester.ensureVisible(action);
-          await tester.tap(action);
+          if (scenario != 'file-capture') {
+            await tester.ensureVisible(action);
+            await tester.tap(action);
+          }
           await waitForNativeSave(
             tester,
             () =>
-                target != null &&
-                receipts.recordById(target!)?.activeEvidence.length == 1 &&
-                !media.busy,
+                !media.busy &&
+                (gateway.pickFailure != null ||
+                    (target != null &&
+                        receipts.recordById(target!)?.activeEvidence.length ==
+                            1)),
           );
+          expect(gateway.pickFailure, isNull);
           expect(find.text(photo.name), findsOneWidget);
           expect(
             receipts.recordById(target!)!.activeEvidence.single.kind,
@@ -204,6 +272,50 @@ void main() {
           if (isFile) expect(gateway.recoveries, 0);
           expect(media.pending, isNull);
           expect(receipts.recordById(target!)!.lifecycle.revision, 2);
+          if (isGallery) {
+            final originalId = target!;
+            await tester.pageBack();
+            await tester.pumpAndSettle();
+            await tester.tap(
+              find.byKey(const ValueKey('choose-receipt-category')),
+            );
+            await tester.pumpAndSettle();
+            await tester.enterText(
+              find.byKey(const ValueKey('receipt-category-search')),
+              'Parking',
+            );
+            await tester.pump();
+            await tester.tap(
+              find.byKey(const ValueKey('receipt-category-receiptParking')),
+            );
+            await tester.tap(
+              find.byKey(const ValueKey('confirm-receipt-category')),
+            );
+            await tester.pumpAndSettle();
+            await tester.tap(
+              find.byKey(const ValueKey('continue-expense-setup')),
+            );
+            await tester.pumpAndSettle();
+            expect(find.text(photo.name), findsOneWidget);
+            // Opening the picker commits the changed setup first. Cancelling
+            // must not lose the existing image or create another receipt.
+            gateway.onPick = () async => [];
+            await tester.tap(
+              find.byKey(const ValueKey('receipt-source-photos')),
+            );
+            await waitForNativeSave(
+              tester,
+              () =>
+                  !media.busy &&
+                  receipts.recordById(originalId)!.entrySetup!.category ==
+                      ExpenseCategory.receiptParking,
+            );
+            expect(target, originalId);
+            expect(
+              receipts.recordById(originalId)!.activeEvidence,
+              hasLength(1),
+            );
+          }
           final savedId = target!;
           await tester.pumpWidget(const SizedBox.shrink());
           await tester.runAsync(() async {
@@ -213,6 +325,13 @@ void main() {
               persistence.receiptDrafts,
             ).find(draftId: savedId, permissions: permissions);
             expect(receipt!.activeEvidence, hasLength(1));
+            if (isGallery) {
+              expect(
+                receipt.entrySetup!.category,
+                ExpenseCategory.receiptParking,
+              );
+              expect(receipt.entrySetup!.type, ExpenseReceiptType.detailed);
+            }
             expect(
               await File(receipt.activeEvidence.single.localPath).length(),
               greaterThan(0),

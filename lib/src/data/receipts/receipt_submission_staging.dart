@@ -21,8 +21,11 @@ extension ReceiptSubmissionStaging on LocalReceiptDraftRepository {
       final extension = item.kind == ReceiptDraftEvidenceKind.pdf
           ? 'pdf'
           : 'image';
-      final expected =
-          '$root/${_safeFolder(draftId)}/${item.evidenceId}.$extension';
+      final expected = File.fromUri(
+        Directory(
+          root,
+        ).uri.resolve('${_safeFolder(draftId)}/${item.evidenceId}.$extension'),
+      ).path;
       final file = File(
         _resolveRetainedPath?.call(item.localPath) ?? item.localPath,
       );

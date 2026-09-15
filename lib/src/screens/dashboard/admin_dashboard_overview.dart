@@ -7,9 +7,9 @@ import '../../shared/operational_scope.dart';
 import '../../shared/app_view_mode.dart';
 import '../work/work_models.dart';
 import '../work/estimate_models.dart';
-import '../expenses/report_sources_screen.dart';
+import '../expenses/reports_screen.dart';
+import '../../shared/section_card.dart';
 import 'dashboard_models.dart';
-import '../../data/work/work_job_attention.dart';
 import 'dashboard_review_section.dart';
 import '../../theme/operational_card_palette.dart';
 
@@ -22,12 +22,14 @@ class AdminDashboardOverview extends StatelessWidget {
     required this.onOpenPlan,
     required this.onAttention,
     required this.attentionCount,
+    this.summaryOnly = false,
   });
   final DateTime date;
   final DashboardPermissions permissions;
   final ValueChanged<PlanItem> onOpenPlan;
   final VoidCallback onAttention;
   final int attentionCount;
+  final bool summaryOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -44,15 +46,6 @@ class AdminDashboardOverview extends StatelessWidget {
         )
         .toList();
     final today = DateUtils.dateOnly(DateTime.now());
-    final jobQueues = <String, List<WorkRecord>>{};
-    if (permissions.canViewSchedule) {
-      for (final record in records) {
-        final queue = WorkJobAttention(record, today).primaryQueue;
-        if (queue != null) {
-          (jobQueues[queue] ??= []).add(record);
-        }
-      }
-    }
     final estimates = records
         .where(
           (r) =>
@@ -79,45 +72,17 @@ class AdminDashboardOverview extends StatelessWidget {
       name: 'USD',
       locale: Localizations.localeOf(context).toLanguageTag(),
     );
-    final monthly = permissions.canViewCompanyFinancials
-        ? store.reportSummary(
-            fromInclusive: DateTime(date.year, date.month),
-            toExclusive: DateTime(date.year, date.month + 1),
-          )
-        : null;
-    final financial = monthly?.financial;
-    final period = DateFormat.yMMMM(
-      Localizations.localeOf(context).toLanguageTag(),
-    ).format(date);
-    void openSources(String title, List<PrototypeReportSource> sources) =>
-        _open(
-          context,
-          ReportSourcesScreen(
-            title: title,
-            basis: '$period · USD',
-            sources: sources,
-          ),
-        );
     final sections = <Widget>[
-      _panel(context, 'Work needing action', [
-        TextButton.icon(
-          onPressed: onAttention,
-          icon: const Icon(Icons.warning_amber_rounded),
-          label: Text('Needs attention · $attentionCount'),
+      if (summaryOnly && attentionCount > 0)
+        _navigationRow(
+          title: 'Needs attention',
+          detail: attentionCount == 1
+              ? '1 item needs attention'
+              : '$attentionCount items need attention',
+          icon: Icons.notifications_active_outlined,
+          onTap: onAttention,
         ),
-        for (final label in const [
-          'Overdue jobs',
-          'Paused or return visit',
-          'Needs employees',
-          'Needs a work date',
-          'Other active jobs',
-        ])
-          _queue(context, label, jobQueues[label] ?? const []),
-        const Text(
-          'Overdue work has a scheduled finish (or start, if no finish was set) before today. Unscheduled jobs are not overdue.',
-        ),
-      ]),
-      if (permissions.canViewCompanyFinancials)
+      if (!summaryOnly && permissions.canViewCompanyFinancials)
         _panel(context, 'Billing and collections', [
           _queue(context, 'Estimates awaiting response', estimates),
           _queue(
@@ -136,46 +101,20 @@ class AdminDashboardOverview extends StatelessWidget {
             'All issued invoices, less linked payments. Drafts excluded.',
           ),
         ]),
-      if (financial != null)
-        _panel(context, '$period · Money · USD', [
-          _metric(
-            context,
-            'Collected money',
-            money.format(financial.moneyCollectedCents / 100),
-            () => openSources('Collected money', monthly!.paymentsReceived),
-          ),
-          _metric(
-            context,
-            'Invoiced revenue',
-            money.format(financial.invoicedRevenueCents / 100),
-            () => openSources('Invoiced revenue', monthly!.invoicesIssued),
-          ),
-          _metric(
-            context,
-            'Recorded spending',
-            money.format(financial.recordedExpenseCents / 100),
-            () => openSources('Recorded spending', monthly!.recordedExpenses),
-          ),
-          const Divider(),
-          const Text(
-            'Profit unavailable — costs incomplete',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          const Text(
-            'Labor, materials and overhead are not fully reconciled. Collected money and invoice totals are not profit.',
-          ),
-        ]),
+      if (summaryOnly && permissions.canViewCompanyFinancials)
+        _navigationRow(
+          title: 'Business overview',
+          detail: 'View totals and supporting records',
+          icon: Icons.insights_outlined,
+          onTap: () => _open(context, const ReportsScreen()),
+        ),
     ];
     return Column(
-      key: const ValueKey('admin-company-overview'),
+      key: ValueKey(
+        summaryOnly ? 'admin-company-summary' : 'admin-company-overview',
+      ),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Company review', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 8),
-        const Text(
-          'Open work and unpaid invoices cover all dates. Money totals cover the month shown below.',
-        ),
-        const SizedBox(height: 16),
         LayoutBuilder(
           builder: (context, constraints) => OperationsLaneGrid(
             layout: AppLayoutEngine.operationsFor(
@@ -192,11 +131,13 @@ class AdminDashboardOverview extends StatelessWidget {
   Widget _panel(BuildContext context, String title, List<Widget> children) =>
       DashboardReviewSection(
         title: title,
-        icon: title == 'Work needing action'
-            ? Icons.assignment_late_outlined
+        icon: title == 'Money spent'
+            ? Icons.receipt_long_outlined
             : Icons.account_balance_wallet_outlined,
-        tone: title == 'Work needing action'
-            ? OperationalCardPalette.attention
+        tone: title == 'Money spent'
+            ? OperationalCardPalette.expenses
+            : title == 'Money received'
+            ? OperationalCardPalette.payments
             : OperationalCardPalette.entries,
         children: children,
       );
@@ -266,17 +207,41 @@ class AdminDashboardOverview extends StatelessWidget {
     ),
   );
 
-  Widget _metric(
-    BuildContext context,
-    String label,
-    String value,
-    VoidCallback onTap,
-  ) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    title: Text(label),
-    subtitle: Text(value),
-    trailing: const Icon(Icons.chevron_right),
-    onTap: onTap,
+  Widget _navigationRow({
+    required String title,
+    required String detail,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) => SectionCard(
+    padding: EdgeInsets.zero,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(detail),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
+      ),
+    ),
   );
   void _open(BuildContext context, Widget page) {
     if (!permissions.canViewCompanyFinancials ||

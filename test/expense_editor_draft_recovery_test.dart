@@ -69,7 +69,7 @@ void main() {
       }
 
       final vendor = find.byKey(const ValueKey('expense-vendor-field'));
-      final amount = find.widgetWithText(TextFormField, 'Final amount paid');
+      final amount = find.byKey(const ValueKey('expense-amount-field'));
       await mount();
       await waitForNativeSave(tester, () => vendor.evaluate().isNotEmpty);
       await tester.enterText(vendor, '  Partial supplier  ');

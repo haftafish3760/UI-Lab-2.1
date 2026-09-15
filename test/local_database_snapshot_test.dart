@@ -103,10 +103,10 @@ void main() {
 
   test('redirected checkpoint directory cannot receive private data', () async {
     final db = await harness.open();
-    final unrelated = await Directory(
-      '${harness.directory.path}/unrelated',
+    final unrelated = await Directory.fromUri(
+      harness.directory.uri.resolve('unrelated'),
     ).create();
-    final sentinel = File('${unrelated.path}/keep.txt');
+    final sentinel = File.fromUri(unrelated.uri.resolve('keep.txt'));
     await sentinel.writeAsString('unchanged', flush: true);
     final link = Link('${harness.directory.path}/database_checkpoints');
     await link.create(unrelated.path);

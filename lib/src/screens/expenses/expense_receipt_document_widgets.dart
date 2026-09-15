@@ -57,7 +57,7 @@ class ExpenseReceiptTotalRow extends StatelessWidget {
   });
 
   final String label;
-  final double value;
+  final double? value;
   final bool emphasized;
 
   @override
@@ -85,17 +85,20 @@ class ExpenseReceiptTotalRow extends StatelessWidget {
   );
 }
 
-String _number(double value) => value == value.roundToDouble()
-    ? value.toStringAsFixed(0)
-    : value.toStringAsFixed(2);
+String _number(double value) =>
+    value.toStringAsFixed(6).replaceFirst(RegExp(r'\.?0+$'), '');
 
 String _lineDescription(ExpenseLineItem item) {
   final part = item.partNumber?.trim();
   final partText = part == null || part.isEmpty ? '' : ' · Part $part';
-  final packageText = item.unitsPerPackage > 1
-      ? ' · ${_number(item.unitsPerPackage)} items per ${item.unit}'
-      : '';
+  final contents = item.unitsPerPackage;
+  final isPackage = item.usesPackageContents;
+  final packageText = !isPackage
+      ? ''
+      : contents == null
+      ? ' · Package contents not recorded'
+      : ' · ${_number(contents)} items per ${item.unit}';
   return '${item.description}$partText\n'
-      '${_number(item.quantity)} ${item.unit} × ${expenseMoney(item.unitPrice)}'
+      '${_number(item.quantity)} ${item.unit} × ${expenseUnitPrice(item.unitPrice)}'
       '$packageText · ${item.category.label}';
 }

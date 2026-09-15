@@ -71,7 +71,7 @@ class _ReceiptIntakeSettingsScreenState
   @override
   Widget build(BuildContext context) => guardDraftNavigation(
     Scaffold(
-      appBar: AppBar(title: const Text('Receipt intake settings')),
+      appBar: AppBar(title: const Text('Receipt settings')),
       body: !_ready
           ? Center(child: Text(_error ?? 'Opening saved input…'))
           : ListView(
@@ -89,6 +89,30 @@ class _ReceiptIntakeSettingsScreenState
                     'Back keeps unfinished choices. Save applies them to receipt intake.',
                   ),
                 SwitchListTile(
+                  key: const ValueKey('receipt-assistance-setting'),
+                  title: const Text('App-assisted receipts'),
+                  subtitle: const Text(
+                    'Read receipt photos on this device. You review the results before saving.',
+                  ),
+                  value: _draft.assistanceEnabled,
+                  onChanged: _saving
+                      ? null
+                      : (value) =>
+                            _change(_draft.copyWith(assistanceEnabled: value)),
+                ),
+                SwitchListTile(
+                  key: const ValueKey('receipt-detail-setting'),
+                  title: const Text('Detailed receipts by default'),
+                  subtitle: const Text(
+                    'Include individual items. Turn off to start with a simple receipt.',
+                  ),
+                  value: _draft.detailedReceipts,
+                  onChanged: _saving
+                      ? null
+                      : (value) =>
+                            _change(_draft.copyWith(detailedReceipts: value)),
+                ),
+                SwitchListTile(
                   title: const Text('Show review checklist'),
                   subtitle: const Text(
                     'Explains the required human review before anything is saved.',
@@ -97,7 +121,7 @@ class _ReceiptIntakeSettingsScreenState
                   onChanged: _saving
                       ? null
                       : (value) => _change(
-                          ReceiptIntakeDisplayPreferences(
+                          _draft.copyWith(
                             showReviewChecklist: value,
                             showEvidenceReminders: _draft.showEvidenceReminders,
                           ),
@@ -112,7 +136,7 @@ class _ReceiptIntakeSettingsScreenState
                   onChanged: _saving
                       ? null
                       : (value) => _change(
-                          ReceiptIntakeDisplayPreferences(
+                          _draft.copyWith(
                             showEvidenceReminders: value,
                             showReviewChecklist: _draft.showReviewChecklist,
                           ),
@@ -123,7 +147,7 @@ class _ReceiptIntakeSettingsScreenState
                   key: const ValueKey('save-receipt-intake-settings-button'),
                   onPressed: _saving ? null : _confirm,
                   icon: const Icon(Icons.check_rounded),
-                  label: const Text('Save receipt display settings'),
+                  label: const Text('Save receipt settings'),
                 ),
               ],
             ),

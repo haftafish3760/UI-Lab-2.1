@@ -124,15 +124,26 @@ class _ExpensesSettingsScreenState extends State<ExpensesSettingsScreen>
                       key: const ValueKey('expense-week-start'),
                       initialValue: _weekStartsOn,
                       isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'Business week starts on'),
-                      items: [for (var day = 1; day <= 7; day++)
-                        DropdownMenuItem(value: day, child: Text(_weekdayName(context, day)))],
-                      onChanged: _saving ? null : (day) {
-                        if (day != null) _edit(() => _weekStartsOn = day);
-                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Business week starts on',
+                      ),
+                      items: [
+                        for (var day = 1; day <= 7; day++)
+                          DropdownMenuItem(
+                            value: day,
+                            child: Text(_weekdayName(context, day)),
+                          ),
+                      ],
+                      onChanged: _saving
+                          ? null
+                          : (day) {
+                              if (day != null) _edit(() => _weekStartsOn = day);
+                            },
                     ),
                     const SizedBox(height: 8),
-                    Text('Ends on ${_weekdayName(context, (_weekStartsOn + 5) % 7 + 1)}. Used for weekly expense totals and entries.'),
+                    Text(
+                      'Ends on ${_weekdayName(context, (_weekStartsOn + 5) % 7 + 1)}. Used for weekly expense totals and entries.',
+                    ),
                     const SizedBox(height: 20),
                     SwitchListTile(
                       dense: true,
@@ -236,11 +247,11 @@ class _ExpensesSettingsScreenState extends State<ExpensesSettingsScreen>
         .where((e) => e.value == ExpenseReceiptType.detailed)
         .map((e) => e.key)
         .toList();
-    if (detailed.isEmpty) return 'All categories: Basic';
+    if (detailed.isEmpty) return 'All categories: Simple';
     if (detailed.length == 1 && detailed.single == ExpenseCategory.materials) {
-      return 'Materials: Detailed · Others: Basic';
+      return 'Materials: Detailed · Others: Simple';
     }
-    return 'Detailed receipts: ${detailed.length} categories · Other categories: Basic';
+    return 'Detailed receipts: ${detailed.length} categories · Other categories: Simple';
   }
 
   String _categoryModeLabel(ExpenseCategoryDisplayMode mode) => switch (mode) {
@@ -250,5 +261,6 @@ class _ExpensesSettingsScreenState extends State<ExpensesSettingsScreen>
   };
 }
 
-String _weekdayName(BuildContext context, int day) =>
-    MaterialLocalizations.of(context).formatFullDate(DateTime(2026, 6, day)).split(',').first;
+String _weekdayName(BuildContext context, int day) => MaterialLocalizations.of(
+  context,
+).formatFullDate(DateTime(2026, 6, day)).split(',').first;

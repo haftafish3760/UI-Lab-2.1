@@ -609,15 +609,21 @@ receipt, and review state.
 
 September 14 owner direction: repair Expenses first, one screen at a time, before Work or further
 OCR/inventory engine changes. Every module uses the same navigation placement
-under UI foundation's shared shell rule. Expenses displays authorized daily,
-current-week, current-month and current-year recorded spending together below
+under UI foundation's shared shell rule. As narrowed by the September 15 owner
+correction, Expense home displays only authorized daily and current-week spending below
 the date/scope heading. Week boundaries follow the app locale. Drafts and planned
 expenses are excluded until posted; refunds retain their recorded signed value.
 Unknown dates are excluded rather than guessed. Personal and company scope must
-be explicit and must filter all four totals consistently.
+be explicit and must filter the totals consistently. Month/year summaries remain
+available through their owning period/report routes, not extra home recap cards.
 
-Use direct labeled Add expense and Add receipt controls on phone and widescreen;
-do not interpose a Fuel/Record/Receipt chooser. On widescreen, group attention,
+September 15 owner correction: retain one labeled Add expense FAB on Expense
+home, including widescreen; remove the inline add-action row. The FAB opens the
+receipt detail/category setup followed by Continue to source selection, as owned
+by receipt_material_intake_blueprint.md section 1. A receipt-only grant exposes an Add
+receipt FAB instead; no add grant exposes neither. This supersedes the earlier
+direct inline-action direction and the default wide-screen action placement for
+this screen. On widescreen, group attention,
 drafts and today's entries in one lane and the dated-record calendar in the
 adjacent lane; planned expenses and optional categories share the support lane
 or occupy a third lane when space permits. On phones these groups stack in that
@@ -637,7 +643,7 @@ boundaries. No new position-to-permission policy is implied by this layout.
 - The localized selected date is the first heading. The current year is omitted
   to reduce noise and returns whenever the selected date belongs to another
   year. My Expenses or Company Expenses names the current scope below it. The
-  four spending totals follow in a shared responsive summary row, wrapping on
+  daily and weekly totals follow in a shared responsive summary row, wrapping on
   phones and with larger accessibility text. Daily total remains the first value.
 - Technician defaults to that person's records. Admin defaults to all authorized
   employees and may narrow the same selected date to one employee.
@@ -659,7 +665,8 @@ boundaries. No new position-to-permission policy is implied by this layout.
   The record lane groups Needs Attention, resumable Receipt Drafts, and Today's
   Entries. The adjacent lane holds the Expense calendar; planned expenses and
   optional categories follow it or occupy the third lane where space permits.
-- Both phone and widescreen use direct Add expense and Add receipt actions.
+- Both phone and widescreen retain the permission-aware FAB described above;
+  scrollable content reserves clearance beneath it.
 - `AppSemanticColors` supplies Attention, Draft, Planned, and Current treatments;
   module amber remains Expense identity rather than a substitute for record state.
 - The first summary value is explicitly `Daily total`; vague labels such as

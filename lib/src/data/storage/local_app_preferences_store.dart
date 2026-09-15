@@ -53,6 +53,8 @@ class LocalAppPreferencesStore implements AppPreferencesRepository {
       AppPreferenceKeys.workListKey(workspace, choice);
 
   static const _allowed = {
+    'receiptAssistanceEnabled': {'true', 'false'},
+    'receiptDetailedReceipts': {'true', 'false'},
     'receiptShowReviewChecklist': {'true', 'false'},
     'receiptShowEvidenceReminders': {'true', 'false'},
     'themeMode': {'system', 'light', 'dark'},

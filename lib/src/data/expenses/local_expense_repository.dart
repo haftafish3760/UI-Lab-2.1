@@ -268,8 +268,11 @@ class LocalExpenseRepository
   Future<int> approvedTotalMinorUnits(ExpenseQuery query) async => _records
       .values
       .where(query.matches)
-      .where((record) => record.approval.entersApprovedTotals)
-      .fold<int>(0, (sum, record) => sum + record.total.minorUnits);
+      .where(
+        (record) =>
+            record.approval.entersApprovedTotals && record.total != null,
+      )
+      .fold<int>(0, (sum, record) => sum + record.total!.minorUnits);
 
   StoredExpenseRecord _requireCurrent(String id, int expectedRevision) {
     final current = _records[id];

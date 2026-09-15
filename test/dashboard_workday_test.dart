@@ -164,9 +164,9 @@ void main() {
 
     expect(find.byKey(const ValueKey('receipt-intake-screen')), findsOneWidget);
     expect(find.text('Add receipt'), findsOneWidget);
-    expect(find.text('Capture receipt photos'), findsOneWidget);
-    expect(find.text('Choose existing photos'), findsOneWidget);
-    expect(find.text('Choose a receipt file'), findsOneWidget);
+    expect(find.text('Capture Photo'), findsOneWidget);
+    expect(find.text('Upload Photos'), findsOneWidget);
+    expect(find.text('Upload PDF/File'), findsOneWidget);
     expect(find.textContaining('mapped to its owning module'), findsNothing);
     expect(tester.takeException(), isNull);
   });

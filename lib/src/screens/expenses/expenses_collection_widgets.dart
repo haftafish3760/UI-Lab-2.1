@@ -154,14 +154,16 @@ class _ExpenseCategoriesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totals = <ExpenseCategory, double>{};
+    final grouped = <ExpenseCategory, List<ExpenseRecord>>{};
     for (final record in records) {
-      totals.update(
-        record.category,
-        (value) => value + record.amount,
-        ifAbsent: () => record.amount,
-      );
+      grouped.putIfAbsent(record.category, () => []).add(record);
     }
+    final summaries = grouped.map(
+      (category, entries) => MapEntry(category, ExpenseAmountSummary(entries)),
+    );
+    final totals = summaries.map(
+      (category, summary) => MapEntry(category, summary.knownMinorUnits),
+    );
     final categories = switch (mode) {
       ExpenseCategoryDisplayMode.off => const <ExpenseCategory>[],
       ExpenseCategoryDisplayMode.custom => customCategories,
@@ -196,7 +198,10 @@ class _ExpenseCategoriesSection extends StatelessWidget {
                         width: width,
                         child: _ExpenseCategoryTile(
                           category: category,
-                          total: totals[category] ?? 0,
+                          total: summaries.containsKey(category)
+                              ? summaries[category]!.displayAmount
+                              : 0,
+                          missingMessage: summaries[category]?.missingMessage,
                           showAmount: showAmounts,
                           onTap: () => onOpen(category),
                         ),
@@ -215,12 +220,14 @@ class _ExpenseCategoryTile extends StatelessWidget {
   const _ExpenseCategoryTile({
     required this.category,
     required this.total,
+    this.missingMessage,
     required this.showAmount,
     required this.onTap,
   });
 
   final ExpenseCategory category;
-  final double total;
+  final double? total;
+  final String? missingMessage;
   final bool showAmount;
   final VoidCallback onTap;
 
@@ -264,6 +271,8 @@ class _ExpenseCategoryTile extends StatelessWidget {
                           fontSize: 12,
                         ),
                       ),
+                    if (showAmount && missingMessage != null)
+                      Text(missingMessage!),
                   ],
                 ),
               ),

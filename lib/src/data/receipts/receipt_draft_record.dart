@@ -1,4 +1,7 @@
+import 'receipt_entry_setup.dart';
 import 'package:flutter/foundation.dart';
+import 'receipt_selected_details.dart';
+import 'receipt_item_read.dart';
 
 const _unchangedReceiptDraftValue = Object();
 
@@ -196,6 +199,9 @@ class StoredReceiptDraft {
     List<ReceiptDraftAuditEvent> auditTrail = const [],
     this.linkedJobId,
     this.linkedJobLabel,
+    this.selectedDetails,
+    this.entrySetup,
+    List<ReceiptItemRead> itemReads = const [],
   }) : expenseDate = DateTime(
          expenseDate.year,
          expenseDate.month,
@@ -204,11 +210,16 @@ class StoredReceiptDraft {
        evidence = List.unmodifiable(
          <ReceiptDraftEvidence>[...evidence]..sort(_compareEvidence),
        ),
-       auditTrail = List.unmodifiable(auditTrail) {
+       auditTrail = List.unmodifiable(auditTrail),
+       itemReads = List.unmodifiable(itemReads) {
     _requireText(draftId, 'draftId');
     _requireText(organizationId, 'organizationId');
     _requireText(ownerEmployeeId, 'ownerEmployeeId');
     _requireText(title, 'title');
+    if (itemReads.map((read) => read.evidenceId).toSet().length !=
+        itemReads.length) {
+      throw const FormatException('Receipt item source IDs must be unique.');
+    }
     if (evidence.map((item) => item.evidenceId).toSet().length !=
         evidence.length) {
       throw const FormatException('Receipt evidence IDs must be unique.');
@@ -234,6 +245,26 @@ class StoredReceiptDraft {
   final ReceiptDraftState state;
   final String? submittedExpenseId;
   final List<ReceiptDraftAuditEvent> auditTrail;
+  final ReceiptSelectedDetails? selectedDetails;
+  final ReceiptEntrySetup? entrySetup;
+  final List<ReceiptItemRead> itemReads;
+
+  List<ReceiptItemRead> get activeItemReads => List.unmodifiable([
+    for (final image in activeEvidence)
+      for (final read in itemReads)
+        if (read.matches(image.evidenceId, image.sha256)) read,
+  ]);
+
+  /// Removed or replaced evidence must never supply the next form's values.
+  ReceiptSelectedDetails? get activeSelectedDetails {
+    final selected = selectedDetails;
+    return selected != null &&
+            activeEvidence.any(
+              (item) => selected.matches(item.evidenceId, item.sha256),
+            )
+        ? selected
+        : null;
+  }
 
   List<ReceiptDraftEvidence> get activeEvidence =>
       List.unmodifiable(evidence.where((item) => item.isActive));
@@ -248,6 +279,9 @@ class StoredReceiptDraft {
     ReceiptDraftState? state,
     Object? submittedExpenseId = _unchangedReceiptDraftValue,
     List<ReceiptDraftAuditEvent>? auditTrail,
+    Object? selectedDetails = _unchangedReceiptDraftValue,
+    List<ReceiptItemRead>? itemReads,
+    ReceiptEntrySetup? entrySetup,
   }) => StoredReceiptDraft(
     draftId: draftId,
     organizationId: organizationId,
@@ -268,6 +302,11 @@ class StoredReceiptDraft {
         ? this.submittedExpenseId
         : submittedExpenseId as String?,
     auditTrail: auditTrail ?? this.auditTrail,
+    itemReads: itemReads ?? this.itemReads,
+    entrySetup: entrySetup ?? this.entrySetup,
+    selectedDetails: identical(selectedDetails, _unchangedReceiptDraftValue)
+        ? this.selectedDetails
+        : selectedDetails as ReceiptSelectedDetails?,
   );
 
   Map<String, Object?> toJson() => {
@@ -283,6 +322,9 @@ class StoredReceiptDraft {
     'state': state.name,
     'submittedExpenseId': submittedExpenseId,
     'auditTrail': auditTrail.map((item) => item.toJson()).toList(),
+    'selectedDetails': selectedDetails?.toJson(),
+    'itemReads': itemReads.map((read) => read.toJson()).toList(),
+    'entrySetup': entrySetup?.toJson(),
   };
 
   factory StoredReceiptDraft.fromJson(
@@ -300,6 +342,15 @@ class StoredReceiptDraft {
     state: ReceiptDraftState.values.byName(_requiredString(json, 'state')),
     submittedExpenseId: json['submittedExpenseId'] as String?,
     auditTrail: _mapList(json, 'auditTrail', ReceiptDraftAuditEvent.fromJson),
+    itemReads: decodeReceiptItemReads(json),
+    entrySetup: json['entrySetup'] == null
+        ? null
+        : ReceiptEntrySetup.fromJson(_requiredMap(json, 'entrySetup')),
+    selectedDetails: json['selectedDetails'] == null
+        ? null
+        : ReceiptSelectedDetails.fromJson(
+            _requiredMap(json, 'selectedDetails'),
+          ),
   );
 }
 

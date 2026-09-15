@@ -282,7 +282,7 @@ void main() {
 
     expect(stored.createdByEmployeeId, 'alex-id');
     expect(stored.paidByEmployeeId, 'alex-id');
-    expect(stored.total.minorUnits, 4872);
+    expect(stored.total?.minorUnits, 4872);
     expect(stored.approval.state, ExpenseApprovalState.pending);
   });
 

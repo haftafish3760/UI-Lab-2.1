@@ -88,13 +88,15 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('receipt-source-text')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('manual-receipt-entry')));
       final vendor = find.byKey(const ValueKey('expense-vendor-field'));
       await waitForNativeSave(tester, () => vendor.evaluate().isNotEmpty);
       await tester.enterText(vendor, 'Receipt supplier');
       await tester.tap(find.byKey(const ValueKey('receipt-total-only-choice')));
       await tester.pumpAndSettle();
-      final amount = find.widgetWithText(TextFormField, 'Final amount paid');
+      final amount = find.byKey(const ValueKey('expense-amount-field'));
       await tester.ensureVisible(amount);
       await tester.enterText(amount, '7.');
       FocusManager.instance.primaryFocus?.unfocus();
@@ -141,6 +143,8 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('receipt-source-text')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('manual-receipt-entry')));
       await waitForNativeSave(

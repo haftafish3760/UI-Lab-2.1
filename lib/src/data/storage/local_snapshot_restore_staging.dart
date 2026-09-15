@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:path/path.dart' as paths;
 
 import 'verified_local_snapshot_bundle.dart';
 import 'local_database_snapshot.dart';
@@ -14,7 +15,7 @@ Future<VerifiedLocalSnapshotBundle> stageLocalSnapshotRestore({
 }) async {
   await requireSelfContainedSnapshot(source.databaseFile.path);
   final privateRoot = await liveDatabaseFile.parent.resolveSymbolicLinks();
-  final candidates = Directory('$privateRoot/restore_candidates');
+  final candidates = Directory(paths.join(privateRoot, 'restore_candidates'));
   await candidates.create(recursive: true);
   if (await candidates.resolveSymbolicLinks() != candidates.path) {
     throw StateError('Restore staging directory is redirected.');

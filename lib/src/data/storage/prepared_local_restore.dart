@@ -21,14 +21,15 @@ class PreparedLocalRestore {
           .relative(entry.value, from: directory.path)
           .replaceAll(paths.separator, '/'),
   });
-  File get databaseFile => File('${directory.path}/maintainiac.sqlite');
+  File get databaseFile =>
+      File(paths.join(directory.path, 'maintainiac.sqlite'));
 
   /// Carries historical references forward with the matching installation.
   /// This does not drain editors or authorize export of the private checkpoint.
   Future<LocalSnapshotBundle> captureCheckpoint(LocalDatabase database) async {
     final source = database.storageFile;
     if (source == null ||
-        source.absolute.path != databaseFile.absolute.path ||
+        paths.normalize(source.absolute.path) != databaseFile.absolute.path ||
         await source.resolveSymbolicLinks() != databaseFile.absolute.path) {
       throw StateError('Checkpoint database belongs to another installation.');
     }
@@ -48,7 +49,7 @@ class PreparedLocalRestore {
     final attachments = paths.join(directory.path, 'attachments');
     final receipts = paths.join(directory.path, 'receipt_evidence', 'evidence');
     if (paths.isAbsolute(reference) &&
-        normalized == reference &&
+        normalized == reference.replaceAll('/', paths.separator) &&
         (paths.isWithin(attachments, reference) ||
             paths.isWithin(receipts, reference))) {
       return reference;
@@ -63,7 +64,7 @@ class PreparedLocalRestore {
   /// edits made since preparation must survive reopening.
   static Future<PreparedLocalRestore> reopen(Directory installation) async {
     final root = await installation.resolveSymbolicLinks();
-    if (root != installation.absolute.path ||
+    if (root != paths.normalize(installation.absolute.path) ||
         paths.basename(root) != 'installation') {
       throw StateError(
         'Restore installation directory is redirected or unsupported.',
@@ -72,11 +73,13 @@ class PreparedLocalRestore {
     final reviewed = await VerifiedLocalSnapshotBundle.open(
       installation.parent,
     );
-    final databaseFile = File('$root/maintainiac.sqlite');
+    final databaseFile = File(paths.join(root, 'maintainiac.sqlite'));
     await _requireRegularOwnedFile(databaseFile);
     final references = <String, String>{};
     for (final entry in reviewed.attachments) {
-      final target = File('$root/${entry.relativePath}');
+      final target = File.fromUri(
+        Directory(root).uri.resolve(entry.relativePath),
+      );
       await _requireRegularOwnedFile(target);
       if (await target.length() != entry.byteLength ||
           (await sha256.bind(target.openRead()).first).toString() !=
@@ -92,7 +95,9 @@ class PreparedLocalRestore {
       references[entry.sourcePath] = target.path;
     }
     for (final alias in reviewed.referenceAliases.entries) {
-      references[alias.key] = '$root/${alias.value}';
+      references[alias.key] = File.fromUri(
+        Directory(root).uri.resolve(alias.value),
+      ).path;
     }
     final database = LocalDatabase.file(databaseFile);
     try {
@@ -113,7 +118,7 @@ class PreparedLocalRestore {
     );
     try {
       final runtime = await Directory(
-        '${staged.directory.path}/installation',
+        paths.join(staged.directory.path, 'installation'),
       ).create();
       final references = <String, String>{};
       await _copyChecked(
@@ -122,7 +127,7 @@ class PreparedLocalRestore {
         staged.databaseDigest,
       );
       for (final entry in staged.attachments) {
-        final target = File('${runtime.path}/${entry.relativePath}');
+        final target = File.fromUri(runtime.uri.resolve(entry.relativePath));
         final previous = references[entry.sourcePath];
         if (previous != null && previous != target.path) {
           throw StateError('Ambiguous restored file reference.');
@@ -135,7 +140,9 @@ class PreparedLocalRestore {
         references[entry.sourcePath] = target.path;
       }
       for (final alias in staged.referenceAliases.entries) {
-        references[alias.key] = '${runtime.path}/${alias.value}';
+        references[alias.key] = File.fromUri(
+          runtime.uri.resolve(alias.value),
+        ).path;
       }
       await verifyDatabaseSnapshotFile('${runtime.path}/maintainiac.sqlite', 1);
       return PreparedLocalRestore._(runtime, references);
@@ -172,7 +179,8 @@ Future<void> _copyChecked(
 Future<void> _requireRegularOwnedFile(File file) async {
   if (await FileSystemEntity.type(file.path, followLinks: false) !=
           FileSystemEntityType.file ||
-      await file.resolveSymbolicLinks() != file.absolute.path) {
+      await file.resolveSymbolicLinks() !=
+          paths.normalize(file.absolute.path)) {
     throw StateError(
       'Restore installation contains a missing or redirected file.',
     );

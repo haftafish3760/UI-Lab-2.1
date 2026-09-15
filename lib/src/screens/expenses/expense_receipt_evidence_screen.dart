@@ -127,7 +127,7 @@ class _ExpenseReceiptEvidenceScreenState
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          expense.vendor,
+                          expense.displayVendor,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 14),

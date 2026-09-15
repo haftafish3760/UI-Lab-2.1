@@ -46,6 +46,7 @@ class ReceiptEvidenceDraftController
       revision: source.lifecycle.revision,
       availableIds: source.activeEvidence.map((e) => e.evidenceId).toSet(),
     );
+    _validateSelectedSource(input, source);
     super.updateInput(input);
   }
 
@@ -112,6 +113,8 @@ extension ReceiptEvidenceDraftWorkflow on ReceiptSubmissionSession {
                 sourceId: receiptId,
                 sourceRevision: expectedRevision,
                 orderedEvidenceIds: order,
+                selectedDetails: source.activeSelectedDetails,
+                itemReads: source.activeItemReads,
                 selectedId: order.isEmpty
                     ? null
                     : order.contains(initiallySelectedId)
@@ -124,6 +127,7 @@ extension ReceiptEvidenceDraftWorkflow on ReceiptSubmissionSession {
           revision: source.lifecycle.revision,
           availableIds: order.toSet(),
         );
+        _validateSelectedSource(initial, source);
       } on Object {
         available = false;
       }
@@ -144,5 +148,25 @@ extension ReceiptEvidenceDraftWorkflow on ReceiptSubmissionSession {
       await draft.close().catchError((Object _) {});
       rethrow;
     }
+  }
+}
+
+void _validateSelectedSource(
+  ReceiptEvidenceReviewInput input,
+  StoredReceiptDraft source,
+) {
+  final details = input.selectedDetails;
+  if (input.itemReads.any(
+    (read) => !source.activeEvidence.any(
+      (item) => read.matches(item.evidenceId, item.sha256),
+    ),
+  )) {
+    throw StateError('The receipt item reading belongs to another image.');
+  }
+  if (details != null &&
+      !source.activeEvidence.any(
+        (item) => details.matches(item.evidenceId, item.sha256),
+      )) {
+    throw StateError('The selected receipt details belong to another image.');
   }
 }

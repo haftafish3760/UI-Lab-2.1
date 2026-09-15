@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../data/receipts/receipt_field_proposals.dart';
 
 import 'package:flutter/material.dart';
 import '../../data/storage/draft_autosave_session.dart';
@@ -40,7 +41,9 @@ part 'receipt_review_draft_recovery.dart';
 class ExpenseEditorScreen extends StatefulWidget {
   const ExpenseEditorScreen({
     required this.expenseDate,
-    this.initialCategory = ExpenseCategory.materials,
+    this.suggestedDetails,
+    this.startNewExpense = false,
+    this.initialCategory = ExpenseCategory.uncategorized,
     this.initialReceiptType = ExpenseReceiptType.basic,
     this.initialReceiptImageCount = 0,
     this.initialJobId,
@@ -58,6 +61,8 @@ class ExpenseEditorScreen extends StatefulWidget {
   });
 
   final DateTime expenseDate;
+  final ReceiptFieldProposals? suggestedDetails;
+  final bool startNewExpense;
   final ExpenseCategory initialCategory;
   final ExpenseReceiptType initialReceiptType;
   final int initialReceiptImageCount;
@@ -134,12 +139,26 @@ class _ExpenseEditorScreenState extends State<ExpenseEditorScreen>
     final existing = widget.existing;
     if (existing != null) {
       _vendor.text = existing.vendor;
-      _amount.text = existing.amount.toStringAsFixed(2);
+      _amount.text = existing.amount?.toStringAsFixed(2) ?? '';
       _subtotal.text = existing.resolvedReceiptSubtotal.toStringAsFixed(2);
       _salesTax.text = existing.salesTax.toStringAsFixed(2);
       _job.text = existing.job ?? '';
     } else {
       _job.text = widget.initialJobLabel ?? '';
+      final suggested = widget.suggestedDetails;
+      if (suggested != null) {
+        String amount(int minor) =>
+            '${minor < 0 ? '-' : ''}${minor.abs() ~/ 100}.${(minor.abs() % 100).toString().padLeft(2, '0')}';
+        _vendor.text = suggested.merchant ?? '';
+        if (suggested.date case final date?) _expenseDate = date;
+        if (suggested.totalMinor case final total?) {
+          _amount.text = amount(total);
+        }
+        if (suggested.subtotalMinor case final subtotal?) {
+          _subtotal.text = amount(subtotal);
+        }
+        if (suggested.taxMinor case final tax?) _salesTax.text = amount(tax);
+      }
     }
   }
 
@@ -270,6 +289,9 @@ class _ExpenseEditorScreenState extends State<ExpenseEditorScreen>
                                       children: [
                                         _PurchaseFields(
                                           vendorController: _vendor,
+                                          requireVendor:
+                                              _receiptType ==
+                                              ExpenseReceiptType.detailed,
                                           jobController: _job,
                                           expenseDate: _expenseDate,
                                           category: _category,
@@ -319,6 +341,9 @@ class _ExpenseEditorScreenState extends State<ExpenseEditorScreen>
                                         ],
                                         const SizedBox(height: 12),
                                         ReceiptTotalsFields(
+                                          simple:
+                                              _receiptType ==
+                                              ExpenseReceiptType.basic,
                                           lineSubtotal: _lineSubtotal,
                                           subtotalController: _subtotal,
                                           salesTaxController: _salesTax,
@@ -411,7 +436,9 @@ class _ExpenseEditorScreenState extends State<ExpenseEditorScreen>
   }
 
   String? _validateAmount(String? value) {
-    return validateRequiredExpenseMoney(value);
+    return _receiptType == ExpenseReceiptType.basic
+        ? validateOptionalExpenseMoney(value)
+        : validateRequiredExpenseMoney(value);
   }
 
   Future<void> _addLine() => _openExpenseLine();

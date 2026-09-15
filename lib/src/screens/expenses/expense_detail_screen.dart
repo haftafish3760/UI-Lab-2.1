@@ -110,7 +110,7 @@ class ExpenseDetailScreen extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                expense.vendor,
+                                expense.displayVendor,
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
                             ),

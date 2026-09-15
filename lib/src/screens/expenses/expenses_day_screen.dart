@@ -123,19 +123,13 @@ class _ExpensesDayScreenState extends State<ExpensesDayScreen> {
     return employeeId == null || item.paidByEmployeeId == employeeId;
   }
 
-  Future<void> _recordExpense(BuildContext context) async {
-    if (!widget.permissions.canCreate) return;
-    final store = PrototypeOperationsScope.of(context);
-    await Navigator.of(context).push<ExpenseRecord>(
-      MaterialPageRoute(
-        builder: (_) => ExpenseEditorScreen(
-          expenseDate: widget.day,
-          permissions: widget.permissions,
-          onConfirm: store.addExpense,
-        ),
-      ),
-    );
-  }
+  Future<void> _recordExpense(BuildContext context) => openExpenseEntryFlow(
+    context,
+    expenseDate: widget.day,
+    permissions: widget.permissions,
+    onConfirm: (record) async =>
+        PrototypeOperationsScope.of(context).addExpense(record),
+  );
 
   Future<void> _openSettings() async {
     if (!widget.permissions.canConfigureDisplay) return;

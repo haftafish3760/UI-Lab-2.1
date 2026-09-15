@@ -52,37 +52,50 @@ class ExpenseRecordCard extends StatelessWidget {
                 Icon(expense.category.icon, size: 22, color: foreground),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text.rich(
                         TextSpan(
-                          text: expense.vendor,
+                          children: [
+                            TextSpan(
+                              text: expense.displayVendor,
+                              style: TextStyle(
+                                color: foreground,
+                                fontSize: 13,
+                                height: 1.1,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '\n$_detail',
+                              style: TextStyle(
+                                color: pending
+                                    ? foreground
+                                    : colors.onSurfaceVariant,
+                                fontSize: 11.5,
+                                height: 1.1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (showAmount && expense.amount == null)
+                        Text(
+                          'Amount not entered',
                           style: TextStyle(
                             color: foreground,
-                            fontSize: 13,
-                            height: 1.1,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        TextSpan(
-                          text: '\n$_detail',
-                          style: TextStyle(
-                            color: pending
-                                ? foreground
-                                : colors.onSurfaceVariant,
-                            fontSize: 11.5,
-                            height: 1.1,
-                          ),
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 8),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (showAmount)
+                    if (showAmount && expense.amount != null)
                       Text(
                         expenseMoney(expense.amount),
                         style: TextStyle(

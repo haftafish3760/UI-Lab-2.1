@@ -1,6 +1,59 @@
 part of 'receipt_evidence_review_screen.dart';
 
 extension _ReceiptEvidenceDraftRecovery on _ReceiptEvidenceReviewScreenState {
+  void _readingChanged(String identity, bool busy) {
+    if (!mounted) return;
+    _refresh(() {
+      if (busy) {
+        _readingEvidenceIds.add(identity);
+      } else {
+        _readingEvidenceIds.remove(identity);
+      }
+    });
+  }
+
+  void _recordItems(
+    ReceiptEvidenceSelection evidence,
+    ReceiptPhotoText text,
+    ReceiptItemParseResult result,
+  ) {
+    if (!_ready ||
+        _saving ||
+        _workflow == null ||
+        !_evidence.any((item) => item.evidenceId == evidence.evidenceId)) {
+      return;
+    }
+    final source = _workflow!.source.activeEvidence
+        .where((item) => item.evidenceId == evidence.evidenceId)
+        .firstOrNull;
+    if (source == null) return;
+    final read = ReceiptItemRead(
+      evidenceId: source.evidenceId,
+      sha256: source.sha256,
+      parserVersion: receiptItemParserVersion,
+      readAtUtc: DateTime.now().toUtc(),
+      recognizedText: text.text,
+      warnings: text.warnings,
+      result: result,
+      sourceLines: text.lines
+          .where(
+            (line) =>
+                line.left.isFinite &&
+                line.top.isFinite &&
+                line.right.isFinite &&
+                line.bottom.isFinite &&
+                line.right > line.left &&
+                line.bottom > line.top,
+          )
+          .toList(),
+    );
+    _refresh(() {
+      _itemReads.removeWhere((old) => old.evidenceId == read.evidenceId);
+      _itemReads.add(read);
+    });
+    _capture();
+  }
+
   void _capture() {
     if (!_ready || _saving || _draft == null) return;
     _workflow!.updateInput(_reviewInput);
@@ -13,6 +66,8 @@ extension _ReceiptEvidenceDraftRecovery on _ReceiptEvidenceReviewScreenState {
     selectedId: _selected?.evidenceId,
     undoId: _undoItem?.evidenceId,
     undoIndex: _undoIndex,
+    selectedDetails: _selectedProposal,
+    itemReads: _itemReads,
   );
 
   Map<String, ReceiptEvidenceSelection> get _reviewEvidenceById {
@@ -32,6 +87,13 @@ extension _ReceiptEvidenceDraftRecovery on _ReceiptEvidenceReviewScreenState {
     _selectedIndex = input.selectedIndex;
     _undoItem = input.undoId == null ? null : byId[input.undoId];
     _undoIndex = input.undoIndex;
+    _selectedProposal = input.selectedDetails;
+    _itemReads
+      ..clear()
+      ..addAll(input.itemReads);
+    _suggestedDetails = input.selectedDetails?.details;
+    _suggestedSourceIdentity =
+        byId[input.selectedDetails?.evidenceId]?.identity;
   }
 
   Future<void> _openDraft() async {
@@ -106,6 +168,16 @@ extension _ReceiptEvidenceDraftRecovery on _ReceiptEvidenceReviewScreenState {
   }
 
   Future<void> _finish({required bool continueToDetails}) async {
+    if (_readingEvidenceIds.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Wait for the photo reading to finish before continuing.',
+          ),
+        ),
+      );
+      return;
+    }
     if (!_ready || _saving || (continueToDetails && _evidence.isEmpty)) return;
     _capture();
     _refresh(() {
@@ -120,6 +192,13 @@ extension _ReceiptEvidenceDraftRecovery on _ReceiptEvidenceReviewScreenState {
             orderedEvidence: List.unmodifiable(_evidence),
             continueToDetails: continueToDetails,
             committedReceipt: committed,
+            suggestedDetails: committed != null
+                ? committed.activeSelectedDetails?.details
+                : _evidence.any(
+                    (item) => item.identity == _suggestedSourceIdentity,
+                  )
+                ? _suggestedDetails
+                : null,
           ),
         );
       }

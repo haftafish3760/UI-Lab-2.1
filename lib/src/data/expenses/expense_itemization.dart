@@ -1,79 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'expense_optional_fields.dart';
 
 import 'expense_money.dart';
+import 'expense_decimal_value.dart';
+import 'expense_unit_price.dart';
 
-@immutable
-class ExpenseDecimalValue {
-  ExpenseDecimalValue({required this.unscaledValue, required this.scale}) {
-    if (scale < 0 || scale > 6) {
-      throw ArgumentError.value(scale, 'scale', 'Must be between 0 and 6.');
-    }
-    if (unscaledValue < 0) {
-      throw ArgumentError.value(
-        unscaledValue,
-        'unscaledValue',
-        'Cannot be negative.',
-      );
-    }
-    if (scale > 0 && unscaledValue % 10 == 0) {
-      throw const FormatException('Quantity decimals must be normalized.');
-    }
-  }
-
-  factory ExpenseDecimalValue.fromDecimalString(String value) {
-    final normalized = value.trim();
-    final match = RegExp(r'^(\d+)(?:\.(\d{1,6}))?$').firstMatch(normalized);
-    if (match == null) {
-      throw const FormatException(
-        'Quantity must be positive with no more than six decimals.',
-      );
-    }
-    var fraction = match.group(2) ?? '';
-    while (fraction.endsWith('0')) {
-      fraction = fraction.substring(0, fraction.length - 1);
-    }
-    final scale = fraction.length;
-    final whole = int.parse(match.group(1)!);
-    final multiplier = _powerOfTen(scale);
-    return ExpenseDecimalValue(
-      unscaledValue:
-          whole * multiplier + (fraction.isEmpty ? 0 : int.parse(fraction)),
-      scale: scale,
-    );
-  }
-
-  final int unscaledValue;
-  final int scale;
-
-  bool get isZero => unscaledValue == 0;
-
-  String get decimalValue {
-    if (scale == 0) return unscaledValue.toString();
-    final digits = unscaledValue.toString().padLeft(scale + 1, '0');
-    final split = digits.length - scale;
-    return '${digits.substring(0, split)}.${digits.substring(split)}';
-  }
-
-  Map<String, Object> toJson() => {
-    'unscaledValue': unscaledValue,
-    'scale': scale,
-  };
-
-  factory ExpenseDecimalValue.fromJson(Map<String, Object?> json) =>
-      ExpenseDecimalValue(
-        unscaledValue: _requiredInt(json, 'unscaledValue'),
-        scale: _requiredInt(json, 'scale'),
-      );
-
-  @override
-  bool operator ==(Object other) =>
-      other is ExpenseDecimalValue &&
-      unscaledValue == other.unscaledValue &&
-      scale == other.scale;
-
-  @override
-  int get hashCode => Object.hash(unscaledValue, scale);
-}
+export 'expense_decimal_value.dart';
+export 'expense_unit_price.dart';
 
 enum ExpenseItemizationMode { totalOnly, itemized }
 
@@ -96,8 +29,7 @@ class StoredExpenseLineItem {
   }) {
     _requireNonEmpty(lineItemId, 'lineItemId');
     _requireNonEmpty(description, 'description');
-    _requireNonEmpty(categoryId, 'categoryId');
-    _requireNonEmpty(categoryLabelSnapshot, 'categoryLabelSnapshot');
+    validateOptionalExpenseCategory(categoryId, categoryLabelSnapshot);
     _requireNonEmpty(packageStyleCode, 'packageStyleCode');
     if (packagesPurchased.isZero) {
       throw ArgumentError.value(
@@ -106,7 +38,7 @@ class StoredExpenseLineItem {
         'Must be above zero.',
       );
     }
-    if (pricePerPackage.minorUnits < 0 || extendedTotal.minorUnits < 0) {
+    if (extendedTotal.minorUnits < 0) {
       throw const FormatException('Receipt line money cannot be negative.');
     }
     if (pricePerPackage.currencyCode != extendedTotal.currencyCode) {
@@ -125,11 +57,11 @@ class StoredExpenseLineItem {
 
   final String lineItemId;
   final String description;
-  final String categoryId;
-  final String categoryLabelSnapshot;
+  final String? categoryId;
+  final String? categoryLabelSnapshot;
   final ExpenseDecimalValue packagesPurchased;
   final String packageStyleCode;
-  final ExpenseMoney pricePerPackage;
+  final ExpenseUnitPrice pricePerPackage;
   final ExpenseMoney extendedTotal;
   final ExpenseDecimalValue? containedQuantityPerPackage;
   final String? containedUnitCode;
@@ -157,13 +89,16 @@ class StoredExpenseLineItem {
       StoredExpenseLineItem(
         lineItemId: _requiredString(json, 'lineItemId'),
         description: _requiredString(json, 'description'),
-        categoryId: _requiredString(json, 'categoryId'),
-        categoryLabelSnapshot: _requiredString(json, 'categoryLabelSnapshot'),
+        categoryId: readOptionalExpenseCategory(json, 'categoryId'),
+        categoryLabelSnapshot: readOptionalExpenseCategory(
+          json,
+          'categoryLabelSnapshot',
+        ),
         packagesPurchased: ExpenseDecimalValue.fromJson(
           _requiredMap(json, 'packagesPurchased'),
         ),
         packageStyleCode: _requiredString(json, 'packageStyleCode'),
-        pricePerPackage: ExpenseMoney.fromJson(
+        pricePerPackage: ExpenseUnitPrice.fromJson(
           _requiredMap(json, 'pricePerPackage'),
         ),
         extendedTotal: ExpenseMoney.fromJson(
@@ -247,7 +182,7 @@ class ExpenseItemization {
       ? null
       : subtotal!.minorUnits - reviewedLineTotalMinorUnits;
 
-  void validateFor(ExpenseMoney total) {
+  void validateFor(ExpenseMoney? total) {
     if (mode == ExpenseItemizationMode.totalOnly && lineItems.isNotEmpty) {
       throw const FormatException('Total-only Expenses cannot contain lines.');
     }
@@ -258,7 +193,12 @@ class ExpenseItemization {
     if (ids.length != lineItems.length) {
       throw const FormatException('Expense line identities must be unique.');
     }
-    final currency = total.currencyCode;
+    if (total == null && mode == ExpenseItemizationMode.itemized) {
+      throw const FormatException(
+        'An itemized expense requires a confirmed total.',
+      );
+    }
+    final currency = total?.currencyCode ?? salesTax.currencyCode;
     if (salesTax.minorUnits < 0 || (subtotal?.minorUnits ?? 0) < 0) {
       throw const FormatException('Expense totals cannot be negative.');
     }
@@ -309,25 +249,11 @@ class ExpenseItemization {
       Object.hash(mode, Object.hashAll(lineItems), subtotal, salesTax);
 }
 
-int _powerOfTen(int exponent) {
-  var value = 1;
-  for (var index = 0; index < exponent; index++) {
-    value *= 10;
-  }
-  return value;
-}
-
 String _requiredString(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value is! String || value.isEmpty) {
     throw FormatException('Missing or invalid $key.');
   }
-  return value;
-}
-
-int _requiredInt(Map<String, Object?> json, String key) {
-  final value = json[key];
-  if (value is! int) throw FormatException('Missing or invalid $key.');
   return value;
 }
 

@@ -1,34 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'expense_line_calculation.dart';
+
+import 'expense_category.dart';
+export 'expense_category.dart';
 
 part 'expense_workflow_demo_data.dart';
 
 const _expenseValueUnchanged = Object();
-
-enum ExpenseCategory {
-  materials('Materials'),
-  consumables('Consumables'),
-  fuel('Fuel'),
-  vehiclePayment('Vehicle payments'),
-  vehicleInsurance('Vehicle insurance'),
-  vehicleRepair('Vehicle repairs'),
-  vehicleMaintenance('Vehicle maintenance'),
-  vehicle('Other vehicle costs'),
-  tools('Tools and equipment'),
-  subcontractor('Subcontractors'),
-  office('Office and business'),
-  rent('Rent and storage'),
-  utilities('Utilities'),
-  phoneInternet('Phone and internet'),
-  licensesTaxes('Licenses and taxes'),
-  advertising('Advertising'),
-  training('Training'),
-  banking('Banking and fees'),
-  travel('Meals and travel'),
-  other('Other');
-
-  const ExpenseCategory(this.label);
-  final String label;
-}
 
 enum ExpenseApprovalStatus {
   notRequired('No approval needed'),
@@ -41,7 +19,7 @@ enum ExpenseApprovalStatus {
 }
 
 enum ExpenseReceiptType {
-  basic('Basic', 'Keep the category, total, and receipt evidence.'),
+  basic('Simple', 'Record an expense without listing individual items.'),
   detailed('Detailed', 'Keep every reviewed receipt line item.');
 
   const ExpenseReceiptType(this.label, this.description);
@@ -59,7 +37,7 @@ class ExpenseLineItem {
     required this.unit,
     required this.unitPrice,
     this.confirmedLineTotal,
-    this.unitsPerPackage = 1,
+    this.unitsPerPackage,
     this.partNumber,
     this.jobId,
     this.jobLabel,
@@ -72,12 +50,28 @@ class ExpenseLineItem {
   final String unit;
   final double unitPrice;
   final double? confirmedLineTotal;
-  final double unitsPerPackage;
+  final double? unitsPerPackage;
   final String? partNumber;
   final String? jobId;
   final String? jobLabel;
 
-  double get total => confirmedLineTotal ?? quantity * unitPrice;
+  double get total {
+    final confirmed = confirmedLineTotal;
+    if (confirmed != null) return confirmed;
+    final calculated = calculateExpenseLineTotal(
+      quantity: quantity.toString(),
+      unitPrice: unitPrice.toString(),
+    );
+    if (calculated == null) {
+      throw const FormatException(
+        'Receipt line has no valid calculated total.',
+      );
+    }
+    return calculated.minorUnits / 100;
+  }
+
+  bool get usesPackageContents =>
+      const ['pack', 'package', 'box'].contains(unit);
 
   ExpenseLineItem copyWith({
     String? description,
@@ -86,7 +80,7 @@ class ExpenseLineItem {
     String? unit,
     double? unitPrice,
     Object? confirmedLineTotal = _expenseValueUnchanged,
-    double? unitsPerPackage,
+    Object? unitsPerPackage = _expenseValueUnchanged,
     Object? partNumber = _expenseValueUnchanged,
     String? jobId,
     String? jobLabel,
@@ -100,7 +94,9 @@ class ExpenseLineItem {
     confirmedLineTotal: identical(confirmedLineTotal, _expenseValueUnchanged)
         ? this.confirmedLineTotal
         : confirmedLineTotal as double?,
-    unitsPerPackage: unitsPerPackage ?? this.unitsPerPackage,
+    unitsPerPackage: identical(unitsPerPackage, _expenseValueUnchanged)
+        ? this.unitsPerPackage
+        : (unitsPerPackage as num?)?.toDouble(),
     partNumber: identical(partNumber, _expenseValueUnchanged)
         ? this.partNumber
         : partNumber as String?,
@@ -135,8 +131,10 @@ class ExpenseRecord {
 
   final String id;
   final String vendor;
+  String get displayVendor =>
+      vendor.trim().isEmpty ? 'Business expense' : vendor;
   final ExpenseCategory category;
-  final double amount;
+  final double? amount;
 
   /// Accepts a typed date and legacy serialized dates at this UI boundary.
   /// Production repositories should decode into a typed domain record before
@@ -160,6 +158,7 @@ class ExpenseRecord {
   final String? submitterAttentionReason;
 
   bool get countsAsRecordedBusinessCost =>
+      amount != null &&
       !requiresSubmitterAttention &&
       (approvalStatus == ExpenseApprovalStatus.notRequired ||
           approvalStatus == ExpenseApprovalStatus.approved);
@@ -172,7 +171,7 @@ class ExpenseRecord {
   ExpenseRecord copyWith({
     String? vendor,
     ExpenseCategory? category,
-    double? amount,
+    Object? amount = _expenseValueUnchanged,
     Object? date,
     String? owner,
     Object? paidByEmployeeId = _expenseValueUnchanged,
@@ -193,7 +192,9 @@ class ExpenseRecord {
     id: id,
     vendor: vendor ?? this.vendor,
     category: category ?? this.category,
-    amount: amount ?? this.amount,
+    amount: identical(amount, _expenseValueUnchanged)
+        ? this.amount
+        : amount as double?,
     date: date ?? this.date,
     owner: owner ?? this.owner,
     paidByEmployeeId: identical(paidByEmployeeId, _expenseValueUnchanged)
@@ -422,7 +423,18 @@ class ScheduledExpenseRecord {
   );
 }
 
-String expenseMoney(double value) => '\$${value.toStringAsFixed(2)}';
+String expenseMoney(double? value) =>
+    value == null ? 'Amount not entered' : '\$${value.toStringAsFixed(2)}';
+
+String expenseUnitPriceValue(double value) {
+  final normalized = value
+      .toStringAsFixed(6)
+      .replaceFirst(RegExp(r'\.?0+$'), '');
+  final parts = normalized.split('.');
+  return '${parts.first}.${(parts.length == 1 ? '' : parts[1]).padRight(2, '0')}';
+}
+
+String expenseUnitPrice(double value) => '\$${expenseUnitPriceValue(value)}';
 
 DateTime? parseExpenseDate(Object? value) {
   if (value is DateTime) return value;

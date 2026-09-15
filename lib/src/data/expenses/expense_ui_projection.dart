@@ -25,6 +25,11 @@ class ExpenseUiProjectionRecord {
     if (record.id.trim().isEmpty) {
       throw ArgumentError.value(record.id, 'record.id', 'Cannot be empty.');
     }
+    if ((record.amount == null) != (exactTotal == null)) {
+      throw ArgumentError(
+        'The visible record and projection disagree on whether an amount was entered.',
+      );
+    }
     if (paidByEmployeeId.trim().isEmpty) {
       throw ArgumentError.value(
         paidByEmployeeId,
@@ -38,7 +43,7 @@ class ExpenseUiProjectionRecord {
         'The visible record and projection have different employee IDs.',
       );
     }
-    if (record.category.name != categoryId) {
+    if (record.category.storageId != categoryId) {
       throw ArgumentError(
         'The visible record and projection have different categories.',
       );
@@ -62,9 +67,9 @@ class ExpenseUiProjectionRecord {
         'The visible record and projection have different approval states.',
       );
     }
-    if (exactTotal.minorUnits < 0) {
+    if (exactTotal != null && exactTotal!.minorUnits < 0) {
       throw ArgumentError.value(
-        exactTotal.minorUnits,
+        exactTotal!.minorUnits,
         'exactTotal',
         'Cannot be negative.',
       );
@@ -83,11 +88,11 @@ class ExpenseUiProjectionRecord {
   }
 
   final ExpenseRecord record;
-  final ExpenseMoney exactTotal;
+  final ExpenseMoney? exactTotal;
   final String paidByEmployeeId;
   final DateTime expenseDate;
   final int? expenseTimeMinutes;
-  final String categoryId;
+  final String? categoryId;
   final String? jobId;
   final String? vehicleId;
   final ExpenseApprovalState approvalState;
@@ -95,8 +100,9 @@ class ExpenseUiProjectionRecord {
   final bool isDeleted;
 
   bool get entersRecordedTotals =>
-      approvalState == ExpenseApprovalState.notRequired ||
-      approvalState == ExpenseApprovalState.approved;
+      exactTotal != null &&
+      (approvalState == ExpenseApprovalState.notRequired ||
+          approvalState == ExpenseApprovalState.approved);
 }
 
 @immutable
@@ -135,7 +141,7 @@ class ExpenseUiProjectionQuery {
         projection.paidByEmployeeId != paidByEmployeeId) {
       return false;
     }
-    if (category != null && projection.categoryId != category!.name) {
+    if (category != null && projection.categoryId != category!.storageId) {
       return false;
     }
     if (jobId != null && projection.jobId != jobId) return false;
@@ -220,8 +226,8 @@ class ExpenseUiProjectionSnapshot {
     var minorUnits = 0;
     for (final projection in active.where(query.matches)) {
       if (!projection.entersRecordedTotals) continue;
-      _requireCurrency(projection.exactTotal, currencyCode);
-      minorUnits += projection.exactTotal.minorUnits;
+      _requireCurrency(projection.exactTotal!, currencyCode);
+      minorUnits += projection.exactTotal!.minorUnits;
     }
     return ExpenseMoney(minorUnits: minorUnits, currencyCode: currencyCode);
   }
@@ -233,12 +239,12 @@ class ExpenseUiProjectionSnapshot {
     final totals = <ExpenseCategory, int>{};
     for (final projection in active.where(query.matches)) {
       if (!projection.entersRecordedTotals) continue;
-      _requireCurrency(projection.exactTotal, currencyCode);
-      final category = ExpenseCategory.values.byName(projection.categoryId);
+      _requireCurrency(projection.exactTotal!, currencyCode);
+      final category = ExpenseCategory.fromStorageId(projection.categoryId);
       totals.update(
         category,
-        (value) => value + projection.exactTotal.minorUnits,
-        ifAbsent: () => projection.exactTotal.minorUnits,
+        (value) => value + projection.exactTotal!.minorUnits,
+        ifAbsent: () => projection.exactTotal!.minorUnits,
       );
     }
     return Map.unmodifiable(

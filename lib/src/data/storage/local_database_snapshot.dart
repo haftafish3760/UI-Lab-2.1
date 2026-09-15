@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:crypto/crypto.dart';
+import 'package:path/path.dart' as paths;
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 import 'local_database.dart';
@@ -37,7 +38,7 @@ class LocalDatabaseSnapshot {
     }
     await database.verifyIntegrity();
     final privateRoot = await source.parent.resolveSymbolicLinks();
-    final root = Directory('$privateRoot/database_checkpoints');
+    final root = Directory(paths.join(privateRoot, 'database_checkpoints'));
     await root.create(recursive: true);
     if (await root.resolveSymbolicLinks() != root.path) {
       throw StateError('Checkpoint directory is redirected.');

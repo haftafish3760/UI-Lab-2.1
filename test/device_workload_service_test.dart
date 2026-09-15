@@ -3,6 +3,32 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/device_capabilities/device_workload_service.dart';
 
 void main() {
+  test(
+    'in-task checkpoint stops on heat and keeps gate until cleanup',
+    () async {
+      var probes = 0;
+      final service = DeviceWorkloadService(
+        probe: () async => DeviceWorkloadProfile(
+          thermal: ++probes > 1 ? 'serious' : 'nominal',
+        ),
+      );
+      var cleanup = false;
+      await expectLater(
+        service.run((_) async {
+          try {
+            await service.checkpoint();
+          } finally {
+            expect(service.busy, isTrue);
+            cleanup = true;
+          }
+        }),
+        throwsA(isA<DeviceWorkloadUnavailable>()),
+      );
+      expect(cleanup, isTrue);
+      expect(service.busy, isFalse);
+      await expectLater(service.checkpoint(), throwsStateError);
+    },
+  );
   test('unknown hardware is limited; RAM alone does not earn capable tier', () {
     expect(const DeviceWorkloadProfile().tier, DeviceWorkloadTier.limited);
     expect(

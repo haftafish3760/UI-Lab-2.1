@@ -46,15 +46,25 @@ class AppPreferencesController extends ChangeNotifier {
   Map<String, String>? _failedChange;
   bool _receiptShowReviewChecklist = true;
   bool _receiptShowEvidenceReminders = true;
+  bool _receiptAssistanceEnabled = false;
+  bool _receiptDetailedReceipts = false;
+  bool get receiptAssistanceEnabled => _receiptAssistanceEnabled;
+  bool get receiptDetailedReceipts => _receiptDetailedReceipts;
   bool get receiptShowReviewChecklist => _receiptShowReviewChecklist;
   bool get receiptShowEvidenceReminders => _receiptShowEvidenceReminders;
   Future<bool> setReceiptDisplay({
     required bool showReviewChecklist,
     required bool showEvidenceReminders,
+    bool? assistanceEnabled,
+    bool? detailedReceipts,
     LocalDraftCheckpoint? draftCheckpoint,
   }) => _saveMany({
     'receiptShowReviewChecklist': showReviewChecklist.toString(),
     'receiptShowEvidenceReminders': showEvidenceReminders.toString(),
+    if (assistanceEnabled != null)
+      'receiptAssistanceEnabled': assistanceEnabled.toString(),
+    if (detailedReceipts != null)
+      'receiptDetailedReceipts': detailedReceipts.toString(),
   }, draftCheckpoint: draftCheckpoint);
   final _reportDisplay = <String, bool>{};
   bool reportDisplayChoice(String choice) {
@@ -129,6 +139,12 @@ class AppPreferencesController extends ChangeNotifier {
     }
     if (values['receiptShowReviewChecklist'] case final String value) {
       _receiptShowReviewChecklist = value == 'true';
+    }
+    if (values['receiptAssistanceEnabled'] case final String value) {
+      _receiptAssistanceEnabled = value == 'true';
+    }
+    if (values['receiptDetailedReceipts'] case final String value) {
+      _receiptDetailedReceipts = value == 'true';
     }
     if (values['receiptShowEvidenceReminders'] case final String value) {
       _receiptShowEvidenceReminders = value == 'true';

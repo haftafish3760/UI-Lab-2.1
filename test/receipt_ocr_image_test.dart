@@ -3,9 +3,20 @@ import 'dart:ui' as ui;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/device_capabilities/device_workload_service.dart';
 import 'package:ui_lab_2_1/src/data/receipts/receipt_ocr_image.dart';
+import 'package:ui_lab_2_1/src/data/receipts/receipt_read_cancellation.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('expired preparation performs no source-file access', () async {
+    await expectLater(
+      ReceiptOcrImage.prepare(
+        'unavailable-photo-must-not-be-opened',
+        const DeviceWorkloadProfile(),
+        checkActive: () => requireReceiptReadActive(() => true),
+      ),
+      throwsA(isA<DeviceWorkloadUnavailable>()),
+    );
+  });
   test(
     'OCR copy obeys pixel budget, maps coordinates and preserves original',
     () async {

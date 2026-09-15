@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/receipts/receipt_photo_reader.dart';
+import 'package:ui_lab_2_1/src/data/receipts/receipt_field_proposals.dart';
 import 'package:ui_lab_2_1/src/screens/expenses/receipt_photo_text_panel.dart';
 import 'package:ui_lab_2_1/src/shared/local_document_path_scope.dart';
 
@@ -21,6 +22,73 @@ class _Reader implements ReceiptPhotoReader {
 }
 
 void main() {
+  testWidgets('saved opt-in starts one read, rebuilds never repeat it', (
+    tester,
+  ) async {
+    final reader = _Reader();
+    Widget host(String path) => MaterialApp(
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: ReceiptPhotoTextPanel(
+            path: path,
+            reader: reader,
+            autoRead: true,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpWidget(host('first'));
+    await tester.pump();
+    expect(reader.paths, ['first']);
+    await tester.pumpWidget(host('first'));
+    await tester.pump();
+    expect(reader.paths, ['first']);
+    reader.requests.first.complete(
+      ReceiptPhotoText(text: 'TOTAL 12.00', lines: []),
+    );
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(host('second'));
+    await tester.pump();
+    expect(reader.paths, ['first', 'second']);
+    reader.requests.last.complete(
+      ReceiptPhotoText(text: 'TOTAL 24.00', lines: []),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets(
+    'suggested details require selection and expire when photo changes',
+    (tester) async {
+      final reader = _Reader();
+      ReceiptFieldProposals? selected;
+      Widget panel(String path) => MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: ReceiptPhotoTextPanel(
+              path: path,
+              reader: reader,
+              onUseDetails: (value) => selected = value,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpWidget(panel('first'));
+      await tester.tap(find.text('Read photo'));
+      reader.requests.single.complete(
+        ReceiptPhotoText(text: 'Juniper Tool Counter\nTOTAL 12.30', lines: []),
+      );
+      await tester.pumpAndSettle();
+      expect(selected, isNull);
+      final use = find.byKey(const ValueKey('use-receipt-suggested-details'));
+      await tester.ensureVisible(use);
+      await tester.tap(use);
+      expect(selected?.totalMinor, 1230);
+      expect(selected?.merchant, 'Juniper Tool Counter');
+      await tester.pumpWidget(panel('second'));
+      expect(use, findsNothing);
+      expect(find.text('Store: Juniper Tool Counter'), findsNothing);
+    },
+  );
   testWidgets(
     'retained references use the authoritative restored-file resolver',
     (tester) async {

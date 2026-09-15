@@ -72,9 +72,17 @@ void main() {
       try {
         await open();
         expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
+        final assistance = find.byKey(
+          const ValueKey('receipt-assistance-setting'),
+        );
+        final detailed = find.byKey(const ValueKey('receipt-detail-setting'));
+        expect(tester.widget<SwitchListTile>(assistance).value, isFalse);
+        await tester.tap(assistance);
+        await tester.tap(detailed);
         await tester.tap(toggle);
         await savedInput();
         expect(preferences.values['receiptShowReviewChecklist'], isNull);
+        expect(preferences.values['receiptAssistanceEnabled'], isNull);
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pumpAndSettle();
         await tester.runAsync(() => harness.close(db));
@@ -84,6 +92,8 @@ void main() {
         ))!;
         await open();
         expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
+        expect(tester.widget<SwitchListTile>(assistance).value, isTrue);
+        expect(tester.widget<SwitchListTile>(detailed).value, isTrue);
         await savedInput();
         await tester.runAsync(
           () => db.customStatement(
@@ -124,6 +134,8 @@ void main() {
           () => LocalAppPreferencesStore.open(db),
         ))!;
         expect(reopened.values['receiptShowReviewChecklist'], 'false');
+        expect(reopened.values['receiptAssistanceEnabled'], 'true');
+        expect(reopened.values['receiptDetailedReceipts'], 'true');
         expect(tester.takeException(), isNull);
       } finally {
         await tester.pumpWidget(const SizedBox.shrink());

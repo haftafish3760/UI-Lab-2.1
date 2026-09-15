@@ -1,3 +1,6 @@
+import 'receipt_selected_details.dart';
+import 'receipt_item_read.dart';
+
 /// Stable evidence identities and review actions, independent of file previews,
 /// widget indices and responsive composition. Version-one wire keys are retained.
 class ReceiptEvidenceReviewInput {
@@ -8,12 +11,17 @@ class ReceiptEvidenceReviewInput {
     required this.selectedId,
     this.undoId,
     this.undoIndex,
-  }) : orderedEvidenceIds = List.unmodifiable(orderedEvidenceIds);
+    this.selectedDetails,
+    List<ReceiptItemRead> itemReads = const [],
+  }) : orderedEvidenceIds = List.unmodifiable(orderedEvidenceIds),
+       itemReads = List.unmodifiable(itemReads);
   final String sourceId;
   final int sourceRevision;
   final List<String> orderedEvidenceIds;
   final String? selectedId, undoId;
   final int? undoIndex;
+  final ReceiptSelectedDetails? selectedDetails;
+  final List<ReceiptItemRead> itemReads;
   int get selectedIndex =>
       selectedId == null ? 0 : orderedEvidenceIds.indexOf(selectedId!);
 
@@ -24,6 +32,15 @@ class ReceiptEvidenceReviewInput {
   }) {
     if (sourceId != receiptId || sourceRevision != revision) {
       throw StateError('Receipt source changed.');
+    }
+    if (itemReads.map((read) => read.evidenceId).toSet().length !=
+            itemReads.length ||
+        itemReads.any((read) => !availableIds.contains(read.evidenceId))) {
+      throw StateError('The item reading source is unavailable or repeated.');
+    }
+    if (selectedDetails != null &&
+        !availableIds.contains(selectedDetails!.evidenceId)) {
+      throw StateError('The suggestion source is unavailable.');
     }
     if (orderedEvidenceIds.toSet().length != orderedEvidenceIds.length ||
         orderedEvidenceIds.any((id) => !availableIds.contains(id))) {
@@ -52,7 +69,35 @@ class ReceiptEvidenceReviewInput {
     selectedId: orderedEvidenceIds[index],
     undoId: undoId,
     undoIndex: undoIndex,
+    selectedDetails: selectedDetails,
+    itemReads: itemReads,
   );
+  ReceiptEvidenceReviewInput useDetails(ReceiptSelectedDetails? details) =>
+      ReceiptEvidenceReviewInput(
+        sourceId: sourceId,
+        sourceRevision: sourceRevision,
+        orderedEvidenceIds: orderedEvidenceIds,
+        selectedId: selectedId,
+        undoId: undoId,
+        undoIndex: undoIndex,
+        selectedDetails: details,
+        itemReads: itemReads,
+      );
+  ReceiptEvidenceReviewInput recordItems(ReceiptItemRead read) =>
+      ReceiptEvidenceReviewInput(
+        sourceId: sourceId,
+        sourceRevision: sourceRevision,
+        orderedEvidenceIds: orderedEvidenceIds,
+        selectedId: selectedId,
+        undoId: undoId,
+        undoIndex: undoIndex,
+        selectedDetails: selectedDetails,
+        itemReads: [
+          for (final existing in itemReads)
+            if (existing.evidenceId != read.evidenceId) existing,
+          read,
+        ],
+      );
   ReceiptEvidenceReviewInput move(int from, int to) {
     if (to < 0 || to >= orderedEvidenceIds.length || from == to) return this;
     final order = [...orderedEvidenceIds];
@@ -65,6 +110,8 @@ class ReceiptEvidenceReviewInput {
       selectedId: id,
       undoId: undoId,
       undoIndex: undoIndex,
+      selectedDetails: selectedDetails,
+      itemReads: itemReads,
     );
   }
 
@@ -86,6 +133,8 @@ class ReceiptEvidenceReviewInput {
       selectedId: order.isEmpty ? null : order[selected],
       undoId: removed,
       undoIndex: index,
+      selectedDetails: selectedDetails,
+      itemReads: itemReads,
     );
   }
 
@@ -99,10 +148,14 @@ class ReceiptEvidenceReviewInput {
       sourceRevision: sourceRevision,
       orderedEvidenceIds: order,
       selectedId: undoId,
+      selectedDetails: selectedDetails,
+      itemReads: itemReads,
     );
   }
 
   Map<String, Object?> toPayload() => {
+    'itemReads': itemReads.map((read) => read.toJson()).toList(),
+    'selectedDetails': selectedDetails?.toJson(),
     'sourceId': sourceId,
     'sourceRevision': sourceRevision,
     'orderedEvidenceIds': orderedEvidenceIds,
@@ -112,6 +165,12 @@ class ReceiptEvidenceReviewInput {
   };
   factory ReceiptEvidenceReviewInput.fromPayload(Map<String, Object?> input) =>
       ReceiptEvidenceReviewInput(
+        itemReads: decodeReceiptItemReads(input),
+        selectedDetails: input['selectedDetails'] == null
+            ? null
+            : ReceiptSelectedDetails.fromJson(
+                (input['selectedDetails'] as Map).cast<String, Object?>(),
+              ),
         sourceId: input['sourceId'] as String,
         sourceRevision: input['sourceRevision'] as int,
         orderedEvidenceIds: (input['orderedEvidenceIds'] as List)

@@ -1,6 +1,26 @@
 part of 'receipt_intake_screen.dart';
 
 extension _ReceiptIntakeMedia on _ReceiptIntakeScreenState {
+  Future<void> _openPastedText() async {
+    if (_openingPicker ||
+        _savingDraft ||
+        !widget.permissions.canAttachReceipt) {
+      return;
+    }
+    final result = await Navigator.of(context).push<ReceiptTextInput>(
+      MaterialPageRoute(
+        builder: (_) => ReceiptTextEntryScreen(initial: _pastedText),
+      ),
+    );
+    if (!mounted || result == null) return;
+    if (result.text == null) {
+      await _openReceiptEditor(imageCount: _evidence.length);
+      return;
+    }
+    _updateMedia(() => _pastedText = result.text!);
+    await _persistDraft();
+  }
+
   Future<void> _pick(
     Future<List<ReceiptEvidenceSelection>> Function() choose,
   ) async {

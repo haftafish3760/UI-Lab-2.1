@@ -21,8 +21,10 @@ extension _ExpensesHomeLayout on _ExpensesScreenState {
           textScaler: MediaQuery.textScalerOf(context),
         );
         final layout = OperationsWorkspaceLayout(
-          columns: detailLayout.columns, laneWidth: detailLayout.columnWidth,
-          gap: detailLayout.gap, workspaceWidth: detailLayout.workspaceWidth,
+          columns: detailLayout.columns,
+          laneWidth: detailLayout.columnWidth,
+          gap: detailLayout.gap,
+          workspaceWidth: detailLayout.workspaceWidth,
         );
         final attentionQuery = _attentionQuery();
         final attentionCenter = PrototypeOperationsScope.of(
@@ -119,9 +121,22 @@ extension _ExpensesHomeLayout on _ExpensesScreenState {
         );
         return Scaffold(
           key: const ValueKey('expenses-module-screen'),
+          floatingActionButton:
+              permissions.canCreate || permissions.canAttachReceipt
+              ? FloatingActionButton.extended(
+                  key: const ValueKey('expenses-add-fab'),
+                  onPressed: permissions.canCreate
+                      ? () => _recordExpense()
+                      : _openReceiptIntake,
+                  icon: const Icon(Icons.add),
+                  label: Text(
+                    permissions.canCreate ? 'Add expense' : 'Add receipt',
+                  ),
+                )
+              : null,
           body: SafeArea(
             child: ListView(
-              padding: insets.copyWith(top: 10, bottom: 32),
+              padding: insets.copyWith(top: 10, bottom: 112),
               children: [
                 OperationsWorkspaceFrame(
                   layout: layout,
@@ -154,31 +169,13 @@ extension _ExpensesHomeLayout on _ExpensesScreenState {
                       if (permissions.canViewAmounts) ...[
                         const SizedBox(height: 12),
                         ExpenseSpendingSummary(
+                          periods: const ['Day', 'Week'],
                           records: _scopeExpenses,
                           date: _selectedDate,
                           firstWeekday: _preferences.weekStartsOn,
                           onOpen: _openSpendingPeriod,
                         ),
                       ],
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          if (permissions.canCreate)
-                            FilledButton.icon(
-                              onPressed: () => _recordExpense(),
-                              icon: const Icon(Icons.add),
-                              label: const Text('Add expense'),
-                            ),
-                          if (permissions.canAttachReceipt)
-                            OutlinedButton.icon(
-                              onPressed: _openReceiptIntake,
-                              icon: const Icon(Icons.receipt_long_outlined),
-                              label: const Text('Add receipt'),
-                            ),
-                        ],
-                      ),
                       if (recurring != null &&
                           (recurring.isLoading ||
                               recurring.phase ==

@@ -35,9 +35,14 @@ class ExpenseRevisionSnapshot {
       throw ArgumentError.value(revision, 'revision', 'Must be positive.');
     }
     _requireNonEmpty(paidByEmployeeId, 'paidByEmployeeId');
-    _requireNonEmpty(vendorName, 'vendorName');
-    _requireNonEmpty(categoryId, 'categoryId');
-    _requireNonEmpty(categoryLabelSnapshot, 'categoryLabelSnapshot');
+    if (itemization.mode == ExpenseItemizationMode.itemized) {
+      _requireNonEmpty(vendorName, 'vendorName');
+    }
+    validateOptionalExpenseCategory(categoryId, categoryLabelSnapshot);
+    itemization.validateFor(total);
+    if (total != null && total!.minorUnits < 0) {
+      throw const FormatException('Expense total cannot be negative.');
+    }
   }
 
   factory ExpenseRevisionSnapshot.fromRecord(StoredExpenseRecord record) =>
@@ -65,9 +70,9 @@ class ExpenseRevisionSnapshot {
   final DateTime expenseDate;
   final int? expenseTimeMinutes;
   final String vendorName;
-  final String categoryId;
-  final String categoryLabelSnapshot;
-  final ExpenseMoney total;
+  final String? categoryId;
+  final String? categoryLabelSnapshot;
+  final ExpenseMoney? total;
   final String? receiptId;
   final int? receiptImageCount;
   final String? jobId;
@@ -84,7 +89,7 @@ class ExpenseRevisionSnapshot {
     'vendorName': vendorName,
     'categoryId': categoryId,
     'categoryLabelSnapshot': categoryLabelSnapshot,
-    'total': total.toJson(),
+    'total': total?.toJson(),
     'receiptId': receiptId,
     'receiptImageCount': receiptImageCount,
     'jobId': jobId,
@@ -100,10 +105,13 @@ class ExpenseRevisionSnapshot {
         paidByEmployeeId: _requiredString(json, 'paidByEmployeeId'),
         expenseDate: parseExpenseDateKey(_requiredString(json, 'expenseDate')),
         expenseTimeMinutes: json['expenseTimeMinutes'] as int?,
-        vendorName: _requiredString(json, 'vendorName'),
-        categoryId: _requiredString(json, 'categoryId'),
-        categoryLabelSnapshot: _requiredString(json, 'categoryLabelSnapshot'),
-        total: ExpenseMoney.fromJson(_requiredMap(json, 'total')),
+        vendorName: readExpenseMerchant(json),
+        categoryId: readOptionalExpenseCategory(json, 'categoryId'),
+        categoryLabelSnapshot: readOptionalExpenseCategory(
+          json,
+          'categoryLabelSnapshot',
+        ),
+        total: readExpenseTotal(json),
         receiptId: json['receiptId'] as String?,
         receiptImageCount: json['receiptImageCount'] as int?,
         jobId: json['jobId'] as String?,

@@ -25,61 +25,42 @@ Employee monthly results and incomplete contribution are governed by Operations
 screen blueprint section 8. Employee results remain distinct from the selected
 day's schedule; every supported total opens its supporting records.
 
-September 14 owner correction: Admin uses the same daily Plan/Entries/calendar
-composition as Technician, including full blue Plan and jade Entries containers,
-shared headings, row hierarchy and responsive lane widths. Company review is
-additional content below those daily lanes, not a replacement dashboard. The
-wide calendar remains in the same supporting lane; compact calendars remain
-below the content. Admin company review uses the same whole-card primitives,
-with amber for action queues and jade for recorded financial summaries.
-Employee monthly review follows that same presentation, below the daily work.
-The selected-day projection and all-date open queues/monthly money totals must
-remain explicitly distinguished. Existing permission limitations below remain.
+September 15 owner correction: Admin retains the same daily Plan/Entries/calendar
+composition as Technician, using shared whole-card components and logical-width
+layout. Company summary containers precede daily work: Needs attention first
+when nonempty, then one compact Business overview row. The entire row is
+tappable and opens the existing Reports screen with period selection and source
+records. Large green/red financial cards are rejected. The 5.7 screenshot was
+an illustration of readable totals, not a visual design to copy. Reflow uses
+AppLayoutEngine and TextScaler.
+Remove the old bottom monthly money panel and its invoiced-revenue metric.
+Billing and collections may remain below daily work; the supporting calendar
+stays bounded. Employee review remains separate from the company summary.
 
-September 14 voice planning correction (required behavior, not yet implemented):
-hide Needs attention completely when there are no authorized urgent items.
-On mobile, show one individually bordered `Needs attention` container with the
-actual count, whether there is one item or many. Tapping it opens a separate
-Needs attention list screen with a Back button; tapping a list item opens its
-exact owning record. This supersedes the proposed two/three-item mobile preview
-and the earlier permanently visible inline job-category lists. Desktop may use
-its extra space differently; its detailed presentation is still under discussion.
-No permanent example warnings or zero-count groups should masquerade as actual
-problems. Affected Jobs appear once, with all applicable issues in their details;
-normally progressing jobs are not attention items. Draft/completed Jobs are not
-overdue active work. Overdue compares the saved scheduled finish (or start when
-finish is absent) with the beginning of today; a date later today is not overdue.
-Reminder lead times are separate owner preferences, still to be wired. This does
-not imply completed cancellation/void handling or production permission binding.
+Needs attention shows the actual authorized count and is completely hidden at
+zero. Opening it leads to a separate list grouped into Urgent and Normal;
+opening an item leads to its owning record, not directly into an edit or fix.
+Routine Estimate, Invoice and expense approvals belong in Normal. The owner
+configures urgency and thresholds in contextual alert settings. Pending approval
+alone is not urgent. Avoid permanent sample warnings and duplicate Job entries.
+Draft/completed Jobs are not overdue active work. Dates, balances, payment terms
+and installment plans belong to their source workflows, not dashboard copies.
+An unpaid installment may qualify for escalation only under the owner's rule;
+a payment must update the source balance before the projected alert changes.
 
-Latest voice correction: routine receipt, Estimate or Invoice approvals belong
-in a separate approval flow; awaiting approval alone does not qualify as urgent
-Needs attention. This supersedes earlier suggestions that every actionable
-record should enter that queue. The account owner must be able to configure
-which business conditions qualify as urgent and their applicable thresholds.
-Examples discussed were overdue customer payments and an employee unable to
-finish a Job because of a problem. Exact defaults and controls remain to be
-designed; these examples are not automatic blanket urgency rules. A record's
-actual overdue/blocked state remains separate from whether the owner's urgency
-rule surfaces it. Approval escalation, if offered, must meet a separately
-defined urgency rule rather than treating all pending approvals as alerts.
+Money received uses confirmed recorded payments; Money spent uses confirmed
+expenses. Each shows its month and opens supporting records. Neither invoicing
+nor cash difference is a claim of profit. Operations section 8 owns financial
+source and permission rules. Payment recording remains separate from processing:
+no card or bank credentials are collected. The earlier single Money destination
+proposal is superseded by the compact Business overview entry. Hourly averages
+and per-vehicle fuel/mileage breakdowns remain requirements for the detailed
+overview and must not be claimed available until their sources are verified.
 
-### Money destination — owner proposal under discussion
-
-The owner proposed one individually bordered `Money` container below Needs
-attention. Tapping it would open a dedicated Money screen with a full financial
-recap rather than placing every financial breakdown on the Dashboard. The owner
-also raised selecting individual employees, then explicitly paused that idea;
-employee breakdown details remain unresolved. Record this proposal without
-implementing it until the current planning conversation settles the flow.
-
-The requested recap should help an authorized owner understand money coming in,
-money going out, and how much the company is making over daily/monthly periods.
-Exact metrics, averages, period defaults, and presentation remain to be settled.
-Existing Operations section 8 owns financial source and permission rules;
-collections, invoicing, cash difference, and profit must not be conflated.
-Earlier assistant suggestions for a `Business performance` heading and separate
-Dashboard profit tiles are proposals, not accepted replacements for this idea.
+Implementation boundary: the top summary layout uses existing local projections.
+Urgent/Normal classification, saved owner urgency controls, complete payment-plan
+integration and production permission binding are not verified by this layout
+change and remain required work. Visual acceptance is still pending.
 
 Current owner direction supersedes the older mobile-header and company Plan/Entries rules below.
 Dashboard alone is this implementation slice, on the existing Windows checkout.
@@ -404,3 +385,5 @@ Before building this feature in Maintainiac, report the existing models,
 repositories, services, permissions, and screens that own the required data.
 Identify missing capabilities and stop for review. Do not invent duplicate data
 architecture during discovery.
+
+September 15 selector correction: the Admin header is the single company/employee selector. Remove the duplicate horizontal company/employee strip between Admin and Business overview; preserve header access to both scopes.

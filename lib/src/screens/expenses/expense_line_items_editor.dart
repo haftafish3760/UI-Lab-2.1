@@ -211,9 +211,8 @@ String _lineDescription(ExpenseLineItem item) {
   final part = item.partNumber?.trim();
   final partText = part == null || part.isEmpty ? '' : ' · Part $part';
   return '${item.description}$partText\n'
-      '${_number(item.quantity)} ${item.unit} × ${expenseMoney(item.unitPrice)}';
+      '${_number(item.quantity)} ${item.unit} × ${expenseUnitPrice(item.unitPrice)}';
 }
 
-String _number(double value) => value == value.roundToDouble()
-    ? value.toStringAsFixed(0)
-    : value.toStringAsFixed(2);
+String _number(double value) =>
+    value.toStringAsFixed(6).replaceFirst(RegExp(r'\.?0+$'), '');

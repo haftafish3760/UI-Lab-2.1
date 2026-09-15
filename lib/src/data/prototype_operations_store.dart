@@ -59,8 +59,14 @@ class PrototypeOperationsStore extends ChangeNotifier {
          ...(workRecords ??
              (workSession == null ? prototypeDemoWorkRecords() : const [])),
        ],
-       _materialCosts = [...(materialCosts ?? (workSession == null ? demoMaterialCosts : const []))],
-       _inventoryStock = [...(inventoryStock ?? (workSession == null ? demoInventoryStock : const []))],
+       _materialCosts = [
+         ...(materialCosts ??
+             (workSession == null ? demoMaterialCosts : const [])),
+       ],
+       _inventoryStock = [
+         ...(inventoryStock ??
+             (workSession == null ? demoInventoryStock : const [])),
+       ],
        _dashboardDays = {...?dashboardDays},
        _companyProfile = companyProfile ?? demoWorkCompany,
        _customers = [...(customers ?? demoWorkCustomers)] {
@@ -121,7 +127,9 @@ class PrototypeOperationsStore extends ChangeNotifier {
   }) {
     final stored =
         _dashboardDays[_dashboardDayKey(day, contextId)] ??
-        (workSession == null ? demoDataFor(day, employeeId: employeeId) : const DashboardDayData());
+        (workSession == null
+            ? demoDataFor(day, employeeId: employeeId)
+            : const DashboardDayData());
     final work = workSession;
     final planned = work == null
         ? stored
@@ -399,7 +407,7 @@ class PrototypeOperationsStore extends ChangeNotifier {
                     !date.isBefore(fromInclusive) &&
                     date.isBefore(toExclusive);
               })
-              .fold(0, (sum, record) => sum + (record.amount * 100).round())
+              .fold(0, (sum, record) => sum + (record.amount! * 100).round())
         : authorized.projection
               .recordedTotal(
                 ExpenseUiProjectionQuery(
@@ -427,7 +435,8 @@ class PrototypeOperationsStore extends ChangeNotifier {
     expenseMinorUnitsById: {
       for (final projection
           in _authorizedExpenseController?.projection.active ?? const [])
-        projection.record.id: projection.exactTotal.minorUnits,
+        if (projection.exactTotal != null)
+          projection.record.id: projection.exactTotal!.minorUnits,
     },
     workRecords: workRecords,
     fromInclusive: fromInclusive,

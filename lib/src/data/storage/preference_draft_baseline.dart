@@ -15,7 +15,12 @@ abstract final class PreferenceDraftBaseline {
     }
     if (domain == AppPreferenceKeys.receiptDisplayDraftDomain &&
         id == AppPreferenceKeys.receiptDisplayDraftId) {
-      return {'receiptShowReviewChecklist', 'receiptShowEvidenceReminders'};
+      return {
+        'receiptShowReviewChecklist',
+        'receiptShowEvidenceReminders',
+        'receiptAssistanceEnabled',
+        'receiptDetailedReceipts',
+      };
     }
     if (domain == AppPreferenceKeys.reportDisplayDraftDomain &&
         id == AppPreferenceKeys.reportDisplayDraftId) {
@@ -47,7 +52,17 @@ abstract final class PreferenceDraftBaseline {
     if (raw is! Map) {
       throw const FormatException('Preference baseline unavailable.');
     }
-    final values = raw.cast<String, String?>();
+    final values = Map<String, String?>.from(raw);
+    // Older receipt-setting drafts predate the two opt-in choices. Preserve
+    // their unset baseline; a concurrently saved choice must still conflict.
+    if (domain == AppPreferenceKeys.receiptDisplayDraftDomain &&
+        id == AppPreferenceKeys.receiptDisplayDraftId &&
+        values.length == 2 &&
+        values.containsKey('receiptShowReviewChecklist') &&
+        values.containsKey('receiptShowEvidenceReminders')) {
+      values['receiptAssistanceEnabled'] = null;
+      values['receiptDetailedReceipts'] = null;
+    }
     final expected = keys(domain, id);
     if (values.length != expected.length ||
         !values.keys.every(expected.contains)) {

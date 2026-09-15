@@ -16,8 +16,8 @@ Map<String, String> validateSnapshotReferenceAliases(
     if (reference is! String ||
         relative is! String ||
         !retained.contains(relative) ||
-        !reference.endsWith('/$relative') ||
-        reference.split('/').contains('..')) {
+        !reference.replaceAll('\\', '/').endsWith('/$relative') ||
+        reference.replaceAll('\\', '/').split('/').contains('..')) {
       throw StateError(
         'Checkpoint alias does not match its retained file identity.',
       );

@@ -78,10 +78,7 @@ class ExpensePeriodScreen extends StatelessWidget {
             final byDate = a.resolvedDate!.compareTo(b.resolvedDate!);
             return byDate != 0 ? byDate : a.id.compareTo(b.id);
           });
-    final cents = records.fold<int>(
-      0,
-      (sum, item) => sum + (item.amount * 100).round(),
-    );
+    final summary = ExpenseAmountSummary(records);
     final dates = MaterialLocalizations.of(context);
     final lastDay = DateTime(
       range.end.year,
@@ -111,9 +108,11 @@ class ExpensePeriodScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${records.length} expense records • ${expenseMoney(cents / 100)}',
+                      '${records.length} expense records • ${expenseMoney(summary.displayAmount)}',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
+                    if (summary.missingMessage case final message?)
+                      Text(message),
                     const SizedBox(height: 16),
                     if (records.isEmpty)
                       const Text('No expense records for this period.'),

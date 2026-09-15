@@ -148,7 +148,7 @@ extension ExpenseDraftWorkflow on ExpenseUiRepositoryController {
           seed.addAll({
             'receiptImageCount': current.receiptImageCount,
             'vendor': current.vendor,
-            'amount': current.amount.toStringAsFixed(2),
+            'amount': current.amount?.toStringAsFixed(2) ?? '',
             'subtotal': current.resolvedReceiptSubtotal.toStringAsFixed(2),
             'salesTax': current.salesTax.toStringAsFixed(2),
             'job': current.job ?? '',

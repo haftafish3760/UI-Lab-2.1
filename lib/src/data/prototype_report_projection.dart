@@ -203,11 +203,14 @@ int _financialTotal(Iterable<PrototypeFinancialEntry> entries) =>
 int _expenseTotal(
   Iterable<ExpenseRecord> expenses,
   Map<String, int> expenseMinorUnitsById,
-) => expenses.fold(
-  0,
-  (sum, record) =>
-      sum + (expenseMinorUnitsById[record.id] ?? (record.amount * 100).round()),
-);
+) => expenses
+    .where((record) => record.amount != null)
+    .fold(
+      0,
+      (sum, record) =>
+          sum +
+          (expenseMinorUnitsById[record.id] ?? (record.amount! * 100).round()),
+    );
 
 PrototypeReportSource _expenseSource(
   ExpenseRecord record,
@@ -215,10 +218,12 @@ PrototypeReportSource _expenseSource(
 ) => PrototypeReportSource(
   kind: PrototypeReportSourceKind.expense,
   id: record.id,
-  title: record.vendor,
-  detail: '${record.category.label} · ${record.owner}',
-  amountCents:
-      expenseMinorUnitsById[record.id] ?? (record.amount * 100).round(),
+  title: record.displayVendor,
+  detail:
+      '${record.category.label} · ${record.owner}${record.amount == null ? ' · Amount not entered' : ''}',
+  amountCents: record.amount == null
+      ? null
+      : expenseMinorUnitsById[record.id] ?? (record.amount! * 100).round(),
 );
 
 PrototypeReportSource _workSource(WorkRecord record) => PrototypeReportSource(

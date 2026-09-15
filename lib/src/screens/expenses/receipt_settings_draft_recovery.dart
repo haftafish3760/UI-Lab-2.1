@@ -55,6 +55,8 @@ extension _ReceiptSettingsDraftRecovery on _ReceiptIntakeSettingsScreenState {
       final saved = _workflow != null
           ? await _workflow!.confirm()
           : await _saved?.setReceiptDisplay(
+              assistanceEnabled: _draft.assistanceEnabled,
+              detailedReceipts: _draft.detailedReceipts,
               showReviewChecklist: _draft.showReviewChecklist,
               showEvidenceReminders: _draft.showEvidenceReminders,
             );

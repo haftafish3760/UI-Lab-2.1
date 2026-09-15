@@ -8,6 +8,7 @@ class _PurchaseFields extends StatelessWidget {
     required this.category,
     required this.onChooseDate,
     required this.onCategoryChanged,
+    required this.requireVendor,
   });
 
   final TextEditingController vendorController;
@@ -16,6 +17,7 @@ class _PurchaseFields extends StatelessWidget {
   final ExpenseCategory category;
   final VoidCallback onChooseDate;
   final ValueChanged<ExpenseCategory> onCategoryChanged;
+  final bool requireVendor;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -24,19 +26,22 @@ class _PurchaseFields extends StatelessWidget {
         key: const ValueKey('expense-vendor-field'),
         controller: vendorController,
         textInputAction: TextInputAction.next,
-        decoration: const InputDecoration(
-          labelText: 'Vendor or store',
+        decoration: InputDecoration(
+          labelText: requireVendor
+              ? 'Vendor or store'
+              : 'Vendor or store (optional)',
           helperText: 'Where the purchase was made',
         ),
-        validator: (value) =>
-            (value ?? '').trim().isEmpty ? 'Enter the vendor or store.' : null,
+        validator: (value) => requireVendor && (value ?? '').trim().isEmpty
+            ? 'Enter the vendor or store.'
+            : null,
       );
       final date = _ReceiptDateField(date: expenseDate, onTap: onChooseDate);
       final categoryField = DropdownButtonFormField<ExpenseCategory>(
         key: const ValueKey('expense-category-field'),
         isExpanded: true,
         initialValue: category,
-        decoration: const InputDecoration(labelText: 'Expense category'),
+        decoration: const InputDecoration(labelText: 'Category (optional)'),
         items: [
           for (final option in ExpenseCategory.values)
             DropdownMenuItem(value: option, child: Text(option.label)),

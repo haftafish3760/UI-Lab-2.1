@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'expense_itemization.dart';
 import 'expense_money.dart';
+import 'expense_optional_fields.dart';
 
 export 'expense_itemization.dart';
 export 'expense_money.dart';
@@ -196,12 +197,13 @@ class StoredExpenseRecord {
     _requireNonEmpty(organizationId, 'organizationId');
     _requireNonEmpty(createdByEmployeeId, 'createdByEmployeeId');
     _requireNonEmpty(paidByEmployeeId, 'paidByEmployeeId');
-    _requireNonEmpty(vendorName, 'vendorName');
-    _requireNonEmpty(categoryId, 'categoryId');
-    _requireNonEmpty(categoryLabelSnapshot, 'categoryLabelSnapshot');
-    if (total.minorUnits < 0) {
+    if (itemization.mode == ExpenseItemizationMode.itemized) {
+      _requireNonEmpty(vendorName, 'vendorName');
+    }
+    validateOptionalExpenseCategory(categoryId, categoryLabelSnapshot);
+    if (total != null && total!.minorUnits < 0) {
       throw ArgumentError.value(
-        total.minorUnits,
+        total!.minorUnits,
         'total',
         'Expense total cannot be negative.',
       );
@@ -225,9 +227,9 @@ class StoredExpenseRecord {
   final DateTime expenseDate;
   final int? expenseTimeMinutes;
   final String vendorName;
-  final String categoryId;
-  final String categoryLabelSnapshot;
-  final ExpenseMoney total;
+  final String? categoryId;
+  final String? categoryLabelSnapshot;
+  final ExpenseMoney? total;
   final String? receiptId;
 
   /// Null means older data did not record an evidence count.
@@ -256,9 +258,9 @@ class StoredExpenseRecord {
 
   StoredExpenseRecord copyWith({
     String? vendorName,
-    String? categoryId,
-    String? categoryLabelSnapshot,
-    ExpenseMoney? total,
+    Object? categoryId = _unchangedExpenseValue,
+    Object? categoryLabelSnapshot = _unchangedExpenseValue,
+    Object? total = _unchangedExpenseValue,
     DateTime? expenseDate,
     Object? expenseTimeMinutes = _unchangedExpenseValue,
     Object? receiptId = _unchangedExpenseValue,
@@ -280,9 +282,16 @@ class StoredExpenseRecord {
         ? this.expenseTimeMinutes
         : expenseTimeMinutes as int?,
     vendorName: vendorName ?? this.vendorName,
-    categoryId: categoryId ?? this.categoryId,
-    categoryLabelSnapshot: categoryLabelSnapshot ?? this.categoryLabelSnapshot,
-    total: total ?? this.total,
+    categoryId: identical(categoryId, _unchangedExpenseValue)
+        ? this.categoryId
+        : categoryId as String?,
+    categoryLabelSnapshot:
+        identical(categoryLabelSnapshot, _unchangedExpenseValue)
+        ? this.categoryLabelSnapshot
+        : categoryLabelSnapshot as String?,
+    total: identical(total, _unchangedExpenseValue)
+        ? this.total
+        : total as ExpenseMoney?,
     receiptId: identical(receiptId, _unchangedExpenseValue)
         ? this.receiptId
         : receiptId as String?,
@@ -312,7 +321,7 @@ class StoredExpenseRecord {
     'vendorName': vendorName,
     'categoryId': categoryId,
     'categoryLabelSnapshot': categoryLabelSnapshot,
-    'total': total.toJson(),
+    'total': total?.toJson(),
     'receiptId': receiptId,
     'receiptImageCount': receiptImageCount,
     'jobId': jobId,
@@ -332,10 +341,13 @@ class StoredExpenseRecord {
         paidByEmployeeId: _requiredString(json, 'paidByEmployeeId'),
         expenseDate: parseExpenseDateKey(_requiredString(json, 'expenseDate')),
         expenseTimeMinutes: json['expenseTimeMinutes'] as int?,
-        vendorName: _requiredString(json, 'vendorName'),
-        categoryId: _requiredString(json, 'categoryId'),
-        categoryLabelSnapshot: _requiredString(json, 'categoryLabelSnapshot'),
-        total: ExpenseMoney.fromJson(_requiredMap(json, 'total')),
+        vendorName: readExpenseMerchant(json),
+        categoryId: readOptionalExpenseCategory(json, 'categoryId'),
+        categoryLabelSnapshot: readOptionalExpenseCategory(
+          json,
+          'categoryLabelSnapshot',
+        ),
+        total: readExpenseTotal(json),
         receiptId: json['receiptId'] as String?,
         receiptImageCount: json['receiptImageCount'] as int?,
         jobId: json['jobId'] as String?,

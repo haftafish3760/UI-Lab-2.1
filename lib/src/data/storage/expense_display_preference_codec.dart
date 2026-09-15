@@ -1,5 +1,6 @@
 /// Stable storage names, independent of translated UI labels or widget layout.
 const expenseDisplayCategoryNames = {
+  'uncategorized',
   'materials',
   'consumables',
   'fuel',
@@ -36,10 +37,11 @@ bool validExpenseReceiptChoices(Object? value) =>
 bool validExpenseDisplayPreferences(Object? value) =>
     value is Map &&
     ((value.length == 5 && value['version'] == 1) ||
-      (value.length == 6 && value['version'] == 2 &&
-       value['weekStartsOn'] is int &&
-       (value['weekStartsOn'] as int) >= 1 &&
-       (value['weekStartsOn'] as int) <= 7)) &&
+        (value.length == 6 &&
+            value['version'] == 2 &&
+            value['weekStartsOn'] is int &&
+            (value['weekStartsOn'] as int) >= 1 &&
+            (value['weekStartsOn'] as int) <= 7)) &&
     value['showJobLinks'] is bool &&
     const {'off', 'topTen', 'custom'}.contains(value['categoryMode']) &&
     validExpenseCategoryChoices(value['customCategories']) &&

@@ -218,10 +218,10 @@ class DesktopAppNavigation extends StatelessWidget {
               children: [
                 const Icon(Icons.handyman, color: AppColors.green, size: 30),
                 const SizedBox(height: 8),
-                const Text(
-                  'MAINTAINIAC',
+                Text(
+                  context.l10n.appTitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.onHeader,
                     fontWeight: FontWeight.w700,
                   ),
