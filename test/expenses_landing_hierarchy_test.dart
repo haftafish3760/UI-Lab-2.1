@@ -1,3 +1,4 @@
+import 'support/expense_setup_fixture.dart';
 import 'package:ui_lab_2_1/src/theme/operational_card_palette.dart';
 import 'package:ui_lab_2_1/src/shared/recorded_entries_section.dart';
 import 'package:flutter/material.dart';
@@ -19,11 +20,12 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const UiLabApp());
     await tester.pumpAndSettle();
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
 
     final date = find.byKey(const ValueKey('expenses-date-heading'));
-    final total = find.byKey(const ValueKey('daily-expense-total'));
+    final total = find.byKey(const ValueKey('expense-spending-day'));
     final attention = find.byKey(const ValueKey('expenses-needs-attention'));
     final drafts = find.byKey(const ValueKey('expense-receipt-drafts-summary'));
     final entries = find.byKey(const ValueKey('expense-entries-section'));

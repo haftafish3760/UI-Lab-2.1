@@ -10,6 +10,8 @@ import 'package:ui_lab_2_1/src/screens/expenses/expense_entry_flow.dart';
 import 'package:ui_lab_2_1/src/screens/expenses/expense_permissions.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
 import '../test/support/load_material_test_font.dart';
+import 'package:ui_lab_2_1/src/screens/expenses/expense_welcome_screen.dart';
+import 'package:ui_lab_2_1/src/shared/app_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -71,6 +73,29 @@ void main() {
           });
         }
 
+        final preferences = AppPreferencesController();
+        final startContext = tester.element(find.text('Start'));
+        Navigator.of(startContext).push<void>(
+          MaterialPageRoute(
+            builder: (_) => ExpenseWelcomeScreen(preferences: preferences),
+          ),
+        );
+        await capture('welcome');
+        await tester.tap(
+          find.byKey(const ValueKey('expense-welcome-continue')),
+        );
+        await capture('assistance');
+        final noHelp = find.byKey(const ValueKey('expense-setup-manual'));
+        await tester.ensureVisible(noHelp);
+        await tester.tap(noHelp);
+        final continueSetup = find.byKey(
+          const ValueKey('expense-welcome-continue'),
+        );
+        await tester.ensureVisible(continueSetup);
+        await tester.pump();
+        await tester.tap(continueSetup);
+        await tester.pumpAndSettle();
+        preferences.dispose();
         await tester.tap(find.text('Start'));
         await capture('setup');
         await tester.tap(find.byKey(const ValueKey('choose-receipt-category')));

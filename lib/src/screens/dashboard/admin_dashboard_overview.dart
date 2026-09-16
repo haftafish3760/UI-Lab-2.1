@@ -22,6 +22,7 @@ class AdminDashboardOverview extends StatelessWidget {
     required this.onOpenPlan,
     required this.onAttention,
     required this.attentionCount,
+    this.urgentCount = 0,
     this.summaryOnly = false,
   });
   final DateTime date;
@@ -29,6 +30,7 @@ class AdminDashboardOverview extends StatelessWidget {
   final ValueChanged<PlanItem> onOpenPlan;
   final VoidCallback onAttention;
   final int attentionCount;
+  final int urgentCount;
   final bool summaryOnly;
 
   @override
@@ -75,10 +77,10 @@ class AdminDashboardOverview extends StatelessWidget {
     final sections = <Widget>[
       if (summaryOnly && attentionCount > 0)
         _navigationRow(
-          title: 'Needs attention',
-          detail: attentionCount == 1
-              ? '1 item needs attention'
-              : '$attentionCount items need attention',
+          title: urgentCount > 0 ? 'Urgent attention' : 'Needs attention',
+          detail: urgentCount > 0
+              ? '$urgentCount urgent · ${attentionCount - urgentCount} normal'
+              : '$attentionCount ${attentionCount == 1 ? 'item needs' : 'items need'} attention',
           icon: Icons.notifications_active_outlined,
           onTap: onAttention,
         ),
@@ -103,7 +105,7 @@ class AdminDashboardOverview extends StatelessWidget {
         ]),
       if (summaryOnly && permissions.canViewCompanyFinancials)
         _navigationRow(
-          title: 'Business overview',
+          title: 'Recap',
           detail: 'View totals and supporting records',
           icon: Icons.insights_outlined,
           onTap: () => _open(context, const ReportsScreen()),

@@ -143,6 +143,7 @@ class _DashboardBody extends StatelessWidget {
                                     ),
                                   ),
                                 ),
+                              if (view == AppViewMode.admin) const Spacer(),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: DashboardViewSelector(
@@ -157,6 +158,9 @@ class _DashboardBody extends StatelessWidget {
                         if (view == AppViewMode.admin && employee == null)
                           AdminDashboardOverview(
                             summaryOnly: true,
+                            urgentCount: attentionItems
+                                .where((item) => item.isUrgent)
+                                .length,
                             date: selectedDate,
                             permissions:
                                 const DashboardPermissions.development(),

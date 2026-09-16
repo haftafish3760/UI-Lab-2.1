@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
+import 'package:ui_lab_2_1/src/shared/section_card.dart';
 
 Future<void> _pumpAt(WidgetTester tester, Size size) async {
   tester.view.physicalSize = size;
@@ -52,6 +53,15 @@ void main() {
     expect(find.text('System settings'), findsOneWidget);
 
     final reports = find.byKey(const ValueKey('menu-reports'));
+    for (final id in ['menu-customers', 'menu-vehicles', 'menu-reports']) {
+      expect(
+        find.descendant(
+          of: find.byKey(ValueKey(id)),
+          matching: find.byType(SectionCard),
+        ),
+        findsOneWidget,
+      );
+    }
     await tester.ensureVisible(reports);
     await tester.pumpAndSettle();
     await tester.tap(reports);

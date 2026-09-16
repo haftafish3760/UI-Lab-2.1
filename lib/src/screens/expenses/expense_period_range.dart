@@ -32,6 +32,14 @@ DateTimeRange expensePeriodRange(
       start: DateTime(day.year),
       end: DateTime(day.year + 1),
     ),
+    'Quarter' => DateTimeRange(
+      start: DateTime(day.year, ((day.month - 1) ~/ 3) * 3 + 1),
+      end: DateTime(day.year, ((day.month - 1) ~/ 3) * 3 + 4),
+    ),
+    'Year to date' => DateTimeRange(
+      start: DateTime(day.year),
+      end: DateTime(day.year, day.month, day.day + 1),
+    ),
     _ => throw ArgumentError.value(period, 'period'),
   };
 }

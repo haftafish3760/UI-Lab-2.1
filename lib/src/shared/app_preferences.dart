@@ -48,6 +48,18 @@ class AppPreferencesController extends ChangeNotifier {
   bool _receiptShowEvidenceReminders = true;
   bool _receiptAssistanceEnabled = false;
   bool _receiptDetailedReceipts = false;
+  bool _expenseSetupCompleted = false;
+  bool get expenseSetupCompleted => _expenseSetupCompleted;
+  Future<bool> completeExpenseSetup({
+    required bool detailed,
+    required bool assistance,
+  }) => _saveMany({
+    'expenseSetupCompleted': 'true',
+    'receiptDetailedReceipts': detailed.toString(),
+    'receiptAssistanceEnabled': assistance.toString(),
+  });
+  Future<bool> rememberReceiptDetail(bool detailed) =>
+      _save('receiptDetailedReceipts', detailed.toString());
   bool get receiptAssistanceEnabled => _receiptAssistanceEnabled;
   bool get receiptDetailedReceipts => _receiptDetailedReceipts;
   bool get receiptShowReviewChecklist => _receiptShowReviewChecklist;
@@ -129,6 +141,9 @@ class AppPreferencesController extends ChangeNotifier {
   Future<bool> setDashboardActions(Set<String> actions) =>
       _save('dashboardActions', jsonEncode(actions.toList()..sort()));
   void _apply(Map<String, String> values) {
+    if (values['expenseSetupCompleted'] case final String value) {
+      _expenseSetupCompleted = value == 'true';
+    }
     if (values['expenseDisplay'] case final String value) {
       _expenseDisplay = value;
     }

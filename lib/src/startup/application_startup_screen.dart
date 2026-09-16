@@ -143,7 +143,7 @@ class _ApplicationStartupScreenState extends State<ApplicationStartupScreen>
                   Text(
                     _failed
                         ? 'Unable to open Tame Your Biz'
-                        : 'Opening your saved work…',
+                        : 'Tame Your Biz',
                     style: AppTheme.light.textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 16),

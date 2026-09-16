@@ -28,7 +28,7 @@ day's schedule; every supported total opens its supporting records.
 September 15 owner correction: Admin retains the same daily Plan/Entries/calendar
 composition as Technician, using shared whole-card components and logical-width
 layout. Company summary containers precede daily work: Needs attention first
-when nonempty, then one compact Business overview row. The entire row is
+when nonempty, then one compact Recap row. The entire row is
 tappable and opens the existing Reports screen with period selection and source
 records. Large green/red financial cards are rejected. The 5.7 screenshot was
 an illustration of readable totals, not a visual design to copy. Reflow uses
@@ -58,7 +58,9 @@ and per-vehicle fuel/mileage breakdowns remain requirements for the detailed
 overview and must not be claimed available until their sources are verified.
 
 Implementation boundary: the top summary layout uses existing local projections.
-Urgent/Normal classification, saved owner urgency controls, complete payment-plan
+The list supports source-provided Urgent/Normal grouping. Current source adapters
+remain Normal until owner escalation policies are implemented; do not interpret
+this as completed urgent-event detection. Saved owner urgency controls, complete payment-plan
 integration and production permission binding are not verified by this layout
 change and remain required work. Visual acceptance is still pending.
 
@@ -70,8 +72,10 @@ workspaces still required; this does not limit the product to two screens.
 - The shared Dashboard header exposes Technician/Admin at every width, menu at
   left and page settings at right, with relevant vehicle/odometer or company scope.
   No redundant Dashboard title. Normal text shares one row; accessibility reflows.
-- Admin defaults to Company Overview. A horizontal scope selector puts Company
-  Overview first, then demo employees; returning to company never changes actor.
+- Admin defaults to Company Overview. Its header selector is the only company/
+  employee selector; the duplicate horizontal strip is removed. On compact
+  layouts the Admin view control occupies approximately half the row, with
+  accessibility-driven height growth. Returning to company never changes actor.
 - Company Overview shows current unfinished/unassigned/overdue/paused-return work,
   pending customer estimates, unpaid invoices, outstanding balance, selected-month
   collections/invoicing/spending and assigned workload. Rows open owning records.

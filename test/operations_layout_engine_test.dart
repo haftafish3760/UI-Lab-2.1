@@ -1,3 +1,4 @@
+import 'support/expense_setup_fixture.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -188,6 +189,7 @@ void main() {
       AppLayoutEngine.workLandingFor(2300).workspaceWidth,
     );
 
+    await useCompletedExpenseSetup(tester);
     await tester.tap(
       find.byKey(const ValueKey('desktop-destination-expenses')),
     );
@@ -338,6 +340,7 @@ void main() {
     expect(find.byType(DesktopAppNavigation), findsNothing);
     expect(find.byKey(const ValueKey('dashboard-2-lane-row')), findsOneWidget);
 
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
     expect(
@@ -349,28 +352,32 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('large text reflows Dashboard before crowding and keeps the rail', (
-    tester,
-  ) async {
-    await _pumpAt(tester, const Size(1120, 900), textScale: 2);
-    expect(find.byKey(const ValueKey('dashboard-1-lane-row')), findsOneWidget);
-    expect(find.byType(NavigationBar), findsNothing);
-    expect(
-      find.descendant(
-        of: find.byType(DesktopAppNavigation),
-        matching: find.byType(ListView),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      AppLayoutEngine.operationsFor(
-        868,
-        textScaler: const TextScaler.linear(2),
-      ).columns,
-      2,
-    );
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'large text reflows Dashboard before crowding and keeps the rail',
+    (tester) async {
+      await _pumpAt(tester, const Size(1120, 900), textScale: 2);
+      expect(
+        find.byKey(const ValueKey('dashboard-1-lane-row')),
+        findsOneWidget,
+      );
+      expect(find.byType(NavigationBar), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(DesktopAppNavigation),
+          matching: find.byType(ListView),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        AppLayoutEngine.operationsFor(
+          868,
+          textScaler: const TextScaler.linear(2),
+        ).columns,
+        2,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   test('top-level module sources retain one layout owner', () {
     const owners = {

@@ -8,6 +8,9 @@ import '../screens/work/company_profile_screen.dart';
 import '../screens/work/saved_clients_screen.dart';
 import '../shared/app_preferences.dart';
 import '../theme/app_theme.dart';
+import '../layout/app_layout_engine.dart';
+import '../shared/operations_workspace.dart';
+import '../shared/section_card.dart';
 import 'employee_directory_screen.dart';
 import 'vehicle_directory_screen.dart';
 
@@ -154,26 +157,28 @@ class _MenuSection extends StatelessWidget {
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: Theme.of(context).colorScheme.surfaceContainerLow,
-    shape: RoundedRectangleBorder(
-      side: BorderSide(color: Theme.of(context).colorScheme.outline),
-      borderRadius: BorderRadius.circular(AppRadii.surface),
-    ),
-    clipBehavior: Clip.antiAlias,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-          child: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
-        ...children,
-      ],
-    ),
+      ),
+      LayoutBuilder(
+        builder: (context, constraints) => OperationsLaneGrid(
+          layout: AppLayoutEngine.operationsFor(
+            constraints.maxWidth,
+            textScaler: MediaQuery.textScalerOf(context),
+          ),
+          children: children,
+        ),
+      ),
+    ],
   );
 }
 
@@ -192,12 +197,36 @@ class _MenuDestination extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    leading: Icon(icon),
-    title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-    subtitle: Text(detail),
-    trailing: const Icon(Icons.chevron_right_rounded),
-    onTap: onTap,
+  Widget build(BuildContext context) => SectionCard(
+    padding: EdgeInsets.zero,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadii.surface),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(detail),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded),
+          ],
+        ),
+      ),
+    ),
   );
 }
 

@@ -39,9 +39,11 @@ working label, not a final naming decision. Defaults remain subject to review.
 ### Basic and Detailed receipts — owner-confirmed
 
 Owner clarification, September 15: Tame Your Biz opens Add Expense with two
-side-by-side choices: **Total only**, explained as a simple receipt saving how
-much was spent, and **Items and total**, explained as a detailed receipt saving
-each item, its quantity and price. A separate optional category section follows.
+full-width choices stacked with a 24-LP gap: **Basic receipt**, saving the total without an itemized
+list, and **Detailed receipt**, saving the total and each item's quantity and
+price. A separate optional category section follows. Continue remembers the
+last chosen detail level for the next receipt; backing out before Continue
+does not change it or any existing receipt.
 The only forward action on this page is green **Continue**. Do not ask about
 personal/business classification, show an expense form, offer capture/manual
 buttons here, or automatically resume an unnamed draft. App-assisted
@@ -80,10 +82,18 @@ changes; picker cancellation must not create a replacement receipt. Category
 search cancellation applies nothing. Text is retained as source input in this
 checkpoint; a completed text-reading/proposal flow is not yet claimed.
 
-First-use Expense onboarding remains required: briefly explain optional receipt
-assistance and let the user opt in or continue manually. Settings must let them
-change that decision. This source-page checkpoint does not implement or claim
-that onboarding; opening a settings screen is not a substitute.
+First-use Expense onboarding has two separate pages, triggered by the first
+Expenses navigation tap, never by eager background module construction. Page one
+says Welcome to Expenses and explains Basic and Detailed receipts in separate
+full-width cards with a 24-LP gap. No outer decorated parent encloses both.
+Page two asks whether the app should help fill out receipts and explains that
+the user reviews extracted details before saving. Neither Yes nor No is silently
+selected. Back retains choices within setup; leaving setup before completion
+does not apply preferences. The final Continue saves both choices and completion
+together in local SQLite; failure stays on setup with a retry message. Existing
+receipt records and cloud consent are unaffected. Expenses gear > Receipt
+assistance opens the existing editable receipt settings. Backup/sync selection
+belongs to the storage contract and is not activated by receipt assistance.
 
 Implementation checkpoint: entry choices and durable assistance/detail defaults
 are connected. Enabled assistance starts a read when a photo is opened; source

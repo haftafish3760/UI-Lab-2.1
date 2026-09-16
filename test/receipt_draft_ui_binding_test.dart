@@ -1,3 +1,4 @@
+import 'support/expense_setup_fixture.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -108,8 +109,17 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Continue receipt draft'), findsOneWidget);
-      expect(find.text('Exact retained receipt'), findsOneWidget);
+      expect(find.text('Continue receipt'), findsOneWidget);
+      expect(
+        tester
+            .widget<ReceiptIntakeScreen>(find.byType(ReceiptIntakeScreen))
+            .draftId,
+        'draft-exact-route',
+      );
+      expect(
+        controller.recordById('draft-exact-route')!.title,
+        'Exact retained receipt',
+      );
       expect(find.text('source.jpg'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
@@ -157,6 +167,7 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));

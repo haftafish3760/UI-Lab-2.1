@@ -111,6 +111,7 @@ class OperationalAttentionItem {
     required this.sourceId,
     required this.title,
     required this.reason,
+    this.isUrgent = false,
   });
 
   final String id;
@@ -119,6 +120,9 @@ class OperationalAttentionItem {
   final String sourceId;
   final String title;
   final String reason;
+
+  /// Source-owned escalation only. An approval request alone is not urgent.
+  final bool isUrgent;
 }
 
 /// Builds permission- and scope-filtered attention projections from source
@@ -409,7 +413,8 @@ class PrototypeAttentionCenter {
     final employeeId = query.selectedEmployeeId ?? demoEmployees.first.id;
     final employee = dashboardEmployeeById(employeeId);
     return record.createdByEmployeeId == employee.id ||
-        (record.assignedEmployeeIds.contains(employee.id) || record.assignee == employee.name);
+        (record.assignedEmployeeIds.contains(employee.id) ||
+            record.assignee == employee.name);
   }
 
   String _fingerprint(List<OperationalAttentionItem> items) {

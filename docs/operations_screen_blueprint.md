@@ -617,6 +617,13 @@ Unknown dates are excluded rather than guessed. Personal and company scope must
 be explicit and must filter the totals consistently. Month/year summaries remain
 available through their owning period/report routes, not extra home recap cards.
 
+September 15: the **Expense recap** home action opens a separate screen with
+Month, Quarter, Year to date and Year choices, an explicit date range, recorded
+total, missing-amount count, category totals and View expenses drill-down. It
+projects the same authorized ledger and employee/company scope; it does not
+create summary records or expose company amounts to technicians. Payments recap
+remains a separate future module review, not part of this Expense change.
+
 September 15 owner correction: retain one labeled Add expense FAB on Expense
 home, including widescreen; remove the inline add-action row. The FAB opens the
 receipt detail/category setup followed by Continue to source selection, as owned
@@ -811,8 +818,8 @@ claiming that mileage or vehicle-health telemetry exists.
 
 September 14 owner clarification: inventory and receipt-reading assistance are
 opt-in. Contractor/service users need understandable item, location, on-hand,
-pending-for-Estimate and available quantities, plus chosen low-stock thresholds
-and reminders. Pending is not consumed stock; release/cancellation/revision and
+available quantities, plus chosen low-stock thresholds
+and reminders. Estimates do not reserve stock; release/cancellation/revision and
 insufficient availability must be handled through explicit authorized commands.
 Keep unknown counts distinct from zero. Core/Standard/Professional/Complete
 membership needs usefulness review, not arbitrary item-count quotas. The three
@@ -849,78 +856,85 @@ silently replace that catalog with its small demonstration ledger.
 
 ### UI Lab Materials home
 
-**Visual thesis:** a calm field-material ledger with verified cost history first
-and dated truck availability second; no warehouse-dashboard clutter.
+September 15 owner direction supersedes the previous cost-first landing and
+Estimate reservation arrangement.
 
-**Content plan:** shared operational header and vehicle/fleet scope; the shared
-localized selected-date heading immediately under that header; genuine Needs
-attention when present; plain Materials purpose and permitted actions;
-cost/source/stock summary; searchable latest verified costs; qualified truck
-stock; evidence-source explanation; then the module-filtered calendar.
+**Purpose:** help service contractors find what they have, know what they paid,
+and prepare supplies for work. Inventory use is optional.
 
-**Interaction thesis:** search narrows the existing ledger immediately; tapping
-a material pushes full cost-and-location history; tapping a stock row pushes a
-physical-count workflow; tapping a date pushes a separate Materials Day route.
-No home-screen body swap masquerades as navigation.
+**Landing:** no truck picker. Show real, authorized inventory needs first:
+items at/below their location-specific minimum, and quantities needing a count.
+Keep **My Inventory** and **Browse Catalog** prominent, enclosed, and readable.
+Keep the supporting Materials calendar below. Remove cost-source explanations
+and technical count-confidence metrics from the landing. Do not show invented
+incoming-order or Job-shortage counts before their workflows are connected.
 
-- The Materials destination imports `AppLayoutEngine.operationsFor` and the shared
-  operational header. Internal inventory model names remain implementation
-  details until genuine stock control is accepted.
-  Its date heading uses the same `AppLayoutEngine` page-title scale as the other
-  operating modules and always precedes Materials attention and ordinary
-  content.
-  One lane stacks cost history, truck stock, and source information. At two
-  lanes those sections wrap in reading order; at three lanes each default
-  section occupies its own bounded lane. The Materials Month calendar then
-  fills the module workspace below them.
-- The cost/source/stock summary uses the shared one/two/four-column metric rule.
-  Normal phones may keep two compact values per row, sufficiently wide panes
-  may show four, and accessibility text collapses the metrics before their
-  labels crowd or truncate.
-- Low verified stock and stale unknown counts appear through the same shared
-  `Needs attention` panel used by the other operating modules. Its Vehicle/Fleet
-  query is capability-checked before count or display, `Show all N` opens the
-  contextual Materials attention list, and each row opens that exact stock
-  record in the physical-count workflow. Dismissal does not change the count.
-- Purchase-cost history belongs to the authorized company catalog. Inventory's
-  operational context is Vehicle, not Employee: Technician uses the assigned
-  vehicle; Admin defaults to Fleet Overview and may narrow physical stock to a
-  vehicle. Vehicle scope never hides valid company cost history.
-- Admin's Inventory vehicle filter is separate from both employee scope and the
-  technician's active truck. Selecting a truck in Inventory therefore cannot
-  change the employee being viewed or the official active-vehicle context; the
-  Inventory filter persists into its child routes.
-- `Record purchase cost` pushes a labeled form for material, trade/service,
-  vendor, currency amount, unit, purchase date, and an optional exact existing
-  Expense link. The interface cannot create receipt evidence with a checkbox.
-  Save creates one Materials-owned cost record with a stable source link; an
-  unlinked record is plainly a direct verified entry. It does not create an
-  expense, change stock, or set customer price/markup. Cost and unit fields use
-  the shared accessible form reflow rather than a fixed phone row.
-- `Verify truck stock` first asks which tracked item was physically counted,
-  then records a nonnegative quantity and marks that location/date as verified.
-  It never chooses the first record silently. Reported and unknown counts remain
-  plainly labeled, and unknown values never contribute to a low-stock claim.
-- A material detail route lists every authorized vendor/date/unit cost and every
-  known stock location. A linked Expense ID opens that exact authorized Expense;
-  receipt and expense evidence remain owned there. Materials does not copy or
-  edit source evidence.
-- Each visible cost-history or stock record is its own compact bordered,
-  tappable container. Records never merge into an undifferentiated list body;
-  supporting explanation stays on the detail route instead of increasing the
-  landing-row height.
-- The compact `Add material` FAB pushes a full-screen labeled action directory.
-  As soon as the local post-navigation workspace reaches the shared two-lane
-  threshold, the same actions appear beside the heading and the FAB leaves.
-  Rail presence is not the breakpoint. The action list is permission-derived
-  in production; a hidden action is not the authorization boundary.
-- Materials calendar uses the shared 5.7-derived month presentation and counts
-  Materials-owned events only. A date pushes Materials Day with confirmed
-  purchases and physical counts for that date. Dashboard receives only an
-  authorized projection of those source records.
-- Materials screen settings affect presentation only, such as showing truck
-  stock or price changes. They cannot grant permissions or alter costs, stock,
-  receipt evidence, estimate price, or markup.
+**Browse Catalog:** September 16 correction: preserve the trade selection;
+replace the rejected screens beneath it, in small batches, one trade at a time.
+Each trade owns its hierarchy; do not impose Plumbing's category/material/type
+sequence on every trade. Reach the exact item, including ordered connection
+sizes, aliases, unit and variant. Two trade columns on an ordinary phone; reflow for larger text
+and wider local workspaces through AppLayoutEngine. Trade cards may use photos;
+all deeper levels use compact image-free grids with full readable labels,
+typically two or three columns when labels fit, and bounded columns on wide
+screens. Do not stretch every category into a full-window row.
+Search stays inside the current branch, clear restores the tree, and Back
+returns to the parent. No item photos are required. Material, size and unit
+must remain visible; no picture may misrepresent an item's material.
+
+**My Inventory:** use the same tree, showing only branches containing added
+items. Choose truck/storage inside this route. Browsing a location must not
+change the official active truck or employee. Show unknown quantity as needing
+a count, never as zero. A stock item's details offer a physical-count action,
+its location minimum and recorded purchase prices. Minimums can be disabled
+independently per item/location. Counts are replaced on confirmation; adding
+stock is a different action. Adding items must not require a receipt.
+
+**Implementation boundary:** the September 15 UI slice uses the existing
+in-memory inventory store, with an explicit review notice on mutation routes.
+It is not durable stock storage, production inventory authorization, receipt
+parsing, or notification delivery. Existing record visibility is applied to
+landing counts, lists, and item lookup. Dedicated inventory permissions and
+durable, atomic stock commands remain required before release. Do not remove
+the review notice until restart and permission tests prove the durable system.
+
+**Superseded bulk-export evidence:** the existing read-only 5.7 extraction yields 57,314 unique
+trade-scoped entries across 21 trades, exported as a compressed browse asset
+(832,849 bytes). Fourteen existing trade PNGs total about 2 MB. The app loads
+the compact browse data without loading the legacy parser or Hive runtime.
+Source size is not evidence of accuracy or complete residential-trade coverage.
+Audit item definitions, duplicate-equivalent variants and trade organization
+before treating the source as an accepted catalog. The source combines some
+trades (including well/septic); owner-requested divisions remain to be reviewed.
+Exporter read the isolated extraction; no protected 5.7 files were modified.
+The owner rejected this bulk browsing implementation. It must not serve as the
+accepted catalog: it omitted aliases and exposed expansion-pack labels directly.
+The replacement uses small SQLite batches with complete source payloads.
+See [Inventory rebuild plan](inventory_rebuild_plan.md) for current order and
+verification gates. Reused legacy tests require independent expectation review;
+passing tests in either app do not establish correctness or parser accuracy.
+
+**Follow-on connected workflows, required but not implemented by this UI slice:**
+- Estimates use stored purchase prices without selecting a truck, deducting
+  stock or reserving stock automatically.
+- At scheduling/assignment, check every required item, of every size, against
+  the assigned location and combined commitments. Recheck assignment/date
+  changes. Offer other permitted locations when a shortage exists.
+- Suggested transfers never move stock; confirm physical movement. Actual use,
+  returns, cancellations, corrections and repeated completion must not
+  double-deduct. Direct-to-Job purchases remain distinct from truck stock.
+- In Expenses' Materials receipt flow, ask all/some/not received. Track only
+  confirmed received quantities as stock. Optional expected delivery date and
+  reminders lead to a receiving confirmation. Incoming orders must never
+  create duplicate Expenses or count as available stock before receipt.
+- Default/per-item markup affects selling price, not purchase history or
+  already-issued documents. Optional notifications consume item/location
+  thresholds through the separately owned notification system.
+- Preserve vendor/date/unit/currency and source evidence on purchase history;
+  Estimates, Jobs and Invoices refer to that history without rewriting it.
+- Custom-item entry, durable stock and cost edits, category coverage review,
+  barcode workflows, ordering and Job readiness are subsequent bounded work.
+
 
 Maintenance and Maintenance-owned Repair screens remain deferred product
 slices. Their future home, list, day, detail, and form routes must consume the

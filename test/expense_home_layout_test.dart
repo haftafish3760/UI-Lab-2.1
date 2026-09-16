@@ -1,3 +1,4 @@
+import 'support/expense_setup_fixture.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
@@ -43,6 +44,7 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         await tester.pumpWidget(const UiLabApp());
+        await useCompletedExpenseSetup(tester);
         await tester.pumpAndSettle();
         for (final name in [
           'dashboard',
@@ -107,6 +109,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       await tester.pumpWidget(const UiLabApp());
+      await useCompletedExpenseSetup(tester);
       await tester.pumpAndSettle();
       final destination = find.byKey(
         ValueKey(
@@ -126,28 +129,37 @@ void main() {
     });
   }
 
-  testWidgets('phone expense home exposes all periods and direct entry', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(const UiLabApp());
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
-    await tester.pumpAndSettle();
-    for (final period in ['day', 'week', 'month', 'year']) {
-      expect(find.byKey(ValueKey('expense-spending-$period')), findsOneWidget);
-    }
-    expect(find.text('Add fuel'), findsNothing);
-    await tester.tap(find.text('Add expense'));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('expense-editor-screen')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('expense-add-actions-screen')),
-      findsNothing,
-    );
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'phone expense home keeps daily and weekly totals and opens receipt setup',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(const UiLabApp());
+      await useCompletedExpenseSetup(tester);
+      await tester.pumpAndSettle();
+      await useCompletedExpenseSetup(tester);
+      await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
+      await tester.pumpAndSettle();
+      for (final period in ['day', 'week']) {
+        expect(
+          find.byKey(ValueKey('expense-spending-$period')),
+          findsOneWidget,
+        );
+      }
+      expect(find.text('Add fuel'), findsNothing);
+      await tester.tap(find.text('Add expense'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('expense-entry-choice-screen')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('expense-add-actions-screen')),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

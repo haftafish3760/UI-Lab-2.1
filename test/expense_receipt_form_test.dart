@@ -1,3 +1,4 @@
+import 'support/expense_setup_fixture.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
@@ -19,6 +20,7 @@ Future<void> _pumpApp(WidgetTester tester, Size size) async {
 }
 
 Future<void> _openExpenses(WidgetTester tester) async {
+  await useCompletedExpenseSetup(tester);
   await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
   await tester.pumpAndSettle();
 }

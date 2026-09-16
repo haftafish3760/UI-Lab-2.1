@@ -1,27 +1,20 @@
 import 'package:flutter/material.dart';
-
-import '../../data/operational_attention.dart';
 import '../../data/prototype_operations_store.dart';
 import '../../layout/app_layout_engine.dart';
-import '../../shared/app_view_mode.dart';
 import '../../shared/localized_date.dart';
-import '../../shared/operational_attention_panel.dart';
+import '../../shared/module_month_calendar.dart';
 import '../../shared/operational_scope.dart';
 import '../../shared/operations_workspace.dart';
 import '../../shared/section_card.dart';
-import '../../shared/module_month_calendar.dart';
-import 'inventory_action_screen.dart';
-import 'inventory_attention_screen.dart';
+import '../../shell/app_menu_scope.dart';
+import '../../theme/app_theme.dart';
+import 'catalog/inventory_catalog_screen.dart';
 import 'inventory_day_screen.dart';
 import 'inventory_models.dart';
-import 'inventory_scope_header.dart';
-import 'inventory_settings_screen.dart';
-import 'material_cost_editor_screen.dart';
-import 'material_detail_screen.dart';
+import 'inventory_navigation_card.dart';
+import 'inventory_review_examples.dart';
+import 'inventory_visible_records.dart';
 import 'stock_count_screen.dart';
-import 'stock_selection_screen.dart';
-
-part 'inventory_widgets.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -30,241 +23,323 @@ class InventoryScreen extends StatefulWidget {
   State<InventoryScreen> createState() => _InventoryScreenState();
 }
 
+// Preserve the screen's original state identity while existing debug sessions
+// hot reload the inventory redesign inside AppShell's IndexedStack.
 class _InventoryScreenState extends State<InventoryScreen> {
-  var _search = '';
-  var _preferences = const InventoryDisplayPreferences.defaults();
-
-  AppViewMode get _view => OperationalScope.of(context).view;
-  PrototypeOperationsStore get _store => PrototypeOperationsScope.of(context);
-
   @override
   Widget build(BuildContext context) {
+    final store = PrototypeOperationsScope.of(context);
     final scope = OperationalScope.of(context);
-    final costs = _visibleCosts;
-    final stock = _visibleStock;
-    final attentionQuery = _attentionQuery(scope);
-    final attentionItems = _store.attentionCenter.itemsFor(attentionQuery);
-    final showAttention = _store.attentionCenter.shouldShow(
-      attentionQuery,
-      attentionItems,
-    );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
-        final layout = AppLayoutEngine.operationsFor(
-          constraints.maxWidth - insets.horizontal,
-          textScaler: MediaQuery.textScalerOf(context),
-        );
-        final showInlineActions = layout.showsInlineModuleActions;
-        return Scaffold(
-          key: const ValueKey('inventory-module-screen'),
-          floatingActionButton: showInlineActions
-              ? null
-              : FloatingActionButton.extended(
-                  heroTag: 'inventory-action-fab',
-                  onPressed: _openActions,
-                  icon: const Icon(Icons.add_rounded),
-                  label: const Text('Add material'),
-                ),
-          body: SafeArea(
-            child: ListView(
-              padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
+    final stock = visibleInventoryStock(store, scope);
+    final low = stock.where((r) => r.isLow).toList();
+    final unknown = stock
+        .where((r) => r.confidence == InventoryStockConfidence.unknown)
+        .toList();
+    final permissions = store.workSession?.permissions;
+    final costs = store.materialCosts
+        .where(
+          (r) =>
+              permissions == null ||
+              permissions.visibleCreatorIds.contains(r.ownerEmployeeId),
+        )
+        .toList();
+    return Scaffold(
+      key: const ValueKey('inventory-module-screen'),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
+            final layout = AppLayoutEngine.operationsFor(
+              constraints.maxWidth - insets.horizontal,
+              textScaler: MediaQuery.textScalerOf(context),
+            );
+            return ListView(
+              padding: insets.add(const EdgeInsets.symmetric(vertical: 10)),
               children: [
                 OperationsWorkspaceFrame(
                   layout: layout,
                   primaryContent: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      InventoryScopeHeader(
+                      SectionCard(
                         key: const ValueKey('inventory-module-header'),
-                        view: _view,
-                        selectedVehicleId: scope.inventoryVehicleId,
-                        onViewChanged: scope.setView,
-                        onVehicleChanged: scope.selectInventoryVehicle,
-                        onSettings: _openSettings,
+                        backgroundColor: AppColors.header,
+                        borderColor: AppColors.headerBorder,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              tooltip: 'Open navigation',
+                              onPressed: AppMenuScope.maybeOpenOf(context),
+                              icon: const Icon(
+                                Icons.menu,
+                                color: AppColors.onHeader,
+                              ),
+                            ),
+                            const Expanded(
+                              child: Text(
+                                'Materials',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: AppColors.onHeader,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Inventory settings',
+                              onPressed: () => _help(context),
+                              icon: const Icon(
+                                Icons.settings_outlined,
+                                color: AppColors.onHeader,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 14),
-                      _InventoryDateHeading(selectedDate: inventoryDemoToday),
-                      if (showAttention) ...[
-                        const SizedBox(height: 12),
-                        OperationalAttentionPanel(
-                          key: const ValueKey('inventory-attention'),
-                          items: attentionItems,
-                          rowKeyFor: (item) => ValueKey(
-                            'inventory-attention-row-${item.sourceId}',
+                      Text(
+                        operationalDateLabel(context, DateTime.now()),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      OperationsLaneGrid(
+                        layout: layout,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'Needs attention',
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall,
+                              ),
+                              const SizedBox(height: 10),
+                              if (low.isNotEmpty)
+                                InventoryNavigationCard(
+                                  key: const ValueKey('inventory-low-stock'),
+                                  title: 'Running low',
+                                  subtitle:
+                                      '${low.length} item locations at or below your chosen minimum',
+                                  icon: Icons.shopping_basket_outlined,
+                                  onTap: () =>
+                                      _attention(context, 'Running low', low),
+                                ),
+                              if (unknown.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                InventoryNavigationCard(
+                                  title: 'Check quantities',
+                                  subtitle:
+                                      '${unknown.length} item locations need a count',
+                                  onTap: () => _attention(
+                                    context,
+                                    'Check quantities',
+                                    unknown,
+                                  ),
+                                ),
+                              ],
+                              if (low.isEmpty && unknown.isEmpty)
+                                SectionCard(
+                                  child: Text(
+                                    stock.isEmpty
+                                        ? 'Start with the items you already have. You can add them without a receipt.'
+                                        : 'No stock alerts right now. Alerts use the minimums you set for each location.',
+                                  ),
+                                ),
+                            ],
                           ),
-                          onOpen: _openAttentionItem,
-                          onOpenAll: () => _openAttentionList(attentionItems),
-                          onDismiss: () => _store.attentionCenter.dismiss(
-                            attentionQuery,
-                            attentionItems,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'Your materials',
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall,
+                              ),
+                              const SizedBox(height: 10),
+                              InventoryNavigationCard(
+                                key: const ValueKey('inventory-my-inventory'),
+                                title: 'My Inventory',
+                                subtitle:
+                                    'Find items on your trucks and in storage',
+                                icon: Icons.inventory_2_outlined,
+                                onTap: () => _browse(context, true),
+                              ),
+                              const SizedBox(height: 10),
+                              InventoryNavigationCard(
+                                key: const ValueKey('inventory-browse-catalog'),
+                                title: 'Browse Catalog',
+                                subtitle:
+                                    'Choose a trade, find an item, and add it to your stock',
+                                icon: Icons.category_outlined,
+                                onTap: () => _browse(context, false),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const SectionCard(
+                        child: Text(
+                          inventoryReviewExamplesEnabled
+                              ? 'Sample inventory for layout review. Changes are not yet saved after closing the app.'
+                              : 'Layout review: inventory changes are not yet saved after closing the app.',
+                        ),
+                      ),
+                    ],
+                  ),
+                  followingContent: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Materials calendar',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 10),
+                      WorkMonthCalendar(
+                        maximumWidth: layout.laneWidth,
+                        selectedDay: inventoryDemoToday,
+                        entryCountForDay: (day) => costs
+                            .where(
+                              (r) => DateUtils.isSameDay(r.purchasedOn, day),
+                            )
+                            .length,
+                        recordKind: CalendarRecordKind.inventoryRecord,
+                        onDaySelected: (day) => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => InventoryDayScreen(
+                              selectedDate: day,
+                              selectedVehicleId: null,
+                              costs: costs,
+                              stock: stock,
+                            ),
                           ),
                         ),
-                      ],
-                      const SizedBox(height: 14),
-                      _InventoryHeading(
-                        view: _view,
-                        showWideActions: showInlineActions,
-                        onRecordCost: _recordCost,
-                        onVerifyStock: stock.isEmpty ? null : _selectStock,
-                      ),
-                      const SizedBox(height: 14),
-                      _InventorySummary(costs: costs, stock: stock),
-                      const SizedBox(height: 16),
-                      _InventoryLanes(
-                        layout: layout,
-                        costs: costs,
-                        stock: stock,
-                        search: _search,
-                        preferences: _preferences,
-                        onSearch: (value) => setState(() => _search = value),
-                        onMaterial: _openMaterial,
-                        onStock: _countStock,
-                        onCalendarDay: _openDay,
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(height: 24),
               ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  List<MaterialCostRecord> get _visibleCosts {
-    // Purchase history belongs to the company catalog. Vehicle scope applies
-    // only to physical stock, never to the historical price lookup.
-    return [..._store.materialCosts];
-  }
-
-  List<InventoryStockRecord> get _visibleStock {
-    final stock = _store.inventoryStock;
-    final vehicleId = OperationalScope.of(context).inventoryVehicleId;
-    if (vehicleId == null) return [...stock];
-    return stock.where((record) => record.locationId == vehicleId).toList();
-  }
-
-  OperationalAttentionQuery _attentionQuery(OperationalScopeController scope) =>
-      OperationalAttentionQuery(
-        panelId: 'inventory-home',
-        module: OperationalAttentionModule.inventory,
-        view: scope.view,
-        access: const OperationalAttentionAccess({
-          OperationalAttentionCapability.reviewInventoryStock,
-        }),
-        selectedVehicleId: scope.inventoryVehicleId,
-        resourceKinds: const {OperationalAttentionResourceKind.inventoryStock},
-      );
-
-  Future<void> _openAttentionItem(OperationalAttentionItem item) async {
-    final matches = _store.inventoryStock.where(
-      (record) => record.id == item.sourceId,
-    );
-    if (matches.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('This stock record is no longer available.'),
-        ),
-      );
-      return;
-    }
-    await _countStock(matches.first);
-  }
-
-  void _openAttentionList(List<OperationalAttentionItem> items) {
-    Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => InventoryAttentionScreen(
-          items: items,
-          onOpen: _openAttentionItem,
-          onSettings: _openSettings,
+            );
+          },
         ),
       ),
     );
   }
 
-  Future<void> _openActions() async {
-    final action = await Navigator.of(context).push<InventoryAction>(
-      MaterialPageRoute(
-        builder: (_) => InventoryActionScreen(
-          selectedDate: inventoryDemoToday,
-          canVerifyStock: _visibleStock.isNotEmpty,
-        ),
-      ),
-    );
-    if (!mounted || action == null) return;
-    switch (action) {
-      case InventoryAction.recordCost:
-        await _recordCost();
-      case InventoryAction.verifyStock:
-        await _selectStock();
-    }
-  }
-
-  Future<void> _recordCost() async {
-    final record = await Navigator.of(context).push<MaterialCostRecord>(
-      MaterialPageRoute(
-        builder: (_) =>
-            MaterialCostEditorScreen(purchaseDate: inventoryDemoToday),
-      ),
-    );
-    if (record != null) _store.addMaterialCost(record);
-  }
-
-  Future<void> _selectStock() async {
-    final updated = await Navigator.of(context).push<InventoryStockRecord>(
-      MaterialPageRoute(
-        builder: (_) => StockSelectionScreen(records: _visibleStock),
-      ),
-    );
-    if (updated != null) _store.updateInventoryStock(updated);
-  }
-
-  Future<void> _countStock(InventoryStockRecord record) async {
-    final updated = await Navigator.of(context).push<InventoryStockRecord>(
-      MaterialPageRoute(builder: (_) => StockCountScreen(record: record)),
-    );
-    if (updated != null) _store.updateInventoryStock(updated);
-  }
-
-  void _openMaterial(String materialId) {
-    final costs = _store.materialCosts
-        .where((record) => record.materialId == materialId)
-        .toList();
-    final stock = _store.inventoryStock
-        .where((record) => record.materialId == materialId)
-        .toList();
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => MaterialDetailScreen(
-          materialName: costs.first.materialName,
-          costs: costs,
-          stock: stock,
-        ),
-      ),
-    );
-  }
-
-  void _openDay(DateTime day) => Navigator.of(context).push(
+  void _browse(BuildContext context, bool mine) => Navigator.of(context).push(
     MaterialPageRoute<void>(
-      builder: (_) => InventoryDayScreen(
-        selectedDate: day,
-        selectedVehicleId: OperationalScope.of(context).inventoryVehicleId,
-        costs: _visibleCosts,
-        stock: _store.inventoryStock,
+      builder: (_) => InventoryCatalogScreen(myInventory: mine),
+    ),
+  );
+  void _attention(
+    BuildContext context,
+    String title,
+    List<InventoryStockRecord> records,
+  ) => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => _InventoryStockAttention(
+        title: title,
+        recordIds: records.map((r) => r.id).toSet(),
       ),
     ),
   );
-
-  Future<void> _openSettings() async {
-    final result = await Navigator.of(context)
-        .push<InventoryDisplayPreferences>(
-          MaterialPageRoute(
-            builder: (_) => InventorySettingsScreen(initial: _preferences),
+  void _help(BuildContext context) => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => Scaffold(
+        appBar: AppBar(title: const Text('Inventory settings')),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(16),
+            child: SectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'My Inventory shows items you have added, grouped by trade and location.\n\n'
+                    'Browse Catalog lets you find items by trade, material, type, and size. No receipt is required to add stock.\n\n'
+                    'Set a minimum quantity when adding an item to show it under Running low. The minimum applies to that location.\n\n'
+                    'A quantity that needs checking is never treated as zero.',
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => _browse(context, true),
+                    child: const Text('Manage item minimums'),
+                  ),
+                ],
+              ),
+            ),
           ),
-        );
-    if (mounted && result != null) setState(() => _preferences = result);
+        ),
+      ),
+    ),
+  );
+}
+
+class _InventoryStockAttention extends StatelessWidget {
+  const _InventoryStockAttention({
+    required this.title,
+    required this.recordIds,
+  });
+  final String title;
+  final Set<String> recordIds;
+  @override
+  Widget build(BuildContext context) {
+    final store = PrototypeOperationsScope.of(context);
+    final records = visibleInventoryStock(store, OperationalScope.of(context))
+        .where(
+          (r) =>
+              recordIds.contains(r.id) &&
+              (title == 'Running low'
+                  ? r.isLow
+                  : r.confidence == InventoryStockConfidence.unknown),
+        )
+        .toList();
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppLayoutEngine.maximumFormWorkspaceWidth,
+          ),
+          child: ListView(
+            padding: const EdgeInsets.all(8),
+            children: [
+              if (records.isEmpty)
+                const SectionCard(
+                  child: Text('These stock checks are taken care of.'),
+                ),
+              for (final record in records)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: InventoryNavigationCard(
+                    title: record.materialName,
+                    subtitle:
+                        '${record.locationLabel}\n${record.confidence == InventoryStockConfidence.unknown ? 'Check quantity' : '${record.quantity} ${record.unitLabel} · minimum ${record.lowAt}'}',
+                    onTap: () async {
+                      final result = await Navigator.of(context)
+                          .push<InventoryStockRecord>(
+                            MaterialPageRoute(
+                              builder: (_) => StockCountScreen(record: record),
+                            ),
+                          );
+                      if (context.mounted && result != null) {
+                        store.updateInventoryStock(result);
+                      }
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

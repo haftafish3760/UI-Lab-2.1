@@ -1,3 +1,4 @@
+import 'support/expense_setup_fixture.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
@@ -7,17 +8,22 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(390, 844));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
     final expense = find.byKey(const ValueKey('expense-record-EXP-1048'));
     await tester.ensureVisible(expense);
+    await tester.pumpAndSettle();
     await tester.tap(expense);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('edit-expense-button')));
     await tester.pumpAndSettle();
     expect(find.text('Correct receipt'), findsWidgets);
-    expect(find.text('Review every item on the receipt'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('expense-receipt-type-selector')),
+      findsOneWidget,
+    );
     expect(
       find.textContaining('Single-handle pull-down kitchen faucet'),
       findsOneWidget,
@@ -59,6 +65,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(390, 844));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('expenses-view-selector')));

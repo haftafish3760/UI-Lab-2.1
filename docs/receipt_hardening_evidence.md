@@ -3,6 +3,43 @@
 Updated September 15, 2026. This is a status record, not product acceptance.
 Requirements are owned by `receipt_material_intake_blueprint.md`.
 
+## September 15: first-use Expense setup and separate recap
+
+First-use Expenses navigation now opens two setup pages: separated Basic/Detailed
+cards, then explicit Yes/No receipt assistance. Both choices and completion are
+saved atomically in local preferences. Back/cancel before completion changes no
+saved settings; failure leaves the choices visible for retry. Subsequent receipt
+entry remembers the last detail choice only on Continue. Expenses gear exposes
+Receipt assistance. These choices do not enable cloud services or change records.
+
+Owner correction: Basic/Detailed choices are stacked at full form width in BOTH
+first-use setup and Add Expense, with a 24-LP gap. Add Expense no longer wraps
+these choices in an extra decorated parent. The source selection grid remains
+two-by-two. The correction passed 19 focused setup/navigation/render checks in
+`build/expense_stacked_choices_tests.log`, including both themes and 2x text.
+The corrected Windows release build and Android local-only debug build both
+completed. Windows opened a responsive Tame Your Biz window; Android installation
+and activity launch succeeded on the S25 Ultra without clearing app data. Build
+logs are `build/expense_stacked_windows_build.log` and
+`build/expense_stacked_android_build.log`. Owner visual acceptance remains open.
+
+Expense home retains daily and weekly totals and its FAB. Expense recap is a
+separate route with month, quarter, year-to-date and year filters, category totals,
+missing-amount disclosure and a drill-down to authorized records. Its permission
+boundary and date calculations reuse the existing period view. Payments recap
+and selective backup/sync remain subsequent work.
+
+Focused checks cover first navigation versus eager module construction, Back,
+explicit assistance opt-in, failed saves/retry, SQLite reopen, remembered detail,
+large text, both themes, recap access and period boundaries. Review renders are
+under `build/receipt-flow-review/`; they are not owner visual acceptance. Final
+run evidence is `build/expense_setup_verified_tests.log` and
+`build/expense_setup_final_analyze.log`: 63 focused checks passed and analysis
+reported no issues. The local-only Android build was installed and launched on
+the owner's S25 Ultra; this proves installation/startup, not owner acceptance of
+the flow or an end-to-end OCR accuracy result. No inventory parser or PDF engine changes
+are included in this slice. This is not an OCR accuracy certification.
+
 ## September 15: opening receipt screens checkpoint
 
 This pass is Expenses only; inventory and inventory parsing are assigned elsewhere.
@@ -23,7 +60,7 @@ Rendered light/dark phone and desktop review images are under
 The render helper resolves the test font fallback to Roboto; these are Flutter
 rendered review artifacts, not screenshots of the owner's phone or acceptance.
 
-Still outstanding: first-use Expense assistance onboarding, the custom camera
+Still outstanding after the subsequent setup slice above: the custom camera
 overlay/brightness control, multi-photo long-receipt arrangement and stitching,
 the revised image preview, completed pasted-text proposal handling, full fuel
 parser/test-harness migration, and measured end-to-end OCR accuracy/performance.
@@ -31,7 +68,7 @@ These 53 tests do not demonstrate a 97-98% recognition accuracy rate.
 
 ## Implemented in the current working tree
 
-- Add Expense and calendar-day entry show explained Total only / Items and total
+- Add Expense and calendar-day entry show explained Basic / Detailed receipt
   choices plus optional category, then Continue opens the two-by-two source grid.
   Manual details are reached from Paste/Text. Explicit new manual entry skips the unsolicited
   unfinished-expense dialog; existing draft recovery remains available.

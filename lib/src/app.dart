@@ -9,6 +9,7 @@ import 'shared/application_recovery_scope.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'screens/inventory/inventory_review_examples.dart';
 
 import '../l10n/app_localizations.dart';
 import 'data/expenses/authorized_expense_service.dart';
@@ -137,6 +138,12 @@ class _UiLabAppState extends State<UiLabApp> {
     _scope = OperationalScopeController(workdaySession: widget.workdaySession);
     _preferences = AppPreferencesController(storage: widget.preferencesStore);
     _operationsStore = PrototypeOperationsStore(
+      materialCosts: inventoryReviewExamplesEnabled
+          ? inventoryReviewCosts()
+          : null,
+      inventoryStock: inventoryReviewExamplesEnabled
+          ? inventoryReviewStock()
+          : null,
       workSession: widget.workSession,
       workdaySession: widget.workdaySession,
       dayNoteSession: widget.dayNoteSession,

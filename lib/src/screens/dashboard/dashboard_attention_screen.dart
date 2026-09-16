@@ -50,13 +50,29 @@ class DashboardAttentionScreen extends StatelessWidget {
                           'Only records that need a permitted decision or follow-up appear here.',
                         ),
                         const SizedBox(height: 12),
-                        OperationalAttentionList(
-                          items: items,
-                          rowKeyFor: (item) => ValueKey(
-                            'dashboard-attention-list-${item.sourceId}',
+                        for (final urgent in [true, false])
+                          if (items.any((item) => item.isUrgent == urgent)) ...[
+                            Text(
+                              '${urgent ? 'Urgent' : 'Normal'} · ${items.where((item) => item.isUrgent == urgent).length}',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            OperationalAttentionList(
+                              items: items
+                                  .where((item) => item.isUrgent == urgent)
+                                  .toList(),
+                              rowKeyFor: (item) => ValueKey(
+                                'dashboard-attention-list-${item.sourceId}',
+                              ),
+                              onOpen: onOpen,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        if (items.isEmpty)
+                          OperationalAttentionList(
+                            items: items,
+                            onOpen: onOpen,
                           ),
-                          onOpen: onOpen,
-                        ),
                       ],
                     ),
                   ),

@@ -13,6 +13,8 @@ import '../../shared/app_preferences.dart';
 
 import '../../shared/nested_editor_draft_status.dart';
 import 'expense_models.dart';
+import 'receipt_intake_settings_screen.dart';
+import '../../shared/section_card.dart';
 
 part 'expense_settings_draft_recovery.dart';
 part 'expense_settings_choice_dialogs.dart';
@@ -101,6 +103,32 @@ class _ExpensesSettingsScreenState extends State<ExpensesSettingsScreen>
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
+                    SectionCard(
+                      child: ListTile(
+                        key: const ValueKey(
+                          'expense-receipt-assistance-settings',
+                        ),
+                        leading: const Icon(Icons.document_scanner_outlined),
+                        title: const Text('Receipt assistance'),
+                        subtitle: const Text(
+                          'Choose whether the app helps fill out your receipts.',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: _saving
+                            ? null
+                            : () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => ReceiptIntakeSettingsScreen(
+                                    initial: readReceiptIntakeDisplayPreferences(
+                                      context,
+                                      const ReceiptIntakeDisplayPreferences(),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     if (_session != null)
                       EditorDraftStatus(
                         state: _session!.state,

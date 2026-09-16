@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import '../layout/app_layout_engine.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/expenses/expenses_screen.dart';
+import '../screens/expenses/expense_welcome_screen.dart';
+import '../screens/expenses/expense_permissions.dart';
+import '../shared/app_preferences.dart';
+import '../shared/operational_scope.dart';
 import '../screens/inventory/inventory_screen.dart';
 import '../screens/modules/module_home_screen.dart';
 import '../screens/work/work_screen.dart';
@@ -20,6 +24,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   var _selectedIndex = 0;
+  bool _openingExpenses = false;
 
   static const _modules = <Widget>[
     DashboardScreen(),
@@ -111,8 +116,30 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  void _selectModule(int index) {
-    if (index == _selectedIndex) return;
+  Future<void> _selectModule(int index) async {
+    if (index == _selectedIndex || _openingExpenses) return;
+    final preferences = AppPreferencesScope.maybeOf(context);
+    final permissions = expensePermissionsForView(
+      OperationalScope.of(context).view,
+    );
+    if (index == 2 &&
+        permissions.canView &&
+        permissions.canConfigureDisplay &&
+        preferences != null &&
+        !preferences.expenseSetupCompleted) {
+      _openingExpenses = true;
+      try {
+        final completed = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) => ExpenseWelcomeScreen(preferences: preferences),
+          ),
+        );
+        if (!mounted || completed != true) return;
+      } finally {
+        _openingExpenses = false;
+      }
+    }
+    if (!mounted) return;
     setState(() => _selectedIndex = index);
   }
 

@@ -24,3 +24,8 @@ combined pass. Reconcile these with the owning blueprints before implementation.
 Existing relevant ownership: operations_screen_blueprint.md,
 work_lifecycle_blueprint.md, technician_dashboard_blueprint.md, and
 product_control_blueprint.md. No claim that these notes are already implemented.
+
+Latest authorized UI pass: individual menu destinations now use shared bordered
+containers and responsive lanes. Notification dismissal must not resolve or
+delete approval records. Owner audit viewing and company-level escalation/approval
+threshold controls remain unimplemented; no claim of complete delivery coverage.

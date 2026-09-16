@@ -175,6 +175,13 @@ extension _ExpensesHomeLayout on _ExpensesScreenState {
                           firstWeekday: _preferences.weekStartsOn,
                           onOpen: _openSpendingPeriod,
                         ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          key: const ValueKey('expenses-open-recap'),
+                          onPressed: _openRecap,
+                          icon: const Icon(Icons.bar_chart_outlined),
+                          label: const Text('Expense recap'),
+                        ),
                       ],
                       if (recurring != null &&
                           (recurring.isLoading ||

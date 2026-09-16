@@ -5,6 +5,17 @@ import 'package:ui_lab_2_1/src/screens/expenses/expense_period_screen.dart';
 import 'package:ui_lab_2_1/src/screens/expenses/expense_permissions.dart';
 
 void main() {
+  test(
+    'quarter and year-to-date use exclusive ends at calendar boundaries',
+    () {
+      final quarter = expensePeriodRange('Quarter', DateTime(2026, 12, 31), 1);
+      expect(quarter.start, DateTime(2026, 10, 1));
+      expect(quarter.end, DateTime(2027, 1, 1));
+      final ytd = expensePeriodRange('Year to date', DateTime(2024, 2, 29), 1);
+      expect(ytd.start, DateTime(2024));
+      expect(ytd.end, DateTime(2024, 3, 1));
+    },
+  );
   ExpenseRecord record(String owner, DateTime date) => ExpenseRecord(
     id: owner,
     vendor: 'Test supplier',

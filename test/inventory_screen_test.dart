@@ -1,43 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lab_2_1/src/app.dart';
-import 'package:ui_lab_2_1/src/data/notifications/authorized_notification_service.dart';
-import 'package:ui_lab_2_1/src/data/notifications/file_notification_repository.dart';
-import 'package:ui_lab_2_1/src/data/notifications/notification_demo_policy.dart';
-import 'package:ui_lab_2_1/src/data/notifications/notification_ui_controller.dart';
+import 'package:ui_lab_2_1/l10n/app_localizations.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
-import 'package:ui_lab_2_1/src/layout/app_layout_engine.dart';
+import 'package:ui_lab_2_1/src/screens/inventory/inventory_screen.dart';
+import 'package:ui_lab_2_1/src/screens/inventory/inventory_models.dart';
+import 'package:ui_lab_2_1/src/screens/inventory/stock_count_screen.dart';
+import 'package:ui_lab_2_1/src/screens/inventory/inventory_visible_records.dart';
+import 'package:ui_lab_2_1/src/screens/inventory/catalog/inventory_catalog.dart';
+import 'package:ui_lab_2_1/src/screens/inventory/catalog/inventory_catalog_screen.dart';
+import 'package:ui_lab_2_1/src/screens/inventory/catalog/inventory_catalog_item_screen.dart';
+import 'package:ui_lab_2_1/src/screens/inventory/inventory_navigation_card.dart';
 import 'package:ui_lab_2_1/src/shared/app_view_mode.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
-import 'package:ui_lab_2_1/src/shell/app_shell.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
 
-Future<void> _pumpAt(
+final fixture = InventoryCatalog.fromJson({
+  'items': [
+    {
+      'id': 'p',
+      'name': 'PVC elbow half inch',
+      'trade': 'Plumbing',
+      'category': 'Fittings',
+      'system': 'PVC',
+      'type': 'Elbows',
+      'variant': 'Half inch',
+      'unit': 'each',
+    },
+    {
+      'id': 'c',
+      'name': 'Wood screw',
+      'trade': 'Carpentry',
+      'category': 'Fasteners',
+      'system': 'Steel',
+      'type': 'Screws',
+      'unit': 'each',
+    },
+  ],
+});
+
+Future<void> pump(
   WidgetTester tester,
-  Size size, {
-  double textScale = 1,
+  Widget screen, {
+  Size size = const Size(390, 844),
+  double scale = 1,
+  PrototypeOperationsStore? store,
+  OperationalScopeController? scope,
+  bool dark = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
+  final records = store ?? PrototypeOperationsStore();
+  final access = scope ?? OperationalScopeController(view: AppViewMode.admin);
+  if (store == null) addTearDown(records.dispose);
+  if (scope == null) addTearDown(access.dispose);
   await tester.pumpWidget(
-    MediaQuery(
-      data: MediaQueryData(
-        size: size,
-        textScaler: TextScaler.linear(textScale),
-      ),
-      child: const UiLabApp(),
-    ),
-  );
-  await tester.pumpAndSettle();
-}
-
-Future<void> _openInventory(WidgetTester tester, {required bool rail}) async {
-  await tester.tap(
-    find.byKey(
-      ValueKey(
-        rail ? 'desktop-destination-inventory' : 'app-destination-inventory',
+    PrototypeOperationsScope(
+      store: records,
+      child: OperationalScope(
+        controller: access,
+        child: MaterialApp(
+          theme: dark ? AppTheme.dark : AppTheme.light,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(scale)),
+            child: child!,
+          ),
+          home: screen,
+        ),
       ),
     ),
   );
@@ -45,392 +79,313 @@ Future<void> _openInventory(WidgetTester tester, {required bool rail}) async {
 }
 
 void main() {
-  test(
-    'Admin Inventory vehicle scope cannot change employee or active truck',
-    () {
-      final scope = OperationalScopeController();
-      addTearDown(scope.dispose);
-
-      scope.setView(AppViewMode.admin);
-      scope.selectInventoryVehicle('service-van-4');
-
-      expect(scope.selectedEmployeeId, isNull);
-      expect(scope.selectedVehicleId, 'transit-12');
-      expect(scope.inventoryVehicleId, 'service-van-4');
-    },
-  );
-
-  testWidgets('active vehicle remains consistent from Dashboard to Inventory', (
-    tester,
-  ) async {
-    const size = Size(412, 915);
-    tester.view.physicalSize = size;
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final scope = OperationalScopeController()..selectVehicle('service-van-4');
+  test('technician stock reads exclude another employee and vehicle', () {
+    final scope = OperationalScopeController();
     final store = PrototypeOperationsStore();
-    final notificationController = NotificationUiController(
-      AuthorizedNotificationService(FileNotificationRepository.transient()),
-      demoNotificationUserPermissions(),
-      Future<void>.value(),
-    );
     addTearDown(scope.dispose);
     addTearDown(store.dispose);
-    addTearDown(notificationController.dispose);
-    await notificationController.load(availableAt: DateTime.now());
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: NotificationUiScope(
-          controller: notificationController,
-          child: PrototypeOperationsScope(
-            store: store,
-            child: OperationalScope(controller: scope, child: const AppShell()),
-          ),
-        ),
+    final records = visibleInventoryStock(store, scope);
+    expect(records, isNotEmpty);
+    expect(
+      records.every(
+        (r) => r.ownerEmployeeId == 'alex' && r.locationId == 'transit-12',
       ),
+      isTrue,
     );
-    await tester.pumpAndSettle();
-
-    await _openInventory(tester, rail: false);
-
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('inventory-context-selector')),
-        matching: find.text('Service Van 4'),
-      ),
-      findsOneWidget,
-    );
-    expect(find.textContaining('Transit 12 · Count verified'), findsNothing);
-    expect(
-      find.textContaining('Service Van 4 · Count unknown'),
-      findsOneWidget,
-    );
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Inventory uses the shared header and cost-first workspace', (
-    tester,
-  ) async {
-    await _pumpAt(tester, const Size(1440, 900));
-    await _openInventory(tester, rail: true);
-
-    expect(
-      find.byKey(const ValueKey('inventory-module-screen')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('inventory-context-selector')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('inventory-date-heading')),
-      findsOneWidget,
-    );
-    final headerTop = tester
-        .getTopLeft(find.byKey(const ValueKey('inventory-module-header')))
-        .dy;
-    final dateTop = tester
-        .getTopLeft(find.byKey(const ValueKey('inventory-date-heading')))
-        .dy;
-    final attentionTop = tester
-        .getTopLeft(find.byKey(const ValueKey('inventory-attention')))
-        .dy;
-    expect(dateTop, greaterThan(headerTop));
-    expect(attentionTop, greaterThan(dateTop));
-    expect(find.text('Materials and cost history'), findsOneWidget);
-    expect(find.text('Verified cost history'), findsOneWidget);
-    expect(find.text('Truck stock'), findsOneWidget);
-    expect(find.text('Cost sources'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('inventory-3-column-content')),
-      findsOneWidget,
-    );
-    final costLane = tester.getTopLeft(find.text('Verified cost history'));
-    final stockLane = tester.getTopLeft(find.text('Truck stock'));
-    final sourceLane = tester.getTopLeft(find.text('Cost sources'));
-    expect(stockLane.dx, greaterThan(costLane.dx));
-    expect(sourceLane.dx, greaterThan(stockLane.dx));
-    expect(find.text('Materials calendar'), findsOneWidget);
-    expect(
-      tester.getSize(find.byKey(const ValueKey('work-5-7-calendar'))).width,
-      greaterThan(1000),
-    );
-    expect(
-      tester.getSize(find.byKey(const ValueKey('work-5-7-calendar'))).width,
-      lessThanOrEqualTo(AppLayoutEngine.maximumOperationsWorkspaceWidth),
-    );
-    expect(find.text('Braided faucet supply line'), findsWidgets);
-    expect(
-      find.byKey(const ValueKey('inventory-cost-record-cost-1001')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('inventory-stock-record-stock-1001')),
-      findsOneWidget,
-    );
-    expect(find.text('Record purchase cost'), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Materials exposes inline actions at the shared two-lane width', (
-    tester,
-  ) async {
-    await _pumpAt(tester, const Size(800, 900));
-    await _openInventory(tester, rail: false);
-
-    expect(
-      find.byKey(const ValueKey('inventory-2-column-content')),
-      findsOneWidget,
-    );
-    expect(find.text('Record purchase cost'), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Inventory attention uses the shared panel and exact stock row', (
-    tester,
-  ) async {
-    await _pumpAt(tester, const Size(390, 844));
-    await _openInventory(tester, rail: false);
-
-    expect(find.byKey(const ValueKey('inventory-attention')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('inventory-attention-row-stock-1001')),
-      findsOneWidget,
-    );
-    expect(find.byTooltip('Dismiss Needs attention'), findsOneWidget);
-    await tester.tap(find.text('Show all 1'));
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('inventory-attention-list')),
-      findsOneWidget,
-    );
-    await tester.tap(
-      find.byKey(const ValueKey('inventory-attention-list-stock-1001')),
-    );
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('stock-count-screen')), findsOneWidget);
-    expect(find.text('Braided faucet supply line'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Inventory settings visibly update only Inventory content', (
-    tester,
-  ) async {
-    await _pumpAt(tester, const Size(412, 915));
-    await _openInventory(tester, rail: false);
-    expect(find.text('Truck stock'), findsOneWidget);
-    expect(find.text('Cost sources'), findsOneWidget);
-
-    await tester.tap(find.byKey(const ValueKey('inventory-settings-button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Show truck stock'));
-    await tester.tap(find.text('Show cost sources'));
-    await tester.tap(
-      find.byKey(const ValueKey('save-inventory-settings-button')),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Truck stock'), findsNothing);
-    expect(find.text('Cost sources'), findsNothing);
-    expect(find.text('Verified cost history'), findsOneWidget);
-    expect(find.text('Materials calendar'), findsOneWidget);
-    expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-    'Inventory Admin defaults to Fleet Overview and scopes vehicle stock',
+    'bundled catalog loads and displays actual trade branches offline',
     (tester) async {
-      await _pumpAt(tester, const Size(412, 915));
-      await _openInventory(tester, rail: false);
-
-      await tester.tap(find.byKey(const ValueKey('inventory-view-selector')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Admin'));
-      await tester.pumpAndSettle();
-      expect(find.text('Fleet Overview'), findsWidgets);
-      expect(
-        find.textContaining('Transit 12 · Count verified'),
-        findsOneWidget,
-      );
-
-      await tester.tap(
-        find.byKey(const ValueKey('inventory-context-selector')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Service Van 4').last);
-      await tester.pumpAndSettle();
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('inventory-context-selector')),
-          matching: find.text('Service Van 4'),
-        ),
-        findsOneWidget,
-      );
-      expect(find.textContaining('Transit 12 · Count verified'), findsNothing);
-      expect(
-        find.textContaining('Service Van 4 · Count unknown'),
-        findsOneWidget,
-      );
+      final catalog = await tester.runAsync(InventoryCatalog.load);
+      expect(catalog!.branches([]).length, 21);
+      await pump(tester, InventoryCatalogScreen(catalog: catalog));
+      expect(find.text('Choose a trade'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
 
-  testWidgets('Inventory vehicle context persists into its action route', (
+  testWidgets(
+    'stock count rejects invalid numbers and can disable its minimum',
+    (tester) async {
+      InventoryStockRecord? saved;
+      final record = demoInventoryStock.first;
+      await pump(
+        tester,
+        Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              child: const Text('Check item'),
+              onPressed: () async {
+                saved = await Navigator.of(context).push<InventoryStockRecord>(
+                  MaterialPageRoute(
+                    builder: (_) => StockCountScreen(record: record),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Check item'));
+      await tester.pumpAndSettle();
+      for (final invalid in ['NaN', 'Infinity', '-1']) {
+        await tester.enterText(
+          find.byKey(const ValueKey('stock-quantity-field')),
+          invalid,
+        );
+        await tester.tap(find.text('Save count'));
+        await tester.pumpAndSettle();
+        expect(saved, isNull);
+        expect(find.text('Enter zero or a positive number.'), findsOneWidget);
+      }
+      await tester.enterText(
+        find.byKey(const ValueKey('stock-quantity-field')),
+        '7',
+      );
+      await tester.tap(find.byType(SwitchListTile));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save count'));
+      await tester.pumpAndSettle();
+      expect(saved!.quantity, 7);
+      expect(saved!.lowAt, isNull);
+      expect(saved!.locationId, record.locationId);
+    },
+  );
+  testWidgets(
+    'landing puts real attention before browsing without a vehicle selector',
+    (tester) async {
+      await pump(tester, const InventoryScreen());
+      expect(find.text('My Inventory'), findsOneWidget);
+      expect(find.text('Browse Catalog'), findsOneWidget);
+      expect(find.text('Running low'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('inventory-context-selector')),
+        findsNothing,
+      );
+      expect(find.text('Cost sources'), findsNothing);
+      expect(
+        tester.getTopLeft(find.text('Running low')).dy,
+        lessThan(tester.getTopLeft(find.text('My Inventory')).dy),
+      );
+      await tester.tap(find.text('Running low'));
+      await tester.pumpAndSettle();
+      expect(find.text('Braided faucet supply line'), findsOneWidget);
+      expect(find.text('PTFE thread seal tape'), findsNothing);
+      await tester.tap(find.text('Braided faucet supply line'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('stock-count-screen')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('empty inventory does not invent alerts or deliveries', (
     tester,
   ) async {
-    await _pumpAt(tester, const Size(412, 915));
-    await _openInventory(tester, rail: false);
-
-    await tester.tap(find.byKey(const ValueKey('inventory-view-selector')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Admin'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('inventory-context-selector')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Service Van 4').last);
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Add material'));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byKey(const ValueKey('inventory-action-screen')),
-      findsOneWidget,
+    final store = PrototypeOperationsStore(
+      inventoryStock: [],
+      materialCosts: [],
     );
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('inventory-context-selector')),
-        matching: find.text('Service Van 4'),
-      ),
-      findsOneWidget,
-    );
+    addTearDown(store.dispose);
+    await pump(tester, const InventoryScreen(), store: store);
+    expect(find.text('Running low'), findsNothing);
+    expect(find.text('Orders awaiting arrival'), findsNothing);
+    expect(find.textContaining('Start with the items'), findsOneWidget);
+  });
+
+  testWidgets('browse follows every level and back preserves parent', (
+    tester,
+  ) async {
+    await pump(tester, InventoryCatalogScreen(catalog: fixture));
+    final a = tester.getTopLeft(find.text('Carpentry'));
+    final b = tester.getTopLeft(find.text('Plumbing'));
+    expect(a.dy, closeTo(b.dy, 1)); // two trade columns on an ordinary phone
+    await tester.tap(find.text('Plumbing'));
+    await tester.pumpAndSettle();
+    expect(find.byType(Image), findsNothing); // photos only at trade level
+    for (final label in ['Fittings', 'PVC', 'Elbows', 'PVC elbow half inch']) {
+      await tester.tap(find.text(label).last);
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('Item details'), findsOneWidget);
+    expect(find.textContaining('No receipt needed'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Elbows'), findsWidgets);
+    expect(find.text('PVC elbow half inch'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Inventory calendar pushes a separate dated screen', (
-    tester,
-  ) async {
-    await _pumpAt(tester, const Size(390, 844));
-    await _openInventory(tester, rail: false);
-    final now = DateTime.now();
-    final day = find.byKey(
-      ValueKey('work-calendar-day-${now.year}-${now.month}-${now.day}'),
-    );
-
-    await tester.ensureVisible(day);
+  testWidgets('search and clear restore the tree', (tester) async {
+    await pump(tester, InventoryCatalogScreen(catalog: fixture));
+    await tester.enterText(find.byType(TextField), 'half inch');
     await tester.pumpAndSettle();
-    await tester.tap(day);
+    expect(find.text('PVC elbow half inch'), findsOneWidget);
+    expect(find.text('Wood screw'), findsNothing);
+    await tester.enterText(find.byType(TextField), 'missing');
     await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('inventory-day-screen')), findsOneWidget);
-    expect(find.text('Material purchases'), findsOneWidget);
-    expect(find.text('Stock counts'), findsOneWidget);
-    expect(tester.takeException(), isNull);
+    expect(find.textContaining('No matching items'), findsOneWidget);
+    await tester.tap(find.byTooltip('Clear search'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose a trade'), findsOneWidget);
   });
 
-  testWidgets('Compact Inventory action writes a verified material cost', (
-    tester,
-  ) async {
-    await _pumpAt(tester, const Size(390, 844));
-    await _openInventory(tester, rail: false);
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-    await tester.tap(find.text('Add material'));
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('inventory-action-screen')),
-      findsOneWidget,
-    );
-    await tester.tap(find.text('Record purchase cost'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'My Inventory excludes unused trades and filtering never changes active truck',
+    (tester) async {
+      final scope = OperationalScopeController(view: AppViewMode.admin);
+      final store = PrototypeOperationsStore(
+        materialCosts: [],
+        inventoryStock: [
+          InventoryStockRecord(
+            id: 's',
+            materialId: 'p',
+            materialName: 'PVC elbow half inch',
+            locationId: 'truck-a',
+            locationLabel: 'Truck A',
+            quantity: 5,
+            unitLabel: 'each',
+            confidence: InventoryStockConfidence.verified,
+            updatedOn: DateTime(2026),
+            ownerEmployeeId: 'alex',
+          ),
+        ],
+      );
+      addTearDown(scope.dispose);
+      addTearDown(store.dispose);
+      await pump(
+        tester,
+        InventoryCatalogScreen(catalog: fixture, myInventory: true),
+        store: store,
+        scope: scope,
+      );
+      expect(find.text('Plumbing'), findsOneWidget);
+      expect(find.text('Carpentry'), findsNothing);
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Truck A').last);
+      await tester.pumpAndSettle();
+      expect(scope.selectedVehicleId, 'transit-12');
+      expect(scope.selectedEmployeeId, isNull);
+    },
+  );
 
-    await tester.enterText(
-      find.byKey(const ValueKey('material-name-field')),
-      'Quarter turn shutoff valve',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('material-vendor-field')),
-      'Neighborhood Hardware',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('material-unit-cost-field')),
-      '12.50',
-    );
-    await tester.tap(
-      find.byKey(const ValueKey('material-source-expense-field')),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('EXP-1048 · Central Supply').last);
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('save-material-cost-button')),
-    );
-    await tester.tap(find.byKey(const ValueKey('save-material-cost-button')));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'adding catalog stock validates quantities and keeps one location record',
+    (tester) async {
+      final store = PrototypeOperationsStore(
+        inventoryStock: [],
+        materialCosts: [],
+      );
+      addTearDown(store.dispose);
+      await pump(
+        tester,
+        InventoryCatalogItemScreen(item: fixture.items.first),
+        store: store,
+      );
+      await tester.ensureVisible(find.text('Add to My Inventory').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add to My Inventory').last);
+      await tester.pumpAndSettle();
+      expect(store.inventoryStock, isEmpty);
+      expect(find.text('Enter a location.'), findsOneWidget);
+      await tester.enterText(find.byType(TextFormField).at(0), 'Truck A');
+      await tester.enterText(find.byType(TextFormField).at(1), 'NaN');
+      await tester.ensureVisible(find.text('Add to My Inventory').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add to My Inventory').last);
+      await tester.pumpAndSettle();
+      expect(store.inventoryStock, isEmpty);
+      await tester.enterText(find.byType(TextFormField).at(1), '5');
+      await tester.ensureVisible(find.text('Add to My Inventory').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add to My Inventory').last);
+      await tester.pumpAndSettle();
+      expect(store.inventoryStock.single.quantity, 5);
+      expect(store.inventoryStock.single.materialId, 'p');
+    },
+  );
 
-    expect(find.text('Quarter turn shutoff valve'), findsOneWidget);
-    expect(find.text('\$12.50\nper each'), findsOneWidget);
+  for (final unknown in [false, true]) {
+    testWidgets('adding more stock respects existing count; unknown=$unknown', (
+      tester,
+    ) async {
+      final store = PrototypeOperationsStore(
+        materialCosts: [],
+        inventoryStock: [
+          InventoryStockRecord(
+            id: 'stock-p-a',
+            materialId: 'p',
+            materialName: 'PVC elbow half inch',
+            locationId: 'truck-a',
+            locationLabel: 'Truck A',
+            quantity: 5,
+            unitLabel: 'each',
+            lowAt: 2,
+            confidence: unknown
+                ? InventoryStockConfidence.unknown
+                : InventoryStockConfidence.verified,
+            updatedOn: DateTime(2026),
+            ownerEmployeeId: 'alex',
+          ),
+        ],
+      );
+      addTearDown(store.dispose);
+      await pump(
+        tester,
+        InventoryCatalogItemScreen(item: fixture.items.first),
+        store: store,
+      );
+      await tester.ensureVisible(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Truck A').last);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextFormField).first, '3');
+      await tester.ensureVisible(find.text('Add to My Inventory').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add to My Inventory').last);
+      await tester.pumpAndSettle();
+      expect(store.inventoryStock.length, 1);
+      expect(store.inventoryStock.single.id, 'stock-p-a');
+      expect(store.inventoryStock.single.quantity, unknown ? 5 : 8);
+      expect(store.inventoryStock.single.lowAt, 2);
+      if (unknown)
+        expect(
+          find.textContaining('Check the current quantity'),
+          findsOneWidget,
+        );
+    });
+  }
 
-    await tester.ensureVisible(find.text('Quarter turn shutoff valve'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Quarter turn shutoff valve'));
-    await tester.pumpAndSettle();
-    expect(
-      find.textContaining('Source expense EXP-1048 · Tap to open'),
-      findsOneWidget,
-    );
-    await tester.tap(
-      find.textContaining('Source expense EXP-1048 · Tap to open'),
-    );
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('expense-detail-screen')), findsOneWidget);
-    expect(find.text('Central Supply'), findsWidgets);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Inventory reflows under accessibility text without overflow', (
-    tester,
-  ) async {
-    await _pumpAt(tester, const Size(320, 844), textScale: 2);
-    await _openInventory(tester, rail: false);
-    final firstMetric = tester.getTopLeft(
-      find.byKey(const ValueKey('verified-material-count')),
-    );
-    final secondMetric = tester.getTopLeft(
-      find.byKey(const ValueKey('linked-expense-count')),
-    );
-    expect(secondMetric.dx, closeTo(firstMetric.dx, 0.1));
-    expect(secondMetric.dy, greaterThan(firstMetric.dy));
-    await tester.drag(find.byType(ListView).first, const Offset(0, -800));
-    await tester.pumpAndSettle();
-    expect(find.text('Verified cost history'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('material cost fields use the shared accessible form reflow', (
-    tester,
-  ) async {
-    await _pumpAt(tester, const Size(320, 844), textScale: 2);
-    await _openInventory(tester, rail: false);
-    expect(tester.takeException(), isNull);
-    await tester.tap(find.text('Add material'));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    await tester.ensureVisible(find.text('Record purchase cost'));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    await tester.tap(find.text('Record purchase cost'));
-    await tester.pumpAndSettle();
-
-    final cost = find.byKey(const ValueKey('material-unit-cost-field'));
-    final unit = find.byKey(const ValueKey('material-unit-label-field'));
-    await tester.ensureVisible(unit);
-    await tester.pumpAndSettle();
-    expect(tester.getTopLeft(unit).dx, closeTo(tester.getTopLeft(cost).dx, .1));
-    expect(tester.getTopLeft(unit).dy, greaterThan(tester.getTopLeft(cost).dy));
-    expect(tester.takeException(), isNull);
-  });
+  for (final configuration in [
+    (const Size(320, 844), 1.0, false),
+    (const Size(320, 844), 2.0, true),
+    (const Size(844, 390), 1.0, false),
+    (const Size(1024, 768), 2.0, true),
+    (const Size(1440, 900), 1.0, false),
+  ]) {
+    testWidgets('landing and catalog reflow at $configuration', (tester) async {
+      await pump(
+        tester,
+        const InventoryScreen(),
+        size: configuration.$1,
+        scale: configuration.$2,
+        dark: configuration.$3,
+      );
+      await tester.drag(find.byType(ListView).first, const Offset(0, -600));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await pump(
+        tester,
+        InventoryCatalogScreen(catalog: fixture),
+        size: configuration.$1,
+        scale: configuration.$2,
+        dark: configuration.$3,
+      );
+      expect(find.byType(InventoryNavigationCard), findsNWidgets(2));
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

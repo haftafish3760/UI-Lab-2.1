@@ -104,7 +104,7 @@ class _ReceiptIntakeSettingsScreenState
                   key: const ValueKey('receipt-detail-setting'),
                   title: const Text('Detailed receipts by default'),
                   subtitle: const Text(
-                    'Include individual items. Turn off to start with a simple receipt.',
+                    'Turn off for Basic receipts. Changing your choice when adding a receipt also updates this setting.',
                   ),
                   value: _draft.detailedReceipts,
                   onChanged: _saving

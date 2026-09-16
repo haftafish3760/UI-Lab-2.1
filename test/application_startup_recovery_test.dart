@@ -16,10 +16,11 @@ void main() {
           load: () => ++attempts == 1 ? first.future : second.future,
         ),
       );
-      expect(find.text('Opening your saved work…'), findsOneWidget);
+      expect(find.text('Tame Your Biz'), findsOneWidget);
+      expect(find.text('Opening your saved work…'), findsNothing);
       first.completeError(StateError('PRIVATE RECORD CONTENT'));
       await tester.pumpAndSettle();
-      expect(find.text('Unable to open Maintainiac'), findsOneWidget);
+      expect(find.text('Unable to open Tame Your Biz'), findsOneWidget);
       expect(find.textContaining('PRIVATE RECORD'), findsNothing);
       await tester.tap(find.text('Retry opening'));
       await tester.pump();

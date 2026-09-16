@@ -50,7 +50,12 @@ void main() {
         final detailed = find.byKey(
           const ValueKey('receipt-every-item-choice'),
         );
-        expect(tester.getTopLeft(simple).dy, tester.getTopLeft(detailed).dy);
+        expect(
+          tester.getTopLeft(detailed).dy - tester.getBottomLeft(simple).dy,
+          24,
+        );
+        expect(tester.getSize(simple).width, tester.getSize(detailed).width);
+        expect(tester.getTopLeft(simple).dx, tester.getTopLeft(detailed).dx);
         await tester.ensureVisible(detailed);
         await tester.tap(detailed);
         await tester.pump();

@@ -85,6 +85,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/document_templates/
+    - assets/inventory/browse_batch.sqlite
+    - assets/inventory/trades/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -121,7 +121,9 @@ class OperationalAttentionRow extends StatelessWidget {
         return SectionCard(
           padding: EdgeInsets.zero,
           backgroundColor: colors.surface,
-          borderColor: semantic.danger.withValues(alpha: .64),
+          borderColor: item.isUrgent
+              ? semantic.danger.withValues(alpha: .64)
+              : colors.outline,
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: type.operationRowHeight),
             child: InkWell(
@@ -136,13 +138,15 @@ class OperationalAttentionRow extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: semantic.danger.withValues(alpha: .13),
+                        color:
+                            (item.isUrgent ? semantic.danger : colors.primary)
+                                .withValues(alpha: .13),
                         borderRadius: BorderRadius.circular(AppRadii.control),
                       ),
                       child: Icon(
                         operationalAttentionIcon(item.resourceKind),
                         size: 20,
-                        color: semantic.danger,
+                        color: item.isUrgent ? semantic.danger : colors.primary,
                       ),
                     ),
                     const SizedBox(width: 9),

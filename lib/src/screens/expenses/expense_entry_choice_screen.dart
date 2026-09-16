@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
+import '../../shared/app_preferences.dart';
 import '../../theme/app_theme.dart';
 import 'expense_models.dart';
 import 'receipt_category_picker_screen.dart';
@@ -69,12 +70,29 @@ class _ExpenseEntryChoiceScreenState extends State<ExpenseEntryChoiceScreen> {
       type: _selected ?? type,
       category: _category,
     );
-    if (widget.onContinue == null) {
-      Navigator.pop(context, choice);
-      return;
-    }
     setState(() => _continuing = true);
     try {
+      final preferences = AppPreferencesScope.maybeOf(context);
+      if (preferences != null &&
+          !await preferences.rememberReceiptDetail(
+            choice.type == ExpenseReceiptType.detailed,
+          )) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Your receipt choice could not be saved. Please try again.',
+              ),
+            ),
+          );
+        }
+        return;
+      }
+      if (!mounted) return;
+      if (widget.onContinue == null) {
+        Navigator.pop(context, choice);
+        return;
+      }
       await widget.onContinue!(choice);
     } finally {
       if (mounted) setState(() => _continuing = false);
@@ -117,52 +135,37 @@ class _ExpenseEntryChoiceScreenState extends State<ExpenseEntryChoiceScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SectionCard(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              'What would you like to keep track of?',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 14),
-                            ReceiptChoicePair(
-                              first: ReceiptChoiceCard(
-                                key: const ValueKey(
-                                  'receipt-total-only-choice',
-                                ),
-                                title: 'Total only',
-                                description:
-                                    'Simple receipt. Save how much you spent.',
-                                icon: Icons.receipt_outlined,
-                                selected: type == ExpenseReceiptType.basic,
-                                onTap: _continuing
-                                    ? null
-                                    : () => setState(
-                                        () => _selected =
-                                            ExpenseReceiptType.basic,
-                                      ),
+                      Text(
+                        'How much detail would you like to save?',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 20),
+                      ReceiptChoiceCard(
+                        key: const ValueKey('receipt-total-only-choice'),
+                        title: 'Basic receipt',
+                        description:
+                            'Save the total and an optional category. Individual items are not recorded.',
+                        icon: Icons.receipt_outlined,
+                        selected: type == ExpenseReceiptType.basic,
+                        onTap: _continuing
+                            ? null
+                            : () => setState(
+                                () => _selected = ExpenseReceiptType.basic,
                               ),
-                              second: ReceiptChoiceCard(
-                                key: const ValueKey(
-                                  'receipt-every-item-choice',
-                                ),
-                                title: 'Items and total',
-                                description:
-                                    'Detailed receipt. Save each item, its quantity and price.',
-                                icon: Icons.format_list_numbered,
-                                selected: type == ExpenseReceiptType.detailed,
-                                onTap: _continuing
-                                    ? null
-                                    : () => setState(
-                                        () => _selected =
-                                            ExpenseReceiptType.detailed,
-                                      ),
+                      ),
+                      const SizedBox(height: 24),
+                      ReceiptChoiceCard(
+                        key: const ValueKey('receipt-every-item-choice'),
+                        title: 'Detailed receipt',
+                        description:
+                            'Save the total, each item, how many you bought, and its price.',
+                        icon: Icons.format_list_numbered,
+                        selected: type == ExpenseReceiptType.detailed,
+                        onTap: _continuing
+                            ? null
+                            : () => setState(
+                                () => _selected = ExpenseReceiptType.detailed,
                               ),
-                            ),
-                          ],
-                        ),
                       ),
                       const SizedBox(height: 16),
                       SectionCard(

@@ -1,6 +1,8 @@
+import 'support/expense_setup_fixture.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
+import 'package:ui_lab_2_1/src/shared/app_preferences.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/today_entries.dart';
 import 'package:ui_lab_2_1/src/layout/app_layout_engine.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/active_vehicle_header.dart';
@@ -45,11 +47,19 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Admin').last);
         await tester.pumpAndSettle();
+        if (size.width == 320) {
+          expect(
+            tester
+                .getSize(find.byKey(const ValueKey('dashboard-view-selector')))
+                .width,
+            lessThanOrEqualTo(size.width / 2),
+          );
+        }
         expect(
           find.byKey(const ValueKey('admin-company-overview')),
           findsOneWidget,
         );
-        final collections = find.text('Business overview');
+        final collections = find.text('Recap');
         expect(find.text('Invoiced revenue'), findsNothing);
         expect(find.text('Work needing action'), findsNothing);
         expect(find.text('Money received'), findsNothing);
@@ -164,6 +174,11 @@ void main() {
       ('maintenance', 4, 'maintenance-module-screen'),
       ('dashboard', 0, 'active-vehicle-summary'),
     ];
+    // Expense setup has its own tests; this case verifies module navigation.
+    await AppPreferencesScope.of(
+      tester.element(find.byType(NavigationBar)),
+    ).completeExpenseSetup(detailed: false, assistance: false);
+    await tester.pumpAndSettle();
     for (final (module, index, screenKey) in modules) {
       await tester.tap(find.byKey(ValueKey('app-destination-$module')));
       await tester.pumpAndSettle();
@@ -302,6 +317,7 @@ void main() {
     expect(find.byKey(const ValueKey('work-module-screen')), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
 
+    await useCompletedExpenseSetup(tester);
     await tester.tap(
       find.byKey(const ValueKey('desktop-destination-expenses')),
     );

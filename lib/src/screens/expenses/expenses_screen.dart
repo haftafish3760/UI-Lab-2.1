@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'expense_spending_summary.dart';
 import 'expense_total_summary_card.dart';
 import 'expense_period_screen.dart';
+import 'expense_recap_screen.dart';
 
 import '../../data/operational_attention.dart';
 import '../../data/prototype_operations_store.dart';
@@ -201,6 +202,19 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       MaterialPageRoute<void>(
         builder: (_) => ExpensePeriodScreen(
           period: period,
+          anchor: _selectedDate,
+          firstWeekday: _preferences.weekStartsOn,
+          permissions: _permissions,
+        ),
+      ),
+    );
+  }
+
+  void _openRecap() {
+    if (!_permissions.canView || !_permissions.canViewAmounts) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ExpenseRecapScreen(
           anchor: _selectedDate,
           firstWeekday: _preferences.weekStartsOn,
           permissions: _permissions,

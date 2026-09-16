@@ -83,6 +83,8 @@ class InventoryStockRecord {
     double? quantity,
     InventoryStockConfidence? confidence,
     DateTime? updatedOn,
+    double? lowAt,
+    bool clearLowAt = false,
   }) => InventoryStockRecord(
     id: id,
     materialId: materialId,
@@ -94,7 +96,7 @@ class InventoryStockRecord {
     confidence: confidence ?? this.confidence,
     updatedOn: updatedOn ?? this.updatedOn,
     ownerEmployeeId: ownerEmployeeId,
-    lowAt: lowAt,
+    lowAt: clearLowAt ? null : lowAt ?? this.lowAt,
   );
 }
 

@@ -27,6 +27,12 @@ Future<Widget> openUiLabApplication({
   String Function(String)? resolveRetainedPath,
   required NativeNotificationGateway nativeNotifications,
 }) async {
+  final startupTimer = Stopwatch()..start();
+  void recordStage(String stage) {
+    if (kDebugMode && const bool.fromEnvironment('STARTUP_TIMING')) {
+      debugPrint('Startup timing: $stage ${startupTimer.elapsedMilliseconds} ms');
+    }
+  }
   // Native reminders initialize after mounting, independently of local storage.
   LocalPersistence? persistence;
   WorkPersistenceSession? workSession;
@@ -39,22 +45,29 @@ Future<Widget> openUiLabApplication({
     );
     storageDirectory = selected.directory;
     resolveRetainedPath = selected.resolveRetainedPath ?? resolveRetainedPath;
+    recordStage('installation selected');
     persistence = await LocalPersistence.open(
       directory: storageDirectory,
       resolveRetainedPath: resolveRetainedPath,
       removeOwnerDemoData: false,
     );
+    recordStage('storage opened and verified');
     await persistence.seedDemoIfNew();
     if (kDebugMode && const bool.fromEnvironment('UI_LAB_REVIEW_EXAMPLES', defaultValue: true)) {
       await loadRequestedWorkExamples(persistence.database);
     }
+    recordStage('review examples checked');
     workSession = await openUiLabWorkSession(persistence.database);
+    recordStage('work loaded');
     directory = await openUiLabDirectory(persistence.database);
+    recordStage('directory loaded');
     workday = await openUiLabWorkdaySession(persistence.database);
     dayNotes = await openUiLabDayNotes(persistence.database);
+    recordStage('workday and notes loaded');
     final preferences = await LocalAppPreferencesStore.open(
       persistence.database,
     );
+    recordStage('startup complete');
     final activePersistence = persistence;
     final activeWork = workSession;
     final activeDirectory = directory;

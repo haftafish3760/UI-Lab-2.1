@@ -1113,6 +1113,15 @@ or owner visual acceptance. Protected 5.7 Git state remains clean and unchanged.
 
 ## Release-one mode and database decision — 2026-09-09
 
+Owner clarification, September 15: offer separate, selectable scopes for backup
+and synchronization. A user may choose receipt backup without backing up other
+modules. Choosing receipt assistance does not grant cloud consent. Explain backup
+as a recoverable copy and sync as keeping selected data consistent across devices.
+Dependency metadata needed to restore selected records must be disclosed; do not
+silently expand scope to unrelated records. This is a recorded requirement, not
+implemented cloud selection or verified restore behavior. Current Expense UI work
+is local only; the backup/sync setup screen is a subsequent reviewed flow.
+
 Required modes: local only; sync without backup; sync with backup. All keep
 durable local operation through SQLite/Drift. Cloud use is optional for the user,
 but cloud backup/sync capability is REQUIRED for release one, not deferred.

@@ -1,3 +1,4 @@
+import 'support/expense_setup_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/expenses/receipt_choice_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,6 +32,7 @@ void main() {
       'Expense FAB stays available and opens entry choices at $width',
       (tester) async {
         await _pumpAt(tester, Size(width, 900));
+        await useCompletedExpenseSetup(tester);
         await tester.tap(
           find.byKey(
             ValueKey(
@@ -80,6 +82,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(1440, 900));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(
       find.byKey(const ValueKey('desktop-destination-expenses')),
     );
@@ -134,6 +137,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(412, 915));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
     expect(find.textContaining('JOB-1038'), findsOneWidget);
@@ -161,6 +165,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(390, 844));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Add expense'));
@@ -205,6 +210,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(390, 844));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
 
@@ -256,6 +262,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(390, 844));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('expenses-view-selector')));
@@ -340,6 +347,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(412, 915));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('expenses-view-selector')));
@@ -374,6 +382,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(412, 915));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
     expect(find.text('Expense categories'), findsNothing);
@@ -431,6 +440,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(390, 844));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('expenses-add-fab')));
@@ -452,6 +462,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(390, 844));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('expenses-add-fab')));
@@ -490,6 +501,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(390, 844));
+    await useCompletedExpenseSetup(tester);
     await tester.tap(find.byKey(const ValueKey('app-destination-expenses')));
     await tester.pumpAndSettle();
 
