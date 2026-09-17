@@ -106,5 +106,49 @@
   "calendarInventoryRecordSingular": "dossier de matériaux",
   "calendarInventoryRecordPlural": "dossiers de matériaux",
   "calendarNoRecords": "Aucun élément : {recordLabel}.",
-  "calendarRecordCount": "{count} {recordLabel}."
+  "calendarRecordCount": "{count} {recordLabel}.",
+  "catalogBrowse": "Parcourir le catalogue",
+  "catalogInventory": "Mon inventaire",
+  "catalogGrid": "Grille",
+  "catalogList": "Liste",
+  "catalogChooseTrade": "Choisir un métier",
+  "catalogChooseCategory": "Choisir une catégorie",
+  "catalogSearch": "Rechercher des articles",
+  "catalogSearchCategory": "Rechercher dans cette catégorie",
+  "catalogClear": "Effacer la recherche",
+  "catalogPlumbing": "Plomberie",
+  "catalogElectrical": "Électricité",
+  "catalogHvac": "CVCA",
+  "catalogFittings": "Raccords",
+  "catalogCopper": "Cuivre",
+  "catalogElbows90": "Coudes à 90°",
+  "catalogItemDetails": "Détails de l’article",
+  "catalogAdd": "Ajouter à mon inventaire",
+  "catalogSize": "Dimension nominale : {size}",
+  "catalogUnit": "Unité : {unit}",
+  "catalogEach": "unité",
+  "catalogCopperElbow": "Coude en cuivre à 90° de {size}",
+  "catalogEmpty": "Cette catégorie est en cours de reconstruction.",
+  "catalogNoMatches": "Aucun article trouvé. Essayez un autre nom ou une autre dimension.",
+  "@catalogSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@catalogUnit": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "@catalogCopperElbow": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  }
 }

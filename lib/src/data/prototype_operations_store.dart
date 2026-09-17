@@ -41,6 +41,7 @@ class PrototypeOperationsStore extends ChangeNotifier {
     List<WorkRecord>? workRecords,
     List<MaterialCostRecord>? materialCosts,
     List<InventoryStockRecord>? inventoryStock,
+    List<InventoryCategoryRecord>? inventoryCategories,
     Map<String, DashboardDayData>? dashboardDays,
     WorkCompanyProfile? companyProfile,
     List<WorkCustomerProfile>? customers,
@@ -63,6 +64,7 @@ class PrototypeOperationsStore extends ChangeNotifier {
          ...(materialCosts ??
              (workSession == null ? demoMaterialCosts : const [])),
        ],
+       _inventoryCategories = [...?inventoryCategories],
        _inventoryStock = [
          ...(inventoryStock ??
              (workSession == null ? demoInventoryStock : const [])),
@@ -93,6 +95,19 @@ class PrototypeOperationsStore extends ChangeNotifier {
   final List<WorkRecord> _workRecords;
   final List<MaterialCostRecord> _materialCosts;
   final List<InventoryStockRecord> _inventoryStock;
+  final List<InventoryCategoryRecord> _inventoryCategories;
+  List<InventoryCategoryRecord> get inventoryCategories => List.unmodifiable(_inventoryCategories);
+  void addInventoryCategory(InventoryCategoryRecord category) {
+    if (_inventoryCategories.any((c) => c.id == category.id)) return;
+    if (category.parentId != null && !_inventoryCategories.any((c) => c.id == category.parentId && c.ownerEmployeeId == category.ownerEmployeeId)) {
+      throw StateError('Parent category is not available.');
+    }
+    if (_inventoryCategories.any((c) => c.parentId == category.parentId && c.ownerEmployeeId == category.ownerEmployeeId && c.name.toLowerCase().trim() == category.name.toLowerCase().trim())) {
+      throw StateError('That category already exists here.');
+    }
+    _inventoryCategories.add(category);
+    notifyListeners();
+  }
   final Map<String, DashboardDayData> _dashboardDays;
   late final PrototypeAttentionCenter attentionCenter;
   WorkCompanyProfile _companyProfile;

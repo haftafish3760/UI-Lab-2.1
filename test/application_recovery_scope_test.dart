@@ -1,3 +1,6 @@
+import 'package:ui_lab_2_1/src/data/expenses/expense_entry_setup_input.dart';
+import 'package:ui_lab_2_1/src/data/expenses/expense_entry_setup_workflow.dart';
+import 'package:ui_lab_2_1/src/data/expenses/expense_workflow_models.dart';
 import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,6 +45,14 @@ void main() {
         );
         final recurring = await openSession(p);
         final receipts = await openEvidenceSession(p);
+        final setup = await receipts.expenses.openEntrySetup(
+          initial: ExpenseEntrySetupInput(
+            date: DateTime(2030),
+            category: ExpenseCategory.fuel,
+            receiptType: ExpenseReceiptType.detailed,
+          ),
+        );
+        await setup.session.close();
         final draft = (await prefs.openWorkDisplayDraft(
           initial: const WorkDisplayPreferences(),
         ))!;
@@ -79,7 +90,26 @@ void main() {
         final original = observed!;
         final listing = (await tester.runAsync(original.list))!;
         expect(listing.isComplete, isTrue);
-        final selected = listing.entries.single;
+        final setupEntry = listing.entries.singleWhere(
+          (e) => e.providerId == 'expenseSetup',
+        );
+        await tester.runAsync(() async {
+          final restored =
+              await original.resume(setupEntry) as ExpenseEntrySetupWorkflow;
+          expect(restored.input.category, ExpenseCategory.fuel);
+          expect(restored.input.receiptType, ExpenseReceiptType.detailed);
+          await restored.session.close();
+          await original.discard(setupEntry);
+        });
+        expect(
+          (await tester.runAsync(
+            original.list,
+          ))!.entries.any((e) => e.providerId == 'expenseSetup'),
+          isFalse,
+        );
+        final selected = listing.entries.singleWhere(
+          (e) => e.providerId == 'preferences',
+        );
         expect(selected.providerId, 'preferences');
         view = AppViewMode.admin;
         await mount(fixture.prefs, true);

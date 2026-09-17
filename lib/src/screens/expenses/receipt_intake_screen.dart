@@ -1,3 +1,4 @@
+import '../../data/receipts/receipt_text_editing_session.dart';
 import '../../shared/editor_input_lock.dart';
 
 import 'package:flutter/material.dart';

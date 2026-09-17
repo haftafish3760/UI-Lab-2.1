@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_checkpoint.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_store.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_persistence_session.dart';
-import 'package:ui_lab_2_1/src/data/work/directory_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_directory_fixture.dart';
 import 'package:ui_lab_2_1/src/data/work/work_contact_codec.dart';
 import 'support/storage/database_harness.dart';
 
@@ -14,7 +14,7 @@ void main() {
         final harness = await DatabaseHarness.create();
         addTearDown(harness.dispose);
         final db = await harness.open();
-        final owner = await openUiLabDirectory(db);
+        final owner = await openSeededTestDirectory(db);
         addTearDown(owner.dispose);
         final secondDb = await harness.open();
         final editor = await DirectoryPersistenceSession.open(

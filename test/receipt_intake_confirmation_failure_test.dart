@@ -89,8 +89,30 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('receipt-source-text')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('manual-receipt-entry')));
+      final textInput = find.byKey(const ValueKey('receipt-pasted-text'));
+      await waitForNativeSave(tester, () => textInput.evaluate().isNotEmpty);
+      await tester.enterText(textInput, 'Unfinished source 7.');
+      await waitForNativeSave(
+        tester,
+        () =>
+            receiptController
+                .recordById('intake-test')
+                ?.entrySetup
+                ?.pastedText ==
+            'Unfinished source 7.',
+      );
+      await tester.pageBack();
+      final textSource = find.byKey(const ValueKey('receipt-source-text'));
+      await waitForNativeSave(tester, () => textSource.evaluate().isNotEmpty);
+      await tester.tap(textSource);
+      await waitForNativeSave(tester, () => textInput.evaluate().isNotEmpty);
+      expect(
+        tester.widget<TextField>(textInput).controller!.text,
+        'Unfinished source 7.',
+      );
+      final manualEntry = find.byKey(const ValueKey('manual-receipt-entry'));
+      await tester.ensureVisible(manualEntry);
+      await tester.tap(manualEntry);
       final vendor = find.byKey(const ValueKey('expense-vendor-field'));
       await waitForNativeSave(tester, () => vendor.evaluate().isNotEmpty);
       await tester.enterText(vendor, 'Receipt supplier');

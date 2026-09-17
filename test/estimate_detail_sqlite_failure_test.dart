@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/dashboard_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_detail_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_models.dart';
@@ -10,18 +10,21 @@ import 'support/storage/native_widget_pump.dart';
 
 void main() {
   testWidgets(
-    'estimate readiness waits for SQLite and rejects a stale displayed revision',
+    'estimate approval submission waits for SQLite and rejects a stale displayed revision',
     (tester) async {
       tester.view.physicalSize = const Size(1400, 1200);
       tester.view.devicePixelRatio = 1;
       final harness = (await tester.runAsync(DatabaseHarness.create))!;
       final db = (await tester.runAsync(harness.open))!;
-      final work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
+      final work = (await tester.runAsync(
+        () => openSeededTestWorkSession(db),
+      ))!;
       var callbacks = 0;
       try {
-        final original = work.records.singleWhere(
-          (item) => item.id == 'est-1040',
-        );
+        final original = work.records
+            .singleWhere((item) => item.id == 'est-1040')
+            .copyWith(requiresCompanyReview: true);
+        expect(await tester.runAsync(() => work.update(original)), isTrue);
         expect(original.resolvedEstimateStage, EstimateStage.draft);
         await tester.pumpWidget(UiLabApp(workSession: work));
         await tester.pumpAndSettle();
@@ -41,7 +44,7 @@ void main() {
           ),
         );
         Future<void> ready() async {
-          final button = find.text('Mark ready to send');
+          final button = find.byKey(const ValueKey('estimate-primary-send'));
           await tester.ensureVisible(button);
           await tester.tap(button);
           await tester.pump();
@@ -58,7 +61,7 @@ void main() {
               .resolvedEstimateStage,
           EstimateStage.draft,
         );
-        expect(find.text('Mark ready to send'), findsOneWidget);
+        expect(find.text('Submit for approval'), findsWidgets);
         expect(callbacks, 0);
         await tester.runAsync(
           () => db.customStatement('DROP TRIGGER fail_estimate'),
@@ -107,7 +110,12 @@ void main() {
                   EstimateStage.readyToSend &&
               !work.isSaving,
         );
-        expect(find.text('Mark ready to send'), findsNothing);
+        expect(
+          work.records
+              .singleWhere((item) => item.id == original.id)
+              .estimateCompanyReviewStatus,
+          EstimateCompanyReviewStatus.pending,
+        );
         expect(
           work.records.singleWhere((item) => item.id == original.id).jobNotes,
           'Concurrent note',

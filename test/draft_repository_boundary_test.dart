@@ -291,6 +291,19 @@ void main() {
     expect(app, isNot(contains('createApplicationMediaCoordinator(')));
     expect(violations, isEmpty);
   });
+  test(
+    'customer document and portal transport remain independent of widgets',
+    () {
+      for (final path in [
+        'lib/src/shared/documents/customer_document.dart',
+        'lib/src/shared/documents/customer_portal_gateway.dart',
+      ]) {
+        final source = File(path).readAsStringSync();
+        expect(source, isNot(contains('package:flutter/')), reason: path);
+        expect(source, isNot(contains('/screens/')), reason: path);
+      }
+    },
+  );
   test('restore presentation contract has no implementation dependencies', () {
     final contract = File(
       'lib/src/data/storage/local_restore_controller.dart',

@@ -1,4 +1,7 @@
 import '../storage/draft_repository.dart';
+import '../expenses/expense_entry_setup_workflow.dart';
+import '../expenses/expense_entry_setup_input.dart';
+import 'atomic_expense_setup_receipt.dart';
 import 'package:flutter/widgets.dart';
 import '../expenses/expense_workflow_models.dart';
 import '../expenses/authorized_expense_service.dart';
@@ -33,6 +36,66 @@ class ReceiptSubmissionSession {
   final ReceiptDraftCommandPermissions receiptPermissions;
   final _actions = SerializedAsyncActions();
   Future<AsyncActionPause> pauseOperations() => _actions.pauseAndDrain();
+
+  Future<ExpenseEntrySetupWorkflow> returnToReceiptSetup(String draftId) =>
+      _actions.run(() async {
+        expenses.requireActiveDraftOwner();
+        final result = await receipts.findById(draftId: draftId);
+        final receipt = result.record;
+        if (receipt == null ||
+            receipt.ownerEmployeeId != expenses.actorEmployeeId ||
+            receipt.organizationId != expenses.organizationId) {
+          throw StateError('The unfinished receipt is unavailable.');
+        }
+        final setup = await expenses.openEntrySetup(
+          initial: ExpenseEntrySetupInput(
+            date: receipt.expenseDate,
+            category:
+                receipt.entrySetup?.category ?? ExpenseCategory.uncategorized,
+            receiptType: receipt.entrySetup?.type ?? ExpenseReceiptType.basic,
+            continuation: ExpenseSetupContinuation(
+              destination: ExpenseSetupDestination.receipt,
+              id: draftId,
+              revision: receipt.lifecycle.revision,
+            ),
+          ),
+        );
+        try {
+          await setup.session.flush();
+          return setup;
+        } on Object {
+          await setup.session.close().catchError((Object _) {});
+          rethrow;
+        }
+      });
+
+  Future<StoredReceiptDraft> continueExpenseSetup(
+    ExpenseEntrySetupWorkflow setup,
+  ) => _actions.run(() async {
+    void authorize() {
+      expenses.requireActiveDraftOwner();
+      if (!expenses.canCreateForEmployee(expenses.actorEmployeeId) ||
+          !identical(setup.session.store, expenses.drafts) ||
+          setup.session.organizationId != receiptPermissions.organizationId ||
+          setup.session.ownerId != receiptPermissions.actorEmployeeId) {
+        throw StateError('Expense and receipt setup owners do not match.');
+      }
+    }
+
+    authorize();
+    late StoredReceiptDraft result;
+    await setup.session.confirm((checkpoint) async {
+      authorize();
+      result = await AtomicExpenseSetupReceipt(service.receiptDrafts).create(
+        checkpoint: checkpoint,
+        permissions: receiptPermissions,
+        occurredAtUtc: DateTime.now().toUtc(),
+      );
+      return true;
+    });
+    await receipts.load();
+    return result;
+  });
 
   Future<StoredReceiptDraft> confirmEvidenceReview({
     required String receiptId,

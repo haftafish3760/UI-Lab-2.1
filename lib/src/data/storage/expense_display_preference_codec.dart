@@ -1,27 +1,10 @@
-/// Stable storage names, independent of translated UI labels or widget layout.
-const expenseDisplayCategoryNames = {
-  'uncategorized',
-  'materials',
-  'consumables',
-  'fuel',
-  'vehiclePayment',
-  'vehicleInsurance',
-  'vehicleRepair',
-  'vehicleMaintenance',
-  'vehicle',
-  'tools',
-  'subcontractor',
-  'office',
-  'rent',
-  'utilities',
-  'phoneInternet',
-  'licensesTaxes',
-  'advertising',
-  'training',
-  'banking',
-  'travel',
-  'other',
-};
+import '../expenses/expense_category.dart';
+
+/// Domain identifiers, independent of translated labels and widget layout.
+/// Derive this set from the domain so new categories remain persistable.
+final expenseDisplayCategoryNames = Set<String>.unmodifiable(
+  ExpenseCategory.values.map((category) => category.name),
+);
 
 bool validExpenseCategoryChoices(Object? value) =>
     value is List &&

@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:ui_lab_2_1/src/data/storage/local_persistence.dart';
+import 'support/storage/native_widget_pump.dart';
 import 'package:ui_lab_2_1/src/data/storage/app_preferences_repository.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_checkpoint.dart';
 import 'package:flutter/material.dart';
@@ -67,7 +69,24 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(const UiLabApp());
+      final root = (await tester.runAsync(
+        () => Directory.systemTemp.createTemp('expense-welcome-'),
+      ))!;
+      final persistence = (await tester.runAsync(
+        () => LocalPersistence.open(directory: root),
+      ))!;
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.runAsync(persistence.close);
+        await tester.runAsync(() => root.delete(recursive: true));
+      });
+      await tester.pumpWidget(
+        UiLabApp(
+          expenseRepository: persistence.expenses,
+          receiptDraftRepository: persistence.receiptDrafts,
+          draftStore: persistence.drafts,
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Welcome to Expenses'), findsNothing);
       await tap(tester, 'app-destination-expenses');
@@ -98,6 +117,13 @@ void main() {
       await tap(tester, 'app-destination-expenses');
       expect(find.text('Welcome to Expenses'), findsNothing);
       await tap(tester, 'expenses-add-fab');
+      await waitForNativeSave(
+        tester,
+        () => find
+            .byKey(const ValueKey('receipt-every-item-choice'))
+            .evaluate()
+            .isNotEmpty,
+      );
       expect(
         tester
             .widget<ReceiptChoiceCard>(
@@ -218,6 +244,7 @@ void main() {
               canAttachReceipt: true,
               onContinue: (value) async {
                 choice = value;
+                return null;
               },
             ),
           ),

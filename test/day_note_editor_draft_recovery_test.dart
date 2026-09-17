@@ -48,7 +48,9 @@ void main() {
           await tester.tap(
             find.byKey(
               ValueKey(
-                calendar ? 'calendar-day-add-button' : 'dashboard-add-button',
+                calendar
+                    ? 'calendar-day-add-button'
+                    : 'dashboard-inline-actions',
               ),
             ),
           );

@@ -1,4 +1,5 @@
 import '../data/storage/draft_recovery_hub.dart';
+import '../data/expenses/expense_entry_setup_workflow.dart';
 import 'draft_recovery_controller.dart';
 import '../data/work/work_primary_draft_recovery.dart';
 import '../data/work/estimate_action_draft_recovery.dart';
@@ -16,6 +17,7 @@ import 'preference_draft_recovery.dart';
 /// the recovery view disappears during opening). Closing flushes pending input;
 /// it never confirms a business record or discards a saved draft.
 Future<void> releaseApplicationRecovery(Object workflow) => switch (workflow) {
+  ExpenseEntrySetupWorkflow() => workflow.session.close(),
   ResumedEstimateDraft(:final controller) => controller.session.close(),
   ResumedInvoiceDraft(:final controller) => controller.session.close(),
   ResumedJobDraft(:final controller) => controller.session.close(),

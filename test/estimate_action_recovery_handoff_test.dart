@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/work/estimate_signature_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/estimate_delivery_draft_workflow.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_signature_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_delivery_screen.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
@@ -23,7 +23,7 @@ void main() {
         (tester) async {
           final harness = (await tester.runAsync(DatabaseHarness.create))!;
           final work = (await tester.runAsync(
-            () async => openUiLabWorkSession(await harness.open()),
+            () async => openSeededTestWorkSession(await harness.open()),
           ))!;
           final base = work.records.singleWhere((r) => r.id == 'est-1040');
           final signing = signature

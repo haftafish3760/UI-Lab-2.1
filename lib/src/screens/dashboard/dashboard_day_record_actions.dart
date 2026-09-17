@@ -86,6 +86,8 @@ extension _DashboardDayRecordActions on _DashboardDayScreenState {
     );
     if (!mounted || record == null) return;
     final store = PrototypeOperationsScope.of(context);
+    // The editor already committed and projected the durable record.
+    if (store.workSession != null) return;
     store.addWorkRecord(record);
     _projectJob(record);
   }
@@ -101,6 +103,8 @@ extension _DashboardDayRecordActions on _DashboardDayScreenState {
     );
     if (!mounted || record == null) return;
     final store = PrototypeOperationsScope.of(context);
+    // The editor already committed the conversion atomically.
+    if (store.workSession != null) return;
     store.addWorkRecord(record);
     store.updateWorkRecord(
       estimate.withEstimateStage(EstimateStage.converted, DateTime.now()),

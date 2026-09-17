@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 part 'dashboard_layout_calculator.dart';
 part 'work_landing_layout_calculator.dart';
+part 'materials_inventory_layout_calculator.dart';
 
 enum AppNavigationMode { bottom, rail }
 
@@ -128,6 +129,13 @@ class WorkShortcutLayout {
 /// scaler. There are deliberately no device, orientation, platform, or
 /// physical-pixel branches here.
 abstract final class AppLayoutEngine {
+  /// Inventory cells use measured complete words, never a device-name breakpoint.
+  static WorkShortcutLayout materialsInventoryFor(
+    double availableWidth, {
+    required TextScaler textScaler,
+    required double longestWordWidth,
+  }) =>
+      _calculateMaterialsInventory(availableWidth, textScaler, longestWordWidth);
   static const railWidth = 220.0;
   static const railMinimumWindowWidth = 1000.0;
   static const dashboardRailMinimumWindowWidth = railMinimumWindowWidth;

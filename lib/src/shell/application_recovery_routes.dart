@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../data/expenses/expense_entry_setup_workflow.dart';
+import '../screens/expenses/expense_entry_flow.dart';
 import '../data/prototype_operations_store.dart';
 import '../data/day_notes/day_note_draft_workflow.dart';
 import '../data/expenses/expense_draft_workflow.dart';
@@ -41,6 +43,14 @@ Future<void> openApplicationRecovery(
   try {
     if (!context.mounted) return;
     switch (workflow) {
+      case ExpenseEntrySetupWorkflow():
+        await openExpenseEntryFlow(
+          context,
+          expenseDate: workflow.input.date,
+          permissions: expensePermissions,
+          recoveredSetup: workflow,
+          onConfirm: PrototypeOperationsScope.of(context).addExpense,
+        );
       case ResumedWorkDraft():
         await openPrimaryWorkRecovery(context, workflow);
       case ResumedEstimateAction():

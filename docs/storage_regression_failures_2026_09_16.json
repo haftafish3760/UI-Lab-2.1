@@ -1,0 +1,882 @@
+{
+  "run": "build/storage_qa/20260917T002916Z-e3e1ebd4",
+  "source_unchanged": true,
+  "note": "Historical failing baseline, not current disposition. Follow-up fixes are recorded in storage_migration_resume_2026_09_16.md. Raw test errors retained without silently filtering failures.",
+  "failures": [
+    {
+      "suite": "domains",
+      "test": "existing domain fixtures persist as individual SQL rows and reconcile on reopen",
+      "errors": [
+        "Expected: contains all of [\n            'expenses/records',\n            'recurring-expenses/templates',\n            'recurring-expenses/occurrences',\n            'receipt-drafts/records'\n          ]\n  Actual: Set:[\n            'recurring-expenses/templates',\n            'recurring-expenses/occurrences',\n            'receipt-drafts/records'\n          ]\n   Which: has too few elements (3 < 4)\n"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "failed SQLite update preserves last-known-good repository and database",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "soft removal and restore retain exact record history across restart",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "directory startup preserves customer locations and company defaults across reopen",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-company-restart.log"
+    },
+    {
+      "suite": "domains",
+      "test": "permission denial, organization isolation and stale directory writes preserve saved data",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-company-restart.log"
+    },
+    {
+      "suite": "domains",
+      "test": "job plan survives reopen and never retains stale date or scope copies",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "status history is atomic, immutable, scoped and recoverable",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "employee confirmation, private fields and configured access survive reopen without reseeding",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-directory-fixtures.log"
+    },
+    {
+      "suite": "domains",
+      "test": "denied reads and writes, view-only, and other organizations cannot change private employee records",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-directory-fixtures.log"
+    },
+    {
+      "suite": "domains",
+      "test": "SQL failure and stale cross-connection confirmation preserve draft and cache atomically",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-directory-fixtures.log"
+    },
+    {
+      "suite": "domains",
+      "test": "customer unchanged confirmation checks SQL revision before consuming input",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-company-restart.log"
+    },
+    {
+      "suite": "domains",
+      "test": "company unchanged confirmation checks SQL revision before consuming input",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-company-restart.log"
+    },
+    {
+      "suite": "domains",
+      "test": "authorized media adoption preserves unfinished new estimate and notes",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "authorized media adoption preserves unfinished existing estimate and notes",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "estimate legacy input reopens through a controller without widgets",
+      "errors": [
+        "Expected: {\n            'creatorId': 'owner',\n            'number': 'UNFINISHED-1',\n            'baseStorageRevision': 0,\n            'title': 'Interrupted work',\n            'discount': '12.',\n            'tax': '',\n            'terms': 'Pending terms',\n            'client': null,\n            'pricing': 'flatRate',\n            'template': 'standard',\n            'createdOn': '2026-09-09T10:00:00.000Z',\n            'items': [],\n            'baseRecord': null,\n            'estimateId': 'estimate-1',\n            'scope': 'Partially entered scope',\n            'expiresOn': '2026-10-09T10:00:00.000Z',\n            'followUpOn': null,\n            'proposedServiceOn': null,\n            'itemEditors': {\n              'new': {\n                'items': [],\n                'pendingItem': {\n                  'lineId': 'pending-line',\n                  'original': null,\n                  'name': 'Unfinished item',\n                  'description': '',\n                  'quantity': '1.',\n                  'price': '',\n                  'cost': '',\n                  'type': 'material',\n                  'unit': 'item',\n                  'billingTreatment': 'nonBillable',\n                  'sourceExpenseId': null,\n                  'sourceExpenseLineId': null,\n                  'sourceReceiptId': null,\n                  'sourceStockId': null,\n                  'initialCost': null\n                }\n              }\n            },\n            'photoEditor': {'photos': [], 'pendingNotes': {'pending-photo': 'Unfinished note'}},\n            'sitePhotos': []\n          }\n  Actual: {\n            'creatorId': 'owner',\n            'number': 'UNFINISHED-1',\n            'purchaseOrderNumber': '',\n            'baseStorageRevision': 0,\n            'title': 'Interrupted work',\n            'discount': '12.',\n            'tax': '',\n            'terms': 'Pending terms',\n            'client': null,\n            'pricing': 'flatRate',\n            'template': 'standard',\n            'createdOn': '2026-09-09T10:00:00.000Z',\n            'items': [],\n            'baseRecord': null,\n            'estimateId': 'estimate-1',\n            'scope': 'Partially entered scope',\n            'expiresOn': '2026-10-09T10:00:00.000Z',\n            'followUpOn': null,\n            'proposedServiceOn': null,\n            'itemEditors': {\n              'new': {\n                'items': [],\n                'pendingItem': {\n                  'lineId': 'pending-line',\n                  'original': null,\n                  'name': 'Unfinished item',\n                  'description': '',\n                  'quantity': '1.',\n                  'price': '',\n                  'cost': '',\n                  'type': 'material',\n                  'unit': 'item',\n                  'billingTreatment': 'nonBillable',\n                  'sourceExpenseId': null,\n                  'sourceExpenseLineId': null,\n                  'sourceReceiptId': null,\n                  'sourceStockId': null,\n                  'initialCost': null\n                }\n              }\n            },\n            'photoEditor': {'photos': [], 'pendingNotes': {'pending-photo': 'Unfinished note'}},\n            'sitePhotos': []\n          }\n   Which: has different length and has extra map key 'purchaseOrderNumber'\n"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-draft-compatibility.log"
+    },
+    {
+      "suite": "domains",
+      "test": "invoice legacy input reopens through a controller without widgets",
+      "errors": [
+        "Expected: {\n            'creatorId': 'owner',\n            'number': 'UNFINISHED-1',\n            'baseStorageRevision': 0,\n            'title': 'Interrupted work',\n            'discount': '12.',\n            'tax': '',\n            'terms': 'Pending terms',\n            'client': null,\n            'pricing': 'flatRate',\n            'template': 'standard',\n            'createdOn': '2026-09-09T10:00:00.000Z',\n            'items': [],\n            'existingRecordId': null,\n            'recordId': 'invoice-1',\n            'summary': 'Partially entered summary',\n            'issuedOn': '2026-09-09T10:00:00.000Z',\n            'dueOn': '2026-10-09T10:00:00.000Z',\n            'sourceJobId': null,\n            'location': null,\n            'paymentMethod': 'Check',\n            'itemEditor': {\n              'items': [],\n              'pendingItem': {\n                'lineId': 'pending-line',\n                'original': null,\n                'name': 'Unfinished item',\n                'description': '',\n                'quantity': '1.',\n                'price': '',\n                'cost': '',\n                'type': 'material',\n                'unit': 'item',\n                'billingTreatment': 'nonBillable',\n                'sourceExpenseId': null,\n                'sourceExpenseLineId': null,\n                'sourceReceiptId': null,\n                'sourceStockId': null,\n                'initialCost': null\n              }\n            }\n          }\n  Actual: {\n            'creatorId': 'owner',\n            'number': 'UNFINISHED-1',\n            'purchaseOrderNumber': '',\n            'baseStorageRevision': 0,\n            'title': 'Interrupted work',\n            'discount': '12.',\n            'tax': '',\n            'terms': 'Pending terms',\n            'client': null,\n            'pricing': 'flatRate',\n            'template': 'standard',\n            'createdOn': '2026-09-09T10:00:00.000Z',\n            'items': [],\n            'existingRecordId': null,\n            'recordId': 'invoice-1',\n            'summary': 'Partially entered summary',\n            'issuedOn': '2026-09-09T10:00:00.000Z',\n            'dueOn': '2026-10-09T10:00:00.000Z',\n            'sourceJobId': null,\n            'location': null,\n            'paymentMethod': 'Check',\n            'itemEditor': {\n              'items': [],\n              'pendingItem': {\n                'lineId': 'pending-line',\n                'original': null,\n                'name': 'Unfinished item',\n                'description': '',\n                'quantity': '1.',\n                'price': '',\n                'cost': '',\n                'type': 'material',\n                'unit': 'item',\n                'billingTreatment': 'nonBillable',\n                'sourceExpenseId': null,\n                'sourceExpenseLineId': null,\n                'sourceReceiptId': null,\n                'sourceStockId': null,\n                'initialCost': null\n              }\n            }\n          }\n   Which: has different length and has extra map key 'purchaseOrderNumber'\n"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-draft-compatibility.log"
+    },
+    {
+      "suite": "domains",
+      "test": "job legacy input reopens through a controller without widgets",
+      "errors": [
+        "Expected: {\n            'jobId': 'job-1',\n            'number': 'JOB-1',\n            'source': null,\n            'sourceStorageRevision': 0,\n            'start': '2026-09-09T23:30:00.000',\n            'end': '2026-09-10T01:30:00.000',\n            'client': null,\n            'location': null,\n            'assignee': null,\n            'vehicle': null,\n            'pricing': 'timeAndMaterials',\n            'items': [],\n            'itemEditor': {\n              'items': [],\n              'pendingItem': {\n                'lineId': 'pending-line',\n                'original': null,\n                'name': 'Unfinished item',\n                'description': '',\n                'quantity': '1.',\n                'price': '',\n                'cost': '',\n                'type': 'material',\n                'unit': 'item',\n                'billingTreatment': 'nonBillable',\n                'sourceExpenseId': null,\n                'sourceExpenseLineId': null,\n                'sourceReceiptId': null,\n                'sourceStockId': null,\n                'initialCost': null\n              }\n            },\n            'title': 'Overnight job',\n            'scope': '',\n            'notes': 'Not yet finished'\n          }\n  Actual: {\n            'jobId': 'job-1',\n            'number': 'JOB-1',\n            'purchaseOrderNumber': '',\n            'assignedEmployeeIds': [],\n            'source': null,\n            'sourceStorageRevision': 0,\n            'start': '2026-09-09T23:30:00.000',\n            'end': '2026-09-10T01:30:00.000',\n            'client': null,\n            'location': null,\n            'assignee': null,\n            'vehicle': null,\n            'pricing': 'timeAndMaterials',\n            'items': [],\n            'itemEditor': {\n              'items': [],\n              'pendingItem': {\n                'lineId': 'pending-line',\n                'original': null,\n                'name': 'Unfinished item',\n                'description': '',\n                'quantity': '1.',\n                'price': '',\n                'cost': '',\n                'type': 'material',\n                'unit': 'item',\n                'billingTreatment': 'nonBillable',\n                'sourceExpenseId': null,\n                'sourceExpenseLineId': null,\n                'sourceReceiptId': null,\n                'sourceStockId': null,\n                'initialCost': null\n              }\n            },\n            'title': 'Overnight job',\n            'scope': '',\n            'notes': 'Not yet finished'\n          }\n   Which: has different length and has extra map key 'purchaseOrderNumber'\n"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-draft-compatibility.log"
+    },
+    {
+      "suite": "domains",
+      "test": "company draft restores without widgets and retains version-one bytes",
+      "errors": [
+        "Expected: {\n            'baseProfile': {\n              'requireEstimateApproval': false,\n              'companyName': '',\n              'businessCategory': '',\n              'phone': '',\n              'email': '',\n              'website': '',\n              'address': '',\n              'logoLabel': '',\n              'logoReference': '',\n              'licenseNumber': '',\n              'businessIdentifier': '',\n              'documentFooter': '',\n              'documentAccentColor': null,\n              'defaultTerms': '',\n              'defaultCurrency': ''\n            },\n            'baseRevision': 2,\n            'logoLabel': 'Pending logo',\n            'name': 'Partial company',\n            'category': '',\n            'phone': '+1 (555',\n            'email': 'pending@',\n            'website': 'https://',\n            'address': '',\n            'terms': 'Partial terms'\n          }\n  Actual: {\n            'baseProfile': {\n              'requireEstimateApproval': false,\n              'companyName': '',\n              'businessCategory': '',\n              'phone': '',\n              'email': '',\n              'website': '',\n              'address': '',\n              'logoLabel': '',\n              'logoReference': '',\n              'licenseNumber': '',\n              'businessIdentifier': '',\n              'documentFooter': '',\n              'documentAccentColor': null,\n              'defaultTerms': '',\n              'defaultCurrency': ''\n            },\n            'baseRevision': 2,\n            'logoLabel': 'Pending logo',\n            'logoReference': '',\n            'name': 'Partial company',\n            'category': '',\n            'phone': '+1 (555',\n            'email': 'pending@',\n            'website': 'https://',\n            'address': '',\n            'terms': 'Partial terms'\n          }\n   Which: has different length and has extra map key 'logoReference'\n"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-draft-compatibility.log"
+    },
+    {
+      "suite": "domains",
+      "test": "company and vehicle opening retain existing stable keys",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "assignment pair survives rollback and reopen before atomic confirmation",
+      "errors": [
+        "Expected: true\n  Actual: <false>\n"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-admission-assignment-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "legacy assignment preserves selections and stale revision; wrong parent is retained",
+      "errors": [
+        "Expected: true\n  Actual: <false>\n"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-admission-assignment-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "payment raw input and identity survive reopen and rollback; retry posts exactly once",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "payment confirmation rechecks changed balance and preserves oversized input until corrected",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "delivery recipients and first preparation time recover after rollback without claiming delivery",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "stale delivery preserves input and recipient changes invalidate review and preparation",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "changesRequested preserves raw reason and first attempt through rollback and reopen",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "rejected preserves raw reason and first attempt through rollback and reopen",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "review gate and stale revision are enforced outside the dialog",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "normalized signature and first approval time survive failed consumption and reopen",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "signature mutations invalidate acceptance and stale approval cannot overwrite another edit",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "item workspace recovers and retries one atomic revision with approval invalidation",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "stale item workspace retains edits and does not overwrite newer record",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-fixture-regression.log"
+    },
+    {
+      "suite": "domains",
+      "test": "work rejects new write on disposal",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-admission-assignment-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "work drains accepted write on disposal",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-admission-assignment-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "customer rejects new write on disposal",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-admission-assignment-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "customer drains accepted write on disposal",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-admission-assignment-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "company drains accepted write on disposal",
+      "errors": [
+        "Expected: <true>\n  Actual: <false>\n"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-admission-assignment-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "employee rejects new write on disposal",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-admission-assignment-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "employee drains accepted write on disposal",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-admission-assignment-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "vehicle rejects new write on disposal",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-admission-assignment-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "vehicle drains accepted write on disposal",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-admission-assignment-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "all estimate actions survive reopen and resume exact input without confirming work",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "review authority is rechecked for list resume and discard without granting editor approval",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "selected revisions and consumed drafts cannot silently reopen or reseed",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "concurrent parent changes retain every action and refuse stale resumption",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "payment catalog reopens partial amount and identity with current balance without posting",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "payment selected revisions and discard cannot recreate consumed input",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "domains",
+      "test": "already recorded payment identity stays a conflict rather than posting it again",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-recovery-fixtures-after.log"
+    },
+    {
+      "suite": "editors",
+      "test": "raw unfinished invoice survives editor disposal and database reopen",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: raw unfinished invoice survives editor disposal and database reopen"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-editor-bundles-verified.log"
+    },
+    {
+      "suite": "editors",
+      "test": "raw unfinished job survives editor disposal and database reopen",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: raw unfinished job survives editor disposal and database reopen"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-editor-bundles-verified.log"
+    },
+    {
+      "suite": "editors",
+      "test": "company input recovers without changing confirmed defaults and survives failed save",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: company input recovers without changing confirmed defaults and survives failed save"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-editor-bundles-verified.log"
+    },
+    {
+      "suite": "editors",
+      "test": "Dashboard description survives Back/reopen and atomic confirmation failure",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: Dashboard description survives Back/reopen and atomic confirmation failure"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-dashboard-recovery.log"
+    },
+    {
+      "suite": "editors",
+      "test": "Dashboard reloads paused workday and failed End remains editable",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: Dashboard reloads paused workday and failed End remains editable"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-dashboard-recovery.log"
+    },
+    {
+      "suite": "editors",
+      "test": "job arrival waits for SQLite on Dashboard",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: job arrival waits for SQLite on Dashboard"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-dashboard-job-actions.log"
+    },
+    {
+      "suite": "editors",
+      "test": "job completion waits for SQLite on Dashboard",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: job completion waits for SQLite on Dashboard"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-dashboard-job-actions.log"
+    },
+    {
+      "suite": "editors",
+      "test": "job arrival waits for SQLite on Calendar Day",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: job arrival waits for SQLite on Calendar Day"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-dashboard-job-actions.log"
+    },
+    {
+      "suite": "editors",
+      "test": "job completion waits for SQLite on Calendar Day",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: job completion waits for SQLite on Calendar Day"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-dashboard-job-actions.log"
+    },
+    {
+      "suite": "editors",
+      "test": "schedule input reopens and commits atomically from Dashboard",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: schedule input reopens and commits atomically from Dashboard"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-editor-bundles-verified.log"
+    },
+    {
+      "suite": "editors",
+      "test": "schedule input reopens and commits atomically from Calendar Day",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: schedule input reopens and commits atomically from Calendar Day"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-editor-bundles-verified.log"
+    },
+    {
+      "suite": "editors",
+      "test": "schedule draft for a different job is retained but never editable",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: schedule draft for a different job is retained but never editable"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-work-current-flows.log"
+    },
+    {
+      "suite": "editors",
+      "test": "estimate readiness waits for SQLite and rejects a stale displayed revision",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: estimate readiness waits for SQLite and rejects a stale displayed revision"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-estimate-current-recovery.log",
+      "current_test": "estimate approval submission waits for SQLite and rejects a stale displayed revision",
+      "note": "Obsolete standalone readiness button replaced in test by the current company approval submission flow; failed-write and stale-screen assertions retained."
+    },
+    {
+      "suite": "editors",
+      "test": "handwriting and consent recover; approval and draft consumption are atomic",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: handwriting and consent recover; approval and draft consumption are atomic"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-editor-bundles-verified.log"
+    },
+    {
+      "suite": "editors",
+      "test": "delivery method recipients recover and preparation never claims sending",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: delivery method recipients recover and preparation never claims sending"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-editor-bundles-verified.log"
+    },
+    {
+      "suite": "editors",
+      "test": "reject reason recovers and commits atomically with review",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: reject reason recovers and commits atomically with review"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-editor-bundles-verified.log"
+    },
+    {
+      "suite": "editors",
+      "test": "return reason recovers and commits atomically with review",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: return reason recovers and commits atomically with review"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-editor-bundles-verified.log"
+    },
+    {
+      "suite": "editors",
+      "test": "detail item editing recovers partial nested input and commits atomically",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: detail item editing recovers partial nested input and commits atomically"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-editor-bundles-verified.log"
+    },
+    {
+      "suite": "editors",
+      "test": "new vehicle raw input recovers after reopen; failed confirmation retains input and retry saves once",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: new vehicle raw input recovers after reopen; failed confirmation retains input and retry saves once"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-nested-media-editor-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "denied direct vehicle routes show no private profile or editor fields",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: denied direct vehicle routes show no private profile or editor fields"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-nested-media-editor-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "Work settings draft survives reopen; only successful Save applies and consumes it",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: Work settings draft survives reopen; only successful Save applies and consumes it"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-settings-repaired.log"
+    },
+    {
+      "suite": "editors",
+      "test": "all category receipt types survive SQLite and invalid settings retain the original",
+      "errors": [
+        "Invalid argument(s): Unsupported device preference."
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-settings-repaired.log"
+    },
+    {
+      "suite": "editors",
+      "test": "Expense settings recover nested choices at 390.0; failed Save preserves input",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: Expense settings recover nested choices at 390.0; failed Save preserves input"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-settings-repaired.log"
+    },
+    {
+      "suite": "editors",
+      "test": "estimate camera-recovery restart recovery keeps raw parent input and confirms photos once",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: estimate camera-recovery restart recovery keeps raw parent input and confirms photos once"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-nested-recovery-current-routes.log"
+    },
+    {
+      "suite": "editors",
+      "test": "estimate files-recovery restart recovery keeps raw parent input and confirms photos once",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: estimate files-recovery restart recovery keeps raw parent input and confirms photos once"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-nested-recovery-current-routes.log"
+    },
+    {
+      "suite": "editors",
+      "test": "payment draft survives reopen; failed ledger write retains input and balance",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: payment draft survives reopen; failed ledger write retains input and balance"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-nested-media-editor-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "recovered imported item retains exact source identities and private cost",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: recovered imported item retains exact source identities and private cost"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-line-item-provenance.log"
+    },
+    {
+      "suite": "editors",
+      "test": "unfinished labor survives Back and database reopen with its estimate",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: unfinished labor survives Back and database reopen with its estimate"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-estimate-nested-recovery.log"
+    },
+    {
+      "suite": "editors",
+      "test": "unfinished material survives Back and database reopen with its estimate",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: unfinished material survives Back and database reopen with its estimate"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-estimate-nested-recovery.log"
+    },
+    {
+      "suite": "editors",
+      "test": "unfinished nested item survives Back and database reopen with its invoice",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: unfinished nested item survives Back and database reopen with its invoice"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-nested-recovery-current-routes.log"
+    },
+    {
+      "suite": "editors",
+      "test": "unfinished nested item survives Back and database reopen with its job",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: unfinished nested item survives Back and database reopen with its job"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-nested-recovery-current-routes.log"
+    },
+    {
+      "suite": "editors",
+      "test": "selected invoice payment mismatch=false retains unposted input",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: selected invoice payment mismatch=false retains unposted input"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "selected invoice payment mismatch=true retains unposted input",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: selected invoice payment mismatch=true retains unposted input"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "job action schedule=false mismatch=false preserves draft",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: job action schedule=false mismatch=false preserves draft"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "job action schedule=false mismatch=true preserves draft",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: job action schedule=false mismatch=true preserves draft"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "job action schedule=true mismatch=false preserves draft",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: job action schedule=true mismatch=false preserves draft"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "job action schedule=true mismatch=true preserves draft",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: job action schedule=true mismatch=true preserves draft"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "selected assignment mismatch=false retains unconfirmed choices",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: selected assignment mismatch=false retains unconfirmed choices"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-nested-media-editor-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "selected assignment mismatch=true retains unconfirmed choices",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: selected assignment mismatch=true retains unconfirmed choices"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-nested-media-editor-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "material handoff rejects replaced owner and changed capabilities",
+      "errors": [
+        "Bad state: No element"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-job-materials-handoff.log"
+    },
+    {
+      "suite": "editors",
+      "test": "material recovery preserves nested input and stock through Back",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: material recovery preserves nested input and stock through Back"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-job-materials-handoff.log"
+    },
+    {
+      "suite": "editors",
+      "test": "estimate action signature=false mismatch=false retains unconfirmed input",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: estimate action signature=false mismatch=false retains unconfirmed input"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "estimate action signature=false mismatch=true retains unconfirmed input",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: estimate action signature=false mismatch=true retains unconfirmed input"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "estimate action signature=true mismatch=false retains unconfirmed input",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: estimate action signature=true mismatch=false retains unconfirmed input"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "estimate action signature=true mismatch=true retains unconfirmed input",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: estimate action signature=true mismatch=true retains unconfirmed input"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "selected review decision mismatch=false preserves unconfirmed reason",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: selected review decision mismatch=false preserves unconfirmed reason"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "selected review decision mismatch=true preserves unconfirmed reason",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: selected review decision mismatch=true preserves unconfirmed reason"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "selected item workspace mismatch=false retains nested input",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: selected item workspace mismatch=false retains nested input"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    },
+    {
+      "suite": "editors",
+      "test": "selected item workspace mismatch=true retains nested input",
+      "errors": [
+        "Test failed. See exception logs above.\nThe test description was: selected item workspace mismatch=true retains nested input"
+      ],
+      "status": "focused_retest_passed",
+      "focused_log": "/tmp/tame-selected-handoff-bundle.log"
+    }
+  ]
+}

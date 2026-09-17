@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_store.dart';
-import 'package:ui_lab_2_1/src/data/work/directory_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_directory_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/work/company_profile_editor.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
@@ -17,7 +17,7 @@ void main() {
       final harness = (await tester.runAsync(DatabaseHarness.create))!;
       var database = (await tester.runAsync(harness.open))!;
       var directory = (await tester.runAsync(
-        () => openUiLabDirectory(database),
+        () => openSeededTestDirectory(database),
       ))!;
       expect(
         await tester.runAsync(
@@ -103,7 +103,7 @@ void main() {
       directory.dispose();
       await tester.runAsync(() => harness.close(database));
       database = (await tester.runAsync(harness.open))!;
-      directory = (await tester.runAsync(() => openUiLabDirectory(database)))!;
+      directory = (await tester.runAsync(() => openSeededTestDirectory(database)))!;
       store = PrototypeOperationsStore(directorySession: directory);
       await tester.runAsync(
         () => database.customStatement("""

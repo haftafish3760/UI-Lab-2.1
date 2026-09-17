@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_store.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/work/invoice_payment_entry_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
@@ -17,7 +17,9 @@ void main() {
     (tester) async {
       final harness = (await tester.runAsync(DatabaseHarness.create))!;
       var database = (await tester.runAsync(harness.open))!;
-      var work = (await tester.runAsync(() => openUiLabWorkSession(database)))!;
+      var work = (await tester.runAsync(
+        () => openSeededTestWorkSession(database),
+      ))!;
       var store = PrototypeOperationsStore(workSession: work);
       final scope = OperationalScopeController();
       addTearDown(() async {
@@ -89,7 +91,9 @@ void main() {
       work.dispose();
       await tester.runAsync(() => harness.close(database));
       database = (await tester.runAsync(harness.open))!;
-      work = (await tester.runAsync(() => openUiLabWorkSession(database)))!;
+      work = (await tester.runAsync(
+        () => openSeededTestWorkSession(database),
+      ))!;
       store = PrototypeOperationsStore(workSession: work);
       await tester.runAsync(
         () => database.customStatement("""

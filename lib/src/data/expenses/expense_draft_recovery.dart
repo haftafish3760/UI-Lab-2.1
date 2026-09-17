@@ -3,6 +3,7 @@ import '../storage/draft_recovery_selection.dart';
 import 'expense_draft_input.dart';
 import 'expense_draft_workflow.dart';
 import 'expense_ui_repository_controller.dart';
+import 'expense_entry_setup_recovery.dart';
 
 /// Discovers owned manual/correction input independently of list filters and UI.
 class ExpenseDraftRecovery {
@@ -28,6 +29,9 @@ class ExpenseDraftRecovery {
     );
   }
   final ExpenseUiRepositoryController _expenses;
+  late final ExpenseEntrySetupRecovery setup = ExpenseEntrySetupRecovery(
+    _expenses,
+  );
   late final DraftRecoveryCatalog _catalog;
   Future<List<DraftRecoveryEntry>> list() => _catalog.list();
   Future<void> discard(DraftRecoveryEntry entry) => _catalog.discard(entry);

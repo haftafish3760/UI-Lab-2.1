@@ -4,7 +4,7 @@ import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_store.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_permissions.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_persistence_session.dart';
-import 'package:ui_lab_2_1/src/data/work/directory_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_directory_fixture.dart';
 import 'package:ui_lab_2_1/src/shell/vehicle_directory_screen.dart';
 import 'package:ui_lab_2_1/src/shell/vehicle_editor_screen.dart';
 import 'package:ui_lab_2_1/src/shell/operations_menu_screen.dart';
@@ -18,7 +18,9 @@ void main() {
     (tester) async {
       final harness = (await tester.runAsync(DatabaseHarness.create))!;
       var db = (await tester.runAsync(harness.open))!;
-      var directory = (await tester.runAsync(() => openUiLabDirectory(db)))!;
+      var directory = (await tester.runAsync(
+        () => openSeededTestDirectory(db),
+      ))!;
       var store = PrototypeOperationsStore(directorySession: directory);
       addTearDown(() async {
         store.dispose();
@@ -99,7 +101,7 @@ void main() {
       directory.dispose();
       await tester.runAsync(() => harness.close(db));
       db = (await tester.runAsync(harness.open))!;
-      directory = (await tester.runAsync(() => openUiLabDirectory(db)))!;
+      directory = (await tester.runAsync(() => openSeededTestDirectory(db)))!;
       store = PrototypeOperationsStore(directorySession: directory);
       await mount();
       await open();
@@ -165,7 +167,7 @@ void main() {
       directory.dispose();
       await tester.runAsync(() => harness.close(db));
       db = (await tester.runAsync(harness.open))!;
-      directory = (await tester.runAsync(() => openUiLabDirectory(db)))!;
+      directory = (await tester.runAsync(() => openSeededTestDirectory(db)))!;
       store = PrototypeOperationsStore(directorySession: directory);
       expect(
         directory.vehicles.singleWhere((e) => e.id == vehicle.id).toJson(),
@@ -180,7 +182,7 @@ void main() {
     (tester) async {
       final harness = (await tester.runAsync(DatabaseHarness.create))!;
       final db = (await tester.runAsync(harness.open))!;
-      final owner = (await tester.runAsync(() => openUiLabDirectory(db)))!;
+      final owner = (await tester.runAsync(() => openSeededTestDirectory(db)))!;
       final denied = (await tester.runAsync(
         () => DirectoryPersistenceSession.open(
           db,

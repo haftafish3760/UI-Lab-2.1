@@ -184,7 +184,9 @@ extension _DashboardScreenActions on _DashboardScreenState {
       ),
     );
     if (!mounted || record == null) return;
-    PrototypeOperationsScope.of(context).addWorkRecord(record);
+    final store = PrototypeOperationsScope.of(context);
+    if (store.workSession != null) return;
+    store.addWorkRecord(record);
     _projectJobToDashboard(record);
   }
 
@@ -200,7 +202,9 @@ extension _DashboardScreenActions on _DashboardScreenState {
         ),
       );
       if (!mounted || record == null) return;
-      PrototypeOperationsScope.of(context).addWorkRecord(record);
+      final store = PrototypeOperationsScope.of(context);
+      if (store.workSession != null) return;
+      store.addWorkRecord(record);
       _projectWorkDocumentToDashboard(record);
       return;
     }
@@ -215,7 +219,9 @@ extension _DashboardScreenActions on _DashboardScreenState {
       ),
     );
     if (!mounted || invoice == null) return;
-    PrototypeOperationsScope.of(context).addWorkRecord(invoice);
+    final store = PrototypeOperationsScope.of(context);
+    if (store.workSession != null) return;
+    store.addWorkRecord(invoice);
     _projectWorkDocumentToDashboard(invoice);
   }
 

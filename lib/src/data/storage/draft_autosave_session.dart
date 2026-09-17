@@ -55,6 +55,7 @@ class DraftAutosaveSession implements PausableDraftSession {
   DraftSaveState get state => _state;
   int get savedRevision => _revision;
   bool get hasFailure => _failure != null;
+  bool get isClosed => _closed;
   bool get isCommittingInput => _committingInput || _paused;
   Map<String, Object?> get input => _copy(_input);
 

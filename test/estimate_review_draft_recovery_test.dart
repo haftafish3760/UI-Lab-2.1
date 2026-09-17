@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_store.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/dashboard_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_detail_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_review_reason_dialog.dart';
@@ -20,7 +20,7 @@ void main() {
         tester.view.devicePixelRatio = 1;
         final harness = (await tester.runAsync(DatabaseHarness.create))!;
         var db = (await tester.runAsync(harness.open))!;
-        var work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
+        var work = (await tester.runAsync(() => openSeededTestWorkSession(db)))!;
         final original = work.records.singleWhere(
           (record) => record.id == 'est-1040',
         );
@@ -79,7 +79,7 @@ void main() {
           await waitForNativeSave(tester, () => field.evaluate().isEmpty);
           await close();
           db = (await tester.runAsync(harness.open))!;
-          work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
+          work = (await tester.runAsync(() => openSeededTestWorkSession(db)))!;
           await open();
           expect(tester.widget<TextFormField>(field).controller!.text, reason);
           await tester.runAsync(
@@ -134,7 +134,7 @@ void main() {
           );
           await close();
           db = (await tester.runAsync(harness.open))!;
-          work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
+          work = (await tester.runAsync(() => openSeededTestWorkSession(db)))!;
           final reopened = work.records.singleWhere(
             (record) => record.id == original.id,
           );

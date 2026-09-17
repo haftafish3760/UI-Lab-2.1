@@ -234,7 +234,8 @@ class DirectoryPersistenceSession extends ChangeNotifier {
     final expected = expectedRevision ?? _companyRevision;
     return _writes.run(() async {
       try {
-        if (_disposed) throw StateError('The company session is no longer active.');
+        // Admission above owns the lifecycle check. Disposal must not cancel
+        // an already accepted write while it waits behind another operation.
         if (proposed.logoReference.isNotEmpty && proposed.logoReference != _company.logoReference) {
           await LocalAttachmentStore(database).verifiedFiles(
             organizationId: permissions.organizationId, ownerIds: {permissions.organizationId},

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_store.dart';
 import 'package:ui_lab_2_1/src/data/work/work_record_codec.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_schedule_editor_sheet.dart';
 import 'support/storage/database_harness.dart';
 import 'support/storage/native_widget_pump.dart';
@@ -13,7 +13,9 @@ void main() {
     (tester) async {
       final harness = (await tester.runAsync(DatabaseHarness.create))!;
       final db = (await tester.runAsync(harness.open))!;
-      final work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
+      final work = (await tester.runAsync(
+        () => openSeededTestWorkSession(db),
+      ))!;
       final job = work.records.singleWhere((item) => item.id == 'job-1038');
       final other = work.records.singleWhere((item) => item.id == 'job-1026');
       final drafts = LocalDraftStore(db);

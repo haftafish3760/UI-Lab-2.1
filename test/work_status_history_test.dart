@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/data/work/work_status_history.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/dashboard_models.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
@@ -10,7 +10,7 @@ void main() {
   test('status history is atomic, immutable, scoped and recoverable', () async {
     final harness = await DatabaseHarness.create();
     var db = await harness.open();
-    var session = await openUiLabWorkSession(db);
+    var session = await openSeededTestWorkSession(db);
     var store = PrototypeOperationsStore(workSession: session);
     List<DayEntry> entries({String? employee = 'alex'}) => store
         .dashboardDay(
@@ -93,7 +93,7 @@ void main() {
       session.dispose();
       await harness.close(db);
       db = await harness.open();
-      session = await openUiLabWorkSession(db);
+      session = await openSeededTestWorkSession(db);
       store = PrototypeOperationsStore(workSession: session);
       expect(entries().map((entry) => entry.title), [
         'Arrived at job',

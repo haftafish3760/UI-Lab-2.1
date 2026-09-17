@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_workspace_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
@@ -19,7 +19,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final harness = (await tester.runAsync(DatabaseHarness.create))!;
     final db = (await tester.runAsync(harness.open))!;
-    final work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
+    final work = (await tester.runAsync(() => openSeededTestWorkSession(db)))!;
     final store = PrototypeOperationsStore(workSession: work);
     final scope = OperationalScopeController();
     addTearDown(() async {

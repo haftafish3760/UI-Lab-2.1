@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import '../../build/inventory_migration/source/work_supply_catalog.dart';
-import '../../build/inventory_migration/source/work_supply_catalog_pack_payload.dart';
+import 'legacy_reference/data/work_supply_catalog.dart';
+import 'legacy_reference/data/work_supply_catalog_pack_payload.dart';
 
 // Read-only source extraction. The batch is intentionally explicit, not a
 // rule that promotes every generated catalog expansion to a browsing category.

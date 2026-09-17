@@ -41,7 +41,7 @@ class PreferenceDraftWorkflow<T> extends DraftWorkflowController<T> {
     // Legacy input stays byte-for-byte unchanged on open. An explicit confirm
     // first persists its baseline; changes since opening still cannot be lost.
     if (!session.input.containsKey(PreferenceDraftBaseline.payloadKey)) {
-      updateInput(input);
+      persistInputForTransition(input);
     }
     return session.confirm((checkpoint) => _confirm(input, checkpoint));
   }

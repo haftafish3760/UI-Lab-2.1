@@ -92,7 +92,7 @@ void main() {
             final controller = CompanyDraftController(session);
             final restored = controller.recoveredInput!;
             expect(restored.email, 'pending@');
-            expect(restored.toPayload(), input);
+            expect(restored.toPayload(), {...input, 'logoReference': ''});
             controller.updateInput(restored);
           case 'employee':
             final controller = EmployeeDraftController(

@@ -1,3 +1,5 @@
+import 'package:ui_lab_2_1/src/data/work/invoice_draft_controller.dart';
+import 'package:ui_lab_2_1/src/data/work/invoice_draft_workflow.dart';
 import 'support/document_form_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +30,7 @@ void main() {
         scope.dispose();
         await harness.dispose();
       });
+      InvoiceDraftController? recovered;
       Future<void> openEditor() async {
         await tester.pumpWidget(
           PrototypeOperationsScope(
@@ -43,6 +46,7 @@ void main() {
                         MaterialPageRoute(
                           builder: (_) => InvoiceEditorScreen(
                             initialDay: DateTime(2026, 9, 9),
+                            recoveredWorkflow: recovered,
                           ),
                         ),
                       ),
@@ -108,14 +112,11 @@ void main() {
       database = (await tester.runAsync(harness.open))!;
       session = (await tester.runAsync(() => openUiLabWorkSession(database)))!;
       store = PrototypeOperationsStore(workSession: session);
+      recovered = (await tester.runAsync(
+        () => session.openInvoiceDraft(recoveryDraftId: before.single.draftId),
+      ))!;
       await openEditor();
-      await waitForNativeSave(
-        tester,
-        () =>
-            find.text('Continue an unfinished invoice?').evaluate().isNotEmpty,
-      );
-      await tester.tap(find.text('Interrupted pump repair'));
-      await tester.pumpAndSettle();
+
       await openDocumentSection(tester, 'invoice-information');
       expect(
         tester

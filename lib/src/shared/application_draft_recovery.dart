@@ -29,6 +29,13 @@ DraftRecoveryHub<Object> createApplicationDraftRecovery({
   required PreferenceDraftRecovery preferences,
 }) => DraftRecoveryHub<Object>([
   DraftRecoveryProvider<Object>(
+    id: 'expenseSetup',
+    label: 'Expense setup',
+    list: expenses.setup.list,
+    resume: expenses.setup.resume,
+    discard: expenses.setup.discard,
+  ),
+  DraftRecoveryProvider<Object>(
     id: 'work',
     label: 'Work',
     list: work.list,

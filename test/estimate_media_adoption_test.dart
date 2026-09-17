@@ -9,7 +9,7 @@ import 'package:ui_lab_2_1/src/data/storage/local_media_picker_request.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_record_command.dart';
 import 'package:ui_lab_2_1/src/data/storage/media_picker_result_retention.dart';
 import 'package:ui_lab_2_1/src/data/work/estimate_media_adoption.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/data/work/work_session_permissions.dart';
 import 'package:ui_lab_2_1/src/data/work/work_record_codec.dart';
 import 'package:ui_lab_2_1/src/data/work/work_record_detail_codec.dart';
@@ -26,7 +26,7 @@ void main() {
       () async {
         final harness = await DatabaseHarness.create();
         var database = await harness.open();
-        final work = await openUiLabWorkSession(database);
+        final work = await openSeededTestWorkSession(database);
         final permissions = work.permissions;
         final base = work.records.firstWhere(
           (record) => record.kind == WorkRecordKind.estimate,

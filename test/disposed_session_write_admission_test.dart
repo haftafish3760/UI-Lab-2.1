@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_persistence.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
-import 'package:ui_lab_2_1/src/data/work/directory_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
+import 'support/storage/seeded_directory_fixture.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_persistence_session.dart';
 
 void main() {
@@ -15,8 +15,8 @@ void main() {
             'write-admission-',
           );
           final persistence = await LocalPersistence.open(directory: root);
-          final work = await openUiLabWorkSession(persistence.database);
-          final directory = await openUiLabDirectory(persistence.database);
+          final work = await openSeededTestWorkSession(persistence.database);
+          final directory = await openSeededTestDirectory(persistence.database);
           final target = kind == 'work' ? work : directory;
           Future<bool> submit() => switch (kind) {
             'work' => work.update(

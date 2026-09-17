@@ -32,5 +32,49 @@
       "count": {"type": "int"},
       "recordLabel": {"type": "String"}
     }
+  },
+  "catalogBrowse": "Browse Catalog",
+  "catalogInventory": "My Inventory",
+  "catalogGrid": "Grid",
+  "catalogList": "List",
+  "catalogChooseTrade": "Choose a trade",
+  "catalogChooseCategory": "Choose a category",
+  "catalogSearch": "Search items",
+  "catalogSearchCategory": "Search this category",
+  "catalogClear": "Clear search",
+  "catalogPlumbing": "Plumbing",
+  "catalogElectrical": "Electrical",
+  "catalogHvac": "HVAC",
+  "catalogFittings": "Fittings",
+  "catalogCopper": "Copper",
+  "catalogElbows90": "90° Elbows",
+  "catalogItemDetails": "Item details",
+  "catalogAdd": "Add to My Inventory",
+  "catalogSize": "Nominal size: {size}",
+  "catalogUnit": "Unit: {unit}",
+  "catalogEach": "each",
+  "catalogCopperElbow": "{size} Copper 90° Elbow",
+  "catalogEmpty": "This category is being rebuilt.",
+  "catalogNoMatches": "No matching items. Try another name or size.",
+  "@catalogSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@catalogUnit": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "@catalogCopperElbow": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
   }
 }

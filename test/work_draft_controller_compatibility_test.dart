@@ -89,7 +89,11 @@ void main() {
           final restored = controller.recoveredInput!;
           expect(restored.discount, '12.');
           expect(restored.tax, '');
-          expect(restored.toPayload(), input);
+          expect(restored.toPayload(), {
+            ...input,
+            if (kind != 'customer') 'purchaseOrderNumber': '',
+            if (kind == 'job') 'assignedEmployeeIds': <String>[],
+          });
           controller.updateInput(restored);
           // A presentation's local collection must not alter the saved checkpoint.
           restored.pendingLineItems.clear();
@@ -99,7 +103,11 @@ void main() {
           final restored = controller.recoveredInput!;
           expect(restored.discount, '12.');
           expect(restored.tax, '');
-          expect(restored.toPayload(), input);
+          expect(restored.toPayload(), {
+            ...input,
+            if (kind != 'customer') 'purchaseOrderNumber': '',
+            if (kind == 'job') 'assignedEmployeeIds': <String>[],
+          });
           controller.updateInput(restored);
           expect(
             () => restored.pendingLineItem!.items.clear(),
@@ -111,7 +119,11 @@ void main() {
           final restored = controller.recoveredInput!;
           expect(restored.scheduledStart.toIso8601String(), input['start']);
           expect(restored.scheduledEnd.toIso8601String(), input['end']);
-          expect(restored.toPayload(), input);
+          expect(restored.toPayload(), {
+            ...input,
+            if (kind != 'customer') 'purchaseOrderNumber': '',
+            if (kind == 'job') 'assignedEmployeeIds': <String>[],
+          });
           controller.updateInput(restored);
           expect(
             () => restored.pendingLineItem!.items.clear(),
@@ -123,7 +135,11 @@ void main() {
           final restored = controller.recoveredInput!;
           expect(restored.phone, '+1 (555');
           expect(restored.email, 'unfinished@');
-          expect(restored.toPayload(), input);
+          expect(restored.toPayload(), {
+            ...input,
+            if (kind != 'customer') 'purchaseOrderNumber': '',
+            if (kind == 'job') 'assignedEmployeeIds': <String>[],
+          });
           controller.updateInput(restored);
         }
         await session.close();

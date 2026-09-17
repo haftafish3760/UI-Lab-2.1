@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:ui_lab_2_1/src/screens/inventory/catalog/inventory_catalog.dart';
-import 'package:ui_lab_2_1/src/screens/inventory/catalog/inventory_catalog_database.dart';
 import '../tool/inventory/browse_batch_sqlite.dart';
 
 Map<String, dynamic> sourceBatch() =>
@@ -17,11 +16,8 @@ Map<String, dynamic> sourceBatch() =>
 void main() {
   late InventoryCatalog catalog;
   setUp(() {
-    catalog = InventoryCatalog.fromJson(
-      readInventoryCatalogDatabase(
-        File('assets/inventory/browse_batch.sqlite').readAsBytesSync(),
-      ),
-    );
+    // Historical fixture tests do not claim acceptance of the shipped asset.
+    catalog = InventoryCatalog.fromJson(sourceBatch());
   });
 
   // Adapted from 5.7 test/work_supply_plumbing_catalog_identity_test.dart.

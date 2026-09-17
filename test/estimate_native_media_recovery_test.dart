@@ -10,7 +10,7 @@ import 'package:ui_lab_2_1/src/startup/application_media_coordinator.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_media_picker_request.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_persistence.dart';
 import 'package:ui_lab_2_1/src/data/storage/native_media_picker_coordinator.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_editor_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_site_photos_screen.dart';
 import 'package:ui_lab_2_1/src/shell/app_shell.dart';
@@ -55,7 +55,7 @@ void main() {
           () => LocalPersistence.open(directory: root),
         ))!;
         var work = (await tester.runAsync(
-          () => openUiLabWorkSession(persistence.database),
+          () => openSeededTestWorkSession(persistence.database),
         ))!;
         final gateway = _Gateway();
         final permissions = work.permissions;
@@ -122,17 +122,17 @@ void main() {
         Future<void> openEditor({bool restoring = false}) async {
           Navigator.of(tester.element(find.byType(AppShell))).push(
             MaterialPageRoute<void>(
-              builder: (_) => restoring ? const WorkDraftsScreen() : EstimateEditorScreen(initialDay: DateTime(2030)),
+              builder: (_) => restoring
+                  ? const WorkDraftsScreen()
+                  : EstimateEditorScreen(initialDay: DateTime(2030)),
             ),
           );
-          await tester.pumpAndSettle();
+          if (!restoring) await tester.pumpAndSettle();
           if (restoring) {
             await waitForNativeSave(
               tester,
-              () => find
-                  .text('Interrupted site estimate')
-                  .evaluate()
-                  .isNotEmpty,
+              () =>
+                  find.text('Interrupted site estimate').evaluate().isNotEmpty,
             );
             await tester.tap(find.text('Interrupted site estimate'));
           }
@@ -183,7 +183,7 @@ void main() {
               work.dispose();
               await persistence.close();
               persistence = await LocalPersistence.open(directory: root);
-              work = await openUiLabWorkSession(persistence.database);
+              work = await openSeededTestWorkSession(persistence.database);
             });
             await openApp();
             if (!isFile) {
@@ -228,7 +228,7 @@ void main() {
             work.dispose();
             await persistence.close();
             persistence = await LocalPersistence.open(directory: root);
-            work = await openUiLabWorkSession(persistence.database);
+            work = await openSeededTestWorkSession(persistence.database);
             final row = (await persistence.drafts.find(
               organizationId: permissions.organizationId,
               domain: 'work/estimate-editor',

@@ -1,5 +1,11 @@
 # Maintainiac canonical application map
 
+**September 17 catalog/parser desktop transfer:** Read [the latest owner scope and unfinished-work handoff](inventory_migration/DESKTOP_HANDOFF_2026_09_17.md) first for this assignment. It supersedes the conflicting inventory scope summaries below: retain Plumbing, Electrical and HVAC, catalog first, with independent harness reconstruction. It does not override another task's storage ownership.
+
+**Latest storage scope (September 16):** [SQLite migration resumed](storage_migration_resume_2026_09_16.md). Catalog/parser work is deferred; another model owns the basic Materials screen. This supersedes the catalog assignment linked below.
+
+**Current inventory handoff (September 16):** [All-trades scope, owner requirements, and unfinished verification](inventory_migration/owner_handoff_2026_09_16.md). Zero catalog records accepted as fully verified.
+
 **Current working plan (September 11):** [Workflow delivery roadmap](workflow_delivery_roadmap.md).
 Start with its owner corrections and [Start Workday review](start_workday_workflow_review.md).
 Owner-selected product name: **Tame Your Biz** (September 15). Historical project IDs remain for compatibility.

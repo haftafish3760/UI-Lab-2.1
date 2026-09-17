@@ -1,6 +1,7 @@
 import 'shared/documents/document_image_scope.dart';
 import 'data/work/company_document_branding.dart';
 import 'shared/documents/customer_portal_gateway.dart';
+import 'shared/documents/customer_portal_scope.dart';
 import 'startup/application_route_pause.dart';
 import 'data/storage/application_storage_lifecycle.dart';
 import 'data/storage/serialized_async_actions.dart';

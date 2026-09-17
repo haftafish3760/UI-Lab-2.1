@@ -744,6 +744,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} {recordLabel}.'**
   String calendarRecordCount(int count, String recordLabel);
+
+  /// No description provided for @catalogBrowse.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Catalog'**
+  String get catalogBrowse;
+
+  /// No description provided for @catalogInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'My Inventory'**
+  String get catalogInventory;
+
+  /// No description provided for @catalogGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get catalogGrid;
+
+  /// No description provided for @catalogList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get catalogList;
+
+  /// No description provided for @catalogChooseTrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a trade'**
+  String get catalogChooseTrade;
+
+  /// No description provided for @catalogChooseCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a category'**
+  String get catalogChooseCategory;
+
+  /// No description provided for @catalogSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search items'**
+  String get catalogSearch;
+
+  /// No description provided for @catalogSearchCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Search this category'**
+  String get catalogSearchCategory;
+
+  /// No description provided for @catalogClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get catalogClear;
+
+  /// No description provided for @catalogPlumbing.
+  ///
+  /// In en, this message translates to:
+  /// **'Plumbing'**
+  String get catalogPlumbing;
+
+  /// No description provided for @catalogElectrical.
+  ///
+  /// In en, this message translates to:
+  /// **'Electrical'**
+  String get catalogElectrical;
+
+  /// No description provided for @catalogHvac.
+  ///
+  /// In en, this message translates to:
+  /// **'HVAC'**
+  String get catalogHvac;
+
+  /// No description provided for @catalogFittings.
+  ///
+  /// In en, this message translates to:
+  /// **'Fittings'**
+  String get catalogFittings;
+
+  /// No description provided for @catalogCopper.
+  ///
+  /// In en, this message translates to:
+  /// **'Copper'**
+  String get catalogCopper;
+
+  /// No description provided for @catalogElbows90.
+  ///
+  /// In en, this message translates to:
+  /// **'90° Elbows'**
+  String get catalogElbows90;
+
+  /// No description provided for @catalogItemDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Item details'**
+  String get catalogItemDetails;
+
+  /// No description provided for @catalogAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to My Inventory'**
+  String get catalogAdd;
+
+  /// No description provided for @catalogSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal size: {size}'**
+  String catalogSize(String size);
+
+  /// No description provided for @catalogUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit: {unit}'**
+  String catalogUnit(String unit);
+
+  /// No description provided for @catalogEach.
+  ///
+  /// In en, this message translates to:
+  /// **'each'**
+  String get catalogEach;
+
+  /// No description provided for @catalogCopperElbow.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} Copper 90° Elbow'**
+  String catalogCopperElbow(String size);
+
+  /// No description provided for @catalogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'This category is being rebuilt.'**
+  String get catalogEmpty;
+
+  /// No description provided for @catalogNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching items. Try another name or size.'**
+  String get catalogNoMatches;
 }
 
 class _AppLocalizationsDelegate

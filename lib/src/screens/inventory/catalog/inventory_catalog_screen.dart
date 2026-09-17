@@ -4,11 +4,14 @@ import '../../../layout/app_layout_engine.dart';
 import '../../../shared/operational_scope.dart';
 import '../../../shared/section_card.dart';
 import '../inventory_models.dart';
-import '../inventory_navigation_card.dart';
 import '../inventory_visible_records.dart';
 import 'inventory_catalog.dart';
-import 'inventory_catalog_item_screen.dart';
+import 'materials_catalog_item_details.dart';
+import 'materials_catalog_tiles.dart';
+import 'materials_catalog_labels.dart';
 import 'inventory_trade_assets.dart';
+import '../../../../l10n/app_localizations_extension.dart';
+import 'materials_catalog_route.dart';
 
 class InventoryCatalogScreen extends StatefulWidget {
   const InventoryCatalogScreen({
@@ -16,9 +19,11 @@ class InventoryCatalogScreen extends StatefulWidget {
     this.path = const [],
     this.locationId,
     this.catalog,
+    this.listView = false,
     super.key,
   });
   final bool myInventory;
+  final bool listView;
   final List<String> path;
   final String? locationId;
   final InventoryCatalog? catalog;
@@ -30,6 +35,7 @@ class _InventoryCatalogScreenState extends State<InventoryCatalogScreen> {
   late Future<InventoryCatalog> _catalog;
   late String? _locationId = widget.locationId;
   String _query = '';
+  late bool _listView = widget.listView;
   final _search = TextEditingController();
   @override
   void initState() {
@@ -50,8 +56,10 @@ class _InventoryCatalogScreenState extends State<InventoryCatalogScreen> {
     appBar: AppBar(
       title: Text(
         widget.path.isEmpty
-            ? (widget.myInventory ? 'My Inventory' : 'Browse Catalog')
-            : widget.path.last,
+            ? (widget.myInventory
+                  ? context.l10n.catalogInventory
+                  : context.l10n.catalogBrowse)
+            : materialsBranchLabel(context, widget.path.last),
       ),
     ),
     body: SafeArea(
@@ -121,7 +129,13 @@ class _InventoryCatalogScreenState extends State<InventoryCatalogScreen> {
                   sliver: SliverList.list(
                     children: [
                       if (widget.path.isNotEmpty) ...[
-                        Text(widget.path.join(' / ')),
+                        Text(
+                          widget.path
+                              .map(
+                                (part) => materialsBranchLabel(context, part),
+                              )
+                              .join(' / '),
+                        ),
                         const SizedBox(height: 12),
                       ],
                       if (widget.myInventory && widget.path.isEmpty) ...[
@@ -165,13 +179,13 @@ class _InventoryCatalogScreenState extends State<InventoryCatalogScreen> {
                             controller: _search,
                             decoration: InputDecoration(
                               labelText: widget.path.isEmpty
-                                  ? 'Search items'
-                                  : 'Search this category',
+                                  ? context.l10n.catalogSearch
+                                  : context.l10n.catalogSearchCategory,
                               prefixIcon: const Icon(Icons.search),
                               suffixIcon: _query.isEmpty
                                   ? null
                                   : IconButton(
-                                      tooltip: 'Clear search',
+                                      tooltip: context.l10n.catalogClear,
                                       onPressed: () {
                                         _search.clear();
                                         setState(() => _query = '');
@@ -185,11 +199,32 @@ class _InventoryCatalogScreenState extends State<InventoryCatalogScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: SegmentedButton<bool>(
+                          segments: [
+                            ButtonSegment(
+                              value: false,
+                              icon: const Icon(Icons.grid_view),
+                              label: Text(context.l10n.catalogGrid),
+                            ),
+                            ButtonSegment(
+                              value: true,
+                              icon: const Icon(Icons.view_list),
+                              label: Text(context.l10n.catalogList),
+                            ),
+                          ],
+                          selected: {_listView},
+                          onSelectionChanged: (value) =>
+                              setState(() => _listView = value.single),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       if (!searching && branches.isNotEmpty) ...[
                         Text(
                           widget.path.isEmpty
-                              ? 'Choose a trade'
-                              : 'Choose a category',
+                              ? context.l10n.catalogChooseTrade
+                              : context.l10n.catalogChooseCategory,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 10),
@@ -200,10 +235,10 @@ class _InventoryCatalogScreenState extends State<InventoryCatalogScreen> {
                         SectionCard(
                           child: Text(
                             _query.isNotEmpty
-                                ? 'No matching items. Try another name or size.'
+                                ? context.l10n.catalogNoMatches
                                 : widget.myInventory
                                 ? 'No items here yet. Browse Catalog to choose your first item.'
-                                : 'This part of the catalog is being rebuilt. Items are not available here yet.',
+                                : context.l10n.catalogEmpty,
                           ),
                         ),
                       if (showItems)
@@ -217,39 +252,43 @@ class _InventoryCatalogScreenState extends State<InventoryCatalogScreen> {
                 if (showItems)
                   SliverPadding(
                     padding: insets,
-                    sliver: SliverList.builder(
-                      itemCount: results.length,
-                      itemBuilder: (context, index) {
-                        final item = results[index];
-                        final records = stock
-                            .where(
-                              (r) =>
-                                  r.materialId == item.id ||
-                                  r.materialId == item.sourceId,
-                            )
-                            .toList();
-                        return Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: SizedBox(
-                            width: layout.laneWidth,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: InventoryNavigationCard(
-                                title: item.name,
-                                subtitle: widget.myInventory
-                                    ? records
-                                          .map(
-                                            (r) =>
-                                                '${r.locationLabel}: ${r.confidence == InventoryStockConfidence.unknown ? 'Check quantity' : '${r.quantity} ${r.unitLabel}'}',
-                                          )
-                                          .join('\n')
-                                    : '${item.unit}${item.variant.isEmpty ? '' : ' · ${item.variant}'}',
-                                onTap: () => _openItem(item, records),
+                    sliver: SliverToBoxAdapter(
+                      child: MaterialsCatalogTiles(
+                        listView: _listView,
+                        entries: [
+                          for (final item in results)
+                            MaterialsCatalogTileData(
+                              label: !searching && item.variant.isNotEmpty
+                                  ? item.variant
+                                  : materialsItemLabel(context, item),
+                              detail: widget.myInventory
+                                  ? stock
+                                        .where(
+                                          (r) =>
+                                              r.materialId == item.id ||
+                                              r.materialId == item.sourceId,
+                                        )
+                                        .map(
+                                          (r) =>
+                                              '${r.locationLabel}: ${r.confidence == InventoryStockConfidence.unknown ? 'Check quantity' : '${r.quantity} ${r.unitLabel}'}',
+                                        )
+                                        .join('\n')
+                                  : searching
+                                  ? materialsUnitLabel(context, item.unit)
+                                  : '',
+                              onTap: () => _openItem(
+                                item,
+                                stock
+                                    .where(
+                                      (r) =>
+                                          r.materialId == item.id ||
+                                          r.materialId == item.sourceId,
+                                    )
+                                    .toList(),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                        ],
+                      ),
                     ),
                   ),
                 const SliverToBoxAdapter(child: SizedBox(height: 32)),
@@ -265,43 +304,27 @@ class _InventoryCatalogScreenState extends State<InventoryCatalogScreen> {
     InventoryCatalog catalog,
     InventoryCatalog source,
     List<String> names,
-  ) => LayoutBuilder(
-    builder: (context, constraints) {
-      final grid = AppLayoutEngine.workShortcutsFor(
-        constraints.maxWidth,
-        textScaler: MediaQuery.textScalerOf(context),
-        minimumLabelWidth: MediaQuery.textScalerOf(context).scale(140),
-      );
-      final columns = grid.columns;
-      final width = (constraints.maxWidth - grid.gap * (columns - 1)) / columns;
-      return Wrap(
-        spacing: grid.gap,
-        runSpacing: grid.gap,
-        children: [
-          for (final name in names)
-            SizedBox(
-              width: width,
-              child: InventoryNavigationCard(
-                title: name,
-                image: widget.path.isEmpty ? inventoryTradeImage(name) : null,
-                subtitle: catalog.count([...widget.path, name]) == 0
-                    ? 'Not available yet'
-                    : '${catalog.count([...widget.path, name])} items available',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => InventoryCatalogScreen(
-                      myInventory: widget.myInventory,
-                      catalog: source,
-                      locationId: _locationId,
-                      path: [...widget.path, name],
-                    ),
-                  ),
-                ),
+  ) => MaterialsCatalogTiles(
+    listView: _listView,
+    entries: [
+      for (final name in names)
+        MaterialsCatalogTileData(
+          label: materialsBranchLabel(context, name),
+          imageAsset: widget.path.isEmpty ? inventoryTradeImage(name) : null,
+          onTap: () => Navigator.of(context).push(
+            MaterialsCatalogRoute<void>(
+              context: context,
+              builder: (_) => InventoryCatalogScreen(
+                myInventory: widget.myInventory,
+                catalog: source,
+                locationId: _locationId,
+                path: [...widget.path, name],
+                listView: _listView,
               ),
             ),
-        ],
-      );
-    },
+          ),
+        ),
+    ],
   );
 
   Future<void> _openItem(
@@ -309,9 +332,10 @@ class _InventoryCatalogScreenState extends State<InventoryCatalogScreen> {
     List<InventoryStockRecord> records,
   ) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      MaterialsCatalogRoute<void>(
+        context: context,
         builder: (_) =>
-            InventoryCatalogItemScreen(item: item, records: records),
+            MaterialsCatalogItemDetails(item: item, records: records),
       ),
     );
   }

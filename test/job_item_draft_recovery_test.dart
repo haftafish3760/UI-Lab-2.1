@@ -1,8 +1,9 @@
+import 'package:ui_lab_2_1/src/screens/work/work_drafts_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_store.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_job_editor.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_items_editor.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
@@ -17,7 +18,9 @@ void main() {
     (tester) async {
       final harness = (await tester.runAsync(DatabaseHarness.create))!;
       var database = (await tester.runAsync(harness.open))!;
-      var work = (await tester.runAsync(() => openUiLabWorkSession(database)))!;
+      var work = (await tester.runAsync(
+        () => openSeededTestWorkSession(database),
+      ))!;
       var store = PrototypeOperationsStore(workSession: work);
       final scope = OperationalScopeController();
       addTearDown(() async {
@@ -30,7 +33,7 @@ void main() {
         (widget) =>
             widget is TextField && widget.decoration?.labelText == label,
       );
-      Future<void> openInvoice() async {
+      Future<void> openInvoice({bool restoring = false}) async {
         await tester.pumpWidget(
           PrototypeOperationsScope(
             store: store,
@@ -43,8 +46,9 @@ void main() {
                     body: TextButton(
                       onPressed: () => Navigator.of(context).push<void>(
                         MaterialPageRoute(
-                          builder: (_) =>
-                              WorkJobEditor(initialDay: DateTime(2026, 9, 9)),
+                          builder: (_) => restoring
+                              ? const WorkDraftsScreen()
+                              : WorkJobEditor(initialDay: DateTime(2026, 9, 9)),
                         ),
                       ),
                       child: const Text('New job'),
@@ -56,7 +60,15 @@ void main() {
           ),
         );
         await tester.tap(find.text('New job'));
-        await tester.pumpAndSettle();
+        if (restoring) {
+          await waitForNativeSave(
+            tester,
+            () => find.text('Nested draft').evaluate().isNotEmpty,
+          );
+          await tester.tap(find.text('Nested draft'));
+        } else {
+          await tester.pumpAndSettle();
+        }
       }
 
       Future<void> openItems() async {
@@ -118,15 +130,11 @@ void main() {
       work.dispose();
       await tester.runAsync(() => harness.close(database));
       database = (await tester.runAsync(harness.open))!;
-      work = (await tester.runAsync(() => openUiLabWorkSession(database)))!;
+      work = (await tester.runAsync(
+        () => openSeededTestWorkSession(database),
+      ))!;
       store = PrototypeOperationsStore(workSession: work);
-      await openInvoice();
-      await waitForNativeSave(
-        tester,
-        () => find.text('Continue an unfinished job?').evaluate().isNotEmpty,
-      );
-      await tester.tap(find.text('Nested draft'));
-      await tester.pumpAndSettle();
+      await openInvoice(restoring: true);
       await waitForNativeSave(
         tester,
         () => find
@@ -145,7 +153,7 @@ void main() {
         tester.widget<TextField>(field('Quantity')).controller!.text,
         '2.',
       );
-      await tester.enterText(field('Customer price per unit'), '25');
+      await tester.enterText(field('Price per item'), '25');
       await tester.ensureVisible(
         find.widgetWithText(FilledButton, 'Add line item'),
       );

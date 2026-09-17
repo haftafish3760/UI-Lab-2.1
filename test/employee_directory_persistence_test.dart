@@ -3,7 +3,7 @@ import 'package:ui_lab_2_1/src/data/storage/local_draft_store.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_checkpoint.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_permissions.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_persistence_session.dart';
-import 'package:ui_lab_2_1/src/data/work/directory_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_directory_fixture.dart';
 import 'package:ui_lab_2_1/src/data/work/employee_directory_profile.dart';
 import 'support/storage/database_harness.dart';
 
@@ -14,7 +14,7 @@ void main() {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       var db = await harness.open();
-      var session = await openUiLabDirectory(db);
+      var session = await openSeededTestDirectory(db);
       final profile = EmployeeDirectoryProfile.fromJson({
         ...session.employees.first.toJson(),
         'name': 'Retained employee',
@@ -33,7 +33,7 @@ void main() {
       session.dispose();
       await harness.close(db);
       db = await harness.open();
-      session = await openUiLabDirectory(db);
+      session = await openSeededTestDirectory(db);
       addTearDown(session.dispose);
       expect(session.employees, hasLength(3));
       expect(
@@ -50,7 +50,7 @@ void main() {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       final db = await harness.open();
-      final owner = await openUiLabDirectory(db);
+      final owner = await openSeededTestDirectory(db);
       addTearDown(owner.dispose);
       for (final permissions in [
         DirectoryPermissions(
@@ -96,7 +96,7 @@ void main() {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       final db = await harness.open();
-      final owner = await openUiLabDirectory(db);
+      final owner = await openSeededTestDirectory(db);
       addTearDown(owner.dispose);
       final otherDb = await harness.open();
       final stale = await DirectoryPersistenceSession.open(

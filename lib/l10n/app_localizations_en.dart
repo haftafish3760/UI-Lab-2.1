@@ -373,6 +373,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String calendarRecordCount(int count, String recordLabel) {
     return '$count $recordLabel.';
   }
+
+  @override
+  String get catalogBrowse => 'Browse Catalog';
+
+  @override
+  String get catalogInventory => 'My Inventory';
+
+  @override
+  String get catalogGrid => 'Grid';
+
+  @override
+  String get catalogList => 'List';
+
+  @override
+  String get catalogChooseTrade => 'Choose a trade';
+
+  @override
+  String get catalogChooseCategory => 'Choose a category';
+
+  @override
+  String get catalogSearch => 'Search items';
+
+  @override
+  String get catalogSearchCategory => 'Search this category';
+
+  @override
+  String get catalogClear => 'Clear search';
+
+  @override
+  String get catalogPlumbing => 'Plumbing';
+
+  @override
+  String get catalogElectrical => 'Electrical';
+
+  @override
+  String get catalogHvac => 'HVAC';
+
+  @override
+  String get catalogFittings => 'Fittings';
+
+  @override
+  String get catalogCopper => 'Copper';
+
+  @override
+  String get catalogElbows90 => '90° Elbows';
+
+  @override
+  String get catalogItemDetails => 'Item details';
+
+  @override
+  String get catalogAdd => 'Add to My Inventory';
+
+  @override
+  String catalogSize(String size) {
+    return 'Nominal size: $size';
+  }
+
+  @override
+  String catalogUnit(String unit) {
+    return 'Unit: $unit';
+  }
+
+  @override
+  String get catalogEach => 'each';
+
+  @override
+  String catalogCopperElbow(String size) {
+    return '$size Copper 90° Elbow';
+  }
+
+  @override
+  String get catalogEmpty => 'This category is being rebuilt.';
+
+  @override
+  String get catalogNoMatches => 'No matching items. Try another name or size.';
 }
 
 /// The translations for English, as used in the United States (`en_US`).
@@ -454,4 +529,79 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
   String calendarRecordCount(int count, String recordLabel) {
     return '$count $recordLabel.';
   }
+
+  @override
+  String get catalogBrowse => 'Browse Catalog';
+
+  @override
+  String get catalogInventory => 'My Inventory';
+
+  @override
+  String get catalogGrid => 'Grid';
+
+  @override
+  String get catalogList => 'List';
+
+  @override
+  String get catalogChooseTrade => 'Choose a trade';
+
+  @override
+  String get catalogChooseCategory => 'Choose a category';
+
+  @override
+  String get catalogSearch => 'Search items';
+
+  @override
+  String get catalogSearchCategory => 'Search this category';
+
+  @override
+  String get catalogClear => 'Clear search';
+
+  @override
+  String get catalogPlumbing => 'Plumbing';
+
+  @override
+  String get catalogElectrical => 'Electrical';
+
+  @override
+  String get catalogHvac => 'HVAC';
+
+  @override
+  String get catalogFittings => 'Fittings';
+
+  @override
+  String get catalogCopper => 'Copper';
+
+  @override
+  String get catalogElbows90 => '90° Elbows';
+
+  @override
+  String get catalogItemDetails => 'Item details';
+
+  @override
+  String get catalogAdd => 'Add to My Inventory';
+
+  @override
+  String catalogSize(String size) {
+    return 'Nominal size: $size';
+  }
+
+  @override
+  String catalogUnit(String unit) {
+    return 'Unit: $unit';
+  }
+
+  @override
+  String get catalogEach => 'each';
+
+  @override
+  String catalogCopperElbow(String size) {
+    return '$size Copper 90° Elbow';
+  }
+
+  @override
+  String get catalogEmpty => 'This category is being rebuilt.';
+
+  @override
+  String get catalogNoMatches => 'No matching items. Try another name or size.';
 }

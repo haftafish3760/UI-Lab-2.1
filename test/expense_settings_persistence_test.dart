@@ -87,6 +87,13 @@ void main() {
         final toggle = find.widgetWithText(SwitchListTile, 'Show related jobs');
         final save = find.byKey(const ValueKey('save-expense-settings-button'));
         Future<void> tapVisible(Finder target) async {
+          if (target.evaluate().isEmpty) {
+            await tester.scrollUntilVisible(
+              target,
+              250,
+              scrollable: find.byType(Scrollable).last,
+            );
+          }
           await tester.ensureVisible(target);
           await tester.pump();
           await tester.tap(target);

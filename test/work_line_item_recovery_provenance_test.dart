@@ -69,7 +69,7 @@ void main() {
 
       await open();
       await tester.enterText(field('Quantity'), '3.');
-      await tester.enterText(field('Customer price per unit'), '8.50');
+      await tester.enterText(field('Price per item'), '8.50');
       final raw = Map<String, Object?>.of(captured!);
       await open(recovery: raw);
       expect(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 /// Application-owned lifecycle, independent of any route, widget or SQL schema.
 /// The host must block user entry points before pausing and detach its view before
 /// closing. The view supplies only its service-draining callback.
@@ -14,10 +16,15 @@ class ApplicationStorageLifecycle {
   final Future<void> Function() _closeStorage;
   Future<void Function()> Function()? _viewServices;
   bool _wasAttached = false, _pausing = false, _paused = false, _closed = false;
+  Future<void>? _closing;
   bool get isAttached => _viewServices != null;
 
   void Function() attach(Future<void Function()> Function() pauseViewServices) {
-    if (_viewServices != null || _closed || _paused || _pausing) {
+    if (_viewServices != null ||
+        _closed ||
+        _closing != null ||
+        _paused ||
+        _pausing) {
       throw StateError(
         'Application storage already has an owner or is paused.',
       );
@@ -31,7 +38,11 @@ class ApplicationStorageLifecycle {
 
   Future<void Function()> pauseAndFlush() async {
     final services = _viewServices;
-    if (services == null || _closed || _pausing || _paused) {
+    if (services == null ||
+        _closed ||
+        _closing != null ||
+        _pausing ||
+        _paused) {
       throw StateError(
         'Application storage cannot pause in its current state.',
       );
@@ -63,10 +74,26 @@ class ApplicationStorageLifecycle {
 
   Future<void> close() async {
     if (_closed) return;
+    final closing = _closing;
+    if (closing != null) return closing;
     if (_viewServices != null || _pausing || (_wasAttached && !_paused)) {
       throw StateError('Detach the paused application before closing storage.');
     }
-    await _closeStorage();
-    _closed = true;
+    // Publish the in-flight operation before invoking storage callbacks. All
+    // callers observe the same completion or failure; no view can attach while
+    // the database and its services are being disposed.
+    final completion = Completer<void>();
+    _closing = completion.future;
+    Future<void>.sync(_closeStorage).then(
+      (_) {
+        _closed = true;
+        completion.complete();
+      },
+      onError: (Object error, StackTrace stack) {
+        _closing = null;
+        completion.completeError(error, stack);
+      },
+    );
+    return completion.future;
   }
 }

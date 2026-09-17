@@ -7,18 +7,47 @@ extension _ReceiptIntakeMedia on _ReceiptIntakeScreenState {
         !widget.permissions.canAttachReceipt) {
       return;
     }
-    final result = await Navigator.of(context).push<ReceiptTextInput>(
-      MaterialPageRoute(
-        builder: (_) => ReceiptTextEntryScreen(initial: _pastedText),
-      ),
-    );
-    if (!mounted || result == null) return;
-    if (result.text == null) {
-      await _openReceiptEditor(imageCount: _evidence.length);
+    final submission = ReceiptSubmissionScope.maybeOf(context);
+    if (submission == null) {
+      _showDraftMessage(
+        'Local receipt storage is unavailable. Reopen the app before editing.',
+      );
       return;
     }
-    _updateMedia(() => _pastedText = result.text!);
-    await _persistDraft();
+    if (!await _persistDraft() || !mounted) return;
+    final id = _activeDraftId;
+    if (id == null) return;
+    _updateMedia(() => _openingPicker = true);
+    try {
+      final editor = submission.openTextEditing(id);
+      ReceiptTextInput? result;
+      try {
+        result = await Navigator.of(context).push<ReceiptTextInput>(
+          MaterialPageRoute(
+            builder: (_) => ReceiptTextEntryScreen(editor: editor),
+          ),
+        );
+      } finally {
+        await editor.close();
+      }
+      if (!mounted) return;
+      // Back also saves input. Refresh the parent revision before any later save
+      // so its older snapshot cannot overwrite text or trigger a false conflict.
+      final saved = submission.receipts.recordById(id);
+      if (saved != null) {
+        _acceptMediaReceipt(saved);
+        _updateMedia(() => _pastedText = saved.entrySetup?.pastedText ?? '');
+      }
+      if (result != null && result.text == null) {
+        await _openReceiptEditor(imageCount: _evidence.length);
+      }
+    } on Object {
+      _showDraftMessage(
+        'Receipt text could not be saved or reopened. Your saved receipt is retained.',
+      );
+    } finally {
+      _updateMedia(() => _openingPicker = false);
+    }
   }
 
   Future<void> _pick(

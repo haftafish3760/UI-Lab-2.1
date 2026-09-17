@@ -1,0 +1,39 @@
+{
+  "scope": "All records and payload fields compared; no sampling",
+  "referenceCounts": {
+    "electrical": 902,
+    "plumbing": 1153,
+    "hvac": 1279
+  },
+  "referenceTotal": 3334,
+  "sqliteRows": 3334,
+  "structuralDiscrepancies": [],
+  "semanticAcceptedRecords": 0,
+  "semanticUnverifiedRecords": 3334,
+  "runtimeBrowseItems": 0,
+  "runtimeTrades": [
+    "Appliance Installation and Repair",
+    "Cabinets and Countertops",
+    "Carpentry",
+    "Drywall",
+    "Electrical",
+    "Fencing",
+    "Flooring",
+    "Garage Doors and Openers",
+    "HVAC",
+    "Insulation",
+    "Landscaping",
+    "Low Voltage and Data",
+    "Masonry and Concrete",
+    "Painting",
+    "Plumbing",
+    "Roofing",
+    "Siding and Exterior",
+    "Tile",
+    "Tools and Safety",
+    "Well Septic and Water Treatment",
+    "Windows and Doors"
+  ],
+  "catalogAcceptance": "NOT ACCEPTED",
+  "limitation": "No independent semantic/product/translation evidence supplied by this comparison"
+}

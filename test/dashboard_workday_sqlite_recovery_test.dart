@@ -33,7 +33,7 @@ void main() {
 
       Future<void> action(String key) async {
         await tester.tap(
-          find.byKey(const ValueKey('dashboard-workday-actions-fab')),
+          find.byKey(const ValueKey('dashboard-inline-actions')),
         );
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(ValueKey('workday-action-$key')));

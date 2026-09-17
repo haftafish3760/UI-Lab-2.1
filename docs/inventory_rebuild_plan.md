@@ -1,5 +1,24 @@
 # Inventory rebuild — September 16, 2026
 
+> **September 17 desktop transfer correction:** The owner's latest direction is
+> Plumbing, Electrical and HVAC only, catalog first, followed by parser integration
+> with a rebuilt independently validated harness. Earlier all-21 and catalog-removal
+> directions are superseded. See [the desktop handoff](inventory_migration/DESKTOP_HANDOFF_2026_09_17.md)
+> for the decision record, incomplete source state, open questions and transfer instructions.
+> The older progress and test statements below are historical, not current acceptance.
+
+**Latest owner scope — September 17, fittings review:** Begin with Plumbing → Fittings and owner review of grid/list and light/dark presentation. Bundle Plumbing, Electrical and HVAC for release one. The owner subsequently requested all 21 trade choices, with the other packs downloadable through Firebase by account holders; interrupted downloads and offline availability must be handled. Trade imagery is awaiting clarification following the owner's newer request for two missing photos, which conflicts with the prior text-only direction. Do not silently treat optional packs as downloaded or verified. Parser and receipt-generator work remain deferred. User-inventory persistence belongs to another task. Maintainiac 5.7 Active remains read-only reference; a separately authorized S25 Ultra wireless build awaits device connectivity.
+
+## Required evidence — September 17 owner correction
+
+- A passing 5.7 test is not proof that its expected answer or catalog data is correct. Review reusable harness components and expectations independently; adapt useful components rather than rebuilding infrastructure without assessment. The resulting harness belongs to Tame Your Biz and need not remain compatible with 5.7.
+- Account for every source record in the three trades, in bounded batches. Track identity, full hierarchy, names, ordered connection sizes, units, aliases, translations and measurement semantics per item. No sample, minimum-count assertion, aggregate percentage or generated report alone establishes complete coverage.
+- Keep migration fidelity, independent semantic validation, SQLite integrity, search behavior and rendered accessibility as separate results. Missing or questionable evidence remains unresolved. Never promote a source's `verifiedManually` flag into independent acceptance.
+- Observed read-only: `work_supply_plumbing_core_curation_audit_report_test.dart` asserts report-file existence, not correctness of reported findings. `work_supply_parser_qa_harness_test.dart` defaults to smoke/non-strict operation with schema/alias sample limits. `work_supply_catalog_scale_test.dart` checks counts and metadata coverage, not product correctness. These observations concern those assertions, not every legacy test.
+- UI Lab baseline on September 17: three existing test files ran 24 tests; 19 passed and five failed because the bundled browse asset has zero items while old tests expect 49 and specific fittings. Fixture-based layout and separate batch round-trip passes do not validate shipped catalog content.
+- U.S./Canada catalog scope; English and Spanish must follow shared language settings. Preserve nominal trade designations and distinguish them from actual dimensions and regional equivalence; a display-unit change must not substitute a different product. Foreign-language and regional correctness require evidence, not automatic translation acceptance.
+- No tests or implementation during voice discussion unless the owner expressly asks for execution then. Keep work in this chat; no additional agents. Run resource-bounded validation on this Mac.
+
 Owner-authorized work in this task only. No delegation. Maintainiac 5.7 Copy
 and Active are read-only. Preserve unrelated working-tree changes and business
 records. The retained trade-selection screen is the starting point; rebuild
@@ -8,8 +27,7 @@ everything beneath a selected trade, rather than patching misleading pack names.
 ## Order and acceptance
 
 1. Record and audit the rejected export, then remove it from the application.
-2. Rebuild category navigation as compact, image-free grids. Preserve trade
-   artwork and counts where truthful. Use shared responsive layout primitives,
+2. Rebuild category navigation as compact, image-free grids. Trade artwork follows the pending owner decision; do not show unverified item counts. Use shared responsive layout primitives,
    bounded desktop content, full labels, accessibility scaling, and one-level
    Back. Verify phone first, then portrait/landscape tablet and wide windows.
 3. Inspect each trade's actual source hierarchy. Plumbing's material/type/size

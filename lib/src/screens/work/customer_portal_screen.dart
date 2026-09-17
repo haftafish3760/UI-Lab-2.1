@@ -5,6 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../data/prototype_operations_store.dart';
 import '../../shared/documents/customer_portal_gateway.dart';
+import '../../shared/documents/customer_portal_scope.dart';
 import '../../shared/utility_form_section.dart';
 import 'estimate_models.dart';
 import 'work_customer_document.dart';

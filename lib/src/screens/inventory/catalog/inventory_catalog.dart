@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'inventory_catalog_database.dart';
+import 'materials_catalog_text.dart';
+import 'materials_trade_manifest.dart';
 
 class InventoryCatalogItem {
   InventoryCatalogItem(Map<String, dynamic> json)
@@ -10,6 +12,7 @@ class InventoryCatalogItem {
       name = json['name'] as String,
       unit = json['unit'] as String,
       variant = json['variant'] as String? ?? '',
+      labelKey = json['labelKey'] as String? ?? '',
       aliases = List<String>.unmodifiable(json['aliases'] as List? ?? const []),
       path = List<String>.unmodifiable(
         json['path'] as List? ??
@@ -20,7 +23,7 @@ class InventoryCatalogItem {
                     : 'Other items',
             ],
       );
-  final String id, sourceId, name, unit, variant;
+  final String id, sourceId, name, unit, variant, labelKey;
   final List<String> aliases;
   final List<String> path;
 }
@@ -32,8 +35,9 @@ class InventoryCatalog {
       for (var depth = 0; depth <= item.path.length; depth++) {
         final key = jsonEncode(item.path.take(depth).toList());
         _counts[key] = (_counts[key] ?? 0) + 1;
-        if (depth < item.path.length)
+        if (depth < item.path.length) {
           (_branches[key] ??= {}).add(item.path[depth]);
+        }
       }
     }
   }
@@ -73,7 +77,17 @@ class InventoryCatalog {
   }
 
   List<String> branches(List<String> path) {
-    return (_branches[jsonEncode(path)] ?? {}).toList()..sort();
+    final names = (_branches[jsonEncode(path)] ?? {}).toList()..sort();
+    if (path.isEmpty) {
+      names.sort((a, b) {
+        final ai = materialsBundledTrades.indexOf(a);
+        final bi = materialsBundledTrades.indexOf(b);
+        if (ai >= 0 || bi >= 0)
+          return (ai < 0 ? 99 : ai).compareTo(bi < 0 ? 99 : bi);
+        return a.compareTo(b);
+      });
+    }
+    return names;
   }
 
   List<InventoryCatalogItem> itemsAt(List<String> path) => search(
@@ -94,6 +108,6 @@ class InventoryCatalog {
           '${item.name} ${item.path.join(' ')} ${item.variant} ${usableAliases.join(' ')}'
               .toLowerCase();
       return _inside(item, path) && words.every(text.contains);
-    }).toList()..sort((a, b) => a.name.compareTo(b.name));
+    }).toList()..sort((a, b) => compareMaterialsSizes(a.name, b.name));
   }
 }

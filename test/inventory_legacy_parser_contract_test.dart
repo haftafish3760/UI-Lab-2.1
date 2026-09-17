@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../build/inventory_migration/source/inventory_parser.dart';
-import '../build/inventory_migration/source/work_supply_models.dart';
-import '../build/inventory_migration/source/work_supply_trade_pack_runtime_loader.dart';
+import '../tool/inventory/legacy_reference/data/inventory_parser.dart';
+import '../tool/inventory/legacy_reference/data/work_supply_models.dart';
+import '../tool/inventory/legacy_reference/data/work_supply_trade_pack_runtime_loader.dart';
 
 // Adapted from 5.7 test/inventory_parser_entry_point_test.dart. Executes only
 // the isolated extraction, not the protected repository or the production app.

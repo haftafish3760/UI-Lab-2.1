@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/dashboard_screen.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/dashboard_day_screen.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/dashboard_models.dart';
@@ -20,7 +20,9 @@ void main() {
           tester.view.devicePixelRatio = 1;
           final harness = (await tester.runAsync(DatabaseHarness.create))!;
           final db = (await tester.runAsync(harness.open))!;
-          final work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
+          final work = (await tester.runAsync(
+            () => openSeededTestWorkSession(db),
+          ))!;
           try {
             await tester.pumpWidget(UiLabApp(workSession: work));
             await tester.pumpAndSettle();
@@ -104,9 +106,7 @@ void main() {
             );
             // Chronological entries collapse after three rows. A late-day event
             // is durable even when it is outside that presentation preview.
-            final expand = find
-                .byKey(const ValueKey('entries-expand-button'))
-                .last;
+            final expand = find.byKey(const ValueKey('entries-expand-button'));
             if (expand.evaluate().isNotEmpty &&
                 find
                     .descendant(

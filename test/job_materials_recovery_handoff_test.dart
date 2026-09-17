@@ -5,7 +5,7 @@ import 'package:ui_lab_2_1/src/data/work/job_materials_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/job_material_permissions.dart';
 import 'package:ui_lab_2_1/src/data/work/work_items_draft_input.dart';
 import 'package:ui_lab_2_1/src/data/work/models/work_models.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_materials_recovery_route.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_items_editor.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
@@ -22,8 +22,8 @@ void main() {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       final db = await harness.open();
-      final owner = await openUiLabWorkSession(db);
-      final replacement = await openUiLabWorkSession(db);
+      final owner = await openSeededTestWorkSession(db);
+      final replacement = await openSeededTestWorkSession(db);
       addTearDown(owner.dispose);
       addTearDown(replacement.dispose);
       final job = owner.records.firstWhere(
@@ -85,7 +85,7 @@ void main() {
     (tester) async {
       final harness = (await tester.runAsync(DatabaseHarness.create))!;
       final work = (await tester.runAsync(
-        () async => openUiLabWorkSession(await harness.open()),
+        () async => openSeededTestWorkSession(await harness.open()),
       ))!;
       final job = work.records.firstWhere(
         (r) => r.kind == WorkRecordKind.job && work.permissions.canEdit(r),

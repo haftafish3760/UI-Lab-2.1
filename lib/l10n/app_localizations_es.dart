@@ -378,6 +378,82 @@ class AppLocalizationsEs extends AppLocalizations {
   String calendarRecordCount(int count, String recordLabel) {
     return '$count $recordLabel.';
   }
+
+  @override
+  String get catalogBrowse => 'Explorar catálogo';
+
+  @override
+  String get catalogInventory => 'Mi inventario';
+
+  @override
+  String get catalogGrid => 'Cuadrícula';
+
+  @override
+  String get catalogList => 'Lista';
+
+  @override
+  String get catalogChooseTrade => 'Elige un oficio';
+
+  @override
+  String get catalogChooseCategory => 'Elige una categoría';
+
+  @override
+  String get catalogSearch => 'Buscar artículos';
+
+  @override
+  String get catalogSearchCategory => 'Buscar en esta categoría';
+
+  @override
+  String get catalogClear => 'Borrar búsqueda';
+
+  @override
+  String get catalogPlumbing => 'Plomería';
+
+  @override
+  String get catalogElectrical => 'Electricidad';
+
+  @override
+  String get catalogHvac => 'Climatización';
+
+  @override
+  String get catalogFittings => 'Conexiones';
+
+  @override
+  String get catalogCopper => 'Cobre';
+
+  @override
+  String get catalogElbows90 => 'Codos de 90°';
+
+  @override
+  String get catalogItemDetails => 'Detalles del artículo';
+
+  @override
+  String get catalogAdd => 'Agregar a mi inventario';
+
+  @override
+  String catalogSize(String size) {
+    return 'Medida nominal: $size';
+  }
+
+  @override
+  String catalogUnit(String unit) {
+    return 'Unidad: $unit';
+  }
+
+  @override
+  String get catalogEach => 'pieza';
+
+  @override
+  String catalogCopperElbow(String size) {
+    return 'Codo de cobre de 90° de $size';
+  }
+
+  @override
+  String get catalogEmpty => 'Esta categoría se está reconstruyendo.';
+
+  @override
+  String get catalogNoMatches =>
+      'No se encontraron artículos. Prueba otro nombre o medida.';
 }
 
 /// The translations for Spanish Castilian, as used in the United States (`es_US`).
@@ -460,4 +536,80 @@ class AppLocalizationsEsUs extends AppLocalizationsEs {
   String calendarRecordCount(int count, String recordLabel) {
     return '$count $recordLabel.';
   }
+
+  @override
+  String get catalogBrowse => 'Explorar catálogo';
+
+  @override
+  String get catalogInventory => 'Mi inventario';
+
+  @override
+  String get catalogGrid => 'Cuadrícula';
+
+  @override
+  String get catalogList => 'Lista';
+
+  @override
+  String get catalogChooseTrade => 'Elige un oficio';
+
+  @override
+  String get catalogChooseCategory => 'Elige una categoría';
+
+  @override
+  String get catalogSearch => 'Buscar artículos';
+
+  @override
+  String get catalogSearchCategory => 'Buscar en esta categoría';
+
+  @override
+  String get catalogClear => 'Borrar búsqueda';
+
+  @override
+  String get catalogPlumbing => 'Plomería';
+
+  @override
+  String get catalogElectrical => 'Electricidad';
+
+  @override
+  String get catalogHvac => 'Climatización';
+
+  @override
+  String get catalogFittings => 'Conexiones';
+
+  @override
+  String get catalogCopper => 'Cobre';
+
+  @override
+  String get catalogElbows90 => 'Codos de 90°';
+
+  @override
+  String get catalogItemDetails => 'Detalles del artículo';
+
+  @override
+  String get catalogAdd => 'Agregar a mi inventario';
+
+  @override
+  String catalogSize(String size) {
+    return 'Medida nominal: $size';
+  }
+
+  @override
+  String catalogUnit(String unit) {
+    return 'Unidad: $unit';
+  }
+
+  @override
+  String get catalogEach => 'pieza';
+
+  @override
+  String catalogCopperElbow(String size) {
+    return 'Codo de cobre de 90° de $size';
+  }
+
+  @override
+  String get catalogEmpty => 'Esta categoría se está reconstruyendo.';
+
+  @override
+  String get catalogNoMatches =>
+      'No se encontraron artículos. Prueba otro nombre o medida.';
 }

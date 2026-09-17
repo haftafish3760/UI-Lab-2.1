@@ -4,7 +4,9 @@ import 'package:ui_lab_2_1/src/data/expenses/local_recurring_expense_repository.
 import 'package:ui_lab_2_1/src/data/receipts/local_receipt_draft_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_persistence.dart';
-import 'package:ui_lab_2_1/src/data/expenses/expense_ui_lab_seed.dart';
+import 'package:ui_lab_2_1/src/data/expenses/expense_record.dart';
+import 'package:ui_lab_2_1/src/data/expenses/expense_ui_lab_policy.dart';
+import 'package:ui_lab_2_1/src/data/expenses/expense_repository.dart';
 
 void main() {
   late Directory root;
@@ -59,7 +61,33 @@ void main() {
         throwsStateError,
       );
       lease.release();
-      await seedExpenseUiLabDemoDataIfEmpty(persistence.expenses);
+      final now = DateTime.utc(2030, 1, 2);
+      await persistence.expenses.create(
+        StoredExpenseRecord(
+          expenseId: 'after-pause',
+          organizationId: expenseUiLabOrganizationId,
+          createdByEmployeeId: 'owner',
+          paidByEmployeeId: 'owner',
+          expenseDate: now,
+          vendorName: 'Supplier',
+          categoryId: 'materials',
+          categoryLabelSnapshot: 'Materials',
+          total: ExpenseMoney(minorUnits: 1250, currencyCode: 'USD'),
+          approval: const ExpenseApproval(
+            state: ExpenseApprovalState.notRequired,
+          ),
+          lifecycle: ExpenseLifecycle(
+            revision: 1,
+            createdAtUtc: now,
+            updatedAtUtc: now,
+          ),
+        ),
+        context: ExpenseMutationContext(
+          actorEmployeeId: 'owner',
+          occurredAtUtc: now,
+          permissionRevision: 'test-permission-v1',
+        ),
+      );
       expect(
         await persistence.database
             .select(persistence.database.localRecords)

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/work/estimate_signature_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/models/work_models.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'support/storage/database_harness.dart';
 
 void main() {
@@ -11,7 +11,7 @@ void main() {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       var db = await harness.open();
-      var work = await openUiLabWorkSession(db);
+      var work = await openSeededTestWorkSession(db);
       final base = work.records.singleWhere((r) => r.id == 'est-1040');
       final revision = work.storageRevisionFor(base.id);
       var workflow = await work.openEstimateSignatureDraft(base.id);
@@ -36,7 +36,7 @@ void main() {
       work.dispose();
       await harness.close(db);
       db = await harness.open();
-      work = await openUiLabWorkSession(db);
+      work = await openSeededTestWorkSession(db);
       addTearDown(work.dispose);
       workflow = await work.openEstimateSignatureDraft(base.id);
       expect(workflow.session.input, raw);
@@ -60,7 +60,7 @@ void main() {
     () async {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
-      final work = await openUiLabWorkSession(await harness.open());
+      final work = await openSeededTestWorkSession(await harness.open());
       addTearDown(work.dispose);
       final base = work.records.singleWhere((r) => r.id == 'est-1040');
       final workflow = await work.openEstimateSignatureDraft(base.id);

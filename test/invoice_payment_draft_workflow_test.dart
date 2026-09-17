@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_financial_models.dart';
 import 'package:ui_lab_2_1/src/data/work/invoice_payment_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/models/work_models.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 
 import 'support/storage/database_harness.dart';
 
@@ -13,7 +13,7 @@ void main() {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       var db = await harness.open();
-      var work = await openUiLabWorkSession(db);
+      var work = await openSeededTestWorkSession(db);
       final invoice = work.records.firstWhere(
         (r) =>
             r.kind == WorkRecordKind.invoice &&
@@ -44,7 +44,7 @@ void main() {
       work.dispose();
       await harness.close(db);
       db = await harness.open();
-      work = await openUiLabWorkSession(db);
+      work = await openSeededTestWorkSession(db);
       addTearDown(work.dispose);
       workflow = await work.openInvoicePaymentDraft(
         invoiceId: invoice.id,
@@ -88,7 +88,7 @@ void main() {
     () async {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
-      final work = await openUiLabWorkSession(await harness.open());
+      final work = await openSeededTestWorkSession(await harness.open());
       addTearDown(work.dispose);
       final invoice = work.records.firstWhere(
         (r) =>

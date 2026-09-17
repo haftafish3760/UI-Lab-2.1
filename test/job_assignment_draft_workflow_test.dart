@@ -5,6 +5,7 @@ import 'package:ui_lab_2_1/src/data/work/work_record_codec.dart';
 import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
 
 import 'support/storage/database_harness.dart';
+import 'support/storage/seeded_directory_fixture.dart';
 
 const job = WorkRecord(
   id: 'assignment-workflow-job',
@@ -15,6 +16,7 @@ const job = WorkRecord(
   detail: 'Repair',
   pricing: WorkPricingModel.flatRate,
   assignee: 'Alex Morgan',
+  assignedEmployeeIds: ['alex'],
   vehicle: 'Transit 12',
 );
 
@@ -25,11 +27,14 @@ void main() {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       var db = await harness.open();
+      final directory = await openSeededTestDirectory(db);
+      directory.dispose();
       var work = await openUiLabWorkSession(db);
-      expect(await work.create(job), isTrue);
+      expect(await work.create(job), isTrue, reason: work.failureMessage);
       var controller = await work.openJobAssignmentDraft(job.id);
       controller.updateAssignment(
         assignee: 'Jordan Lee',
+        employeeIds: ['jordan'],
         vehicle: 'Service Van 4',
       );
       await db.customStatement(
@@ -53,6 +58,7 @@ void main() {
       await db.customStatement('DROP TRIGGER fail_assignment');
       final saved = (await controller.confirm())!;
       expect(saved.assignee, 'Jordan Lee');
+      expect(saved.assignedEmployeeIds, ['jordan']);
       expect(saved.vehicle, 'Service Van 4');
       await expectLater(controller.confirm(), throwsStateError);
       expect(work.storageRevisionFor(job.id), 2);
@@ -74,9 +80,12 @@ void main() {
     () async {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
-      final work = await openUiLabWorkSession(await harness.open());
+      final database = await harness.open();
+      final directory = await openSeededTestDirectory(database);
+      directory.dispose();
+      final work = await openUiLabWorkSession(database);
       addTearDown(work.dispose);
-      expect(await work.create(job), isTrue);
+      expect(await work.create(job), isTrue, reason: work.failureMessage);
       final actor = work.permissions.actorEmployeeId;
       final id = 'edit-$actor-${job.id}';
       final payload = {
@@ -99,7 +108,10 @@ void main() {
         isTrue,
       );
       final controller = await work.openJobAssignmentDraft(job.id);
-      expect(controller.input.toPayload(), payload);
+      expect(controller.input.toPayload(), {
+        ...payload,
+        'employeeIds': <String>[],
+      });
       expect(await controller.confirm(), isNull);
       final latest = work.records.singleWhere((r) => r.id == job.id);
       expect(latest.jobNotes, 'Concurrent change');

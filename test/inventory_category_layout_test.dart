@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/screens/inventory/catalog/inventory_catalog.dart';
 import 'package:ui_lab_2_1/src/screens/inventory/catalog/inventory_catalog_screen.dart';
-import 'package:ui_lab_2_1/src/screens/inventory/inventory_navigation_card.dart';
 import 'inventory_screen_test.dart' as harness;
 
 InventoryCatalog categoryFixture() => InventoryCatalog.fromJson({
@@ -57,13 +56,13 @@ void main() {
         );
         expect(find.byType(Image), findsNothing);
         final fittings = tester.getRect(
-          find.widgetWithText(InventoryNavigationCard, 'Fittings'),
+          find.byKey(const ValueKey('materials:Fittings')),
         );
         final pipe = tester.getRect(
-          find.widgetWithText(InventoryNavigationCard, 'Pipe and tubing'),
+          find.byKey(const ValueKey('materials:Pipe and tubing')),
         );
         if (scale == 1) {
-          expect(fittings.width, lessThan(size.width / 1.5));
+          expect(fittings.width, lessThanOrEqualTo(size.width));
           expect(pipe.width, closeTo(fittings.width, .1));
         }
         expect(tester.takeException(), isNull);

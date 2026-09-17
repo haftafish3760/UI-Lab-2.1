@@ -9,7 +9,7 @@ import 'package:ui_lab_2_1/src/screens/inventory/inventory_visible_records.dart'
 import 'package:ui_lab_2_1/src/screens/inventory/catalog/inventory_catalog.dart';
 import 'package:ui_lab_2_1/src/screens/inventory/catalog/inventory_catalog_screen.dart';
 import 'package:ui_lab_2_1/src/screens/inventory/catalog/inventory_catalog_item_screen.dart';
-import 'package:ui_lab_2_1/src/screens/inventory/inventory_navigation_card.dart';
+import 'package:ui_lab_2_1/src/screens/inventory/catalog/materials_catalog_tiles.dart';
 import 'package:ui_lab_2_1/src/shared/app_view_mode.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
@@ -46,6 +46,9 @@ Future<void> pump(
   PrototypeOperationsStore? store,
   OperationalScopeController? scope,
   bool dark = false,
+  TargetPlatform? platform,
+  Locale? locale,
+  bool reducedMotion = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -61,13 +64,17 @@ Future<void> pump(
       child: OperationalScope(
         controller: access,
         child: MaterialApp(
-          theme: dark ? AppTheme.dark : AppTheme.light,
+          theme: (dark ? AppTheme.dark : AppTheme.light).copyWith(
+            platform: platform,
+          ),
+          locale: locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.linear(scale)),
+            data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(scale),
+              disableAnimations: reducedMotion,
+            ),
             child: child!,
           ),
           home: screen,
@@ -208,7 +215,10 @@ void main() {
       await tester.pumpAndSettle();
     }
     expect(find.text('Item details'), findsOneWidget);
-    expect(find.textContaining('No receipt needed'), findsOneWidget);
+    expect(
+      find.widgetWithText(FilledButton, 'Add to My Inventory'),
+      findsOneWidget,
+    );
     await tester.pageBack();
     await tester.pumpAndSettle();
     expect(find.text('Elbows'), findsWidgets);
@@ -384,7 +394,7 @@ void main() {
         scale: configuration.$2,
         dark: configuration.$3,
       );
-      expect(find.byType(InventoryNavigationCard), findsNWidgets(2));
+      expect(find.byType(MaterialsCatalogTiles), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }

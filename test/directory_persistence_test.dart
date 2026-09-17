@@ -2,19 +2,37 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_permissions.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_persistence_session.dart';
-import 'package:ui_lab_2_1/src/data/work/directory_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_directory_fixture.dart';
 import 'package:ui_lab_2_1/src/data/work/work_contact_codec.dart';
 
 import 'support/storage/database_harness.dart';
 
 void main() {
+  test('accepted company save survives disposal and database reopen', () async {
+    final harness = await DatabaseHarness.create();
+    addTearDown(harness.dispose);
+    var database = await harness.open();
+    final directory = await openSeededTestDirectory(database);
+    final expectedRevision = directory.companyRevision + 1;
+    final pending = directory.saveCompany(
+      directory.company.copyWith(companyName: 'Saved before leaving'),
+    );
+    directory.dispose();
+    expect(await pending, isTrue, reason: directory.failureMessage);
+    await harness.close(database);
+    database = await harness.open();
+    final reopened = await openSeededTestDirectory(database);
+    addTearDown(reopened.dispose);
+    expect(reopened.company.companyName, 'Saved before leaving');
+    expect(reopened.companyRevision, expectedRevision);
+  });
   test(
     'directory startup preserves customer locations and company defaults across reopen',
     () async {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       var database = await harness.open();
-      var directory = await openUiLabDirectory(database);
+      var directory = await openSeededTestDirectory(database);
       var store = PrototypeOperationsStore(directorySession: directory);
       final source = store.customers.first;
       final changed = decodeWorkCustomerProfile({
@@ -48,7 +66,7 @@ void main() {
       directory.dispose();
       await harness.close(database);
       database = await harness.open();
-      directory = await openUiLabDirectory(database);
+      directory = await openSeededTestDirectory(database);
       store = PrototypeOperationsStore(directorySession: directory);
       addTearDown(directory.dispose);
       addTearDown(store.dispose);
@@ -70,7 +88,7 @@ void main() {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       final database = await harness.open();
-      final owner = await openUiLabDirectory(database);
+      final owner = await openSeededTestDirectory(database);
       addTearDown(owner.dispose);
       final denied = await DirectoryPersistenceSession.open(
         database,

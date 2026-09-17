@@ -47,6 +47,20 @@ class MaterialCostRecord {
 }
 
 @immutable
+class InventoryCategoryRecord {
+  const InventoryCategoryRecord({required this.id, required this.name, required this.ownerEmployeeId, this.parentId});
+  final String id, name, ownerEmployeeId;
+  final String? parentId;
+}
+
+@immutable
+class InventoryItemSize {
+  const InventoryItemSize({required this.label, required this.value, required this.unit});
+  final String label, value, unit;
+  String get display => '$label: $value $unit';
+}
+
+@immutable
 class InventoryStockRecord {
   const InventoryStockRecord({
     required this.id,
@@ -60,6 +74,12 @@ class InventoryStockRecord {
     required this.updatedOn,
     required this.ownerEmployeeId,
     this.lowAt,
+    this.categoryId,
+    this.aliases = const [],
+    this.sizes = const [],
+    this.partNumber = '',
+    this.unitCostCents,
+    this.currencyCode = 'USD',
   });
 
   final String id;
@@ -73,6 +93,12 @@ class InventoryStockRecord {
   final DateTime updatedOn;
   final String ownerEmployeeId;
   final double? lowAt;
+  final String? categoryId;
+  final List<String> aliases;
+  final List<InventoryItemSize> sizes;
+  final String partNumber;
+  final int? unitCostCents;
+  final String currencyCode;
 
   bool get isLow =>
       confidence != InventoryStockConfidence.unknown &&
@@ -97,6 +123,8 @@ class InventoryStockRecord {
     updatedOn: updatedOn ?? this.updatedOn,
     ownerEmployeeId: ownerEmployeeId,
     lowAt: clearLowAt ? null : lowAt ?? this.lowAt,
+    categoryId: categoryId, aliases: aliases, sizes: sizes,
+    partNumber: partNumber, unitCostCents: unitCostCents, currencyCode: currencyCode,
   );
 }
 

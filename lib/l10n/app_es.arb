@@ -106,5 +106,49 @@
   "calendarInventoryRecordSingular": "registro de materiales",
   "calendarInventoryRecordPlural": "registros de materiales",
   "calendarNoRecords": "No hay {recordLabel}.",
-  "calendarRecordCount": "{count} {recordLabel}."
+  "calendarRecordCount": "{count} {recordLabel}.",
+  "catalogBrowse": "Explorar catálogo",
+  "catalogInventory": "Mi inventario",
+  "catalogGrid": "Cuadrícula",
+  "catalogList": "Lista",
+  "catalogChooseTrade": "Elige un oficio",
+  "catalogChooseCategory": "Elige una categoría",
+  "catalogSearch": "Buscar artículos",
+  "catalogSearchCategory": "Buscar en esta categoría",
+  "catalogClear": "Borrar búsqueda",
+  "catalogPlumbing": "Plomería",
+  "catalogElectrical": "Electricidad",
+  "catalogHvac": "Climatización",
+  "catalogFittings": "Conexiones",
+  "catalogCopper": "Cobre",
+  "catalogElbows90": "Codos de 90°",
+  "catalogItemDetails": "Detalles del artículo",
+  "catalogAdd": "Agregar a mi inventario",
+  "catalogSize": "Medida nominal: {size}",
+  "catalogUnit": "Unidad: {unit}",
+  "catalogEach": "pieza",
+  "catalogCopperElbow": "Codo de cobre de 90° de {size}",
+  "catalogEmpty": "Esta categoría se está reconstruyendo.",
+  "catalogNoMatches": "No se encontraron artículos. Prueba otro nombre o medida.",
+  "@catalogSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@catalogUnit": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "@catalogCopperElbow": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1,3 +1,9 @@
+import 'dart:io';
+import 'package:ui_lab_2_1/src/data/storage/local_persistence.dart';
+import 'package:ui_lab_2_1/src/data/expenses/expense_ui_repository_controller.dart';
+import 'package:ui_lab_2_1/src/data/receipts/receipt_submission_session.dart';
+import 'receipt_evidence_draft_workflow_test.dart' show openEvidenceSession;
+import 'support/storage/native_widget_pump.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/screens/expenses/expense_entry_flow.dart';
@@ -17,7 +23,8 @@ void main() {
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
-        await tester.pumpWidget(
+        await mount(
+          tester,
           MaterialApp(
             theme: dark ? AppTheme.dark : AppTheme.light,
             builder: (context, child) => MediaQuery(
@@ -42,7 +49,13 @@ void main() {
           ),
         );
         await tester.tap(find.text('Start'));
-        await tester.pumpAndSettle();
+        await waitForNativeSave(
+          tester,
+          () => find
+              .byKey(const ValueKey('continue-expense-setup'))
+              .evaluate()
+              .isNotEmpty,
+        );
         expect(find.text('Add receipt'), findsNothing);
         expect(find.text('Enter without a receipt'), findsNothing);
         expect(find.byType(TextFormField), findsNothing);
@@ -74,12 +87,28 @@ void main() {
         await tester.tap(
           find.byKey(const ValueKey('confirm-receipt-category')),
         );
-        await tester.pumpAndSettle();
+        await waitForNativeSave(
+          tester,
+          () =>
+              find
+                  .byKey(const ValueKey('continue-expense-setup'))
+                  .evaluate()
+                  .isNotEmpty &&
+              tester
+                      .widget<FilledButton>(
+                        find.byKey(const ValueKey('continue-expense-setup')),
+                      )
+                      .onPressed !=
+                  null,
+        );
         expect(find.text('Parking'), findsOneWidget);
         final next = find.byKey(const ValueKey('continue-expense-setup'));
         await tester.ensureVisible(next);
         await tester.tap(next);
-        await tester.pumpAndSettle();
+        await waitForNativeSave(
+          tester,
+          () => find.byType(ReceiptIntakeScreen).evaluate().isNotEmpty,
+        );
         final source = tester.widget<ReceiptIntakeScreen>(
           find.byType(ReceiptIntakeScreen),
         );
@@ -107,7 +136,20 @@ void main() {
           isNull,
         );
         await tester.pageBack();
-        await tester.pumpAndSettle();
+        await waitForNativeSave(
+          tester,
+          () =>
+              find
+                  .byKey(const ValueKey('continue-expense-setup'))
+                  .evaluate()
+                  .isNotEmpty &&
+              tester
+                      .widget<FilledButton>(
+                        find.byKey(const ValueKey('continue-expense-setup')),
+                      )
+                      .onPressed !=
+                  null,
+        );
         expect(find.text('Parking'), findsOneWidget);
         expect(tester.widget<ReceiptChoiceCard>(detailed).selected, isTrue);
         expect(tester.takeException(), isNull);
@@ -118,7 +160,8 @@ void main() {
   testWidgets(
     'category cancel does not apply a pending change; no category is available',
     (tester) async {
-      await tester.pumpWidget(
+      await mount(
+        tester,
         MaterialApp(
           theme: AppTheme.light,
           home: Builder(
@@ -136,15 +179,50 @@ void main() {
         ),
       );
       await tester.tap(find.text('Start'));
-      await tester.pumpAndSettle();
+      await waitForNativeSave(
+        tester,
+        () => find
+            .byKey(const ValueKey('continue-expense-setup'))
+            .evaluate()
+            .isNotEmpty,
+      );
       await tester.tap(find.byKey(const ValueKey('choose-receipt-category')));
       await tester.pumpAndSettle();
       await tester.tap(
         find.byKey(const ValueKey('receipt-category-uncategorized')),
       );
       await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
+      await waitForNativeSave(
+        tester,
+        () => find
+            .byKey(const ValueKey('continue-expense-setup'))
+            .evaluate()
+            .isNotEmpty,
+      );
       expect(find.text('Fuel'), findsOneWidget);
     },
+  );
+}
+
+Future<void> mount(WidgetTester tester, Widget child) async {
+  final root = (await tester.runAsync(
+    () => Directory.systemTemp.createTemp('setup-layout-'),
+  ))!;
+  final persistence = (await tester.runAsync(
+    () => LocalPersistence.open(directory: root),
+  ))!;
+  final session = (await tester.runAsync(
+    () => openEvidenceSession(persistence),
+  ))!;
+  addTearDown(() async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(persistence.close);
+    await tester.runAsync(() => root.delete(recursive: true));
+  });
+  await tester.pumpWidget(
+    ExpenseUiScope(
+      controller: session.expenses,
+      child: ReceiptSubmissionScope(session: session, child: child),
+    ),
   );
 }

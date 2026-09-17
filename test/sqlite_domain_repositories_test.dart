@@ -4,7 +4,7 @@ import 'package:drift/drift.dart' show Variable;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/expenses/expense_repository.dart';
 import 'package:ui_lab_2_1/src/data/expenses/expense_ui_lab_policy.dart';
-import 'package:ui_lab_2_1/src/data/expenses/expense_ui_lab_seed.dart';
+import 'support/storage/expense_record_fixture.dart';
 import 'package:ui_lab_2_1/src/data/expenses/recurring_expense_ui_lab_seed.dart';
 import 'package:ui_lab_2_1/src/data/receipts/receipt_draft_ui_lab_seed.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_persistence.dart';
@@ -30,7 +30,7 @@ void main() {
   test(
     'existing domain fixtures persist as individual SQL rows and reconcile on reopen',
     () async {
-      await seedExpenseUiLabDemoDataIfEmpty(persistence.expenses);
+      await createExpenseStorageFixture(persistence.expenses);
       await seedRecurringExpenseUiLabDemoDataIfEmpty(
         persistence.recurringExpenses,
       );
@@ -81,7 +81,7 @@ void main() {
   test(
     'failed SQLite update preserves last-known-good repository and database',
     () async {
-      await seedExpenseUiLabDemoDataIfEmpty(persistence.expenses);
+      await createExpenseStorageFixture(persistence.expenses);
       final record = (await persistence.expenses.query(
         ExpenseQuery(access: access),
       )).first;
@@ -125,7 +125,7 @@ void main() {
   test(
     'soft removal and restore retain exact record history across restart',
     () async {
-      await seedExpenseUiLabDemoDataIfEmpty(persistence.expenses);
+      await createExpenseStorageFixture(persistence.expenses);
       final record = (await persistence.expenses.query(
         ExpenseQuery(access: access),
       )).first;

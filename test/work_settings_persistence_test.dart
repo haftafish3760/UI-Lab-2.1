@@ -25,7 +25,10 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Work').first);
         await tester.pumpAndSettle();
-        expect(find.text('My Jobs'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('work-1-column-queues')),
+          findsOneWidget,
+        );
         await tester.tap(find.byKey(const ValueKey('work-settings-button')));
         await tester.pumpAndSettle();
         await waitForNativeSave(tester, () => toggle.evaluate().isNotEmpty);
@@ -84,7 +87,10 @@ void main() {
         );
         await tester.tap(save);
         await waitForNativeSave(tester, () => toggle.evaluate().isEmpty);
-        expect(find.text('My Jobs'), findsNothing);
+        expect(
+          find.byKey(const ValueKey('work-1-column-queues')),
+          findsNothing,
+        );
         expect(find.text('Work Calendar'), findsOneWidget);
         expect(preferences.values['workShowDailySummaries'], 'false');
         expect(await tester.runAsync(drafts), isEmpty);

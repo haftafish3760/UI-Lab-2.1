@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/work/estimate_items_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/work_items_draft_input.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_items_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/stored_estimate_items_editor.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
@@ -23,7 +23,7 @@ void main() {
       (tester) async {
         final harness = (await tester.runAsync(DatabaseHarness.create))!;
         final work = (await tester.runAsync(
-          () async => openUiLabWorkSession(await harness.open()),
+          () async => openSeededTestWorkSession(await harness.open()),
         ))!;
         final base = work.records.singleWhere((r) => r.id == 'est-1040');
         final workflow = (await tester.runAsync(

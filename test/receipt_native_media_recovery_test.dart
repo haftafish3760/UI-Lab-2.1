@@ -220,7 +220,13 @@ void main() {
               permissions: const ExpensePermissions.development(),
               onConfirm: (record) async => record,
             );
-            await tester.pumpAndSettle();
+            await waitForNativeSave(
+              tester,
+              () => find
+                  .byKey(const ValueKey('receipt-every-item-choice'))
+                  .evaluate()
+                  .isNotEmpty,
+            );
             await tester.tap(
               find.byKey(const ValueKey('receipt-every-item-choice')),
             );
@@ -238,7 +244,10 @@ void main() {
               ),
             );
           }
-          await tester.pumpAndSettle();
+          await waitForNativeSave(
+            tester,
+            () => find.byType(ReceiptIntakeScreen).evaluate().isNotEmpty,
+          );
           final action = recovering
               ? find.byKey(const ValueKey('recover-receipt-photos'))
               : find.byKey(
@@ -275,7 +284,13 @@ void main() {
           if (isGallery) {
             final originalId = target!;
             await tester.pageBack();
-            await tester.pumpAndSettle();
+            await waitForNativeSave(tester, () {
+              final choice = find.byKey(
+                const ValueKey('choose-receipt-category'),
+              );
+              return choice.evaluate().isNotEmpty &&
+                  tester.widget<OutlinedButton>(choice).onPressed != null;
+            });
             await tester.tap(
               find.byKey(const ValueKey('choose-receipt-category')),
             );
@@ -291,11 +306,20 @@ void main() {
             await tester.tap(
               find.byKey(const ValueKey('confirm-receipt-category')),
             );
-            await tester.pumpAndSettle();
+            await waitForNativeSave(
+              tester,
+              () => find
+                  .byKey(const ValueKey('continue-expense-setup'))
+                  .evaluate()
+                  .isNotEmpty,
+            );
             await tester.tap(
               find.byKey(const ValueKey('continue-expense-setup')),
             );
-            await tester.pumpAndSettle();
+            await waitForNativeSave(
+              tester,
+              () => find.byType(ReceiptIntakeScreen).evaluate().isNotEmpty,
+            );
             expect(find.text(photo.name), findsOneWidget);
             // Opening the picker commits the changed setup first. Cancelling
             // must not lose the existing image or create another receipt.

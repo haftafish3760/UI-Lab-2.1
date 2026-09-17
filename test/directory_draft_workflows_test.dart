@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_draft_workflows.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_permissions.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_persistence_session.dart';
-import 'package:ui_lab_2_1/src/data/work/directory_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_directory_fixture.dart';
 import 'package:ui_lab_2_1/src/data/work/employee_draft_controller.dart';
 
 import 'support/storage/database_harness.dart';
@@ -31,8 +31,8 @@ void main() {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       var database = await harness.open();
-      final directory = await openUiLabDirectory(database);
-      final other = await openUiLabDirectory(database);
+      final directory = await openSeededTestDirectory(database);
+      final other = await openSeededTestDirectory(database);
       final controller = await directory.openEmployeeDraft();
       controller.updateInput(employeeInput());
       await controller.session.flush();
@@ -48,7 +48,7 @@ void main() {
       other.dispose();
       await harness.close(database);
       database = await harness.open();
-      final reopened = await openUiLabDirectory(database);
+      final reopened = await openSeededTestDirectory(database);
       addTearDown(reopened.dispose);
       expect(
         reopened.employees.singleWhere((e) => e.id == profile.id).name,
@@ -67,7 +67,7 @@ void main() {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       var database = await harness.open();
-      var directory = await openUiLabDirectory(database);
+      var directory = await openSeededTestDirectory(database);
       final actor = directory.permissions.actorEmployeeId;
       final organization = directory.permissions.organizationId;
       // This literal identity predates the service; layout-independent opening
@@ -84,7 +84,7 @@ void main() {
       directory.dispose();
       await harness.close(database);
       database = await harness.open();
-      directory = await openUiLabDirectory(database);
+      directory = await openSeededTestDirectory(database);
       addTearDown(directory.dispose);
       final recovered = await directory.openEmployeeDraft();
       expect(recovered.recoveredInput!.phone, '+1 (');
@@ -143,7 +143,7 @@ void main() {
   test('company and vehicle opening retain existing stable keys', () async {
     final harness = await DatabaseHarness.create();
     addTearDown(harness.dispose);
-    final directory = await openUiLabDirectory(await harness.open());
+    final directory = await openSeededTestDirectory(await harness.open());
     addTearDown(directory.dispose);
     final actor = directory.permissions.actorEmployeeId;
     final company = await directory.openCompanyDraft();
@@ -172,7 +172,7 @@ void main() {
   test('failed recovery opening retains the row and can be retried', () async {
     final harness = await DatabaseHarness.create();
     addTearDown(harness.dispose);
-    final directory = await openUiLabDirectory(await harness.open());
+    final directory = await openSeededTestDirectory(await harness.open());
     addTearDown(directory.dispose);
     final permissions = directory.permissions;
     final payload = employeeInput(role: 'unsupported').toPayload();

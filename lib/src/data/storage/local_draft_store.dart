@@ -4,13 +4,66 @@ import 'package:drift/drift.dart';
 
 import 'local_database.dart';
 import 'draft_repository.dart';
+import 'draft_transfer_repository.dart';
+import 'local_draft_checkpoint.dart';
 import 'draft_session_registry.dart';
 import 'local_record_command.dart';
 
 /// Recoverable unconfirmed input, including incomplete numbers and empty fields.
 /// A saved draft does not change a balance, stock quantity or issued document.
-class LocalDraftStore implements DraftRepository, ManagedDraftRepository {
+class LocalDraftStore
+    implements DraftTransferRepository, ManagedDraftRepository {
   const LocalDraftStore(this.database);
+
+  @override
+  Future<int> transfer({
+    required String organizationId,
+    required String ownerId,
+    required LocalDraftCheckpoint source,
+    required String targetDomain,
+    required String targetDraftId,
+    required Map<String, Object?> targetPayload,
+    required DateTime occurredAt,
+    int expectedTargetRevision = 0,
+  }) {
+    // Detach mutable caller input before asynchronous storage work begins.
+    final payload = (jsonDecode(canonicalJson(targetPayload)) as Map)
+        .cast<String, Object?>();
+    if (source.domain == targetDomain && source.draftId == targetDraftId) {
+      throw ArgumentError('A draft transfer requires a different destination.');
+    }
+    return database.transaction(() async {
+      final current = await find(
+        organizationId: organizationId,
+        ownerId: ownerId,
+        domain: source.domain,
+        draftId: source.draftId,
+      );
+      if (current == null || current.revision != source.revision) {
+        throw const LocalRecordConflict('The source draft changed.');
+      }
+      final revision = await save(
+        organizationId: organizationId,
+        ownerId: ownerId,
+        domain: targetDomain,
+        draftId: targetDraftId,
+        expectedRevision: expectedTargetRevision,
+        payload: payload,
+        occurredAt: occurredAt,
+      );
+      if (!await consumeIfUnchanged(
+        organizationId: organizationId,
+        ownerId: ownerId,
+        domain: source.domain,
+        draftId: source.draftId,
+        expectedRevision: source.revision,
+      )) {
+        throw const LocalRecordConflict('The source draft changed.');
+      }
+      return revision;
+    });
+  }
+
   final LocalDatabase database;
   @override
   DraftSessionRegistry get draftSessions => database.draftSessions;

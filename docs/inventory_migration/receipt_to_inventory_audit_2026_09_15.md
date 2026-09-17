@@ -1,5 +1,7 @@
 # Receipt-to-inventory migration audit
 
+**Historical audit:** Read the [September 16 owner handoff](owner_handoff_2026_09_16.md) first for corrected all-trades scope, current changes and verification limits.
+
 September 15, 2026. Source inspection of Maintainiac 5.7 Copy against the
 current UI Lab 2.1 working files. Prepared directly in the owner's voice task.
 

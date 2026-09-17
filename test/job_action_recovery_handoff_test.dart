@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/work/job_notes_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/job_schedule_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/models/work_models.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_notes_editor_dialog.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_schedule_editor_sheet.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
@@ -22,7 +22,7 @@ void main() {
         (tester) async {
           final harness = (await tester.runAsync(DatabaseHarness.create))!;
           final work = (await tester.runAsync(
-            () async => openUiLabWorkSession(await harness.open()),
+            () async => openSeededTestWorkSession(await harness.open()),
           ))!;
           final job = work.records.firstWhere(
             (r) => r.kind == WorkRecordKind.job && work.permissions.canEdit(r),

@@ -1,3 +1,5 @@
+import 'package:ui_lab_2_1/src/data/work/job_draft_controller.dart';
+import 'package:ui_lab_2_1/src/data/work/job_draft_workflow.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -27,6 +29,7 @@ void main() {
       scope.dispose();
       await harness.dispose();
     });
+    JobDraftController? recovered;
     Future<void> openEditor() async {
       await tester.pumpWidget(
         PrototypeOperationsScope(
@@ -40,8 +43,10 @@ void main() {
                   body: TextButton(
                     onPressed: () => Navigator.of(context).push<void>(
                       MaterialPageRoute(
-                        builder: (_) =>
-                            WorkJobEditor(initialDay: DateTime(2026, 9, 9)),
+                        builder: (_) => WorkJobEditor(
+                          initialDay: DateTime(2026, 9, 9),
+                          recoveredWorkflow: recovered,
+                        ),
                       ),
                     ),
                     child: const Text('New job'),
@@ -104,13 +109,11 @@ void main() {
     database = (await tester.runAsync(harness.open))!;
     session = (await tester.runAsync(() => openUiLabWorkSession(database)))!;
     store = PrototypeOperationsStore(workSession: session);
+    recovered = (await tester.runAsync(
+      () => session.openJobDraft(recoveryDraftId: before.single.draftId),
+    ))!;
     await openEditor();
-    await waitForNativeSave(
-      tester,
-      () => find.text('Continue an unfinished job?').evaluate().isNotEmpty,
-    );
-    await tester.tap(find.text('Interrupted pump repair'));
-    await tester.pumpAndSettle();
+
     await waitForNativeSave(
       tester,
       () => find.byKey(const ValueKey('job-title-field')).evaluate().isNotEmpty,

@@ -82,6 +82,16 @@ changes; picker cancellation must not create a replacement receipt. Category
 search cancellation applies nothing. Text is retained as source input in this
 checkpoint; a completed text-reading/proposal flow is not yet claimed.
 
+Storage checkpoint, September 16: pasted text now saves while editing through
+ReceiptTextEditingSession, against the existing receipt draft revision. Back and
+the forward actions wait for pending local writes. Failed writes remain visible
+and retryable; an explicit unsaved-text discard leaves the saved receipt intact.
+Returning to intake refreshes its saved revision. This adds no parser behavior
+and confirms no expense or stock. Disk-backed controller and widget tests cover
+raw-text reopening, failed writes, retry, conflicts and the receipt-to-Expense
+rollback path. Physical-device interruption verification remains outstanding.
+See `storage_migration_resume_2026_09_16.md` for evidence and remaining gates.
+
 First-use Expense onboarding has two separate pages, triggered by the first
 Expenses navigation tap, never by eager background module construction. Page one
 says Welcome to Expenses and explains Basic and Detailed receipts in separate

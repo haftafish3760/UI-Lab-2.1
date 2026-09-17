@@ -11,7 +11,7 @@ import 'package:ui_lab_2_1/src/data/work/estimate_review_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/models/estimate_models.dart';
 import 'package:ui_lab_2_1/src/data/work/models/work_models.dart';
 import 'package:ui_lab_2_1/src/data/work/work_persistence_session.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'support/storage/database_harness.dart';
 
 DraftAutosaveSession sessionOf(ResumedEstimateAction resumed) =>
@@ -70,7 +70,7 @@ void main() {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
       var database = await harness.open();
-      var work = await openUiLabWorkSession(database);
+      var work = await openSeededTestWorkSession(database);
       final pending = await seedActions(work);
       final before = await work.drafts.listOwned(
         organizationId: work.permissions.organizationId,
@@ -90,7 +90,7 @@ void main() {
       work.dispose();
       await harness.close(database);
       database = await harness.open();
-      work = await openUiLabWorkSession(database);
+      work = await openSeededTestWorkSession(database);
       addTearDown(work.dispose);
       final recovery = recoveryFor(work);
       final entries = await recovery.list();
@@ -121,7 +121,7 @@ void main() {
     () async {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
-      final work = await openUiLabWorkSession(await harness.open());
+      final work = await openSeededTestWorkSession(await harness.open());
       addTearDown(work.dispose);
       await seedActions(work);
       var permission = const EstimatePermissions.development();
@@ -148,7 +148,7 @@ void main() {
     () async {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
-      final work = await openUiLabWorkSession(await harness.open());
+      final work = await openSeededTestWorkSession(await harness.open());
       addTearDown(work.dispose);
       final pending = await seedActions(work);
       final recovery = recoveryFor(work);
@@ -204,7 +204,7 @@ void main() {
     () async {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
-      final work = await openUiLabWorkSession(await harness.open());
+      final work = await openSeededTestWorkSession(await harness.open());
       addTearDown(work.dispose);
       final pending = await seedActions(work);
       final recovery = recoveryFor(work);

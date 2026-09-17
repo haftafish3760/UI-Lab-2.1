@@ -1,7 +1,6 @@
 import 'dart:convert';
-import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
-import '../../screens/work/documents/customer_document.dart';
+import 'customer_document.dart';
 
 /// Account integration supplies a fresh Firebase ID token, never a service key.
 /// No default host or demonstration URL can create an apparently live link.
@@ -92,19 +91,4 @@ class CustomerReviewLink {
   final Uri url;
   final DateTime expiresAt;
   final String digest;
-}
-
-class CustomerPortalScope extends InheritedWidget {
-  const CustomerPortalScope({
-    required this.gateway,
-    required super.child,
-    super.key,
-  });
-  final CustomerPortalGateway gateway;
-  static CustomerPortalGateway? maybeOf(BuildContext context) => context
-      .dependOnInheritedWidgetOfExactType<CustomerPortalScope>()
-      ?.gateway;
-  @override
-  bool updateShouldNotify(CustomerPortalScope oldWidget) =>
-      gateway != oldWidget.gateway;
 }

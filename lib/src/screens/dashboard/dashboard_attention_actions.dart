@@ -127,6 +127,7 @@ extension _DashboardAttentionActions on _DashboardScreenState {
     );
     if (!mounted || job == null) return;
     final store = PrototypeOperationsScope.of(context);
+    if (store.workSession != null) return; // Editor owns the atomic conversion.
     store.addWorkRecord(job);
     store.updateWorkRecord(
       estimate.withEstimateStage(EstimateStage.converted, DateTime.now()),

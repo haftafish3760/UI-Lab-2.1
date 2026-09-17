@@ -2,7 +2,7 @@ import '../storage/local_record_store.dart';
 import '../storage/local_record_command.dart';
 import '../storage/local_record_identity.dart';
 import '../../shared/documents/customer_portal_gateway.dart';
-import '../../screens/work/documents/customer_document.dart';
+import '../../shared/documents/customer_document.dart';
 import 'work_persistence_session.dart';
 import 'models/work_models.dart';
 import 'models/estimate_models.dart';

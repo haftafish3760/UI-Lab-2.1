@@ -379,6 +379,82 @@ class AppLocalizationsFr extends AppLocalizations {
   String calendarRecordCount(int count, String recordLabel) {
     return '$count $recordLabel.';
   }
+
+  @override
+  String get catalogBrowse => 'Parcourir le catalogue';
+
+  @override
+  String get catalogInventory => 'Mon inventaire';
+
+  @override
+  String get catalogGrid => 'Grille';
+
+  @override
+  String get catalogList => 'Liste';
+
+  @override
+  String get catalogChooseTrade => 'Choisir un métier';
+
+  @override
+  String get catalogChooseCategory => 'Choisir une catégorie';
+
+  @override
+  String get catalogSearch => 'Rechercher des articles';
+
+  @override
+  String get catalogSearchCategory => 'Rechercher dans cette catégorie';
+
+  @override
+  String get catalogClear => 'Effacer la recherche';
+
+  @override
+  String get catalogPlumbing => 'Plomberie';
+
+  @override
+  String get catalogElectrical => 'Électricité';
+
+  @override
+  String get catalogHvac => 'CVCA';
+
+  @override
+  String get catalogFittings => 'Raccords';
+
+  @override
+  String get catalogCopper => 'Cuivre';
+
+  @override
+  String get catalogElbows90 => 'Coudes à 90°';
+
+  @override
+  String get catalogItemDetails => 'Détails de l’article';
+
+  @override
+  String get catalogAdd => 'Ajouter à mon inventaire';
+
+  @override
+  String catalogSize(String size) {
+    return 'Dimension nominale : $size';
+  }
+
+  @override
+  String catalogUnit(String unit) {
+    return 'Unité : $unit';
+  }
+
+  @override
+  String get catalogEach => 'unité';
+
+  @override
+  String catalogCopperElbow(String size) {
+    return 'Coude en cuivre à 90° de $size';
+  }
+
+  @override
+  String get catalogEmpty => 'Cette catégorie est en cours de reconstruction.';
+
+  @override
+  String get catalogNoMatches =>
+      'Aucun article trouvé. Essayez un autre nom ou une autre dimension.';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -461,4 +537,80 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String calendarRecordCount(int count, String recordLabel) {
     return '$count $recordLabel.';
   }
+
+  @override
+  String get catalogBrowse => 'Parcourir le catalogue';
+
+  @override
+  String get catalogInventory => 'Mon inventaire';
+
+  @override
+  String get catalogGrid => 'Grille';
+
+  @override
+  String get catalogList => 'Liste';
+
+  @override
+  String get catalogChooseTrade => 'Choisir un métier';
+
+  @override
+  String get catalogChooseCategory => 'Choisir une catégorie';
+
+  @override
+  String get catalogSearch => 'Rechercher des articles';
+
+  @override
+  String get catalogSearchCategory => 'Rechercher dans cette catégorie';
+
+  @override
+  String get catalogClear => 'Effacer la recherche';
+
+  @override
+  String get catalogPlumbing => 'Plomberie';
+
+  @override
+  String get catalogElectrical => 'Électricité';
+
+  @override
+  String get catalogHvac => 'CVCA';
+
+  @override
+  String get catalogFittings => 'Raccords';
+
+  @override
+  String get catalogCopper => 'Cuivre';
+
+  @override
+  String get catalogElbows90 => 'Coudes à 90°';
+
+  @override
+  String get catalogItemDetails => 'Détails de l’article';
+
+  @override
+  String get catalogAdd => 'Ajouter à mon inventaire';
+
+  @override
+  String catalogSize(String size) {
+    return 'Dimension nominale : $size';
+  }
+
+  @override
+  String catalogUnit(String unit) {
+    return 'Unité : $unit';
+  }
+
+  @override
+  String get catalogEach => 'unité';
+
+  @override
+  String catalogCopperElbow(String size) {
+    return 'Coude en cuivre à 90° de $size';
+  }
+
+  @override
+  String get catalogEmpty => 'Cette catégorie est en cours de reconstruction.';
+
+  @override
+  String get catalogNoMatches =>
+      'Aucun article trouvé. Essayez un autre nom ou une autre dimension.';
 }

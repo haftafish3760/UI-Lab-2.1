@@ -1,0 +1,2204 @@
+{
+  "purpose": "WIP desktop transfer, not a tested release",
+  "base_head": "98d240558df1c9de4044a894fd22810bf167bf81",
+  "included_files": [
+    {
+      "path": "assets/inventory/browse_batch.sqlite",
+      "bytes": 61440,
+      "sha256": "2d907424e635403a8a3cde835100f433ae92dd81e59cece28e3da1e06009c63b"
+    },
+    {
+      "path": "docs/README.md",
+      "bytes": 13666,
+      "sha256": "683e9cd1fa99c436d6668878775f590cfee5495964166f3084d1ffe90d2d7483"
+    },
+    {
+      "path": "docs/inventory_migration/DESKTOP_HANDOFF_2026_09_17.md",
+      "bytes": 26703,
+      "sha256": "7b234de307eb1faf7888a59d76da870e25deb0e2d646463d44c4b520f9dfecad"
+    },
+    {
+      "path": "docs/inventory_migration/audit_2026_09_16/catalog_reconciliation.json",
+      "bytes": 966,
+      "sha256": "3872ca2a2bc5da07effbdfd7d54479d21ef29531ca26a3a0cca15162c615d9d1"
+    },
+    {
+      "path": "docs/inventory_migration/audit_2026_09_16/catalog_record_evidence.jsonl.gz",
+      "bytes": 1342962,
+      "sha256": "1b86ab24e326c0703fdae6da4a8c3680004f314334a56ba1ebbe2a462fd60ccc"
+    },
+    {
+      "path": "docs/inventory_migration/materials_copper_review_001.json",
+      "bytes": 31684,
+      "sha256": "26a88294ee36ca899272527da44c729253845ccf2bc9983aa509561121ef6e46"
+    },
+    {
+      "path": "docs/inventory_migration/owner_handoff_2026_09_16.md",
+      "bytes": 28730,
+      "sha256": "08e2b14e87a96ffbeaf2a3549f77c5aee960f50b0e80ac2516af50313f4e6fa0"
+    },
+    {
+      "path": "docs/inventory_migration/receipt_to_inventory_audit_2026_09_15.md",
+      "bytes": 11660,
+      "sha256": "a865f1ae8a4dd2cb2e0ada891f8a44be09a6c9fa820384a667f27b906526f487"
+    },
+    {
+      "path": "docs/inventory_rebuild_plan.md",
+      "bytes": 7330,
+      "sha256": "8cdd7a41d58ee1f7e99a48c165814d5012275d59dec59ac7e3c42d0f8f10139f"
+    },
+    {
+      "path": "docs/receipt_material_intake_blueprint.md",
+      "bytes": 54987,
+      "sha256": "4591d5419fb91e50ae307d8a4aa1984dbd5cd410be3b0a11f559199453f7d0fc"
+    },
+    {
+      "path": "docs/storage_migration_resume_2026_09_16.md",
+      "bytes": 55931,
+      "sha256": "d37adefd1c0cba4837e8609ca104bac18adc566928760a1c26ae54b58ea8cf3b"
+    },
+    {
+      "path": "docs/storage_regression_failures_2026_09_16.json",
+      "bytes": 44994,
+      "sha256": "0a00d53c296994b3b9b59c93a942146be643663ceb095b910d50b0e6a4f1ac87"
+    },
+    {
+      "path": "ios/Flutter/Debug.xcconfig",
+      "bytes": 107,
+      "sha256": "690b8a8b1ae15ddd29b241429963e971bbc6720ab22f154cf8cf6b085b6d4925"
+    },
+    {
+      "path": "ios/Flutter/Release.xcconfig",
+      "bytes": 109,
+      "sha256": "75abb819a9de1e0e41c835e7307bc64a506cac25a9a5c0b0d8253fa1c3d5d422"
+    },
+    {
+      "path": "ios/Podfile",
+      "bytes": 1391,
+      "sha256": "f58e643b37a91401e0ab83570b844718ddb78b14cc062a4bdee5934a29b86fd8"
+    },
+    {
+      "path": "lib/l10n/app_en.arb",
+      "bytes": 7450,
+      "sha256": "2222f9c065271bddd881cae6e476a70d11c02d8abb74961f00f5c7de75d0ccc9"
+    },
+    {
+      "path": "lib/l10n/app_en_US.arb",
+      "bytes": 2382,
+      "sha256": "ffb9f09f863fa811ba8d509a888af3cb7ce4c6746cbdde66cc6c55c69983d680"
+    },
+    {
+      "path": "lib/l10n/app_es.arb",
+      "bytes": 7197,
+      "sha256": "34b74d5943a813a1d0182f9040066d105a291a6762e98bbae648434494961073"
+    },
+    {
+      "path": "lib/l10n/app_es_US.arb",
+      "bytes": 2322,
+      "sha256": "fa26e12e84f5ce707aa10e94bbba94a8a4e9e6cc3d45f2a988ce9117e8c9fb36"
+    },
+    {
+      "path": "lib/l10n/app_fr.arb",
+      "bytes": 7374,
+      "sha256": "45ae012625b1efaad0d678b4410a42c75ad10f5ecf3e5ae52070909d5b087ae0"
+    },
+    {
+      "path": "lib/l10n/app_fr_CA.arb",
+      "bytes": 2399,
+      "sha256": "c714013c393fe4b8e183c3c760616d0099d678fd71dcffd66162c3275c78221e"
+    },
+    {
+      "path": "lib/l10n/app_localizations.dart",
+      "bytes": 27650,
+      "sha256": "d7af96c15179c3c7528a19af9afa86cd2023b8b2c8d703686a00b63ca696083a"
+    },
+    {
+      "path": "lib/l10n/app_localizations_en.dart",
+      "bytes": 13559,
+      "sha256": "349bbc8f1af102386c3ab85dee92ef01116b33f6a4d7ee022b5cf3713218c4be"
+    },
+    {
+      "path": "lib/l10n/app_localizations_es.dart",
+      "bytes": 14405,
+      "sha256": "f7bd47bf863ce4284d008054d55bfbf7669ffefec02a562f458d63bb28657c5c"
+    },
+    {
+      "path": "lib/l10n/app_localizations_fr.dart",
+      "bytes": 14632,
+      "sha256": "50ebe87e7444045e44158e697498eac637cb6e6369d044652c753127789ec2b7"
+    },
+    {
+      "path": "lib/src/app.dart",
+      "bytes": 19246,
+      "sha256": "7133cff455e5f5034593d38ee41f13ea0d5b75b55ed2ad5716e3157871f5f003"
+    },
+    {
+      "path": "lib/src/data/expenses/expense_draft_recovery.dart",
+      "bytes": 4503,
+      "sha256": "77709e4173bdb8efe065f15abdc3d39daf52d8f34f2a22bf78d1e67cc19aba48"
+    },
+    {
+      "path": "lib/src/data/expenses/expense_entry_setup_input.dart",
+      "bytes": 3211,
+      "sha256": "a80ec5249e6edcd55f7e11c7179ffabc82a275dd48c05358645bcd60f51fe4df"
+    },
+    {
+      "path": "lib/src/data/expenses/expense_entry_setup_recovery.dart",
+      "bytes": 2463,
+      "sha256": "628a6911e4070792a2a09402af9d930d6d59c86efd8543f8b393cdae4ab818b5"
+    },
+    {
+      "path": "lib/src/data/expenses/expense_entry_setup_workflow.dart",
+      "bytes": 7637,
+      "sha256": "a5b3c3586647ef01dc0a41054df3017c6898f0881d4618e64b6af981d93b0ad9"
+    },
+    {
+      "path": "lib/src/data/prototype_operations_store.dart",
+      "bytes": 17860,
+      "sha256": "3b41a330fa8faf22a09c4ccd0493590bd6f66c41d5662b1044124ce0e6605d8a"
+    },
+    {
+      "path": "lib/src/data/receipts/atomic_expense_setup_receipt.dart",
+      "bytes": 4351,
+      "sha256": "355e8ea30d29b5aef6942e344af63030cc873708d2e3dc177b6a1132db66077a"
+    },
+    {
+      "path": "lib/src/data/receipts/receipt_submission_session.dart",
+      "bytes": 5898,
+      "sha256": "5636b0a96bb49c4307387a103f11eb0d1c9d169b279e09deb2d4807b10bc4ef3"
+    },
+    {
+      "path": "lib/src/data/receipts/receipt_text_editing_session.dart",
+      "bytes": 4726,
+      "sha256": "d3a8033954bc3a16606d42a9111501bf7328bbcd6fdaba55ab0368e59e400704"
+    },
+    {
+      "path": "lib/src/data/storage/application_storage_lifecycle.dart",
+      "bytes": 3096,
+      "sha256": "3b1b1a9e0419091879eae00e304bcf129842d6e6c0f7c8f12e86fd805e9e14aa"
+    },
+    {
+      "path": "lib/src/data/storage/draft_autosave_session.dart",
+      "bytes": 9159,
+      "sha256": "14276dbd4ea78b028f27aaeece47b371cdc51b42fb086ae7d5fe8cfefd13927b"
+    },
+    {
+      "path": "lib/src/data/storage/draft_transfer_repository.dart",
+      "bytes": 732,
+      "sha256": "36a19d28d054db5e1301b27a5605e3410825bcaf1b4e39a4d5b5be0d3a90b495"
+    },
+    {
+      "path": "lib/src/data/storage/draft_workflow_controller.dart",
+      "bytes": 1473,
+      "sha256": "7e55aad8a1a0b5a03ebc7039b50d75cd41465e89597db9233c0eb34289d69d24"
+    },
+    {
+      "path": "lib/src/data/storage/expense_display_preference_codec.dart",
+      "bytes": 1282,
+      "sha256": "4a7fd684c19a6037bf4d702631f8b93c0dea5e57e8ff7bbbdcf06fe5c901a234"
+    },
+    {
+      "path": "lib/src/data/storage/local_draft_store.dart",
+      "bytes": 9225,
+      "sha256": "ab313a52620374be683b9af5f8e1ed784a2e829af14799afc27cc44fac9f1ee2"
+    },
+    {
+      "path": "lib/src/data/storage/preference_draft_workflow.dart",
+      "bytes": 3441,
+      "sha256": "8ac2672777ddfb5bc3ccffeec5f20ac9730efff1ea137971b3d01efd2c8d4ea6"
+    },
+    {
+      "path": "lib/src/data/work/directory_persistence_session.dart",
+      "bytes": 13200,
+      "sha256": "78ef773bfad8c7222656b72d595923aa7ad2f36961e7b1fef6baf8dc52eaae0b"
+    },
+    {
+      "path": "lib/src/data/work/work_customer_review_session.dart",
+      "bytes": 6289,
+      "sha256": "69f136f2fdf66c76c4176e6022e03f52debeb70a2dfd75ec65025a54d716bd5b"
+    },
+    {
+      "path": "lib/src/layout/app_layout_engine.dart",
+      "bytes": 16694,
+      "sha256": "92466798246c0c188500c2519a3e274976c584d49ae1c38b5dcae395b1dc8d32"
+    },
+    {
+      "path": "lib/src/layout/materials_catalog_layout_calculator.dart",
+      "bytes": 621,
+      "sha256": "712fa91cea2aed67f7b48b200e74ab475403f7915abf10cfbacf2f736382cc72"
+    },
+    {
+      "path": "lib/src/layout/materials_inventory_layout_calculator.dart",
+      "bytes": 623,
+      "sha256": "1099a937d613d1ddcba8864a157c5ba9d541f58f2df533e16dc3f90c14da250f"
+    },
+    {
+      "path": "lib/src/screens/dashboard/dashboard_attention_actions.dart",
+      "bytes": 4657,
+      "sha256": "2d95eba0d48ff17ffc6871ce17ddc44f8689b972a839a0848381584af5ba7bbc"
+    },
+    {
+      "path": "lib/src/screens/dashboard/dashboard_day_record_actions.dart",
+      "bytes": 12527,
+      "sha256": "113af02093952d05d3251aa7bf04b37b78519c2c5f3a90a86dcf6e01b2d0067c"
+    },
+    {
+      "path": "lib/src/screens/dashboard/dashboard_screen_actions.dart",
+      "bytes": 10552,
+      "sha256": "cbef0e2ac509a861d9dd0f4fea95db58564c9582ec9313cd3010bbd33809b9ad"
+    },
+    {
+      "path": "lib/src/screens/expenses/expense_entry_choice_screen.dart",
+      "bytes": 11136,
+      "sha256": "46cade8ddb5a5f99987655ffe277a78f266fa436bf9611ab334f0fdcda506f28"
+    },
+    {
+      "path": "lib/src/screens/expenses/expense_entry_flow.dart",
+      "bytes": 5698,
+      "sha256": "dfd6be494cd5574ecfca1b17a9128a76da44531c33e341ff416ebaa9bfcb9594"
+    },
+    {
+      "path": "lib/src/screens/expenses/receipt_category_picker_screen.dart",
+      "bytes": 7769,
+      "sha256": "feb025b2b05311b441331a16df992d2b1f0e039294b7f42908c8e9c265e842ca"
+    },
+    {
+      "path": "lib/src/screens/expenses/receipt_intake_media.dart",
+      "bytes": 8382,
+      "sha256": "ac1c23c6c9488e9bb788bc87be5800a2eefaa6669b09e641aec923c072d8c0a4"
+    },
+    {
+      "path": "lib/src/screens/expenses/receipt_intake_screen.dart",
+      "bytes": 16726,
+      "sha256": "c09d930278be7fa23e2ce75019b739a5de04e0f07824bb348fcbaabeae18abe3"
+    },
+    {
+      "path": "lib/src/screens/expenses/receipt_text_entry_screen.dart",
+      "bytes": 6303,
+      "sha256": "4e6d351b91c1da42627c6f523a33912690a9494da6fb62c1dab510614886008c"
+    },
+    {
+      "path": "lib/src/screens/inventory/catalog/inventory_catalog.dart",
+      "bytes": 4076,
+      "sha256": "75c3019eda8c94a896d1d1052a0d8fcf33d02955ace98370b7471702b0e62501"
+    },
+    {
+      "path": "lib/src/screens/inventory/catalog/inventory_catalog_screen.dart",
+      "bytes": 14566,
+      "sha256": "6d13850a36b4b056b4bbc334d1f627a75bc4d5b423e3ee110fc59df74dc6fe88"
+    },
+    {
+      "path": "lib/src/screens/inventory/catalog/materials_catalog_item_details.dart",
+      "bytes": 3121,
+      "sha256": "4ff96212657bbe8c6bd16b6145c8ca6add98eedc24ffc981e536b1e78a8758c7"
+    },
+    {
+      "path": "lib/src/screens/inventory/catalog/materials_catalog_labels.dart",
+      "bytes": 879,
+      "sha256": "4a158af6b42e71d1c0faf3ccba6067c536fc34b4abe9781dcae9320c6bf96e68"
+    },
+    {
+      "path": "lib/src/screens/inventory/catalog/materials_catalog_route.dart",
+      "bytes": 677,
+      "sha256": "f3a52a28a31610ff521a0131c2c6e9007150067ee199b899d9c424ced7373ac4"
+    },
+    {
+      "path": "lib/src/screens/inventory/catalog/materials_catalog_text.dart",
+      "bytes": 1505,
+      "sha256": "df2da8681a3bda9cc260e983d1a47acab296115e0f4317e5a582cda12ab81fce"
+    },
+    {
+      "path": "lib/src/screens/inventory/catalog/materials_catalog_tiles.dart",
+      "bytes": 6153,
+      "sha256": "3741fb82b56606b3833c7443110012c25cbc8071457d0ca69c5c01291d5b44d0"
+    },
+    {
+      "path": "lib/src/screens/inventory/catalog/materials_trade_manifest.dart",
+      "bytes": 657,
+      "sha256": "1c990ca7a0196512e9dccc38c446029ec9ab997364c2f3734238fefecb60e1f7"
+    },
+    {
+      "path": "lib/src/screens/inventory/inventory_item_entry_screen.dart",
+      "bytes": 8894,
+      "sha256": "fc1d6b761b0805f86d7b15772820923475e3cb8f3fd7701031a13484abf7f2ba"
+    },
+    {
+      "path": "lib/src/screens/inventory/inventory_models.dart",
+      "bytes": 7026,
+      "sha256": "22d10cde34c04e2b28821234db3d6252b08cf0110552da71ecae9529eb17b83f"
+    },
+    {
+      "path": "lib/src/screens/inventory/materials_inventory_tiles.dart",
+      "bytes": 5435,
+      "sha256": "a969ba7332e0edbe21682d4f7bc8b015c5013796862f959fda112b9e5c57e74c"
+    },
+    {
+      "path": "lib/src/screens/work/customer_portal_screen.dart",
+      "bytes": 8889,
+      "sha256": "ff460ecd8bb01f29ef6edd4b296271d69227675494a829109bc4176d917cabe8"
+    },
+    {
+      "path": "lib/src/screens/work/documents/customer_document.dart",
+      "bytes": 137,
+      "sha256": "183f0521a8b348502c961c9596cb502e5a6899171a8034f98afca8456efb81dc"
+    },
+    {
+      "path": "lib/src/shared/application_draft_recovery.dart",
+      "bytes": 3685,
+      "sha256": "616c0a40323c333364da43414e10e2ce97de987ee843221d23e59d3bde26a667"
+    },
+    {
+      "path": "lib/src/shared/application_recovery_release.dart",
+      "bytes": 3372,
+      "sha256": "1370eb0695772e3bcd4a1f2c0567e9deeadc5eba6a16a5bedbefe2699f82d82d"
+    },
+    {
+      "path": "lib/src/shared/documents/customer_document.dart",
+      "bytes": 2830,
+      "sha256": "c9e0d90fbba07d1311058ac37e555024a67f432622384aa65edc4c1e33784932"
+    },
+    {
+      "path": "lib/src/shared/documents/customer_portal_gateway.dart",
+      "bytes": 2885,
+      "sha256": "328e73e3bfe92f0c6979de029c774997ef641e50cc95078681fadb5507ac4d7e"
+    },
+    {
+      "path": "lib/src/shared/documents/customer_portal_scope.dart",
+      "bytes": 539,
+      "sha256": "6915f183b7fd7936a34e62f498bbbd1571c5b96f8db7cfbc1a286d32fd2a39f2"
+    },
+    {
+      "path": "lib/src/shell/application_recovery_routes.dart",
+      "bytes": 4321,
+      "sha256": "560296b054c25b485a1636a5be95e8c5fd00c30c46e605f5364269cd3ba83e26"
+    },
+    {
+      "path": "macos/Flutter/Flutter-Debug.xcconfig",
+      "bytes": 125,
+      "sha256": "802714a37a8fd3065fb3d8e21cbcfbb3147c7ad25f25934b64590085aa9f5b28"
+    },
+    {
+      "path": "macos/Flutter/Flutter-Release.xcconfig",
+      "bytes": 127,
+      "sha256": "d575f436f8bab30d7096792396e73b65db242edc01913c4123d2c29e713b3a6d"
+    },
+    {
+      "path": "macos/Podfile",
+      "bytes": 1365,
+      "sha256": "46afee587c4ce12f5ea80942d379c6d6dc07037149e307fc30ade39a44132bb3"
+    },
+    {
+      "path": "macos/Podfile.lock",
+      "bytes": 548,
+      "sha256": "fcc104bae323ad6eab84bf9788c8d54ab290accf4674e970a00d8dba51b6b576"
+    },
+    {
+      "path": "macos/Runner.xcodeproj/project.pbxproj",
+      "bytes": 34342,
+      "sha256": "5107d9c9db7f8239b42759a27bba0744ffe62ff980f12221f5696d8da8b1566d"
+    },
+    {
+      "path": "macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved",
+      "bytes": 3685,
+      "sha256": "0beec01f683ce46cb6409b3e051730ea2b12a324b855176174b53c0f88f30191"
+    },
+    {
+      "path": "macos/Runner.xcworkspace/contents.xcworkspacedata",
+      "bytes": 224,
+      "sha256": "465e6de5660384eb6832e8078920ba6cd5305c445cb29a24a86a2fda4aa6b67e"
+    },
+    {
+      "path": "macos/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved",
+      "bytes": 3685,
+      "sha256": "0beec01f683ce46cb6409b3e051730ea2b12a324b855176174b53c0f88f30191"
+    },
+    {
+      "path": "pubspec.lock",
+      "bytes": 37764,
+      "sha256": "8e0a75951f77a16aff9525acfa85f61de8cf61d7669b673fcbabc2390862270d"
+    },
+    {
+      "path": "pubspec.yaml",
+      "bytes": 4691,
+      "sha256": "9a00c24afaeaacf022891877f71dfba0a52f59ea4fa14eadce6d8a72649515d5"
+    },
+    {
+      "path": "test/application_recovery_scope_test.dart",
+      "bytes": 6573,
+      "sha256": "f0894158f94277ad888d15d6caeb0d5203e3ca89442abc8d9505a931baccf0e9"
+    },
+    {
+      "path": "test/application_storage_lifecycle_test.dart",
+      "bytes": 3263,
+      "sha256": "17a340df87e0d708147e630000032b6d2373cdb7d4343263aff8d5c144fd5e16"
+    },
+    {
+      "path": "test/company_profile_draft_recovery_test.dart",
+      "bytes": 6048,
+      "sha256": "16f9530251b0cb80aac16756e6003ba0a5ae9d784ac19a0aad4dccdedf609f84"
+    },
+    {
+      "path": "test/dashboard_editor_commit_ownership_test.dart",
+      "bytes": 3120,
+      "sha256": "e1ee6bc216b3bfb2fe6fab952d792a1826a3e0a6037b1d7beb4cee7f80df38ac"
+    },
+    {
+      "path": "test/dashboard_plan_sqlite_failure_test.dart",
+      "bytes": 5496,
+      "sha256": "05bd1f8b2e76934b4357cddc06d684e1056edd07a65b17cd7cc24a7f10a5c18b"
+    },
+    {
+      "path": "test/dashboard_schedule_draft_recovery_test.dart",
+      "bytes": 6361,
+      "sha256": "980f983d76e18c7c3458c10884c57b46b4d1b36d519f9f5e71008bdcd9159706"
+    },
+    {
+      "path": "test/dashboard_workday_sqlite_recovery_test.dart",
+      "bytes": 7451,
+      "sha256": "9b7fe22664836a80be5357f4d95bfff6a9003974640968f5b149df379ea77a7a"
+    },
+    {
+      "path": "test/day_note_editor_draft_recovery_test.dart",
+      "bytes": 6105,
+      "sha256": "9614331954883c591d1ec4d2c4f0c625650c8d0d346e5545565946dd9ac8db3f"
+    },
+    {
+      "path": "test/directory_draft_workflows_test.dart",
+      "bytes": 7826,
+      "sha256": "7473252b9b9b907664866b6bc73e4c46bd6961629f602a342f9ca669a84d6a7d"
+    },
+    {
+      "path": "test/directory_persistence_test.dart",
+      "bytes": 5430,
+      "sha256": "8f6cfa2b20d22d341671f1d18eeef046eebfa366e0b47616a8b8f7f338b392b3"
+    },
+    {
+      "path": "test/directory_profile_draft_compatibility_test.dart",
+      "bytes": 6606,
+      "sha256": "2e1c0d7c49bae914c88a5f46fd8f1acc2415ef49df981b1ddd3d7f6e24123fd6"
+    },
+    {
+      "path": "test/directory_unchanged_confirmation_test.dart",
+      "bytes": 4234,
+      "sha256": "192bc27ba437b6a4c6f071e8cb6fd7e76a4799d6b4b3ce37d164b2288f84c0c9"
+    },
+    {
+      "path": "test/disposed_session_write_admission_test.dart",
+      "bytes": 2960,
+      "sha256": "46fedd464cce8c741d1f09f30ee174466686f5e1ec9afa71a86ba1f460663cf9"
+    },
+    {
+      "path": "test/draft_repository_boundary_test.dart",
+      "bytes": 12319,
+      "sha256": "0a156eb9683d34132965019d7832646b39f36e09813df9b49214598c94c51898"
+    },
+    {
+      "path": "test/draft_transfer_repository_test.dart",
+      "bytes": 6514,
+      "sha256": "573584bfc4d46efa865cdd93ff1c9781cff8e4d2412ecd8a0b1686df9a84d1b7"
+    },
+    {
+      "path": "test/draft_workflow_evolution_test.dart",
+      "bytes": 2484,
+      "sha256": "c0616575e51f7ce66e202f1194b32f74f3c5577511054deddaa02af54f45497f"
+    },
+    {
+      "path": "test/employee_directory_persistence_test.dart",
+      "bytes": 6011,
+      "sha256": "d833a0be1518cddc4b1593fba2f48bbaa74d5980fe0aa6386a5565c6c4a2311a"
+    },
+    {
+      "path": "test/estimate_action_draft_recovery_test.dart",
+      "bytes": 8689,
+      "sha256": "35fc9dc57b64e432e02d65cf13e58605959cf312810351c737d1bddbae8bab5a"
+    },
+    {
+      "path": "test/estimate_action_recovery_handoff_test.dart",
+      "bytes": 6690,
+      "sha256": "b4d0d6d4ca4949d4fb26af95ec163ced8540629f8ddbb7229ea15b7951ba2cba"
+    },
+    {
+      "path": "test/estimate_delivery_draft_recovery_test.dart",
+      "bytes": 7859,
+      "sha256": "519cd0b42783c102ca0af1df36c83a808868c5286bf5d744c35952464363b280"
+    },
+    {
+      "path": "test/estimate_delivery_draft_workflow_test.dart",
+      "bytes": 5508,
+      "sha256": "2c185df9298d29d5b5256446e8b008da92c6d0730810394c494e4f693da2388f"
+    },
+    {
+      "path": "test/estimate_detail_items_recovery_test.dart",
+      "bytes": 5960,
+      "sha256": "2323b7aec61f8951766aaecab129770cb03ad4acc1f2a46cd12407bd0006eb35"
+    },
+    {
+      "path": "test/estimate_detail_sqlite_failure_test.dart",
+      "bytes": 4975,
+      "sha256": "bb62e1d3e9da3b2698d19a787760d2acd1c3ab8bade84a87b62231198d2d9f91"
+    },
+    {
+      "path": "test/estimate_item_draft_recovery_test.dart",
+      "bytes": 7907,
+      "sha256": "a559719dec50b2cf5d241cdd165205dc51064a1a802f6a6d7586fe5d838af55a"
+    },
+    {
+      "path": "test/estimate_items_draft_workflow_test.dart",
+      "bytes": 4315,
+      "sha256": "7b27ff2d3f0d10ba341b7933edc0822336c6fafca7e64760913fba23ee3d70b3"
+    },
+    {
+      "path": "test/estimate_items_recovery_handoff_test.dart",
+      "bytes": 5243,
+      "sha256": "1ce71d5b2de49e05a8019d2d41814084a589bf74e34d2898da744325bf4e69cb"
+    },
+    {
+      "path": "test/estimate_media_adoption_test.dart",
+      "bytes": 10117,
+      "sha256": "855014b13e4cd0c7e2ec43977f971d5eda241b629dcb4728b53b4a15f39a4db8"
+    },
+    {
+      "path": "test/estimate_native_media_recovery_test.dart",
+      "bytes": 10334,
+      "sha256": "b4771b37ef3498947f187c2138d995f713e0e04b5299f3638bf231d8e0447e13"
+    },
+    {
+      "path": "test/estimate_review_draft_recovery_test.dart",
+      "bytes": 6502,
+      "sha256": "a4bca771da0c5962915ef4c5e106a0d3a50b740ef1c1942c9a77a608d830aa8f"
+    },
+    {
+      "path": "test/estimate_review_draft_workflow_test.dart",
+      "bytes": 5648,
+      "sha256": "7151df3272b35f432ae6256e307f4df71e1f1d031866695bd6e2034202dde670"
+    },
+    {
+      "path": "test/estimate_review_recovery_handoff_test.dart",
+      "bytes": 5565,
+      "sha256": "9159aaa352fcc72e33388b21c1dd8841c1c394a6553b44aa1eb0b6383fd37db0"
+    },
+    {
+      "path": "test/estimate_signature_draft_recovery_test.dart",
+      "bytes": 6252,
+      "sha256": "ac2b5bec2c1175f94da9f50078e73bc1aff4cd1b33a225f48eb51119a1f2a02a"
+    },
+    {
+      "path": "test/estimate_signature_draft_workflow_test.dart",
+      "bytes": 4052,
+      "sha256": "35483e2fa94b54e99575a4f78e31cb75da6da419f21ee6fa25973bd1e0012f67"
+    },
+    {
+      "path": "test/expense_entry_choice_test.dart",
+      "bytes": 8338,
+      "sha256": "8c70c389d02f0dfd2070892483b7bc362f4841fb2a2c026b20610885b128ae45"
+    },
+    {
+      "path": "test/expense_entry_open_failure_test.dart",
+      "bytes": 4449,
+      "sha256": "9f60c034f78df22cec6f3cc851c1c93f14822029abd8c7380ca041eb6456b812"
+    },
+    {
+      "path": "test/expense_entry_setup_screen_recovery_test.dart",
+      "bytes": 3428,
+      "sha256": "2dc66496d8ada0e230b8168129d216bbfd543cd58c40699bf60e12f0b5a4376c"
+    },
+    {
+      "path": "test/expense_entry_setup_workflow_test.dart",
+      "bytes": 10254,
+      "sha256": "917b0135e37570fdfc4497cc30cd9c9f4cd68b108c0170adc6edbccddbaf0563"
+    },
+    {
+      "path": "test/expense_settings_persistence_test.dart",
+      "bytes": 11254,
+      "sha256": "a11df49b5dd9c929128bfca00a5f05da7292ff56e94c865976ce69c7dd454be6"
+    },
+    {
+      "path": "test/expense_setup_back_navigation_test.dart",
+      "bytes": 9598,
+      "sha256": "f0f8f4b2589ae271ae50a65a4c05e5ec9b798226aaa2a27fb6a0831fc603926e"
+    },
+    {
+      "path": "test/expense_setup_discard_isolation_test.dart",
+      "bytes": 4144,
+      "sha256": "34d450cc0fa736dffe594d41d2ffcbdd4a3f8337a2f25374b278e88ea903cbea"
+    },
+    {
+      "path": "test/expense_setup_receipt_transfer_test.dart",
+      "bytes": 6178,
+      "sha256": "ea125c0f6b3d8add3eef615060b6fe159b5d2382c6240f5cf0f5ca7dd98a85c7"
+    },
+    {
+      "path": "test/expense_welcome_test.dart",
+      "bytes": 10412,
+      "sha256": "4368926daf2bf5cacb9a6ebccbccafeeebc83124015d2801b0ea1a1d29dbe5a2"
+    },
+    {
+      "path": "test/inventory_batch_verification_test.dart",
+      "bytes": 4832,
+      "sha256": "59a7d42283a9a75c61cf5c8fa5115a0f92c595dfb83d4e4365c5abfbc831662f"
+    },
+    {
+      "path": "test/inventory_catalog_navigation_test.dart",
+      "bytes": 1759,
+      "sha256": "dba89757ede34b7e208784741af69e449c730261efe05131563a8ba6db18363e"
+    },
+    {
+      "path": "test/inventory_category_layout_test.dart",
+      "bytes": 3352,
+      "sha256": "625e7c28c26f189775ad94d4afbc781b53a4c64ce53a3488e3ce8c26cd09e416"
+    },
+    {
+      "path": "test/inventory_legacy_parser_contract_test.dart",
+      "bytes": 2834,
+      "sha256": "67ae291fc38bd6e00bd047ac2c56d477ad548d8b23930ea3abc968623cada645"
+    },
+    {
+      "path": "test/inventory_screen_test.dart",
+      "bytes": 14546,
+      "sha256": "c1d5f9d66fa2eacf88749f8755c89dfa05e2b7c11f5e7b58603edbde02deead4"
+    },
+    {
+      "path": "test/invoice_editor_draft_recovery_test.dart",
+      "bytes": 5866,
+      "sha256": "53dc181f4e912fc54bc05e985c7afc519db7b93ecf93f3bbad1e7dfb5ff65c27"
+    },
+    {
+      "path": "test/invoice_item_draft_recovery_test.dart",
+      "bytes": 7033,
+      "sha256": "88a0930b25f028f3a98f59a07f4b6f698ac76855d101c9427a2ad94bedfb45b4"
+    },
+    {
+      "path": "test/invoice_payment_draft_recovery_catalog_test.dart",
+      "bytes": 5603,
+      "sha256": "cd2589cb90f5355c0daec731ca2e2c7aeb9152dc15495ddcee5eae080b6bd4af"
+    },
+    {
+      "path": "test/invoice_payment_draft_workflow_test.dart",
+      "bytes": 5434,
+      "sha256": "57f819b490723aca554333dba9d3cfa97b0b83213313d473ac49172760e6daa2"
+    },
+    {
+      "path": "test/invoice_payment_recovery_handoff_test.dart",
+      "bytes": 5402,
+      "sha256": "7a9fb9742b3454ab71d585e649529d24b6a8cdd1cbf9ad4066c6ccc3bb560dd4"
+    },
+    {
+      "path": "test/job_action_recovery_handoff_test.dart",
+      "bytes": 6361,
+      "sha256": "2d738be995be5c2111dc59a77a01e939e242462b41da1f80a6f70027ec3172ec"
+    },
+    {
+      "path": "test/job_assignment_draft_workflow_test.dart",
+      "bytes": 5426,
+      "sha256": "a9656dbad537c0c5d693e6cf5c3a4f4315cecad9bee0a46dc2b2f312f6be73ef"
+    },
+    {
+      "path": "test/job_assignment_recovery_handoff_test.dart",
+      "bytes": 5207,
+      "sha256": "b11541ea726fffbd31ee4bf53d3a6ee409525c61ba78452f2e869fe648dadf7c"
+    },
+    {
+      "path": "test/job_editor_draft_recovery_test.dart",
+      "bytes": 5235,
+      "sha256": "43e44e3e7a3070fe56cbf217abde9a262189cb3ef40bfaac007dbfc89d038e0e"
+    },
+    {
+      "path": "test/job_item_draft_recovery_test.dart",
+      "bytes": 6960,
+      "sha256": "bc0fc926c2ead61cc703a2a21e39bf7a811b1e0a3f35bef03a3217a05708a6bc"
+    },
+    {
+      "path": "test/job_materials_recovery_handoff_test.dart",
+      "bytes": 6683,
+      "sha256": "33996cb93e0f764fe9590097799d1e50fa63fe1914c2aeb2e36c09848b02d308"
+    },
+    {
+      "path": "test/job_schedule_draft_identity_test.dart",
+      "bytes": 3342,
+      "sha256": "d18aab029a391654d24d36efba1fbba5b2c6ac9ff987e45c302a316cd2dcffa7"
+    },
+    {
+      "path": "test/job_status_sqlite_failure_test.dart",
+      "bytes": 3375,
+      "sha256": "e887e8e74d152193ffa2a6a65ad80583cce22f656889556e75c600b9250719ec"
+    },
+    {
+      "path": "test/local_persistence_pause_test.dart",
+      "bytes": 4167,
+      "sha256": "2394531b5160f5f6327cee9ff859a68cfddecb57557ec3e4a800a28fea98bb7a"
+    },
+    {
+      "path": "test/materials_catalog_platform_test.dart",
+      "bytes": 1945,
+      "sha256": "7d7bfbf2e4bb3216fb78a23bd33451e447dc2a913a32767c8bf6ea9c6635641c"
+    },
+    {
+      "path": "test/materials_catalog_preview_test.dart",
+      "bytes": 3580,
+      "sha256": "660eebcf2b8b3335194f4cb23cd493a2446ae6193ea4842c85468591df1d2130"
+    },
+    {
+      "path": "test/materials_catalog_review_test.dart",
+      "bytes": 6435,
+      "sha256": "117dd24827501b0f421a8cc9a1f194874b16f7e88ae37a678d9a1861606284d7"
+    },
+    {
+      "path": "test/payment_draft_recovery_test.dart",
+      "bytes": 6212,
+      "sha256": "cf392230e03c4cff73c79562661c50678be353f8a179ac82887601e4efcd2608"
+    },
+    {
+      "path": "test/receipt_intake_confirmation_failure_test.dart",
+      "bytes": 9648,
+      "sha256": "f1fc0ae100fb5ba4bae00cfac3ea64773f64e926b63028d83a2f0c12ad5a8222"
+    },
+    {
+      "path": "test/receipt_native_media_recovery_test.dart",
+      "bytes": 15519,
+      "sha256": "2ee5a7392c756e013884171a51633edcc8ee3a8f2cffb00c2ed896816e5e3806"
+    },
+    {
+      "path": "test/receipt_text_editing_session_test.dart",
+      "bytes": 4974,
+      "sha256": "d7d8c557a16df8e41e56ea0796948e77b9e936c42e6171f715159a7fde55d42b"
+    },
+    {
+      "path": "test/receipt_text_entry_persistence_test.dart",
+      "bytes": 3836,
+      "sha256": "a4dd3d18343218a3067c7b577913d21bb3b9d05b0d3966b7c9084d8615b9d2a6"
+    },
+    {
+      "path": "test/sqlite_domain_repositories_test.dart",
+      "bytes": 5820,
+      "sha256": "2c1c2193a8ae8c872a1a714246364b5cf584e45b9942c449ad9ba60f88584751"
+    },
+    {
+      "path": "test/support/storage/expense_record_fixture.dart",
+      "bytes": 1186,
+      "sha256": "d2b9061287b8a079600776c79203833964f6f1481012293433928b2a502e9dd1"
+    },
+    {
+      "path": "test/support/storage/seeded_directory_fixture.dart",
+      "bytes": 2870,
+      "sha256": "077eb7f0b0e57b1d1fb4d0298522ef18fd915fe3459c4164ab1be6f78a94c6ce"
+    },
+    {
+      "path": "test/support/storage/seeded_work_fixture.dart",
+      "bytes": 1605,
+      "sha256": "eca28910b7e0dfe934e608fd78edf0fb4a8f8b5a123fcddd5a4b7bd0b767c63b"
+    },
+    {
+      "path": "test/vehicle_editor_draft_recovery_test.dart",
+      "bytes": 8685,
+      "sha256": "7527a34a8e8baccbc025a134efcd7ac75d564cfbfdcf7290f62c792a5c0bd443"
+    },
+    {
+      "path": "test/work_dashboard_projection_test.dart",
+      "bytes": 4868,
+      "sha256": "6d65895c67135a77ff8352fa62800b17aa24454726e373758cae3140b7d31d61"
+    },
+    {
+      "path": "test/work_draft_controller_compatibility_test.dart",
+      "bytes": 7637,
+      "sha256": "269fcf71626a75840193d578f2c96789c7fe5fb353a832b137a80c2e2bccdac2"
+    },
+    {
+      "path": "test/work_line_item_recovery_provenance_test.dart",
+      "bytes": 4188,
+      "sha256": "8fb4c2becff6f1471d75e956244c47d9b794051fff15334a66599917ec8ce831"
+    },
+    {
+      "path": "test/work_settings_persistence_test.dart",
+      "bytes": 4533,
+      "sha256": "b0983c169ee579e1c082e9eb972052e3bcb398aa5f9f34d6c1188e145b51fef3"
+    },
+    {
+      "path": "test/work_status_history_test.dart",
+      "bytes": 4435,
+      "sha256": "d275daa41341b55b0ff94e7c87bef82dcb75df687ea90f83077f92ed953e5c51"
+    },
+    {
+      "path": "tool/inventory/export_review_batch.dart",
+      "bytes": 1721,
+      "sha256": "b8e0a50e1f78416e3cacdcf3adf179458cf164106c66c4cdaf0c9e44aa651e2a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/README.md",
+      "bytes": 1061,
+      "sha256": "00088de89629c12ef55460c946a1010277c2a78fcdb3eb7aff2c31439d9f0328"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/appliance_installation_repair/appliance_installation_repair_catalog.dart",
+      "bytes": 226,
+      "sha256": "7c8180bd805dc2590d0c8c2e1eb2256fe20ebe3decdf0d82654d2f8d11857b14"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/appliance_installation_repair/generated_appliance_installation_repair_detail_catalog.dart",
+      "bytes": 12602,
+      "sha256": "44f92279cbb13beced1e951c4461acf98be803249e00152bfdd67851f7a8db2e"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/cabinets_countertops/cabinets_countertops_catalog.dart",
+      "bytes": 201,
+      "sha256": "40cbfbf78fb2c7975fc62368426a798572d97d5505c721272cce0966c6f8c486"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/cabinets_countertops/generated_cabinets_countertops_detail_catalog.dart",
+      "bytes": 10507,
+      "sha256": "7d76619ba88d79441c15ed16db5b73eeda178fabb60c54c4bd86ad6a032d5727"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/carpentry/adhesives_and_sealants/adhesives_and_sealants_catalog.dart",
+      "bytes": 922,
+      "sha256": "5dd47d135bae02c36783e9424cde698774711730c83020ccdd1ef71f6501a449"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/carpentry/carpentry_catalog.dart",
+      "bytes": 463,
+      "sha256": "03b991001ebbb1d2e7526afe90544c4099e6879cdb58257d6f54616b4638249a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/carpentry/connectors_and_framing_hardware/connectors_and_framing_hardware_catalog.dart",
+      "bytes": 947,
+      "sha256": "ca7c4ae5f11d941da4ed180025a3d33d7f9693f124f6eaeedc3bc5ad7f4c25c4"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/carpentry/decking_and_exterior_wood/decking_and_exterior_wood_catalog.dart",
+      "bytes": 3832,
+      "sha256": "25646041ebe77d7da032a5f08424b2d5f57f4925bdad3a7ee4e292d7768a191e"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/carpentry/fasteners/fasteners_catalog.dart",
+      "bytes": 869,
+      "sha256": "447c045ea3d6bedc5e64fa319077194a434410d928d1a8c0180c81c32e23d3ed"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/carpentry/generated_carpentry_detail_catalog.dart",
+      "bytes": 7900,
+      "sha256": "ce7f79d18834c58349aa8c48f25f433a836f9d50864849471f7f5586ef5a13db"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/carpentry/generated_carpentry_service_catalog.dart",
+      "bytes": 29820,
+      "sha256": "977882bac8f7200b7a9eeebbf8d9a68f861988b1fc08066dbbe4db9688e856f9"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/carpentry/lumber/lumber_catalog.dart",
+      "bytes": 595,
+      "sha256": "abc3e6be45c9a341e58f6495390515af79028361aa120d5b128071764ca7fffd"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/carpentry/sheet_goods/sheet_goods_catalog.dart",
+      "bytes": 494,
+      "sha256": "a61be575034c948e9e3d10d54f6be319724b21a8517fbd5c405808628d71c16b"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/carpentry/trim_and_hardware/trim_and_hardware_catalog.dart",
+      "bytes": 840,
+      "sha256": "a18830464a9db339ee439ca0b217546cf40a04b660543fdbdf7c4111ac20f43b"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/drywall/compound_and_mud/compound_and_mud_catalog.dart",
+      "bytes": 1053,
+      "sha256": "f90204391a6fd43e5a316fb754f49251df72a04aedb695ef924a6936fc93b1d3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/drywall/drywall_catalog.dart",
+      "bytes": 364,
+      "sha256": "e9ad486f1b9661facc2fc21e27e59178d5b5f2fe2df0b577f6eccdaad4bfeb65"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/drywall/fasteners_and_adhesives/fasteners_and_adhesives_catalog.dart",
+      "bytes": 1133,
+      "sha256": "ebbac1cc62650ca0c2180e39601e4a5345d7bdfec8c0913a7f3235d7ac2da509"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/drywall/generated_drywall_detail_catalog.dart",
+      "bytes": 7440,
+      "sha256": "f5b4a5226608ff4c3ee8af287b207ec74fffc87d32f1039e2d3cd4246b1f0745"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/drywall/generated_drywall_service_catalog.dart",
+      "bytes": 23516,
+      "sha256": "c509637ab2cedc90cbbb5e5ba91e1ff7613ae82e08b09b0f8f79d8e18a5835bf"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/drywall/panels_and_board/panels_and_board_catalog.dart",
+      "bytes": 857,
+      "sha256": "b6f677996bda9d515d96967e9477824e6529decb655b0c53693b514a9765190d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/drywall/tape_bead_and_trim/tape_bead_and_trim_catalog.dart",
+      "bytes": 1078,
+      "sha256": "0a69a8fd964019a5c26c0baec6741c02dcf09143895bd337d7598c301b47561c"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/drywall/texture_and_patch/texture_and_patch_catalog.dart",
+      "bytes": 953,
+      "sha256": "abf7302baef993eca30d5ac044b52b6f2f99bd44b199ad18e65b235d75404ff2"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/boxes_and_covers/boxes_and_covers_catalog.dart",
+      "bytes": 922,
+      "sha256": "96fec8595d9e8069e0c0deae0088b1ed4cb4c7b5d1923c863d7e5b51de2dff3d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/breakers/breakers_catalog.dart",
+      "bytes": 996,
+      "sha256": "c1558599237250c737d102cae9023594c22e7d73bec7632fc551615f2ef2ea18"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/conduit_and_fittings/conduit_and_fittings_catalog.dart",
+      "bytes": 2557,
+      "sha256": "71c86dc4f390aadb583612e097e2c69384383ef732a9a88f239d1597446bf53f"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/connectors_and_consumables/connectors_and_consumables_catalog.dart",
+      "bytes": 829,
+      "sha256": "50301a9971e3e6ae1c9d048d32f116481fef99d2a9b865d6f791d3dd7a6d4786"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/devices/devices_catalog.dart",
+      "bytes": 976,
+      "sha256": "00a86fbf6347bcf12c112c8f955604d11e9d8180ba0ff0a6a4cc03804bff40c6"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/electrical_catalog.dart",
+      "bytes": 579,
+      "sha256": "5bfc1244bb3cdf8ca362169f069c42c008402692e4b24131fa2de7cdc28cdbc1"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/electrical_core_supplemental_catalog.dart",
+      "bytes": 10660,
+      "sha256": "f76f98320905f6c50beb58ea67919b62728e8e3a0116f93bcce3d2b147b382d8"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/generated_electrical_bulk_catalog.dart",
+      "bytes": 16221,
+      "sha256": "891e87d42191a39b9ae071457e28bff427c86c6b971d1ba6f7a145b8524d1fcd"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/generated_electrical_service_catalog.dart",
+      "bytes": 25256,
+      "sha256": "493558bd05be9193ab4abdecd98853984c60d58cc6620e2f90e726441fc96dc2"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/generated_electrical_support.dart",
+      "bytes": 2432,
+      "sha256": "c4265ee0aee94dbb0858863b969815fd98ea1899bd77baaf63c6c7295a1f6108"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/grounding_and_bonding/grounding_and_bonding_catalog.dart",
+      "bytes": 1088,
+      "sha256": "f2eb72999e74d0cb95abd66c7e280bf4f2bc87cfda1faf4f25d335b5aafc3656"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/lighting/lighting_catalog.dart",
+      "bytes": 908,
+      "sha256": "7374e64a5d7a9a9aae8296137389a1e8ba3d06db54877dae6745e9f81f4778a1"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/panels_and_service_equipment/panels_and_service_equipment_catalog.dart",
+      "bytes": 1165,
+      "sha256": "ed5b4b15c64affac6b94d3d26403142e8bd09fc12163f251d8e0caebcaaf7578"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/electrical/wire_and_cable/wire_and_cable_catalog.dart",
+      "bytes": 617,
+      "sha256": "b2a7ef1c2715a717eeb06365217fc86fc6cc4b4dcf965b6551a2400d71575b3d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/fencing/fencing_catalog.dart",
+      "bytes": 4140,
+      "sha256": "e30403f9d006c655f05085a5f085d0d91862dc896ffcfa8755d2cfa2803e4cb8"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/fencing/generated_fencing_detail_catalog.dart",
+      "bytes": 8158,
+      "sha256": "e32afdf2a6eb6dfee8a993533ce8c0533211149431deef060ecc06b32cc8eb19"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/fencing/generated_fencing_field_catalog.dart",
+      "bytes": 7561,
+      "sha256": "b04f9b7171e182b378445559a22b64f644f14a45c704f1031d22d7b5e96f044d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/fencing/generated_fencing_service_catalog.dart",
+      "bytes": 22285,
+      "sha256": "9fd232aa749757e5ba3a1ee365d7decea9790d9466107dcf59cd262b0e705f0d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/flooring/flooring_catalog.dart",
+      "bytes": 159,
+      "sha256": "af86fac905fdd7b2293d3a983c895cdde92c9eb9aa19915e4f12bf49b37dbf57"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/flooring/generated_flooring_detail_catalog.dart",
+      "bytes": 11734,
+      "sha256": "5112f83c2dcbd35d5f99071e60b6723737d21c027b8c9045d5838d74c2d3e1c4"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/garage_doors_openers/garage_doors_openers_catalog.dart",
+      "bytes": 199,
+      "sha256": "31759eabfc82b36e11466097b537376d95fd1691c048ef673b5ac7f2bcd472d6"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/garage_doors_openers/generated_garage_doors_openers_detail_catalog.dart",
+      "bytes": 9387,
+      "sha256": "a07fbbc3ef008ce918563120baa0c8959ec746777a9c879b5bd852f4901a5d21"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/air_filters/air_filters_catalog.dart",
+      "bytes": 306,
+      "sha256": "f969ed0dc74675addc3875058618e532db5264fdeffdc2899aa45e94e032256e"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/condensate/condensate_catalog.dart",
+      "bytes": 3508,
+      "sha256": "776f00f7eda9d12255fa2c0df92c0afb1105ec0666d0c15e9b1f3fb94d8cc6fb"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/controls_and_electrical/controls_and_electrical_catalog.dart",
+      "bytes": 1038,
+      "sha256": "d0579ab9d1fff621ac9440d6dc7f92a325c2efc8f479bd83b4d3dcc517f53ec5"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/detail/hvac_controls_lines_and_condensate_detail_catalog.dart",
+      "bytes": 5824,
+      "sha256": "54855b441aaeccd78bb4b9015b4ada706788202b58ae96c261e89b2364b7adcf"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/detail/hvac_equipment_and_service_detail_catalog.dart",
+      "bytes": 4421,
+      "sha256": "0b1882e41fadd74ec45549a50440c5763303cc7c1266c375e1d9fc920d584686"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/detail/hvac_filter_iaq_and_air_distribution_detail_catalog.dart",
+      "bytes": 4277,
+      "sha256": "0f1ccfb148a62f3a62fe4959e81f516629cae80344963bb0ab5f84d33df45cf0"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/ductwork_and_air_distribution/ductwork_and_air_distribution_catalog.dart",
+      "bytes": 2370,
+      "sha256": "407732507a6c4b25d5185b657d4a85ffa1e097cdcd17958dfbcfcf5d8064a4dc"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/generated_hvac_detail_catalog.dart",
+      "bytes": 2080,
+      "sha256": "9fdb6a0fe6ff324a3209782ae1fc78e1bbc9aab84d91402e4701289ffb81a503"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/generated_hvac_equipment_catalog.dart",
+      "bytes": 9369,
+      "sha256": "2ab851c5721b92838352bd336d3fb83478ff20703d69d742c5f448abca2ea082"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/generated_hvac_service_catalog.dart",
+      "bytes": 26273,
+      "sha256": "249495a1ef33619083629647615d0b54b3f1e9aa7b90c9b0807faac011c58df3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/generated_hvac_service_truck_airflow_catalog.dart",
+      "bytes": 9757,
+      "sha256": "0c11f1d53570341f608b96874cb368774d8e0dd480738e141831e9b9c80c0f0b"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/generated_hvac_service_truck_catalog.dart",
+      "bytes": 15881,
+      "sha256": "9904256e7661afcd887e194b44874a6aba01bead395547f6f3dd1877613afc67"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/generated_hvac_service_truck_controls_catalog.dart",
+      "bytes": 10348,
+      "sha256": "4efb8c23d2b3d0873d3738b0f26a1965a529296acccc4d1330b4dc2d402013fa"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/generated_hvac_service_truck_diagnostics_catalog.dart",
+      "bytes": 6359,
+      "sha256": "93168e0472128c293b58c4cfdc0f0ae42d7497e19a75ab783f769dc9ac0df54c"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/generated_hvac_service_truck_hydronic_catalog.dart",
+      "bytes": 6254,
+      "sha256": "5f9de5e44293c420776a639f74e3035602e9096b34d78f5235b812522791434f"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/generated_hvac_service_truck_rtu_catalog.dart",
+      "bytes": 5281,
+      "sha256": "25d819a2454e9bf40ab9bd760aed390a694197aec507608ecfa7fceb620593e7"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/generated_hvac_service_truck_vent_gas_catalog.dart",
+      "bytes": 8102,
+      "sha256": "85c6c448b242230b042db009e00207c2e2fa5d5674bbd0c407a81bce61069d2f"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/generated_hvac_system_catalog.dart",
+      "bytes": 11420,
+      "sha256": "dde599e89ecb9da44f4a57f32d4edc54f82f88617484021d9a3edca8125c56f4"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/hvac_catalog.dart",
+      "bytes": 947,
+      "sha256": "11f7e76bbca1436b10a2b78e381bb3397e0fb5682ef436a00c038e66d7005ab4"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/hvac_core_supplemental_catalog.dart",
+      "bytes": 7951,
+      "sha256": "74d9577301d880f218bee0263c63f2d9f7f1fb5b72d890683c3a2b8eb52f367b"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/ignition_and_gas_heat/ignition_and_gas_heat_catalog.dart",
+      "bytes": 949,
+      "sha256": "3454aa659df97901e883103ee1f6c611791cae39232822986a21411d54b1b8e6"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/motors_and_blower_parts/motors_and_blower_parts_catalog.dart",
+      "bytes": 959,
+      "sha256": "44433307a6eba017f289360776d46d1a9be41c023331bba9f38691bf34ecd109"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/refrigerant_lines/refrigerant_lines_catalog.dart",
+      "bytes": 810,
+      "sha256": "ac4dfd2b34ecda8e115b10b7c0a9367dd34cc6127c7c18499ce14632dfd5587a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/refrigerant_service/refrigerant_service_catalog.dart",
+      "bytes": 956,
+      "sha256": "5893169b404dcb96f1d47ddf68a1d4d21c715c7fdc466eb4dca05880097d5922"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/hvac/tape_and_sealants/tape_and_sealants_catalog.dart",
+      "bytes": 875,
+      "sha256": "1de39d40e1c5df3c216c51d8b8bb81790b56ee3ca9d0a367020d68872b4eac31"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/insulation/batt_insulation/batt_insulation_catalog.dart",
+      "bytes": 796,
+      "sha256": "078383c7ced682cfd0938d748126687291ffcb0eec30822ad1e34e6620960359"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/insulation/blown_insulation/blown_insulation_catalog.dart",
+      "bytes": 537,
+      "sha256": "7c4b2ea5c27af57df637105dc462e9df482af37feb1dd48ffefd0db72cfabfa2"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/insulation/foam_and_air_sealing/foam_and_air_sealing_catalog.dart",
+      "bytes": 583,
+      "sha256": "83228b755fee8098ae275f23c4c892fec1afe23f1a60ae1274e15073e9d2fe06"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/insulation/generated_insulation_detail_catalog.dart",
+      "bytes": 6880,
+      "sha256": "bbf57cbc41b5e8d3ae392bae993cac633329050c0eb3eb05ff0a4ac129152dd4"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/insulation/generated_insulation_service_catalog.dart",
+      "bytes": 26571,
+      "sha256": "473d794e181a0d64a6ec4e266c574d8ee3e9a0aa067aec896b840da722326ea3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/insulation/insulation_catalog.dart",
+      "bytes": 371,
+      "sha256": "850f6344c60ad6bb83412c1fd76fbe0929dd779a58dde37ef358cbe2feec0491"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/insulation/vapor_barriers_and_accessories/vapor_barriers_and_accessories_catalog.dart",
+      "bytes": 848,
+      "sha256": "4b1b875b983aabe479b57ea738330b80f42140563bd58f2b9d3c7aebaccf5dff"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/landscaping/drainage_and_erosion/drainage_and_erosion_catalog.dart",
+      "bytes": 849,
+      "sha256": "9512e3fd6faa230dfff9db7a4270d56b562b1bc41eb56680696c256d87034ec3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/landscaping/generated_landscaping_detail_catalog.dart",
+      "bytes": 9353,
+      "sha256": "bc20bbd15b44f45f8fafeb70fdc69ef62ac806f4b52d1c594fe3d931fec24740"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/landscaping/generated_landscaping_service_catalog.dart",
+      "bytes": 27092,
+      "sha256": "46b0eaa12be4cd78319e9658a8843ced5cc2b8c486ca0fa9b235bddd74149dbd"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/landscaping/hardscape/hardscape_catalog.dart",
+      "bytes": 773,
+      "sha256": "c88e66deb5016958ee75c0387ea61de5503e4b730263503ab8312c4885948e75"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/landscaping/irrigation/irrigation_catalog.dart",
+      "bytes": 710,
+      "sha256": "f98747b7bda64eb2dffe3454b5fc0958d0fdfdc2aa55d07774a7c6cc5d95e6b5"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/landscaping/landscaping_catalog.dart",
+      "bytes": 320,
+      "sha256": "5906784df34acd2e7b5fd49c15e04cf7c7dddeabd8b8b390c19a1265d61c3cba"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/low_voltage_data/boxes_and_plates/boxes_and_plates_catalog.dart",
+      "bytes": 792,
+      "sha256": "c59a1d3b68cb76db013be0a7bbc40e0c6481d0d7b30ea84850edba6d7cd04ac5"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/low_voltage_data/cable/cable_catalog.dart",
+      "bytes": 769,
+      "sha256": "61bb61089c233544284bb3e38512e4a78f0ed6570fee8b0bf25d78b71f21eb69"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/low_voltage_data/generated_low_voltage_data_detail_catalog.dart",
+      "bytes": 9231,
+      "sha256": "b94cd31e9f2295909061a1e2781585e35253fcce7c79a0c613afb6d3f2c2be75"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/low_voltage_data/generated_low_voltage_data_service_catalog.dart",
+      "bytes": 25937,
+      "sha256": "4f9c6fddb25d6c9cbed53ab164456c13d74f03c0bb4970447679051f7acaaf44"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/low_voltage_data/low_voltage_data_catalog.dart",
+      "bytes": 414,
+      "sha256": "1536d99c44d3f3249a90a1a8ef5dff964750cc124808f7ab10c943dd2da29c05"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/low_voltage_data/terminations/terminations_catalog.dart",
+      "bytes": 495,
+      "sha256": "5fcad63317f8c87e2407e730b90b003e71a0b5708923fae9d2f05fade5cdad92"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/low_voltage_data/testers_and_tools/testers_and_tools_catalog.dart",
+      "bytes": 963,
+      "sha256": "d48a88d0ad4703cfae324df5c08b62e3a235b02f640b868d77eb9b405a85cd30"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/masonry_concrete/anchors_and_repair/anchors_and_repair_catalog.dart",
+      "bytes": 820,
+      "sha256": "37c5b9711b2edbc73a5bca0fc060a84e2c57757c5602644fc6a0a9d710ec3eca"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/masonry_concrete/concrete/concrete_catalog.dart",
+      "bytes": 428,
+      "sha256": "b1476dc8ea1b9dbc8af5f19e8aaba42c0564a8bd476046e081f43dd11f3e626d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/masonry_concrete/generated_masonry_concrete_detail_catalog.dart",
+      "bytes": 11007,
+      "sha256": "06f9f5f450687512d6f988e41b09f72d9d4ecbcfbfd54d58ad257735c3964aa4"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/masonry_concrete/generated_masonry_concrete_service_catalog.dart",
+      "bytes": 14662,
+      "sha256": "397fde0e00dcaf6ad0e4c5b147dbc5fb6aefc0c8cae121a7c7d57fdf46192745"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/masonry_concrete/masonry_concrete_catalog.dart",
+      "bytes": 436,
+      "sha256": "f9c83890c53bc261b31c04dac82e25068cec907e6327aaa29c343ad8807d7b1f"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/masonry_concrete/masonry_materials/masonry_materials_catalog.dart",
+      "bytes": 464,
+      "sha256": "2e5d511589809b7b12a0ff882153d5ba8cc6fef791d3f5ed51000d751355fa6b"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/masonry_concrete/reinforcement_and_forms/reinforcement_and_forms_catalog.dart",
+      "bytes": 812,
+      "sha256": "e8b4c2c82982d137c174f96177143a0b0fdedb915f6c4eafd26870197db88ca3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/painting/caulk_and_patch/caulk_and_patch_catalog.dart",
+      "bytes": 726,
+      "sha256": "ce7c2e417563da95378f6f49f9a817408f506975d0141d4e268bc8687d130282"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/painting/generated_painting_detail_catalog.dart",
+      "bytes": 8521,
+      "sha256": "87da74e72a9c45c62dd3e8375b8e5b1edbc88ad12e677de1f29a44afab4def21"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/painting/generated_painting_service_catalog.dart",
+      "bytes": 23361,
+      "sha256": "948d60cc1407dc88a263811437bca0527c5e1e61d6e0aaef2dfc41aefbd1ddc6"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/painting/paint/paint_catalog.dart",
+      "bytes": 420,
+      "sha256": "b4ca3d035dd752393219587536be6cfd8a7e66563ad0d98577f65abfc98583aa"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/painting/paint_prep_and_supplies/paint_prep_and_supplies_catalog.dart",
+      "bytes": 1029,
+      "sha256": "d6e903d1487ca9e1893b24b3bd4ef32c9628e032142b4029c04aa77fa746cbb3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/painting/painting_catalog.dart",
+      "bytes": 312,
+      "sha256": "1291360546a2a995d4cd4de07398b89c72052a5822f4147aab6dceefca2e34b6"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/consumables/consumables_catalog.dart",
+      "bytes": 4573,
+      "sha256": "0427f694e2c9951eca7a6d535d8aed3981af0f34b61a78c0536e4b407b48afc8"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/drainage_waste_vent/drainage_waste_vent_catalog.dart",
+      "bytes": 1253,
+      "sha256": "23eade9b174a17f73f121813805eaf873824165b7a6afae7b3b46d9db9a3ac24"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/abs_dwv.dart",
+      "bytes": 1245,
+      "sha256": "9f1ee885dd321d33dab3936e5b5e38b2833a8dbf048a276e8ce9e0e4997bfe88"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/black_iron.dart",
+      "bytes": 1838,
+      "sha256": "00beacfa68c06fda6bb06b164fca9c610c61c5581510dde0e59ef06b3eab692a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/brass.dart",
+      "bytes": 1563,
+      "sha256": "42fdc226fc3a195ad1aaa2577fca2d405e4766326b069ea560569b452e16447e"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/cast_iron_and_no_hub.dart",
+      "bytes": 894,
+      "sha256": "f975860803a14e225a62e46f6173a2efb347a7cb7c19fb04eaa6ebf52fbbccb1"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/copper.dart",
+      "bytes": 3358,
+      "sha256": "29f0e500d5b527ca5c36eded8a949cd61a319ede661c28bf762709db737a4e99"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/cpvc.dart",
+      "bytes": 1277,
+      "sha256": "69d4ab4f5139d670ed508c561d472af508570b135f0e9c22716804c733d6648a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/fittings_catalog.dart",
+      "bytes": 483,
+      "sha256": "89626059cc099c416933de952216cd5eac8764af92bfdd17f102d763fd8177b8"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/galvanized_steel.dart",
+      "bytes": 1513,
+      "sha256": "b0fb296bd525f569c719306d04465924471ca39fa108afdc98a2dd7eaef8ce22"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/pex.dart",
+      "bytes": 1752,
+      "sha256": "df3978a70f70f6ca76cf1834fb66d90ed731fccf917ad19e003962b8d583a2fb"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/push_fit.dart",
+      "bytes": 1751,
+      "sha256": "dc5c8dbccb69b5d3b88862d7a311cb87910787d3039c9baed7b2a013105943c8"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/pvc_dwv.dart",
+      "bytes": 1574,
+      "sha256": "d938556b6e5d5a092279dd680dd474b67bc0223c5959feebe7e2e7a609807e3b"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/fittings/pvc_schedule_40.dart",
+      "bytes": 1879,
+      "sha256": "8dcd61d6650e2bf73188d751bd530e9496e740b08bac60927e60c7e4b09f846c"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/generated_plumbing_drain_finish_catalog.dart",
+      "bytes": 8203,
+      "sha256": "5fb846c0fa4c2e27e9462b5cf4060db8d04e3d50e631c978d377e09c3efbafcc"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/generated_plumbing_items.dart",
+      "bytes": 8464,
+      "sha256": "7da8d3e95cd8791cb79f580426799dab71068a1366cc0a1bc402efd1d9ce8d30"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/generated_plumbing_seals_service_catalog.dart",
+      "bytes": 6902,
+      "sha256": "5ce107c668ac489426aa50b9f2722378e7914008c50eec2cd631704f7ace6ca5"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/generated_plumbing_service_truck_catalog.dart",
+      "bytes": 17907,
+      "sha256": "472a61ee65583940b784dfa4054479a41b57d7862086a3c9785df7bb5f5bf267"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/generated_plumbing_service_truck_tools_catalog.dart",
+      "bytes": 2044,
+      "sha256": "2e87e7e3edf2795bce568fa78951c97b905d6a8ab36f54a0a46010512de0031a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/hangers_and_supports/hangers_and_supports_catalog.dart",
+      "bytes": 3459,
+      "sha256": "c62f5e525f1209c8670a4a19e602e9cfdcf9fa77a278c451927af2c73f1f6c1d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/pipe_and_tubing/pipe_and_tubing_catalog.dart",
+      "bytes": 1856,
+      "sha256": "0600f1e18977a29ddd8d13a4fceadcc95369877e511712296b4794fe1e3e7255"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/plumbing_catalog.dart",
+      "bytes": 608,
+      "sha256": "2ce81412f01e745899f2fbb5895af4e0903b27b5fa35d21e270a8a8c92aa2cf1"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/pumps/pumps_catalog.dart",
+      "bytes": 3864,
+      "sha256": "702b25d8524d6a9000c8005dbd636219eea09ce0af02534244cfd342f002487b"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/shower_and_tub_repair/shower_and_tub_repair_catalog.dart",
+      "bytes": 1760,
+      "sha256": "5c382c494c61562f8c7e99a658a814cdbe87a434e0dda7fcd009735ef8220923"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/sink_and_faucet_repair/sink_and_faucet_repair_catalog.dart",
+      "bytes": 2240,
+      "sha256": "7706cdac21a0b7db884fb8222135f44a7c7946ceeee0129b5a9e737cd3aad3d8"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/supply_lines/supply_lines_catalog.dart",
+      "bytes": 1948,
+      "sha256": "0a686af942bd3274456cf95a2de3508d78e444d25c04c6b227c5fc336fbceedc"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/toilet_repair/toilet_repair_catalog.dart",
+      "bytes": 2229,
+      "sha256": "453a6e361b3706acdcd8d2c6bd6c05cbea58cebceff02eef38d76ab8fd6f002d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/valves/valves_catalog.dart",
+      "bytes": 2548,
+      "sha256": "b63362e7e45d02373a9add358509ad45ba0720bfd5f7fd3da24c6af8b07cd816"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/plumbing/water_heater/water_heater_catalog.dart",
+      "bytes": 2435,
+      "sha256": "6f9e4d2cc9419cf0ce0f2adb4cde5476184b988977d8008234b7a8bcae9ce5c3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/roofing/flashing_and_sealants/flashing_and_sealants_catalog.dart",
+      "bytes": 768,
+      "sha256": "f60af37c7ae848cfc20ed64d55a34ab30881b9119e2f390e08e050c5bd815a26"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/roofing/generated_roofing_detail_catalog.dart",
+      "bytes": 7092,
+      "sha256": "e0ded82fb58de8a869786e09efbd8a258ebcf3a12d7223b3cfd1a31aa30ba2da"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/roofing/generated_roofing_service_catalog.dart",
+      "bytes": 27728,
+      "sha256": "fc046f4572a52cedb11282c5376ac68a10148a156daa386135e76b5cc12edee7"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/roofing/gutters_and_drainage/gutters_and_drainage_catalog.dart",
+      "bytes": 748,
+      "sha256": "f0890cae6c38e0485a0d75eafaecef266f574394eb368744f5550dc86461eddb"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/roofing/roof_covering/roof_covering_catalog.dart",
+      "bytes": 569,
+      "sha256": "372fc34ec38febb99c8b245879f75a35b5254bacb9b923f45b0c3a06830d3ee9"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/roofing/roofing_catalog.dart",
+      "bytes": 346,
+      "sha256": "0dcfe517ffab2b71face5f72f7dc996df75ba66a31470343a53616a230f6ae48"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/roofing/vents_and_roof_accessories/vents_and_roof_accessories_catalog.dart",
+      "bytes": 809,
+      "sha256": "4370c140c21244a3f288e4de79dbd934a032b680de22fe9ea6e50c0417655756"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/siding_exterior/generated_siding_exterior_detail_catalog.dart",
+      "bytes": 9641,
+      "sha256": "4d8a842df64cea806479c76a42510fd01051cf5709fffee897a38b24cfb8330c"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/siding_exterior/siding_exterior_catalog.dart",
+      "bytes": 186,
+      "sha256": "cb66d785e238751eba147473004a5ac7e4ee4d07c67dc2892adb96a20accc95f"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tile/generated_tile_field_catalog.dart",
+      "bytes": 4617,
+      "sha256": "1ad31ef8c1f52d4a6daf6703c6f8c6560b1fad74a3c92cfd5ae060bdb231e30d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tile/generated_tile_install_catalog.dart",
+      "bytes": 13280,
+      "sha256": "ea31e423418357214fb54d9997943858acdf418f9a6c8c500e41d7bd1e74df57"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tile/generated_tile_service_catalog.dart",
+      "bytes": 28418,
+      "sha256": "e448c9f0a83c8649ea92f72c62d072debecbc2beb75402d7287a480ed59d8d92"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tile/generated_tile_surface_catalog.dart",
+      "bytes": 11031,
+      "sha256": "1886e57b62fe70fb3556f4b31c5d6f0935dc77ab98e0c106a62e66fc85cde80d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tile/setting_materials/setting_materials_catalog.dart",
+      "bytes": 952,
+      "sha256": "df85878ac1ab5841faaa5e8242ee90573ba37df2797a12f20585e2a4712c5ff2"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tile/tile_catalog.dart",
+      "bytes": 388,
+      "sha256": "a38befe6a1af4c3ce89ea7779eab240ae90de92d033459985d86e6a975ae8e66"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tile/tile_materials/tile_materials_catalog.dart",
+      "bytes": 953,
+      "sha256": "88d4ca04dbc151c2b99018cf8c0f97073c71ca3f06502c4ca832e4e858b012dc"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tile/tools_and_accessories/tools_and_accessories_catalog.dart",
+      "bytes": 924,
+      "sha256": "c1b82802653c19a4581af5dc29494e80f7c2173bed961387b6a4b3c39b247ad7"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tile/waterproofing/waterproofing_catalog.dart",
+      "bytes": 972,
+      "sha256": "18fdddafd70e7530ad6cc1892a378619453e90e63be0a55af14fd6f8c7b02f97"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tools_safety/adhesives_and_general_consumables/adhesives_and_general_consumables_catalog.dart",
+      "bytes": 938,
+      "sha256": "362299c8563851f3784cfb1afb5d136cd3e1d184123cb86b057a6d993da365f6"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tools_safety/generated_tools_safety_detail_catalog.dart",
+      "bytes": 10694,
+      "sha256": "5cd853adfd34c335146dc12b7d9f0e21144d6e4ec9d6569d6f18f0120a265a40"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tools_safety/generated_tools_safety_service_catalog.dart",
+      "bytes": 27775,
+      "sha256": "22cde7d129e01e9c18c64b98723d712f6b6ad35e8e4fec67b125e8f87a01aa38"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tools_safety/measuring_and_layout/measuring_and_layout_catalog.dart",
+      "bytes": 957,
+      "sha256": "fc7c6039fe0fae5f3da406a41b50dcb3605d14b8bd21a4da3855cf17888a1050"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tools_safety/safety/safety_catalog.dart",
+      "bytes": 711,
+      "sha256": "a8dfed6d8ab9b372fcd8ffcdd3b599cafd08b14fa3447990dbf5d6333e29bb04"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tools_safety/tools/tools_catalog.dart",
+      "bytes": 1108,
+      "sha256": "b08274511170ac1d74539250a8ad4dc41af129f07f32750a83d26fd636ddc520"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/tools_safety/tools_safety_catalog.dart",
+      "bytes": 370,
+      "sha256": "1a884d70c76a0390388aa81d86b86fa24d39b578d42e83c5015a178bbc449d0c"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/well_septic_water_treatment/generated_well_septic_water_treatment_detail_catalog.dart",
+      "bytes": 10334,
+      "sha256": "80097f7c03591e49adf8287b10ff2cf2f806ba957f64d60889dc317da9ae2543"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/well_septic_water_treatment/well_septic_water_treatment_catalog.dart",
+      "bytes": 218,
+      "sha256": "9af94e71f71772d87df07b81f9258da388be318fce333189626a69ced2d2858a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/windows_doors/generated_windows_doors_detail_catalog.dart",
+      "bytes": 12756,
+      "sha256": "0839bdbb4a29bd3b66fcb2affc5bc5c3a67840b0df8267a945d6eb48fcd2af68"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/catalog/windows_doors/windows_doors_catalog.dart",
+      "bytes": 180,
+      "sha256": "472774bfb0545af768e63e8ba9359baefe5f51ee81d29e5fd860a2305702b8a7"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parser.dart",
+      "bytes": 3699,
+      "sha256": "e5db9585bbd789fd8aecab7816bfeb42c526accbd17b8f62c320aa25ed596b8e"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/cabinets_countertops/cabinets_and_countertops_receipt_score.dart",
+      "bytes": 4482,
+      "sha256": "4a3863107e908bdc99d447ce38ed274a181f2e6eb06ee6c9ae3dbf2d236e6386"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/electrical/electrical_receipt_score.dart",
+      "bytes": 13058,
+      "sha256": "03c0fe05b23992cdf3151a6518842198644022ee1aaf35cc99127ac22bce3433"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/hvac/hvac_air_distribution_and_gas_receipt_score.dart",
+      "bytes": 13571,
+      "sha256": "f94f5a23e67c5ab6f9943bfde2e5022a0eefcb785ceccefc143ade0c670ca634"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/hvac/hvac_air_drain_and_duct_parser.dart",
+      "bytes": 11109,
+      "sha256": "8ae40d1ef6dd58e047a85cda304645af3eb1310a5351cfb6beb015730e608851"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/hvac/hvac_core_parser.dart",
+      "bytes": 439,
+      "sha256": "a123e4178b14ea824ba7d1b7a2ec425592d6cb3b686c1456255a430c733543e2"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/hvac/hvac_equipment_and_air_filter_receipt_score.dart",
+      "bytes": 11274,
+      "sha256": "97c515f1560f31b9644617e77cc9962b65f550c0bfe66ea987df1e7dc9b05ab1"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/hvac/hvac_equipment_and_service_parts_parser.dart",
+      "bytes": 7400,
+      "sha256": "cb5a71337f8406062790472f49adb1e961f1f676416ee1f9048f0d1655d048a4"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/hvac/hvac_receipt_precedence_parser.dart",
+      "bytes": 10264,
+      "sha256": "da0a554d5d2ca8a98273131d86213913c0dfb17fe14ce6ca680ed0eed9ea9835"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/hvac/hvac_receipt_score.dart",
+      "bytes": 393,
+      "sha256": "0f5ab8c28289fd3942a0edd17518294484adae93b2c2526a4dfcc43ac0c9649e"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/hvac/hvac_service_equipment_and_tool_receipt_score.dart",
+      "bytes": 12376,
+      "sha256": "ce132b220f6f2fdabbaddfd0d6cffe48c323724354b7227d0114dc1c375f0e75"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/hvac/hvac_unscoped_evidence_parser.dart",
+      "bytes": 1661,
+      "sha256": "17afd16e9074e50c97b91b64a70e353dac570aba4006a4586f7a331fc4f12580"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/plumbing/plumbing_fast_matcher.dart",
+      "bytes": 13123,
+      "sha256": "1063464d35c5662f2838081bf83ad6f7840f52ae71465861706531e51974e592"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/plumbing/plumbing_receipt_precedence_parser.dart",
+      "bytes": 7887,
+      "sha256": "e868680fcf8d065d1cf11654b78aafaf230221d0cab94927dfd20fbb0b9124c7"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/plumbing/plumbing_receipt_score.dart",
+      "bytes": 16508,
+      "sha256": "a77955d3d7bd045e0081324a7d6aa33ac8903ef3dc87928e1946560e56a1f310"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/plumbing/plumbing_receipt_term_aliases.dart",
+      "bytes": 6092,
+      "sha256": "2a49ead0cb445c92be59abb3bd5b49bd40564bcf28d4c9bf57bf233deff5d681"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/shared/receipt_catalog_context.dart",
+      "bytes": 6820,
+      "sha256": "dfd6d65bdbe38b02f9e255721ce7ff9cbb3610b905acc7f3ef523308b59fa20d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/shared/receipt_catalog_index_parity_qa.dart",
+      "bytes": 2077,
+      "sha256": "5804ff4fb36f9d60c2414daf092bcc8bf11bb6511874a9c7b9d0dd1ab1d00385"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/shared/receipt_confidence_specificity.dart",
+      "bytes": 14042,
+      "sha256": "42320c622fd83b2737f63b3c722224a5212c85094acf9d777c6c853b9962e97e"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/shared/receipt_noise.dart",
+      "bytes": 918,
+      "sha256": "89864838ee97cbeb4660c0d6af89e4643c17cdd064ee6894c31e40131ac55608"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/shared/term_aliases/receipt_cabinets_doors_and_finishes_term_aliases.dart",
+      "bytes": 7906,
+      "sha256": "0b5e1b7d4fb47fe388872d657f7c54945942c789424773d9549585e692cc8cb3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/shared/term_aliases/receipt_construction_and_appliance_term_aliases.dart",
+      "bytes": 6373,
+      "sha256": "d30a6bca5d36d02e7d1389a727a7c92e9e23577b3dcddf2500800c71fe9224dd"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/shared/term_aliases/receipt_electrical_and_hvac_term_aliases.dart",
+      "bytes": 7964,
+      "sha256": "856f17c88b43a7dcf236d5c5e87d9b654038f256e872bd9b780003ec473782cc"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/shared/term_aliases/receipt_fencing_masonry_landscape_and_tool_term_aliases.dart",
+      "bytes": 15173,
+      "sha256": "4abc882093b2744c8dd11c7ba26d3c9baea852b86992c03b5e6d631761e1f5b2"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/shared/term_aliases/receipt_roofing_siding_and_flooring_term_aliases.dart",
+      "bytes": 5388,
+      "sha256": "77789cc3bd93a0d1037e93396734f9385c6d4658e048e81d2588f5c338724398"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/inventory_parsers/shared/term_aliases/receipt_tile_and_insulation_term_aliases.dart",
+      "bytes": 4591,
+      "sha256": "44e66b9f3212b1855f84bc09543df2b31713d7b24fe262eba8f732eb298f5595"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog.dart",
+      "bytes": 17345,
+      "sha256": "d97194dc33898eadb88acc9666132d7e037c1e1484c5515ea7b19abaefd5a60b"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog_audit.dart",
+      "bytes": 15127,
+      "sha256": "8a14c02c573da2d3aea2056f850d1b62ada361ed9a6d6fc076790f88ae130afd"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog_audit_intelligence.dart",
+      "bytes": 1617,
+      "sha256": "25a6ca46e310061f107c592223b901eac88811afc208fed7a5ce1ee4c57eb54f"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog_hvac_and_general_signals.dart",
+      "bytes": 9419,
+      "sha256": "7713ce3a4eeca65c8a7a96fa9ba92af795fc7ee9392a87a7289334fa4a1fcb1c"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog_intelligence.dart",
+      "bytes": 18230,
+      "sha256": "640990115ce2c8b03b9884954b2d915cb65a60b74d78269d1c2f1a876ed6e6c0"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog_metadata_builders.dart",
+      "bytes": 13859,
+      "sha256": "20096d6301cf5cb702615df90e14f9a4c9387d0e0b4b83cd238c7036c75e0a4b"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog_pack_payload.dart",
+      "bytes": 12556,
+      "sha256": "1e96be91412b22701b1747dee38a0d092df2f3def6533d46359da2ced9ee8c3a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog_search.dart",
+      "bytes": 4935,
+      "sha256": "3db802d16d0fb04c6bacd6451c1dac42685a77b16dbe1ad918b10145e4d42991"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog_shape_signals.dart",
+      "bytes": 4475,
+      "sha256": "ab690a2187acc5f3fe32af9394fd969734f1fe092967f63bce1112c0c65e1acf"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog_sizes.dart",
+      "bytes": 2800,
+      "sha256": "03a90d37bb808327868ce3eb0b5925208c46053ff315c93a23ae5fd5ce1cb57d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog_tier_signals.dart",
+      "bytes": 5786,
+      "sha256": "d3774d3f4a813406330e056e0f812fbcdb12bf3ebbb633920cd822b303672d4a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_catalog_trade_metadata_helpers.dart",
+      "bytes": 15226,
+      "sha256": "d86ade88764733d49f5e3904992587e642f3201ab01eec54f7c9e4a7d78f2692"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_color.dart",
+      "bytes": 96,
+      "sha256": "a335bb3ba463cf737cfb8417b0eb46cb672242a70550e4e79a4adcd7aaaed779"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_color_stub.dart",
+      "bytes": 63,
+      "sha256": "d6804319636e89b65b25d03594b83baf24f6c6c434bbbeb60a5dd4209dc474b1"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_electrical_catalog_intelligence.dart",
+      "bytes": 1614,
+      "sha256": "c6427def8fd99861629796671b5b748579f010a4d0c87e8c28c2f93991e9a00f"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_electrical_metadata_intelligence.dart",
+      "bytes": 12239,
+      "sha256": "f702233036375160fa8d9328ae6d7e1846faaae5688c38ce90f11e53e47dcd61"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_hvac_catalog_intelligence.dart",
+      "bytes": 408,
+      "sha256": "84b427c61fda984b089f2ce79546af24b8f850ecb4dfad913b9ebeacc9bc84ab"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_item_identity_resolver.dart",
+      "bytes": 6560,
+      "sha256": "ead735d10fe678e7f3e0122ef86c3b956f36c48ca938b86a41f7337c719b683f"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_item_intelligence.dart",
+      "bytes": 4026,
+      "sha256": "28e7e10a34e955e729c33415819d4d0048323f0c025d1ec738dd9896605c7760"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_locale_pack.dart",
+      "bytes": 1636,
+      "sha256": "a0d6d19e8ebb19fc57507b90cf2a5b4664b213df3edfca1272e10d980515e006"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_models.dart",
+      "bytes": 10342,
+      "sha256": "e77ebec74fdf13b1230383712c5c7bab6f63644696a16cbbf20bacfe60999ec5"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_plumbing_catalog_intelligence.dart",
+      "bytes": 15411,
+      "sha256": "6af7f38fbc6b1eabffe1bb20048880445ed1f37b2cba5e955d7edee52f7ff693"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_plumbing_catalog_tier_constants.dart",
+      "bytes": 5584,
+      "sha256": "06f04636bd72a3088de653b9cc8bb0ed126ab214c710645da514e4ce57c07f1d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_plumbing_metadata_intelligence.dart",
+      "bytes": 10063,
+      "sha256": "b3235d73b305320785fcbbdf0f64fc508c84e4a0f064da3a0f2dad53a1546a51"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_confidence.dart",
+      "bytes": 856,
+      "sha256": "4638c714e6061f69fac2f8c2fe571cad44fa9f2f4b2d1d5795bb9f30d01bf90d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser.dart",
+      "bytes": 199729,
+      "sha256": "09296ec6f3e1b05ddd317b3578d42b877b1b7cb495a7d4f6a78873af331be8d3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_ambiguity_helpers.dart",
+      "bytes": 7061,
+      "sha256": "e4d41922bbeab00d5ba7a2ccabf2eaf92b35746bc0497755f7ccc2a530aafc63"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_confidence_engine.dart",
+      "bytes": 8911,
+      "sha256": "dc2b658855bebfa6039d5027c69a163d340e350ead1458656a5b7e30983956fb"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_electrical_service_and_safety_matcher.dart",
+      "bytes": 8573,
+      "sha256": "043d83c559ff43b542c2635337cedf520b214807dd251d1e0ffd0f8304580057"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_electrical_service_matcher.dart",
+      "bytes": 10956,
+      "sha256": "8419a0045456ddb47d0f4b6fe3aaf169f0d8832ffeab451909b8d1d52f5d2ebf"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_fallback_specificity.dart",
+      "bytes": 12830,
+      "sha256": "ec72bcf87a044147f58097934385fc27d99316b8782bf698b28300cdc0c396fe"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_fastener_terms.dart",
+      "bytes": 1642,
+      "sha256": "a2236413df0cd2695fe940a6d7ad0e3c3996ac27ba5dbd261711e23cfe2a138d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_locale_terms.dart",
+      "bytes": 12095,
+      "sha256": "bdbe0a88b99241a4086e4cd680aefe197fa1618b69ee9d763659bd2770f0164f"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_terms.dart",
+      "bytes": 6419,
+      "sha256": "1d03c816c4474ebe22269ac07ac3f50e3c227bd5b2d9e618ee57c335e9f66e93"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores.dart",
+      "bytes": 1702,
+      "sha256": "0daf0fbc787e100ee218b16d2585ba924d4574eeee995a00fa67a0bc84c1c564"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_appliances.dart",
+      "bytes": 3954,
+      "sha256": "f41c07e4d45a4660c54ddd8dc635be8ca77851af1c53059af26456d383afe492"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_core.dart",
+      "bytes": 14326,
+      "sha256": "42797a3b91798860456d9038aa3a7fe4c739d49ed4d7163276cca65907d3fe17"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_drywall.dart",
+      "bytes": 8804,
+      "sha256": "b1bcd144c08e1c4543b0efe89501f588bd45ed4a9c28c6932f1bc17866a1fd06"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_exterior.dart",
+      "bytes": 43,
+      "sha256": "9749c5622d9b0083f6d290897341a8f9d0a4c62ff3ee9c47344ffacd9647f930"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_fencing.dart",
+      "bytes": 6471,
+      "sha256": "5608cc6e429655b3c4b33518a514f7c539129bdd18c1a1842d563334fe6a2e47"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_finishes.dart",
+      "bytes": 43,
+      "sha256": "9749c5622d9b0083f6d290897341a8f9d0a4c62ff3ee9c47344ffacd9647f930"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_flooring.dart",
+      "bytes": 5985,
+      "sha256": "87a1bea8d9e101a06fd23881439f4c79584dc420aa0b2ec652514e49fcc30cfd"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_garage.dart",
+      "bytes": 3767,
+      "sha256": "8e89b257182d2b7a324cd4b1c18ac7d4458e9e92ab35912eb9b3dae8d48f6a57"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_insulation.dart",
+      "bytes": 8629,
+      "sha256": "b5d9b10b6bf71aab0632eb30a6d596b65ed9453fef0538649e3ebe963ad4d72a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_landscaping.dart",
+      "bytes": 13245,
+      "sha256": "d6a55e1131c38e2de1dc3775564fdc1c181fc071e9f903cfe42cd62253ef94c3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_low_voltage_tools.dart",
+      "bytes": 10042,
+      "sha256": "8b232fe8cbd317ba4ec53a96a3e9432a460a6ee3264f9b729585bfbbb2c1215d"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_masonry_concrete.dart",
+      "bytes": 8597,
+      "sha256": "e956665a7b1160677eb48c03229a0af5bbce4aaccfbb7132a077151e5d58f1c3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_painting.dart",
+      "bytes": 7295,
+      "sha256": "3ccb63fba88a7d7aabb45b6fd452757d10ff30ec5d70e2d2f5400433b2cb82ac"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_roofing.dart",
+      "bytes": 10172,
+      "sha256": "6d1272cfc8c8d10d5e6bcdaf25fe8390e99e99121ee22544278e19ac33f27b72"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_siding_exterior.dart",
+      "bytes": 5639,
+      "sha256": "aa38a95f54ae1e47f07af9619c21e2efd9dd5d3e6fa4dfc1b095347713cbb5b3"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_tile.dart",
+      "bytes": 7668,
+      "sha256": "ba133c8b095602109c8bf58c5bbb248c0a8eb82404e600026b9ec0eb4a68608a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_tile_tools.dart",
+      "bytes": 7142,
+      "sha256": "526e43745098b6dc92d86517da29cc929246308b0e75e8eb8ce4f782cad583e1"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_tile_waterproofing.dart",
+      "bytes": 10933,
+      "sha256": "d0aceb7d0412780e0e0a2cb627cac860885a961ce43c05b78eabd88482d62a05"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_tools_safety.dart",
+      "bytes": 8713,
+      "sha256": "2fc94b52307b3b4046a5321fa28bb3c9168e2970211f4eea13145a71fe117d30"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_receipt_parser_trade_scores_well_septic.dart",
+      "bytes": 4072,
+      "sha256": "1a13ab01eef6284dbf363ecd03cc09cc8bd1718b7aec9055c39b1e35fd9b2c81"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_trade_pack_base_bundle_policy.dart",
+      "bytes": 1995,
+      "sha256": "9fa176d36f6a87788acde00cd22b18649ee948eea9112d4ead1553f5baf7735a"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_trade_pack_delivery_policy.dart",
+      "bytes": 1621,
+      "sha256": "2929a76cc71212d96074078e467f95e264b4641172e3240216915cf8ba76ba0b"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_trade_pack_import_validator.dart",
+      "bytes": 12430,
+      "sha256": "2a8b9df5063e528cb81a75792ec5f767c3d8bb1615386a26f5dead0c4cb7b3d1"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_trade_pack_manifest.dart",
+      "bytes": 8106,
+      "sha256": "5479f5e298c429e53514d3b9e481a6b79356e3cb33102d0799b0283d800b96db"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_trade_pack_runtime_loader.dart",
+      "bytes": 10957,
+      "sha256": "37b9382476a7754a123a41bfe0bc9d2c133276df05a8da64fd887e5e803b605e"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/data/work_supply_trade_pack_tiers.dart",
+      "bytes": 15435,
+      "sha256": "e5958a259cc6723836814a1cb6325001be9d91d0b22189dd6be0b5349e5756a2"
+    },
+    {
+      "path": "tool/inventory/legacy_reference/manifest.json",
+      "bytes": 72818,
+      "sha256": "f760910082297009c901a4f863801759e113d0633dea7400274e976afc1627a8"
+    },
+    {
+      "path": "tool/materials/materials_copper_review_batch.dart",
+      "bytes": 3463,
+      "sha256": "81ae325bd07cffe710449688e6930802198436e7ec52e0e8f729ffcc9d3ae392"
+    },
+    {
+      "path": "tooling/inventory_qa/audit_catalog_artifacts.py",
+      "bytes": 5198,
+      "sha256": "881b0cc0e43e5760fea8073e77a9c0d851f13041c48fadf47b76a7091fa1a47f"
+    },
+    {
+      "path": "tooling/inventory_qa/capture_legacy_reference.py",
+      "bytes": 3102,
+      "sha256": "1dc1c2c3df9b1807d0e32b07c569bdbfdb8eabc859bf654fb7f935255561e1dc"
+    },
+    {
+      "path": "tooling/storage_qa/suites.json",
+      "bytes": 11364,
+      "sha256": "09df708e92bb3583b35eff920aedd4e038c98e5d5643be1100f792e5996a9de9"
+    }
+  ],
+  "excluded_files": [
+    {
+      "path": "output/pdf/electrical-v1-estimate.pdf",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "output/pdf/electrical-v1-landscape-estimate.pdf",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "output/pdf/hvac-v1-estimate.pdf",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "output/pdf/hvac-v1-landscape-estimate.pdf",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "output/pdf/plumbing-v1-estimate.pdf",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "output/pdf/plumbing-v1-landscape-estimate.pdf",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "output/pdf/print-v1-estimate.pdf",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "output/pdf/print-v1-landscape-estimate.pdf",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "output/pdf/service-standard-estimate.pdf",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "output/pdf/service-standard-landscape-estimate.pdf",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/android/.gradle/9.2.0/checksums/checksums.lock",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/android/.gradle/9.2.0/fileChanges/last-build.bin",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/android/.gradle/9.2.0/fileHashes/fileHashes.bin",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/android/.gradle/9.2.0/fileHashes/fileHashes.lock",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/android/.gradle/9.2.0/gc.properties",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/android/.gradle/buildOutputCleanup/cache.properties",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/android/.gradle/vcs-1/gc.properties",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/example/android/.gradle/9.3.1/checksums/checksums.lock",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/example/android/.gradle/9.3.1/fileChanges/last-build.bin",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/example/android/.gradle/9.3.1/fileHashes/fileHashes.bin",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/example/android/.gradle/9.3.1/fileHashes/fileHashes.lock",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/example/android/.gradle/9.3.1/gc.properties",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/example/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/example/android/.gradle/buildOutputCleanup/cache.properties",
+      "reason": "local build cache or generated preview; left untouched"
+    },
+    {
+      "path": "third_party/image_picker_android/example/android/.gradle/vcs-1/gc.properties",
+      "reason": "local build cache or generated preview; left untouched"
+    }
+  ],
+  "notes": [
+    "Manifest omits its own hash.",
+    "Tracked unchanged repository files transfer through Git history.",
+    "No application tests or builds run for handoff.",
+    "Other task changes are preserved, not certified.",
+    "Full protected 5.7 checkout and ignored external inputs are not transferred."
+  ]
+}

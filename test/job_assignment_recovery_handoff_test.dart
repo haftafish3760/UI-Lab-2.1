@@ -1,3 +1,4 @@
+import 'support/storage/seeded_directory_fixture.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/work/job_action_draft_recovery.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_details_recovery_routes.dart';
@@ -6,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/work/job_assignment_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/models/work_models.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_assignment_editor_sheet.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
 import 'support/storage/database_harness.dart';
@@ -19,7 +20,7 @@ void main() {
       (tester) async {
         final harness = (await tester.runAsync(DatabaseHarness.create))!;
         final work = (await tester.runAsync(
-          () async => openUiLabWorkSession(await harness.open()),
+          () async => openSeededTestWorkSession(await harness.open()),
         ))!;
         final job = work.records.firstWhere(
           (r) => r.kind == WorkRecordKind.job && work.permissions.canEdit(r),
@@ -35,7 +36,14 @@ void main() {
           await workflow.session.flush();
         });
         final revision = work.storageRevisionFor(job.id);
-        final store = PrototypeOperationsStore(workSession: work);
+        final directory = (await tester.runAsync(
+          () => openSeededTestDirectory(work.repository.database),
+        ))!;
+        addTearDown(directory.dispose);
+        final store = PrototypeOperationsStore(
+          workSession: work,
+          directorySession: directory,
+        );
         Future<void>? route;
         try {
           await tester.pumpWidget(
@@ -79,9 +87,12 @@ void main() {
             );
           } else {
             expect(find.text('Service Van 4'), findsOneWidget);
-            await tester.tap(find.byKey(const ValueKey('Technician')));
-            await tester.pumpAndSettle();
-            await tester.tap(find.text('Jordan Lee').last);
+            final employee = find.widgetWithText(
+              CheckboxListTile,
+              'Jordan Lee',
+            );
+            await tester.ensureVisible(employee);
+            await tester.tap(employee);
             await tester.pumpAndSettle();
             await finishNativeOperation(tester, workflow.session.flush);
           }

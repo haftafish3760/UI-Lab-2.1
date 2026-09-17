@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_store.dart';
-import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'support/storage/seeded_work_fixture.dart';
 import 'package:ui_lab_2_1/src/screens/dashboard/dashboard_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_detail_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_signature_screen.dart';
@@ -17,7 +17,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       final harness = (await tester.runAsync(DatabaseHarness.create))!;
       var db = (await tester.runAsync(harness.open))!;
-      var work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
+      var work = (await tester.runAsync(() => openSeededTestWorkSession(db)))!;
       final name = find.byKey(const ValueKey('signature-customer-name'));
       Future<void> open() async {
         await tester.pumpWidget(UiLabApp(workSession: work));
@@ -35,7 +35,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        final sign = find.text('Sign in person');
+        final sign = find.text('Record customer approval');
         await tester.ensureVisible(sign);
         await tester.tap(sign);
         await tester.pumpAndSettle();
@@ -73,7 +73,7 @@ void main() {
         expect(retained.payload, contains('Morgan Customer'));
         await unmount();
         db = (await tester.runAsync(harness.open))!;
-        work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
+        work = (await tester.runAsync(() => openSeededTestWorkSession(db)))!;
         await open();
         tester.view.physicalSize = const Size(900, 1200);
         await tester.pumpAndSettle();
@@ -134,7 +134,7 @@ void main() {
         );
         await unmount();
         db = (await tester.runAsync(harness.open))!;
-        work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
+        work = (await tester.runAsync(() => openSeededTestWorkSession(db)))!;
         final reopened = work.records
             .singleWhere((record) => record.id == 'est-1041')
             .customerSignature!;
