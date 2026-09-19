@@ -744,6 +744,40 @@ price/markup, invoice, or job completion.
 
 ## 8. Reports and Recap
 
+### Employee weekly hours — owner requirement, September 18, 2026
+
+Status: required future workflow; this documentation does not establish that
+employee time tracking or weekly review is implemented or verified.
+
+- Begin Workday on the technician dashboard must start a durable time record
+  associated with that employee's stable profile identity. End Workday records
+  its end. Records remain available across app restarts and offline use; they
+  are not merely a running on-screen timer or attached only to a vehicle.
+- The account owner or another appropriately authorized reviewer must have an
+  easy-to-find view showing each employee's worked hours for a selected week,
+  with daily detail and links to the underlying time records. Employee profiles
+  must provide access to the same records, not separately maintained totals.
+- Weekly review must not require visiting every employee profile individually.
+  Review access must be enforced for queries, totals, routes, exports and sync,
+  not just by hiding controls. This does not grant all employees team visibility.
+- This is employee time recording/review, distinct from a subcontractor bill
+  entered as an Expense. It does not authorize payroll processing, withholding,
+  take-home-pay calculations or automatic creation of paid expenses.
+
+Implementation planning safeguards (engineering recommendations, not additional
+owner-approved pay policies): account for breaks, unfinished sessions, duplicate
+starts, overlapping sessions, offline recovery, overnight/week-boundary sessions,
+time zones and daylight-saving changes. Corrections must retain prior values,
+actor and reason; incomplete records must be visibly distinguished from verified
+totals. Test daily-to-weekly reconciliation and scoped access before acceptance.
+
+Open product choices before implementation: week start, break treatment,
+correction/approval authority and workflow, and final navigation placement.
+“Timesheets” with a “This week” view is the recommended plain-language label,
+not an approved final label. Do not call recorded hours “Payroll” as though pay
+has been calculated. Apply the app-wide English, Mexican Spanish and Canadian
+French requirement to this workflow and its dates, labels and reports.
+
 ### September 13: employee contribution on Admin Dashboard
 
 Company Overview exposes actionable work, collections, invoicing, outstanding
@@ -979,6 +1013,26 @@ changes to amounts after approval, policy changes while requests are pending,
 unavailable reviewers, offline submissions and repeated requests. Preserve
 the actual submitting/reviewing actor, time, document revision and applicable
 policy. These safeguards are design work, not functionality proven by these notes.
+
+### September 19 employee-permission clarification
+
+Owner requirement: employees cannot directly edit their own recorded timesheets
+by default. Direct editing needs an explicit grant. Employees need a correction
+request workflow; reviewer rules, approval states and audit details remain to be
+specified and validated before implementation. The earlier assistant's suggested
+approval design is a recommendation, not a completed feature.
+
+The employee permission questionnaire must address applicable view, create/add,
+edit, delete, approve and send actions across business modules. Job access must
+not automatically expose invoice totals, payments, costs or profit. Existing
+minimum-access rules and enforcement boundaries below still apply.
+
+Owner requested Skip with a confirmation explaining the loss of capabilities
+when permissions are off. The owner subsequently reopened whether some defaults
+should be enabled. Therefore the exact default matrix and final Skip behavior
+remain unresolved; the assistant's proposed starter grants are not approved.
+Do not silently assign those grants. The no-self-timesheet-edit default above
+is explicit and remains in force.
 
 Employee setup asks plain-language Yes/No questions rather than presenting raw
 permission names. A dependent permission cannot survive without its parent:

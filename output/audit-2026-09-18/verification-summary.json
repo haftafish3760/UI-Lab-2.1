@@ -1,0 +1,121 @@
+{
+  "full_suite": {
+    "counts_excluding_suite_loaders": {
+      "success": 1313,
+      "failure": 7,
+      "skipped": 3,
+      "error": 67,
+      "hidden": 10
+    },
+    "suite_files_observed": 378,
+    "protocol_done": {
+      "success": false,
+      "type": "done",
+      "time": 780199
+    },
+    "missing_test_files": [],
+    "unfinished_test_names": []
+  },
+  "failed_suite_loaders": 1,
+  "independent_probes": {
+    "counts_excluding_suite_loaders": {
+      "failure": 5
+    },
+    "suite_files_observed": 1,
+    "protocol_done": {
+      "success": false,
+      "type": "done",
+      "time": 3207
+    },
+    "missing_test_files": [],
+    "unfinished_test_names": [],
+    "failed_suite_loaders": [],
+    "failures": [
+      {
+        "name": "AUD-02: added stock survives closing and reopening SQLite sessions",
+        "file": "/Volumes/AppleWork/UI-Lab-2.1/output/audit-2026-09-18/audit_behavior_probe_test.dart",
+        "result": "failure",
+        "errors": [
+          "Expected: an object with length of <1>\n  Actual: WhereIterable<InventoryStockRecord>:[]\n   Which: has length of <0>\n"
+        ],
+        "diagnostics": []
+      },
+      {
+        "name": "AUD-04: outstanding balance subtracts a recorded partial payment",
+        "file": "/Volumes/AppleWork/UI-Lab-2.1/output/audit-2026-09-18/audit_behavior_probe_test.dart",
+        "result": "failure",
+        "errors": [
+          "Expected: <6000>\n  Actual: <10000>\n"
+        ],
+        "diagnostics": []
+      },
+      {
+        "name": "AUD-05: employee expense scope uses identity even when names match",
+        "file": "/Volumes/AppleWork/UI-Lab-2.1/output/audit-2026-09-18/audit_behavior_probe_test.dart",
+        "result": "failure",
+        "errors": [
+          "Expected: empty\n  Actual: [Instance of 'PrototypeReportSource']\n"
+        ],
+        "diagnostics": []
+      },
+      {
+        "name": "AUD-06: EV charging offered by picker contributes to vehicle report",
+        "file": "/Volumes/AppleWork/UI-Lab-2.1/output/audit-2026-09-18/audit_behavior_probe_test.dart",
+        "result": "failure",
+        "errors": [
+          "Expected: <1000>\n  Actual: <0>\n"
+        ],
+        "diagnostics": []
+      },
+      {
+        "name": "AUD-03: review examples must not erase unrelated existing Work records",
+        "file": "/Volumes/AppleWork/UI-Lab-2.1/output/audit-2026-09-18/audit_behavior_probe_test.dart",
+        "result": "failure",
+        "errors": [
+          "Expected: an object with length of <1>\n  Actual: []\n   Which: has length of <0>\n"
+        ],
+        "diagnostics": []
+      }
+    ],
+    "skips": []
+  },
+  "source_files_changed_since_manifest": [],
+  "analyzer": {
+    "errors": 1,
+    "informational": 7,
+    "log": "flutter-analyze.log"
+  },
+  "storage_harness_python_tests": {
+    "passed": 22,
+    "log": "storage-harness-tests.log"
+  },
+  "limitations": [
+    "No physical device or simulator UI acceptance",
+    "No native process power-loss validation",
+    "No production account isolation or cloud service verification",
+    "Catalog semantic accuracy not validated",
+    "Full suite regenerates output/pdf artifacts, including previously dirty preview PDFs"
+  ],
+  "commands": {
+    "full_suite": "flutter test --no-pub --concurrency=1 --reporter=json",
+    "analyzer": "flutter analyze --no-pub",
+    "build": "flutter build macos --debug --no-pub --dart-define=UI_LAB_REVIEW_EXAMPLES=false"
+  },
+  "exit_codes": {
+    "full_suite": 1,
+    "analyzer": 1,
+    "audit_probes": 1,
+    "macos_build": 0,
+    "storage_harness_python": 0
+  },
+  "macos_build": {
+    "passed": true,
+    "launched": false,
+    "review_examples_disabled": true,
+    "warning": "printing plugin does not support Swift Package Manager for macOS"
+  },
+  "artifact_cleanup": {
+    "initially_clean_infrastructure_pdf_files_restored": 12,
+    "task_owned_flutter_tester_or_xcodebuild_remaining": false
+  }
+}

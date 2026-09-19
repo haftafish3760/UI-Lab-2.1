@@ -1,0 +1,275 @@
+[
+  {
+    "id": "AUD-01",
+    "title": "Critical: login does not establish business authority",
+    "status": "open",
+    "evidence_level": "source-confirmed",
+    "detail": "**Source-confirmed.** `lib/main.dart` supplies an account gateway separately from application startup. `work_ui_lab_bootstrap.dart`, `directory_ui_lab_bootstrap.dart`, `workday_ui_lab_bootstrap.dart`, and expense policies still supply a fixed company/actor and development grants. `AccountIdentity` contains email/verification, not a stable account UID plus company membership. `expensePermissionsForView` changes capabilities based on Admin/Technician presentation mode.\n\nConsequence: employee profile permission selections and Firebase sign-in do not establish the user-A/user-B isolation required by the owner. Domain guards are useful but can only enforce the authority supplied to them. A presentation switch must never manufacture authority.\n\nRequired correction: a single trusted active-company/actor policy, supporting deliberate local-owner operation and authenticated company membership where applicable; fail-closed routes, queries/counts, mutations, exports, attachment access, notifications and sync; recheck revocation during asynchronous work and clear restricted cached projections on account change. Separate compensation access from ordinary employee directory access. Verify direct route access and direct service calls, not just hidden controls.",
+    "source_files": [
+      "lib/src/data/work/work_ui_lab_bootstrap.dart",
+      "lib/src/data/work/directory_ui_lab_bootstrap.dart",
+      "lib/src/screens/expenses/expense_permissions.dart",
+      "lib/src/data/account/account_gateway.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-02",
+    "title": "Critical: inventory additions are not durable",
+    "status": "open",
+    "evidence_level": "reproduced",
+    "detail": "**Reproduced.** Audit probe adds stock, closes the actual SQLite-backed Work session/database, reopens both, and reconstructs the application operations store. The new stock is absent. `PrototypeOperationsStore.updateInventoryStock`, `addMaterialCost`, and `addInventoryCategory` mutate in-memory lists. `InventoryItemEntryScreen` pops after the synchronous list mutation. There is no durable stock ledger in that path.\n\nThis remains a problem even if the entire reference catalog is removed. Custom items, stock locations, receiving, consumption, transfers, recounts, reversals, cost history and links to receipts/jobs need the existing SQLite transaction authority. Save success must follow a durable commit. Relevant job/expense effects must commit atomically and retries must not duplicate stock or spending.",
+    "source_files": [
+      "lib/src/data/prototype_operations_store.dart",
+      "lib/src/screens/inventory/inventory_item_entry_screen.dart"
+    ],
+    "owner_decision": false,
+    "independent_probe": "audit_behavior_probe_test.dart"
+  },
+  {
+    "id": "AUD-03",
+    "title": "Critical for affected debug installations: review loader deletes Work data",
+    "status": "open",
+    "evidence_level": "reproduced",
+    "detail": "**Reproduced.** When the review marker is absent, `loadRequestedWorkExamples` deletes the organization's `work/%` records, revisions and drafts before creating review fixtures. The probe inserts a synthetic preexisting Work record and confirms it disappears. Normal startup invokes this loader in debug builds with `UI_LAB_REVIEW_EXAMPLES` defaulting to true.\n\nThis is conditional, not a claim that every launch deletes data: it applies to debug startup with the marker absent. Existing comments describe a previous owner-requested replacement. That historical request does not make a default startup deletion safe for new installations with real work. Review fixtures need an explicitly isolated demo installation and opt-in lifecycle. No normal application launch was performed during this audit.",
+    "source_files": [
+      "lib/src/startup/open_ui_lab_application.dart",
+      "lib/src/data/work/work_review_examples.dart"
+    ],
+    "owner_decision": false,
+    "independent_probe": "audit_behavior_probe_test.dart"
+  },
+  {
+    "id": "AUD-04",
+    "title": "High: report outstanding amounts ignore partial payments",
+    "status": "open",
+    "evidence_level": "reproduced",
+    "detail": "**Reproduced.** A $100 invoice with a $40 recorded payment produces $100 outstanding in `PrototypeReportProjection` instead of $60. Outstanding/overdue sources use `_workSource`, which copies the original invoice total. Payment collections are summed separately. Other screens calculate remaining balance differently, creating inconsistent business figures.\n\nUse one authorized invoice-balance projection everywhere, reconciling issued amount, payments and future corrections. Separately define period activity versus balance \u201cas of\u201d a date: the current projection filters outstanding invoices by issue date, so older unpaid invoices fall outside a selected period. The latter behavior requires explicit labeling or a corrected receivables basis.",
+    "source_files": [
+      "lib/src/data/prototype_report_projection.dart",
+      "lib/src/screens/expenses/reports_lanes.dart"
+    ],
+    "owner_decision": false,
+    "independent_probe": "audit_behavior_probe_test.dart"
+  },
+  {
+    "id": "AUD-05",
+    "title": "High: names still act as record relationships",
+    "status": "open",
+    "evidence_level": "reproduced",
+    "detail": "**Reproduced for employee reports; source-confirmed for customer links.** Employee expense filtering checks `record.owner == employeeName`. An expense with another employee's stable ID but the same display name appears in the requested employee report. This demonstrates an attribution defect, not proof of a separately authenticated cross-account exploit.\n\n`CustomerDetailScreen` joins Work by customer name. `deliverWorkPdf` selects a customer by name; `WorkRecord` stores `client` text without a customer ID. Name changes or duplicate names can detach/mix history or select the wrong current customer details. Use stable company-scoped IDs, with display snapshots where historical documents require them. Existing Job assignment validation already demonstrates the better pattern: saved employee IDs and active-profile checks.",
+    "source_files": [
+      "lib/src/data/prototype_report_projection.dart",
+      "lib/src/screens/work/customer_detail_screen.dart",
+      "lib/src/screens/work/work_pdf_delivery.dart"
+    ],
+    "owner_decision": false,
+    "independent_probe": "audit_behavior_probe_test.dart"
+  },
+  {
+    "id": "AUD-06",
+    "title": "High: category search and reporting disagree",
+    "status": "open",
+    "evidence_level": "source-confirmed",
+    "detail": "**Source-confirmed search gap; reproduced reporting gap.** `ReceiptCategoryPickerScreen` searches only the category label. No custom-category entry exists there; the category identity is a fixed enum. The picker exposes receipt-specific category IDs while report groups use older vehicle IDs. A $10 Charging Fees expense contributes $0 to the report's fuel/vehicle total and falls into other expenses.\n\nRequired work is a coherent category system, not just adding strings to one widget: durable stable IDs, standard categories plus company custom categories, aliases/common spelling variations, duplicate-name handling, archival without breaking old expenses, recovery/permissions, and shared report grouping. Search should offer suggestions without silently changing the selected category. Fuel must not be assumed exclusively vehicle-related. Custom categories must not imply tax treatment.",
+    "source_files": [
+      "lib/src/data/expenses/expense_category.dart",
+      "lib/src/screens/expenses/receipt_category_picker_screen.dart",
+      "lib/src/data/prototype_report_projection.dart"
+    ],
+    "owner_decision": false,
+    "independent_probe": "audit_behavior_probe_test.dart"
+  },
+  {
+    "id": "AUD-07",
+    "title": "High: employee profiles are not an earnings system",
+    "status": "open",
+    "evidence_level": "source-confirmed",
+    "detail": "**Source-confirmed.** Employee profile identity and SQLite save/revision handling exist, but `pay` is a free-text string. No structured salary/hourly basis, effective-dated rates, compensation permissions, approved timesheet period or gross-earnings calculation was located. `WorkdayAccess` still hard-codes two employee IDs and three vehicle IDs, so creating a new employee does not itself connect that person to an authorized timekeeping session.\n\nThe existing `StoredWorkdayRecord` is useful: UTC instants, employee ID, pause duration in microseconds, and precise elapsed duration. Preserve that accuracy; do not rebuild it as rounded decimal-hour buckets. It also requires a vehicle/odometer context, which is not appropriate as the only clock-in model for office/shop staff. An Employee Hours workflow needs employee-linked time entries independent of mandatory vehicle use, corrections with history, week boundaries/timezone rules, own-versus-company views, and rate history. Salary allocation and overtime/paid-break treatment remain product/policy decisions; do not invent them or call estimated earnings payroll. Payroll tax/withholding and QuickBooks integration remain outside current authorized implementation.",
+    "source_files": [
+      "lib/src/data/work/employee_directory_profile.dart",
+      "lib/src/data/workday/workday_ui_lab_bootstrap.dart",
+      "lib/src/data/workday/stored_workday_record.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-08",
+    "title": "High: backup/restore services are not a usable backup product",
+    "status": "open",
+    "evidence_level": "source-confirmed",
+    "detail": "**Source-confirmed.** SQLite snapshots, attachment manifests, candidate restore, integrity verification and application-switch services exist. Settings exposes \u201cSaved work\u201d but \u201cBackup and company sync\u201d is a noninteractive tile. Firebase gateway handles accounts, not business-record upload/sync. Firebase initialization currently supports Android/iOS; desktop account connection is explicitly unavailable.\n\nRemaining work: user-visible protected backup/export and restore selection/review/retry; actual scheduled/cloud transport if retained in release scope; restore on a replacement device; attachment completeness; encrypted sensitive exports and access/key-recovery design; authoritative upload acknowledgments, conflict handling, account revocation and multi-device tests. A local change outbox is not a completed sync service. Do not advertise current account configuration as backup.",
+    "source_files": [
+      "lib/src/shell/operations_menu_screen.dart",
+      "lib/src/data/storage/local_restore_workflow.dart",
+      "lib/src/data/account/firebase_account_gateway.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-09",
+    "title": "High: issued document history can change when directory data changes",
+    "status": "open",
+    "evidence_level": "source-confirmed",
+    "detail": "**Source-confirmed.** Work PDF delivery builds from the current company profile and a customer found by current name. An immutable `GeneratedDocumentSnapshot` class exists, but no application use was found outside its definition. Export-attempt history is useful but does not retain the exact bytes/branding/address originally issued.\n\nPersist an issuance revision with customer/company/terms/template snapshots and the exact retained artifact/hash. Reopening an issued copy must not regenerate a different historical document from today's directory. Draft preview remains distinct from issue/share; native handoff is not proof of delivery.",
+    "source_files": [
+      "lib/src/screens/work/work_pdf_delivery.dart",
+      "lib/src/screens/work/work_customer_document.dart",
+      "lib/src/shared/documents/generated_document_snapshot.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-10",
+    "title": "High: financial lifecycle is incomplete",
+    "status": "open",
+    "evidence_level": "source-confirmed",
+    "detail": "**Source-confirmed.** The financial event enum contains invoice-issued and payment-received only; positive payment validation rejects overpayment and has useful balance checks. A durable refund/reversal/customer-credit event workflow was not found. Work lifecycle lacks explicit cancelled/void statuses. Work amounts still include floating-point totals, while Expenses has stronger exact decimal/minor-unit machinery; common currency ownership is incomplete across these models.\n\nRequired: shared exact arithmetic/basis, explicit correction/void/refund/credit semantics, deposits and allocation rules where supported, and no duplicate financial effect when an expense is linked to a job or materials. Existing guards should be preserved. This is not a proposal to calculate taxes or build a general ledger. \u201cInvoiced minus recorded expenses\u201d currently appears as estimated gross profit; it is not a complete profitability measure when labor, overhead and allocations are missing.",
+    "source_files": [
+      "lib/src/data/prototype_financial_models.dart",
+      "lib/src/data/work/work_persistence_session.dart",
+      "lib/src/data/work/models/work_models.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-11",
+    "title": "High: receipt-to-inventory is not complete",
+    "status": "open",
+    "evidence_level": "source-confirmed",
+    "detail": "**Source-confirmed.** Expense save paths reject `prepareMaterialsReview` rather than commit stock; no production `InventoryParser` call was found under `lib`. Job material drafts can retain source-stock information but do not implement an atomic stock-consumption ledger. This prevents treating a successful parser test or material picker as a completed receipt-to-stock workflow.\n\nKeep receipt saving independent of optional inventory. Recognition and parser output remain proposals. Explicit user review must decide items, quantities, units, costs, location and stock effects. Keep one original expense and source links; job allocation and customer charges are different facts. Parser implementation is reserved for the owner's separate effort; no parser changes were made here.",
+    "source_files": [
+      "lib/src/data/expenses/expense_ui_repository_bridge.dart",
+      "lib/src/data/work/job_materials_draft_workflow.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-12",
+    "title": "High: low-storage admission and receipt-file collision safety remain gaps",
+    "status": "open",
+    "evidence_level": "source-confirmed",
+    "detail": "**Source-confirmed absence/risk; no physical disk-failure reproduction in this audit.** The storage conversation identified low-space warning/reserve work as unfinished. Current runtime-capability code handles memory/thermal/power but no shared free-disk/reserve admission gate was found in the searched native and Dart storage paths.\n\nReceipt retention verifies/hash-checks and flushes a temporary file, which is good. `_copyEvidence` nevertheless deletes an existing final target before rename. Deterministic evidence identity plus repeated imports/retries deserves a targeted collision/failure test; do not treat the delete-before-publish sequence as proven safe. `_mergeEvidence` can also fail after earlier files were copied, requiring an orphan/cleanup policy that preserves referenced evidence. The shared attachment store uses unique identities and a different pattern. Unify safe file publication semantics, keep SQLite error handling even after a free-space check, and avoid promising that any fixed reserve guarantees successful writes.",
+    "source_files": [
+      "lib/src/data/receipts/local_receipt_draft_repository.dart",
+      "lib/src/data/storage/local_attachment_store.dart",
+      "lib/src/data/device_capabilities/device_workload_service.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-13",
+    "title": "High: current regression baseline is failing",
+    "status": "open",
+    "evidence_level": "current execution and test inventory",
+    "detail": "Fresh analyzer and full-suite details are in `verification-summary.json`, `test-failures.json` and raw logs. The parser contract test contains a compile-time constant-expression error; it does not execute its intended scenarios. Other failures must be classified as behavioral defects, stale test expectations, or broken fixtures one by one. A known failure must not be dismissed merely because it also failed historically.\n\nExisting tests were audited for intent: the catalog conversion suite compares input payloads to stored payloads, not product truth; the report projection fixture does not exercise the partial-payment balance defect; storage process-kill tests genuinely use disposable databases, kill an uncommitted writer and verify previously acknowledged values. Good infrastructure and incomplete business coverage coexist.",
+    "source_files": [
+      "test/inventory_legacy_parser_contract_test.dart",
+      "test/prototype_report_projection_test.dart",
+      "test/local_database_interruption_test.dart"
+    ],
+    "owner_decision": false,
+    "current_result": {
+      "passed": 1313,
+      "failed_or_errored": 74,
+      "skipped": 3,
+      "failed_suite_loaders": 1,
+      "observed_files": 378
+    }
+  },
+  {
+    "id": "AUD-14",
+    "title": "Maintenance/repair",
+    "status": "open",
+    "evidence_level": "source review or explicitly unverified",
+    "detail": "Shell routes to `ModuleHomeScreen.maintenance`, with canned \u201c2 services\u201d content and prototype action. It is not service history, due rules, repairs or expense-linked maintenance. Real users must not mistake fixture reminders for their equipment.",
+    "source_files": [
+      "lib/src/shell/app_shell.dart",
+      "lib/src/screens/modules/module_home_screen.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-15",
+    "title": "Scheduling/calendar",
+    "status": "open",
+    "evidence_level": "source review or explicitly unverified",
+    "detail": "Durable scheduling and assignment drafts exist; assignment checks saved active employee IDs. The inspected rescheduling path takes a new start and preserves an existing duration, and rejects a nonexistent local clock time. Complete availability/conflict/capacity, duration, cancellation/return visits and company-timezone behavior still need end-to-end evidence; do not mistake calendar rendering for a scheduling engine.",
+    "source_files": [
+      "lib/src/data/work/job_schedule_draft_workflow.dart",
+      "lib/src/data/work/work_assignment_validation.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-16",
+    "title": "Quotes",
+    "status": "open",
+    "evidence_level": "source review or explicitly unverified",
+    "detail": "`WorkRecordKind` contains estimate/job/invoice, not an independent quote lifecycle. Decide whether a separate quote product is still wanted before adding a competing near-duplicate workflow. Existing documents are evidence, not fresh owner approval.",
+    "source_files": [
+      "lib/src/data/work/models/work_models.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-17",
+    "title": "Localization/accessibility/layout",
+    "status": "open",
+    "evidence_level": "source review or explicitly unverified",
+    "detail": "Shared constraint/TextScaler infrastructure and many widget tests exist. Current forms still use literal English, currency/unit assumptions, and some screens remain bounded single-form columns. Full wide-screen composition, keyboard, screen-reader, long-name, large-text, small-screen and native visual acceptance are not established. No computer screenshots were taken.",
+    "source_files": [
+      "lib/src/layout/app_layout_engine.dart",
+      "test/expense_record_card_accessibility_test.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-18",
+    "title": "Device support",
+    "status": "open",
+    "evidence_level": "source review or explicitly unverified",
+    "detail": "iOS project target is 15.5; Android minimum is inherited from the installed Flutter configuration. A device's manufacturing year is not an OS support guarantee. Current capability admission is useful but does not establish native camera/OCR/share/notification behavior on the owner's older phones.",
+    "source_files": [
+      "ios/Runner.xcodeproj/project.pbxproj",
+      "android/app/build.gradle.kts"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-19",
+    "title": "Scale/performance",
+    "status": "open",
+    "evidence_level": "source review or explicitly unverified",
+    "detail": "Snapshot adapters load entire company-domain collections into memory and authorize downstream. This needs profiling and a query-scope review before handling many employees and years of receipts. Catalog SQLite reading does synchronous temporary-file/database work beneath a screen namespace. No measured performance failure is claimed here.",
+    "source_files": [
+      "lib/src/data/storage/sqlite_domain_snapshot_store.dart",
+      "lib/src/screens/inventory/catalog/inventory_catalog_database.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-20",
+    "title": "Notifications",
+    "status": "open",
+    "evidence_level": "source review or explicitly unverified",
+    "detail": "Durable repository/native adapter scaffolding exists. Real-account recipient scoping, revoked access, stale destinations, OS denial, reboot and exact reminder timing need end-to-end proof against the final identity policy.",
+    "source_files": [
+      "lib/src/data/notifications/flutter_local_notification_gateway.dart"
+    ],
+    "owner_decision": false
+  },
+  {
+    "id": "AUD-21",
+    "title": "Reference catalog",
+    "status": "open",
+    "evidence_level": "source review or explicitly unverified",
+    "detail": "The shipped browse database currently contains 8 items and 21 trade rows. Retained core packs contain 902 Electrical, 1,153 Plumbing and 1,279 HVAC items. These are separate populations. Counts and conversion equality establish neither correctness nor acceptance. No exhaustive authoritative field verification was performed; none of these items is accepted by this audit.",
+    "source_files": [
+      "assets/inventory/browse_batch.sqlite",
+      "test/inventory_catalog_conversion_test.dart",
+      "test/inventory_batch_verification_test.dart"
+    ],
+    "owner_decision": false
+  }
+]

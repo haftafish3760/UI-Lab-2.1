@@ -72,6 +72,9 @@ class ExpenseEntrySetupWorkflow {
   /// destination remains discoverable even if navigation is interrupted.
   Future<String> continueManually({required String ownerLabel}) async {
     _authorize();
+    if (!input.detailChosen) {
+      throw StateError('Choose Basic or Detailed before continuing.');
+    }
     final repository = session.store;
     if (repository is! DraftTransferRepository) {
       throw StateError('Atomic expense setup transfer is unavailable.');

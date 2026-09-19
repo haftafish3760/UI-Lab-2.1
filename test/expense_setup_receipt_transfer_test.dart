@@ -100,8 +100,16 @@ void main() {
             date: DateTime(2030, 2, 3),
             category: ExpenseCategory.fuel,
             receiptType: ExpenseReceiptType.detailed,
+            detailChosen: false,
           ),
         );
+        await setup.session.flush();
+        await expectLater(
+          session.continueExpenseSetup(setup),
+          throwsStateError,
+        );
+        expect(session.receipts.records, isEmpty);
+        setup.chooseDetail(ExpenseReceiptType.detailed);
         await setup.session.flush();
         await persistence.database.customStatement(
           "CREATE TRIGGER fail_setup_transfer BEFORE DELETE ON local_drafts BEGIN SELECT RAISE(ABORT, 'injected'); END",

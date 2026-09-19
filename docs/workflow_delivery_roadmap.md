@@ -98,7 +98,12 @@ No dates or claim of percentage complete are assigned without measured evidence.
 ## Start / work / finish behavior to implement
 
 - Start Workday is explicit and creates one durable session, not a booked job,
-  employee payroll clock-in, or automatic business-mile classification.
+  payroll calculation, or automatic business-mile classification. Owner
+  clarification September 18: it must also support employee time recording and
+  accessible weekly-hours review, as specified in
+  `operations_screen_blueprint.md`, “Employee weekly hours.” This supersedes any
+  reading of the earlier “not employee payroll clock-in” wording as excluding
+  employee worked-time records; payroll processing remains outside this request.
 - Vehicle and odometer belong beside one another. Clearly distinguish last
   confirmed reading from today's input, with unit and date. Never seed a real
   reading from a demo value, historical average or zero meaning unknown.

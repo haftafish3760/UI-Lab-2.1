@@ -7,6 +7,49 @@ import 'support/storage/database_harness.dart';
 
 void main() {
   test(
+    'unanswered detail survives reopening and cannot transfer until chosen',
+    () async {
+      final harness = await DatabaseHarness.create();
+      addTearDown(harness.dispose);
+      var db = await harness.open();
+      final initial = ExpenseEntrySetupInput(
+        date: DateTime(2030),
+        category: ExpenseCategory.uncategorized,
+        receiptType: ExpenseReceiptType.basic,
+        detailChosen: false,
+      );
+      var workflow = await ExpenseEntrySetupWorkflow.open(
+        repository: LocalDraftStore(db),
+        organizationId: 'company',
+        ownerId: 'owner',
+        initial: initial,
+        authorize: () {},
+      );
+      await workflow.session.flush();
+      final id = workflow.session.draftId;
+      await workflow.session.close();
+      await harness.close(db);
+      db = await harness.open();
+      workflow = await ExpenseEntrySetupWorkflow.open(
+        repository: LocalDraftStore(db),
+        organizationId: 'company',
+        ownerId: 'owner',
+        initial: initial,
+        recoveryDraftId: id,
+        authorize: () {},
+      );
+      expect(workflow.input.detailChosen, isFalse);
+      await expectLater(
+        workflow.continueManually(ownerLabel: 'Owner'),
+        throwsStateError,
+      );
+      workflow.chooseDetail(ExpenseReceiptType.detailed);
+      expect(workflow.input.detailChosen, isTrue);
+      await workflow.continueManually(ownerLabel: 'Owner');
+      await workflow.session.close();
+    },
+  );
+  test(
     'returning setup preserves raw manual input and rejects stale continuation',
     () async {
       final harness = await DatabaseHarness.create();

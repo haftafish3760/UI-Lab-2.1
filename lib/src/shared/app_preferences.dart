@@ -17,6 +17,8 @@ enum AppLanguage {
 
 enum AppMeasurementSystem { us, metric }
 
+enum ReceiptDetailPreference { basic, detailed, mixed, notSureYet }
+
 class AppPreferencesController extends ChangeNotifier {
   AppPreferencesController({
     this.storage,
@@ -48,16 +50,40 @@ class AppPreferencesController extends ChangeNotifier {
   bool _receiptShowEvidenceReminders = true;
   bool _receiptAssistanceEnabled = false;
   bool _receiptDetailedReceipts = false;
+  ReceiptDetailPreference? _receiptDetailPreference;
+  ReceiptDetailPreference? get receiptDetailPreference =>
+      _receiptDetailPreference;
+  bool get chooseReceiptDetailEachTime =>
+      _receiptDetailPreference == ReceiptDetailPreference.mixed ||
+      _receiptDetailPreference == ReceiptDetailPreference.notSureYet;
   bool _expenseSetupCompleted = false;
   bool get expenseSetupCompleted => _expenseSetupCompleted;
   Future<bool> completeExpenseSetup({
-    required bool detailed,
+    bool? detailed,
+    ReceiptDetailPreference? detailPreference,
     required bool assistance,
-  }) => _saveMany({
-    'expenseSetupCompleted': 'true',
-    'receiptDetailedReceipts': detailed.toString(),
-    'receiptAssistanceEnabled': assistance.toString(),
-  });
+  }) {
+    if (detailPreference == null && detailed == null) {
+      throw ArgumentError(
+        'Choose a receipt preference before completing setup.',
+      );
+    }
+    final choice =
+        detailPreference ??
+        (detailed!
+            ? ReceiptDetailPreference.detailed
+            : ReceiptDetailPreference.basic);
+    return _saveMany({
+      'expenseSetupCompleted': 'true',
+      'receiptDetailPreference': choice.name,
+      if (choice == ReceiptDetailPreference.basic ||
+          choice == ReceiptDetailPreference.detailed)
+        'receiptDetailedReceipts': (choice == ReceiptDetailPreference.detailed)
+            .toString(),
+      'receiptAssistanceEnabled': assistance.toString(),
+    });
+  }
+
   Future<bool> rememberReceiptDetail(bool detailed) =>
       _save('receiptDetailedReceipts', detailed.toString());
   bool get receiptAssistanceEnabled => _receiptAssistanceEnabled;
@@ -141,6 +167,9 @@ class AppPreferencesController extends ChangeNotifier {
   Future<bool> setDashboardActions(Set<String> actions) =>
       _save('dashboardActions', jsonEncode(actions.toList()..sort()));
   void _apply(Map<String, String> values) {
+    if (values['receiptDetailPreference'] case final String value) {
+      _receiptDetailPreference = ReceiptDetailPreference.values.byName(value);
+    }
     if (values['expenseSetupCompleted'] case final String value) {
       _expenseSetupCompleted = value == 'true';
     }

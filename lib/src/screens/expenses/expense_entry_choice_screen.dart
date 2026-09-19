@@ -30,11 +30,15 @@ class ExpenseEntryChoiceScreen extends StatefulWidget {
     required this.canAttachReceipt,
     this.canConfigureDisplay = true,
     this.onContinue,
+    this.onChoiceApplied,
     this.workflow,
     this.initialCategory = ExpenseCategory.uncategorized,
     super.key,
   });
   final ExpenseEntrySetupWorkflow? workflow;
+
+  /// Inline choice gate for new receipts opened directly from other modules.
+  final ValueChanged<ExpenseEntryChoice>? onChoiceApplied;
   final bool canAttachReceipt;
   final bool canConfigureDisplay;
   final ExpenseCategory initialCategory;
@@ -57,7 +61,9 @@ class _ExpenseEntryChoiceScreenState extends State<ExpenseEntryChoiceScreen>
   void initState() {
     super.initState();
     _workflow = widget.workflow;
-    _selected = widget.workflow?.input.receiptType;
+    _selected = widget.workflow?.input.detailChosen == true
+        ? widget.workflow!.input.receiptType
+        : null;
     _saves = navigationDraft?.changes.listen((_) {
       if (mounted) setState(() {});
     });
@@ -132,6 +138,10 @@ class _ExpenseEntryChoiceScreenState extends State<ExpenseEntryChoiceScreen>
         return;
       }
       if (!mounted) return;
+      if (widget.onChoiceApplied != null) {
+        widget.onChoiceApplied!(choice);
+        return;
+      }
       if (widget.onContinue == null) {
         Navigator.pop(context, choice);
         return;
@@ -168,11 +178,17 @@ class _ExpenseEntryChoiceScreenState extends State<ExpenseEntryChoiceScreen>
   @override
   Widget build(BuildContext context) {
     final preferences = readReceiptIntakeDisplayPreferences(context, _fallback);
+    final mustChoose = _workflow != null
+        ? !_workflow!.input.detailChosen
+        : (AppPreferencesScope.maybeOf(context)?.chooseReceiptDetailEachTime ??
+              false);
     final type =
         _selected ??
-        (preferences.detailedReceipts
-            ? ExpenseReceiptType.detailed
-            : ExpenseReceiptType.basic);
+        (mustChoose
+            ? null
+            : (preferences.detailedReceipts
+                  ? ExpenseReceiptType.detailed
+                  : ExpenseReceiptType.basic));
     return guardDraftNavigation(
       Scaffold(
         key: const ValueKey('expense-entry-choice-screen'),
@@ -279,7 +295,9 @@ class _ExpenseEntryChoiceScreenState extends State<ExpenseEntryChoiceScreen>
                             foregroundColor: Colors.white,
                             minimumSize: const Size.fromHeight(56),
                           ),
-                          onPressed: _continuing ? null : () => _continue(type),
+                          onPressed: _continuing || type == null
+                              ? null
+                              : () => _continue(type),
                           icon: const Icon(Icons.arrow_forward),
                           label: const Text('Continue'),
                         ),

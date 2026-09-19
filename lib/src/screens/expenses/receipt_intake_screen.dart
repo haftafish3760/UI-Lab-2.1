@@ -1,5 +1,7 @@
 import '../../data/receipts/receipt_text_editing_session.dart';
 import '../../shared/editor_input_lock.dart';
+import '../../shared/app_preferences.dart';
+import 'expense_entry_choice_screen.dart';
 
 import 'package:flutter/material.dart';
 
@@ -145,6 +147,21 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
       return const ExpensePermissionDeniedScaffold(
         screenKey: ValueKey('receipt-intake-screen'),
         message: 'You do not have permission to add receipts.',
+      );
+    }
+    if (widget.draftId == null &&
+        widget.initialReceiptType == null &&
+        _chosenReceiptType == null &&
+        (AppPreferencesScope.maybeOf(context)?.chooseReceiptDetailEachTime ??
+            false)) {
+      return ExpenseEntryChoiceScreen(
+        canAttachReceipt: true,
+        canConfigureDisplay: widget.permissions.canConfigureDisplay,
+        initialCategory: widget.initialCategory,
+        onChoiceApplied: (choice) => setState(() {
+          _chosenReceiptType = choice.type;
+          _chosenCategory = choice.category;
+        }),
       );
     }
     final draftController = ReceiptDraftUiScope.maybeOf(context);

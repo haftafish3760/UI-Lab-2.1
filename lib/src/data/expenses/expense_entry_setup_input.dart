@@ -39,6 +39,7 @@ class ExpenseEntrySetupInput {
     required this.date,
     required this.category,
     required this.receiptType,
+    this.detailChosen = true,
     this.pendingCategory,
     this.continuation,
   });
@@ -46,6 +47,7 @@ class ExpenseEntrySetupInput {
   final DateTime date;
   final ExpenseCategory category;
   final ExpenseReceiptType receiptType;
+  final bool detailChosen;
   final ExpenseCategory? pendingCategory;
   final ExpenseSetupContinuation? continuation;
 
@@ -59,6 +61,7 @@ class ExpenseEntrySetupInput {
     continuation: continuation,
     category: category ?? this.category,
     receiptType: receiptType ?? this.receiptType,
+    detailChosen: receiptType != null || detailChosen,
     pendingCategory: clearPendingCategory
         ? null
         : pendingCategory ?? this.pendingCategory,
@@ -69,6 +72,7 @@ class ExpenseEntrySetupInput {
     'date': date.toIso8601String(),
     'category': category.name,
     'receiptType': receiptType.name,
+    'detailChosen': detailChosen,
     'pendingCategory': pendingCategory?.name,
     if (continuation != null) 'continuation': continuation!.toPayload(),
   };
@@ -84,6 +88,9 @@ class ExpenseEntrySetupInput {
     }
     return ExpenseEntrySetupInput(
       date: date,
+      detailChosen: value['detailChosen'] == null
+          ? true
+          : value['detailChosen'] as bool,
       continuation: value['continuation'] == null
           ? null
           : ExpenseSetupContinuation.fromPayload(

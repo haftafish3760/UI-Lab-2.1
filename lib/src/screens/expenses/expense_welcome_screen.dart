@@ -14,9 +14,10 @@ class ExpenseWelcomeScreen extends StatefulWidget {
 }
 
 class _ExpenseWelcomeScreenState extends State<ExpenseWelcomeScreen> {
-  late bool _detailed = widget.preferences.receiptDetailedReceipts;
+  ReceiptDetailPreference? _detailChoice;
   bool? _assistance;
   bool _assistanceStep = false, _saving = false;
+  bool _movingForward = true;
   String? _error;
   final _scroll = ScrollController();
 
@@ -29,7 +30,10 @@ class _ExpenseWelcomeScreenState extends State<ExpenseWelcomeScreen> {
   void _back() {
     if (_saving) return;
     if (_assistanceStep) {
-      setState(() => _assistanceStep = false);
+      setState(() {
+        _movingForward = false;
+        _assistanceStep = false;
+      });
       _scroll.jumpTo(0);
     } else {
       Navigator.of(context).pop(false);
@@ -39,7 +43,11 @@ class _ExpenseWelcomeScreenState extends State<ExpenseWelcomeScreen> {
   Future<void> _continue() async {
     if (_saving) return;
     if (!_assistanceStep) {
-      setState(() => _assistanceStep = true);
+      if (_detailChoice == null) return;
+      setState(() {
+        _movingForward = true;
+        _assistanceStep = true;
+      });
       _scroll.jumpTo(0);
       return;
     }
@@ -49,7 +57,7 @@ class _ExpenseWelcomeScreenState extends State<ExpenseWelcomeScreen> {
       _error = null;
     });
     final saved = await widget.preferences.completeExpenseSetup(
-      detailed: _detailed,
+      detailPreference: _detailChoice!,
       assistance: _assistance!,
     );
     if (!mounted) return;
@@ -91,117 +99,201 @@ class _ExpenseWelcomeScreenState extends State<ExpenseWelcomeScreen> {
                   width: AppLayoutEngine.formWorkspaceWidthFor(
                     constraints.maxWidth - insets.horizontal,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        _assistanceStep
-                            ? 'Help with your receipts'
-                            : 'Welcome to Expenses',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        _assistanceStep
-                            ? 'The app can read text from your receipt photos and help fill in the details. You review them before saving.'
-                            : 'Let’s get a few things set up.',
-                      ),
-                      const SizedBox(height: 28),
-                      Text(
-                        _assistanceStep
-                            ? 'Would you like the app to help fill out your receipts?'
-                            : 'How much detail would you like to save?',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 20),
-                      if (!_assistanceStep) ...[
-                        ReceiptChoiceCard(
-                          key: const ValueKey('expense-setup-basic'),
-                          title: 'Basic receipt',
-                          description:
-                              'Save the receipt total and an optional category. Individual items are not recorded.',
-                          icon: Icons.receipt_outlined,
-                          selected: !_detailed,
-                          onTap: () => setState(() => _detailed = false),
-                        ),
-                        const SizedBox(height: 24),
-                        ReceiptChoiceCard(
-                          key: const ValueKey('expense-setup-detailed'),
-                          title: 'Detailed receipt',
-                          description:
-                              'Save the receipt total, each item, how many you bought, and its price. You can also choose a category.',
-                          icon: Icons.format_list_numbered,
-                          selected: _detailed,
-                          onTap: () => setState(() => _detailed = true),
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'You can attach a receipt image with either option.',
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'You can change this when adding a receipt. The app remembers your last choice.',
-                        ),
-                      ] else ...[
-                        ReceiptChoiceCard(
-                          key: const ValueKey('expense-setup-assisted'),
-                          title: 'Yes, help me fill it out',
-                          description:
-                              'Read my receipt photos on this device. I’ll check the details before saving.',
-                          icon: Icons.document_scanner_outlined,
-                          selected: _assistance == true,
-                          onTap: _saving
-                              ? null
-                              : () => setState(() => _assistance = true),
-                        ),
-                        const SizedBox(height: 24),
-                        ReceiptChoiceCard(
-                          key: const ValueKey('expense-setup-manual'),
-                          title: 'No, I’ll fill it out myself',
-                          description:
-                              'Enter the details myself. I can still attach receipt photos.',
-                          icon: Icons.edit_outlined,
-                          selected: _assistance == false,
-                          onTap: _saving
-                              ? null
-                              : () => setState(() => _assistance = false),
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'You can change this anytime: open Expenses, tap the gear, then Receipt assistance.',
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'This does not turn on cloud backup or sync.',
-                        ),
-                      ],
-                      if (_error != null) ...[
-                        const SizedBox(height: 16),
-                        Semantics(
-                          liveRegion: true,
-                          child: Text(
-                            _error!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
+                  child: AnimatedSwitcher(
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 220),
+                    layoutBuilder: (current, previous) => Stack(
+                      alignment: Alignment.topCenter,
+                      children: [
+                        for (final child in previous)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: ExcludeSemantics(
+                                child: SingleChildScrollView(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  child: child,
+                                ),
+                              ),
                             ),
                           ),
+                        ?current,
+                      ],
+                    ),
+                    transitionBuilder: (child, animation) {
+                      final incoming = child.key == ValueKey(_assistanceStep);
+                      final direction = _movingForward ? 1.0 : -1.0;
+                      return SlideTransition(
+                        position:
+                            Tween<Offset>(
+                              begin: Offset(
+                                incoming ? direction : -direction,
+                                0,
+                              ),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutCubic,
+                              ),
+                            ),
+                        child: FadeTransition(opacity: animation, child: child),
+                      );
+                    },
+                    child: Column(
+                      key: ValueKey(_assistanceStep),
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          _assistanceStep
+                              ? 'Help with your receipts'
+                              : 'Welcome to Expenses',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          _assistanceStep
+                              ? 'The app can read text from your receipt photos and help fill in the details. You review them before saving.'
+                              : 'Let’s get a few things set up.',
+                        ),
+                        const SizedBox(height: 28),
+                        Text(
+                          _assistanceStep
+                              ? 'Would you like the app to help fill out your receipts?'
+                              : 'How much detail would you like to save?',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 20),
+                        if (!_assistanceStep) ...[
+                          ReceiptChoiceCard(
+                            key: const ValueKey('expense-setup-basic'),
+                            title: 'Basic receipt',
+                            description:
+                                'Save the receipt total and an optional category. Individual items are not recorded.',
+                            icon: Icons.receipt_outlined,
+                            selected:
+                                _detailChoice == ReceiptDetailPreference.basic,
+                            onTap: () => setState(
+                              () =>
+                                  _detailChoice = ReceiptDetailPreference.basic,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          ReceiptChoiceCard(
+                            key: const ValueKey('expense-setup-detailed'),
+                            title: 'Detailed receipt',
+                            description:
+                                'Save the receipt total, each item, how many you bought, and its price. You can also choose a category.',
+                            icon: Icons.format_list_numbered,
+                            selected:
+                                _detailChoice ==
+                                ReceiptDetailPreference.detailed,
+                            onTap: () => setState(
+                              () => _detailChoice =
+                                  ReceiptDetailPreference.detailed,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          ReceiptChoiceCard(
+                            key: const ValueKey('expense-setup-mixed'),
+                            title: 'Mixed',
+                            description:
+                                'Use Basic for some receipts and Detailed for others. Choose when adding each receipt.',
+                            icon: Icons.swap_horiz,
+                            selected:
+                                _detailChoice == ReceiptDetailPreference.mixed,
+                            onTap: () => setState(
+                              () =>
+                                  _detailChoice = ReceiptDetailPreference.mixed,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          ReceiptChoiceCard(
+                            key: const ValueKey('expense-setup-not-sure'),
+                            title: 'Not sure yet',
+                            description:
+                                'Decide later. Choose Basic or Detailed when adding each receipt.',
+                            icon: Icons.help_outline,
+                            selected:
+                                _detailChoice ==
+                                ReceiptDetailPreference.notSureYet,
+                            onTap: () => setState(
+                              () => _detailChoice =
+                                  ReceiptDetailPreference.notSureYet,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'You can attach a receipt image whether you choose Basic or Detailed.',
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Choose one option to continue. You can still change the detail level for an individual receipt.',
+                          ),
+                        ] else ...[
+                          ReceiptChoiceCard(
+                            key: const ValueKey('expense-setup-assisted'),
+                            title: 'Yes, help me fill it out',
+                            description:
+                                'Read my receipt photos on this device. I’ll check the details before saving.',
+                            icon: Icons.document_scanner_outlined,
+                            selected: _assistance == true,
+                            onTap: _saving
+                                ? null
+                                : () => setState(() => _assistance = true),
+                          ),
+                          const SizedBox(height: 24),
+                          ReceiptChoiceCard(
+                            key: const ValueKey('expense-setup-manual'),
+                            title: 'No, I’ll fill it out myself',
+                            description:
+                                'Enter the details myself. I can still attach receipt photos.',
+                            icon: Icons.edit_outlined,
+                            selected: _assistance == false,
+                            onTap: _saving
+                                ? null
+                                : () => setState(() => _assistance = false),
+                          ),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'You can change this anytime: open Expenses, tap the gear, then Receipt assistance.',
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'This does not turn on cloud backup or sync.',
+                          ),
+                        ],
+                        if (_error != null) ...[
+                          const SizedBox(height: 16),
+                          Semantics(
+                            liveRegion: true,
+                            child: Text(
+                              _error!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 28),
+                        FilledButton(
+                          key: const ValueKey('expense-welcome-continue'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.green,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size.fromHeight(56),
+                          ),
+                          onPressed:
+                              _saving ||
+                                  (_assistanceStep
+                                      ? _assistance == null
+                                      : _detailChoice == null)
+                              ? null
+                              : _continue,
+                          child: Text(_saving ? 'Saving…' : 'Continue'),
                         ),
                       ],
-                      const SizedBox(height: 28),
-                      FilledButton(
-                        key: const ValueKey('expense-welcome-continue'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.green,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(56),
-                        ),
-                        onPressed:
-                            _saving || (_assistanceStep && _assistance == null)
-                            ? null
-                            : _continue,
-                        child: Text(_saving ? 'Saving…' : 'Continue'),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

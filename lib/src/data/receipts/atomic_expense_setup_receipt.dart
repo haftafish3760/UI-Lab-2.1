@@ -39,6 +39,9 @@ class AtomicExpenseSetupReceipt {
       );
     }
     final input = ExpenseEntrySetupInput.fromPayload(drafts.decode(saved));
+    if (!input.detailChosen) {
+      throw StateError('Choose Basic or Detailed before continuing.');
+    }
     if (input.pendingCategory != null) {
       throw StateError('Finish or cancel the category choice first.');
     }

@@ -54,6 +54,7 @@ class LocalAppPreferencesStore implements AppPreferencesRepository {
 
   static const _allowed = {
     'expenseSetupCompleted': {'true', 'false'},
+    'receiptDetailPreference': {'basic', 'detailed', 'mixed', 'notSureYet'},
     'receiptAssistanceEnabled': {'true', 'false'},
     'receiptDetailedReceipts': {'true', 'false'},
     'receiptShowReviewChecklist': {'true', 'false'},

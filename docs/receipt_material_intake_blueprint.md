@@ -42,7 +42,9 @@ Owner clarification, September 15: Tame Your Biz opens Add Expense with two
 full-width choices stacked with a 24-LP gap: **Basic receipt**, saving the total without an itemized
 list, and **Detailed receipt**, saving the total and each item's quantity and
 price. A separate optional category section follows. Continue remembers the
-last chosen detail level for the next receipt; backing out before Continue
+last chosen detail level for the next receipt for Basic/Detailed setup preferences;
+Mixed and Not sure yet instead require an explicit choice for each new receipt.
+Backing out before Continue
 does not change it or any existing receipt.
 The only forward action on this page is green **Continue**. Do not ask about
 personal/business classification, show an expense form, offer capture/manual
@@ -94,7 +96,13 @@ See `storage_migration_resume_2026_09_16.md` for evidence and remaining gates.
 
 First-use Expense onboarding has two separate pages, triggered by the first
 Expenses navigation tap, never by eager background module construction. Page one
-says Welcome to Expenses and explains Basic and Detailed receipts in separate
+says Welcome to Expenses and offers **Basic receipt**, **Detailed receipt**,
+**Mixed**, and **Not sure yet**, with NO preselected choice (owner correction,
+September 18). Continue requires a selection. Mixed and Not sure yet both ask
+Basic or Detailed for each new receipt; these remain distinct saved preferences,
+not additional receipt record types. Resuming an already-chosen draft preserves
+its choice. Existing Basic/Detailed preferences and historical receipts remain
+unchanged. The choices appear in separate
 full-width cards with a 24-LP gap. No outer decorated parent encloses both.
 Page two asks whether the app should help fill out receipts and explains that
 the user reviews extracted details before saving. Neither Yes nor No is silently
@@ -104,6 +112,10 @@ together in local SQLite; failure stays on setup with a retry message. Existing
 receipt records and cloud consent are unaffected. Expenses gear > Receipt
 assistance opens the existing editable receipt settings. Backup/sync selection
 belongs to the storage contract and is not activated by receipt assistance.
+
+Setup steps use a short horizontal forward/back transition, disabled when the
+system requests reduced motion. Back preserves staged choices without applying
+them. This does not change app-wide route transitions.
 
 Implementation checkpoint: entry choices and durable assistance/detail defaults
 are connected. Enabled assistance starts a read when a photo is opened; source

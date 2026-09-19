@@ -4,6 +4,7 @@ import '../../data/expenses/expense_draft_recovery.dart';
 import '../../data/expenses/expense_ui_repository_controller.dart';
 import '../../data/receipts/receipt_submission_session.dart';
 import 'receipt_intake_settings_screen.dart';
+import '../../shared/app_preferences.dart';
 import 'package:flutter/material.dart';
 import 'expense_entry_choice_screen.dart';
 import 'expense_editor_screen.dart';
@@ -43,6 +44,11 @@ Future<void> openExpenseEntryFlow(
           initial: ExpenseEntrySetupInput(
             date: expenseDate,
             category: initialCategory,
+            detailChosen:
+                !(AppPreferencesScope.maybeOf(
+                      context,
+                    )?.chooseReceiptDetailEachTime ??
+                    false),
             receiptType: preferences.detailedReceipts
                 ? ExpenseReceiptType.detailed
                 : ExpenseReceiptType.basic,

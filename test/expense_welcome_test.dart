@@ -166,6 +166,7 @@ void main() {
         );
         expect(detailed.top - basic.bottom, 24);
         expect(basic.width, detailed.width);
+        await tap(tester, 'expense-setup-basic');
         await tap(tester, 'expense-welcome-continue');
         await tap(tester, 'expense-setup-assisted');
         await tester.pageBack();

@@ -100,18 +100,29 @@ class _ReceiptIntakeSettingsScreenState
                       : (value) =>
                             _change(_draft.copyWith(assistanceEnabled: value)),
                 ),
-                SwitchListTile(
-                  key: const ValueKey('receipt-detail-setting'),
-                  title: const Text('Detailed receipts by default'),
-                  subtitle: const Text(
-                    'Turn off for Basic receipts. Changing your choice when adding a receipt also updates this setting.',
+                if (AppPreferencesScope.maybeOf(
+                      context,
+                    )?.chooseReceiptDetailEachTime ??
+                    false)
+                  const ListTile(
+                    title: Text('Choose the detail level for each receipt'),
+                    subtitle: Text(
+                      'Your Mixed or Not sure yet setup choice keeps Basic and Detailed unselected for each new receipt.',
+                    ),
+                  )
+                else
+                  SwitchListTile(
+                    key: const ValueKey('receipt-detail-setting'),
+                    title: const Text('Detailed receipts by default'),
+                    subtitle: const Text(
+                      'Turn off for Basic receipts. Changing your choice when adding a receipt also updates this setting.',
+                    ),
+                    value: _draft.detailedReceipts,
+                    onChanged: _saving
+                        ? null
+                        : (value) =>
+                              _change(_draft.copyWith(detailedReceipts: value)),
                   ),
-                  value: _draft.detailedReceipts,
-                  onChanged: _saving
-                      ? null
-                      : (value) =>
-                            _change(_draft.copyWith(detailedReceipts: value)),
-                ),
                 SwitchListTile(
                   title: const Text('Show review checklist'),
                   subtitle: const Text(

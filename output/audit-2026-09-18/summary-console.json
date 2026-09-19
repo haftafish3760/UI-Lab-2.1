@@ -1,0 +1,30 @@
+{
+  "full_suite": {
+    "counts_excluding_suite_loaders": {
+      "success": 1313,
+      "failure": 7,
+      "skipped": 3,
+      "error": 67,
+      "hidden": 10
+    },
+    "suite_files_observed": 378,
+    "protocol_done": {
+      "success": false,
+      "type": "done",
+      "time": 780199
+    },
+    "missing_test_files": [],
+    "unfinished_test_names": []
+  },
+  "failed_suite_loaders": 1,
+  "source_files_changed_since_manifest": [],
+  "analyzer": {
+    "errors": 1,
+    "informational": 7,
+    "log": "flutter-analyze.log"
+  },
+  "storage_harness_python_tests": {
+    "passed": 22,
+    "log": "storage-harness-tests.log"
+  }
+}
