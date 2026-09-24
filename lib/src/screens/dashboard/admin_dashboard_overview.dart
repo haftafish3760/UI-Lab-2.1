@@ -158,6 +158,7 @@ class AdminDashboardOverview extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
+        key: PageStorageKey('admin-billing-$label'),
         tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         childrenPadding: const EdgeInsets.symmetric(horizontal: 12),
         title: Text('$label · ${records.length}'),

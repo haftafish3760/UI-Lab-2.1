@@ -1,4 +1,5 @@
 import 'preference_draft_baseline.dart';
+import '../../shared/screen_layout_configuration.dart';
 import 'app_preference_keys.dart';
 import 'app_preferences_repository.dart';
 import 'draft_repository.dart';
@@ -78,6 +79,13 @@ class LocalAppPreferencesStore implements AppPreferencesRepository {
     'configureActions',
   };
   static bool _valid(String key, String value) {
+    if (key == AdminDashboardLayoutConfiguration.preferenceKey) {
+      try {
+        return AdminDashboardLayoutConfiguration.isValid(jsonDecode(value));
+      } on FormatException {
+        return false;
+      }
+    }
     if (key == 'expenseDisplay') {
       try {
         return validExpenseDisplayPreferences(jsonDecode(value));

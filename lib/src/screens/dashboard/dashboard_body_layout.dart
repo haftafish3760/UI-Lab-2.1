@@ -17,6 +17,7 @@ class _DashboardBody extends StatelessWidget {
     required this.onReturnToToday,
     required this.attentionItems,
     required this.onOpenAllAttention,
+    required this.onOpenAttention,
     required this.onOpenPlan,
     required this.onPlanAction,
     required this.onOpenEntry,
@@ -41,6 +42,7 @@ class _DashboardBody extends StatelessWidget {
   final VoidCallback onReturnToToday;
   final List<OperationalAttentionItem> attentionItems;
   final VoidCallback onOpenAllAttention;
+  final ValueChanged<OperationalAttentionItem> onOpenAttention;
   final ValueChanged<PlanItem> onOpenPlan;
   final void Function(PlanItem item, PlanAction action) onPlanAction;
   final ValueChanged<DayEntry> onOpenEntry;
@@ -51,6 +53,9 @@ class _DashboardBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (view == AppViewMode.admin) {
+      return _AdminDashboardWorkspace(body: this);
+    }
     final scaler = MediaQuery.textScalerOf(context);
     return LayoutBuilder(
       builder: (context, bodyConstraints) {
