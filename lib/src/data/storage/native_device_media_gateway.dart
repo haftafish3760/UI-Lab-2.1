@@ -5,14 +5,23 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'local_media_picker_request.dart';
 import 'native_media_picker_coordinator.dart';
+import '../receipts/receipt_camera_gateway.dart';
 
 class NativeDeviceMediaGateway implements JournaledNativeMediaPickerGateway {
-  NativeDeviceMediaGateway({ImagePicker? picker, bool? useAndroidJournal})
-    : _picker = picker ?? ImagePicker(),
-      _useAndroidJournal = useAndroidJournal ?? Platform.isAndroid;
+  NativeDeviceMediaGateway({
+    ImagePicker? picker,
+    bool? useAndroidJournal,
+    ReceiptCameraGateway? receiptCamera,
+    this.receiptCameraGuides,
+  }) : _picker = picker ?? ImagePicker(),
+       _receiptCamera = receiptCamera ?? ReceiptCameraGateway(),
+       _useAndroidJournal = useAndroidJournal ?? Platform.isAndroid;
   final bool _useAndroidJournal;
   static const _journal = MethodChannel('maintainiac/native_media_journal');
   final ImagePicker _picker;
+  final ReceiptCameraGateway _receiptCamera;
+  final Future<Map<String, Object?>> Function(LocalMediaPickerRequest)?
+  receiptCameraGuides;
 
   bool _journals(LocalMediaPickerRequest request) =>
       _useAndroidJournal && request.source != MediaPickerSource.files;
@@ -23,6 +32,15 @@ class NativeDeviceMediaGateway implements JournaledNativeMediaPickerGateway {
   ) async {
     if (_journals(request)) {
       await _journal.invokeMethod<void>('begin', request.requestId);
+      if (request.source == MediaPickerSource.camera &&
+          request.destination == MediaPickerDestination.receipt) {
+        return _receiptCamera.capture(
+          request.requestId,
+          resolveGuides: receiptCameraGuides == null
+              ? null
+              : () => receiptCameraGuides!(request),
+        );
+      }
     }
     return pick(request.source, request.destination);
   }

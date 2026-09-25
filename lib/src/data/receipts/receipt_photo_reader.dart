@@ -36,7 +36,11 @@ class NativeReceiptPhotoReader implements ReceiptPhotoReader {
     // retains its slot until native recognition and resource cleanup finish.
     var expired = false;
     return DeviceWorkloadService.instance
-        .run((profile) => _readBounded(path, profile, () => expired))
+        .run((profile) => _readBounded(path, profile, () => expired ||
+            DeviceWorkloadService.instance.stopRequested),
+          request: const DeviceWorkloadRequest(
+            storageBytes: 16 * 1024 * 1024, memoryBytes: 32 * 1024 * 1024),
+        )
         .timeout(
           const Duration(seconds: 10),
           onTimeout: () {
@@ -68,6 +72,10 @@ class NativeReceiptPhotoReader implements ReceiptPhotoReader {
           path,
           profile,
           checkActive: () => requireReceiptReadActive(expired),
+          beforeWrite: (_) async {
+            await DeviceWorkloadService.instance.checkpoint();
+            requireReceiptReadActive(expired);
+          },
         ),
         recognize: (path) => _recognizePhoto(recognizer, path),
         expired: expired,

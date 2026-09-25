@@ -38,6 +38,21 @@ void main() {
         '${folder.path}${Platform.pathSeparator}original.png',
       );
       await original.writeAsBytes(bytes);
+      var requestedBytes = 0;
+      await expectLater(
+        ReceiptOcrImage.prepare(
+          original.path,
+          const DeviceWorkloadProfile(),
+          beforeWrite: (size) async {
+            requestedBytes = size;
+            throw const DeviceWorkloadUnavailable('Storage reserve reached.');
+          },
+        ),
+        throwsA(isA<DeviceWorkloadUnavailable>()),
+      );
+      expect(requestedBytes, greaterThan(0));
+      expect(await original.readAsBytes(), bytes);
+      expect(await folder.list().length, 1);
       final copy = await ReceiptOcrImage.prepare(
         original.path,
         const DeviceWorkloadProfile(),
@@ -50,7 +65,9 @@ void main() {
       descriptor.dispose();
       buffer.dispose();
       await copy.dispose();
-      expect(await File(copy.path).exists(), isFalse);
+      expect(await File(copy.path).exists(), isTrue);
+      // Explicit fixture teardown, not app behavior.
+      addTearDown(() => Directory(copy.retainedDirectory).delete(recursive: true));
       expect(await original.readAsBytes(), bytes);
     },
   );

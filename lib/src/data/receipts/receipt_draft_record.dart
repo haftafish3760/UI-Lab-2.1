@@ -1,3 +1,4 @@
+import 'receipt_stitch_draft_state.dart';
 import 'receipt_entry_setup.dart';
 import 'package:flutter/foundation.dart';
 import 'receipt_selected_details.dart';
@@ -200,6 +201,7 @@ class StoredReceiptDraft {
     this.linkedJobId,
     this.linkedJobLabel,
     this.selectedDetails,
+    this.stitchState,
     this.entrySetup,
     List<ReceiptItemRead> itemReads = const [],
   }) : expenseDate = DateTime(
@@ -246,6 +248,21 @@ class StoredReceiptDraft {
   final String? submittedExpenseId;
   final List<ReceiptDraftAuditEvent> auditTrail;
   final ReceiptSelectedDetails? selectedDetails;
+  final ReceiptStitchDraftState? stitchState;
+
+  ReceiptStitchDraftState? get activeStitchState {
+    final stitch = stitchState;
+    final images = activeEvidence;
+    if (stitch == null || stitch.evidenceIds.length != images.length)
+      return null;
+    for (var i = 0; i < images.length; i++) {
+      if (stitch.evidenceIds[i] != images[i].evidenceId ||
+          stitch.sourceHashes[i] != images[i].sha256)
+        return null;
+    }
+    return stitch;
+  }
+
   final ReceiptEntrySetup? entrySetup;
   final List<ReceiptItemRead> itemReads;
 
@@ -280,6 +297,7 @@ class StoredReceiptDraft {
     Object? submittedExpenseId = _unchangedReceiptDraftValue,
     List<ReceiptDraftAuditEvent>? auditTrail,
     Object? selectedDetails = _unchangedReceiptDraftValue,
+    Object? stitchState = _unchangedReceiptDraftValue,
     List<ReceiptItemRead>? itemReads,
     ReceiptEntrySetup? entrySetup,
   }) => StoredReceiptDraft(
@@ -303,6 +321,9 @@ class StoredReceiptDraft {
         : submittedExpenseId as String?,
     auditTrail: auditTrail ?? this.auditTrail,
     itemReads: itemReads ?? this.itemReads,
+    stitchState: identical(stitchState, _unchangedReceiptDraftValue)
+        ? this.stitchState
+        : stitchState as ReceiptStitchDraftState?,
     entrySetup: entrySetup ?? this.entrySetup,
     selectedDetails: identical(selectedDetails, _unchangedReceiptDraftValue)
         ? this.selectedDetails
@@ -323,6 +344,7 @@ class StoredReceiptDraft {
     'submittedExpenseId': submittedExpenseId,
     'auditTrail': auditTrail.map((item) => item.toJson()).toList(),
     'selectedDetails': selectedDetails?.toJson(),
+    'stitchState': stitchState?.toJson(),
     'itemReads': itemReads.map((read) => read.toJson()).toList(),
     'entrySetup': entrySetup?.toJson(),
   };
@@ -343,6 +365,9 @@ class StoredReceiptDraft {
     submittedExpenseId: json['submittedExpenseId'] as String?,
     auditTrail: _mapList(json, 'auditTrail', ReceiptDraftAuditEvent.fromJson),
     itemReads: decodeReceiptItemReads(json),
+    stitchState: json['stitchState'] == null
+        ? null
+        : ReceiptStitchDraftState.fromJson(_requiredMap(json, 'stitchState')),
     entrySetup: json['entrySetup'] == null
         ? null
         : ReceiptEntrySetup.fromJson(_requiredMap(json, 'entrySetup')),

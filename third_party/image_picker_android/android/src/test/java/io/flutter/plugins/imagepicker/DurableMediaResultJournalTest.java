@@ -71,7 +71,7 @@ public class DurableMediaResultJournalTest {
     assertEquals(retained, journal.read("request_one"));
     assertArrayEquals(new byte[] {2, 4, 8}, Files.readAllBytes(new File(retained.get(0)).toPath()));
     journal.acknowledge("request_one");
-    assertFalse(new File(retained.get(0)).exists());
+    assertArrayEquals(new byte[] {2, 4, 8}, Files.readAllBytes(new File(retained.get(0)).toPath()));
     journal.acknowledge("request_one");
     assertTrue(journal.read("request_one").isEmpty());
     journal.begin("request_two");
@@ -95,7 +95,7 @@ public class DurableMediaResultJournalTest {
     old.setVersion(1);
     old.close();
     journal = new DurableMediaResultJournal(context, directory -> { directoryFlushes++; });
-    assertEquals(4, journal.getReadableDatabase().getVersion());
+    assertEquals(5, journal.getReadableDatabase().getVersion());
     journal.begin("request_new");
     journal.acknowledge("request_old");
     assertEquals("request_new", journal.activeKey());
@@ -158,11 +158,12 @@ public class DurableMediaResultJournalTest {
         () -> journal.storeResults("request_one", List.of(source.getPath())));
     assertTrue(journal.read("request_one").isEmpty());
     assertThrows(IllegalStateException.class, () -> journal.acknowledge("request_one"));
-    assertEquals(before, handoffFiles());
+    assertTrue(handoffFiles().containsAll(before));
+    assertEquals(before.size() + 1, handoffFiles().size());
     assertTrue(source.isFile());
   }
 
-  @Test public void laterMissingSourceRemovesOnlyUnpublishedCopies() throws Exception {
+  @Test public void laterMissingSourcePreservesUnpublishedCopies() throws Exception {
     java.util.Set<String> before = handoffFiles();
     journal.begin("request_one");
     File source = new File(context.getCacheDir(), "first.jpg");
@@ -170,7 +171,8 @@ public class DurableMediaResultJournalTest {
     File missing = new File(context.getCacheDir(), "absent-second.jpg");
     assertThrows(java.io.IOException.class, () -> journal.storeResults(
         "request_one", List.of(source.getPath(), missing.getPath())));
-    assertEquals(before, handoffFiles());
+    assertTrue(handoffFiles().containsAll(before));
+    assertEquals(before.size() + 1, handoffFiles().size());
     assertArrayEquals(new byte[] {3, 5, 7}, Files.readAllBytes(source.toPath()));
     assertTrue(journal.read("request_one").isEmpty());
     List<String> retry = journal.storeResults("request_one", List.of(source.getPath()));
@@ -183,7 +185,7 @@ public class DurableMediaResultJournalTest {
         : new java.util.HashSet<>(java.util.Arrays.asList(names));
   }
 
-  @Test public void failedCleanupFlushRemainsQueuedAcrossReopenAndNewRequest() throws Exception {
+  @Test public void acknowledgedFilesSurviveReopenAndNewRequest() throws Exception {
     journal.begin("request_one");
     File source = new File(context.getCacheDir(), "cleanup.jpg");
     Files.write(source.toPath(), new byte[] {7, 8, 9});
@@ -202,12 +204,13 @@ public class DurableMediaResultJournalTest {
     journal.close();
     journal = new DurableMediaResultJournal(context, directory -> { directoryFlushes++; });
     assertTrue(journal.cleanAcknowledgedCopies());
-    assertEquals(0, cleanupCount());
+    assertEquals(1, cleanupCount());
+    assertArrayEquals(new byte[] {7, 8, 9}, Files.readAllBytes(new File(copies.get(0)).toPath()));
     assertEquals("request_two", journal.activeKey());
     assertArrayEquals(new byte[] {7, 8, 9}, Files.readAllBytes(source.toPath()));
   }
 
-  @Test public void versionTwoReadyMediaSurvivesUpgradeThenAcknowledgedCleanup() throws Exception {
+  @Test public void versionTwoMediaSurvivesUpgradeAndAcknowledgement() throws Exception {
     journal.begin("request_one");
     File source = new File(context.getCacheDir(), "upgrade.jpg");
     Files.write(source.toPath(), new byte[] {9, 3, 1});
@@ -217,18 +220,19 @@ public class DurableMediaResultJournalTest {
         "maintainiac_native_media.sqlite", 0, null);
     old.execSQL("DROP TABLE media_cleanup");
     old.execSQL("DROP TABLE media_staging");
+    old.execSQL("DROP TABLE receipt_captures");
     old.setVersion(2);
     old.close();
     journal = new DurableMediaResultJournal(context, directory -> { directoryFlushes++; });
     assertEquals(copies, journal.read("request_one"));
-    assertEquals(4, journal.getReadableDatabase().getVersion());
+    assertEquals(5, journal.getReadableDatabase().getVersion());
     journal.acknowledge("request_one");
-    assertFalse(new File(copies.get(0)).exists());
-    assertEquals(0, cleanupCount());
+    assertArrayEquals(Files.readAllBytes(source.toPath()), Files.readAllBytes(new File(copies.get(0)).toPath()));
+    assertEquals(1, cleanupCount());
     assertTrue(source.isFile());
   }
 
-  @Test public void cleanupRejectsPathsOutsideHandoffDirectory() throws Exception {
+  @Test public void acknowledgementPreservesOutsidePaths() throws Exception {
     File outside = new File(context.getFilesDir(), "keep.jpg");
     Files.write(outside.toPath(), new byte[] {1, 9});
     String manifest = new org.json.JSONArray().put(new org.json.JSONObject()
@@ -237,7 +241,7 @@ public class DurableMediaResultJournalTest {
         "INSERT INTO acknowledgements VALUES('request_old')");
     journal.getWritableDatabase().execSQL(
         "INSERT INTO media_cleanup VALUES('request_old',?)", new Object[] {manifest});
-    assertFalse(journal.cleanAcknowledgedCopies());
+    assertTrue(journal.cleanAcknowledgedCopies());
     assertEquals(1, cleanupCount());
     assertArrayEquals(new byte[] {1, 9}, Files.readAllBytes(outside.toPath()));
   }
@@ -261,7 +265,7 @@ public class DurableMediaResultJournalTest {
     assertTrue(new File(copies.get(0)).isFile());
     journal.getWritableDatabase().execSQL("DROP TRIGGER fail_ack");
     journal.acknowledge("request_one");
-    assertFalse(new File(copies.get(0)).exists());
+    assertArrayEquals(Files.readAllBytes(source.toPath()), Files.readAllBytes(new File(copies.get(0)).toPath()));
   }
 
   @Test public void missingSourceNeverPublishesAReadyResult() throws Exception {
@@ -273,3 +277,4 @@ public class DurableMediaResultJournalTest {
     assertThrows(IllegalStateException.class, () -> journal.acknowledge("request_one"));
   }
 }
+

@@ -40,7 +40,7 @@ void main() {
         physicalRamMb: 8192,
         availableRamMb: 4096,
       ).tier,
-      DeviceWorkloadTier.capable,
+      DeviceWorkloadTier.balanced,
     );
     expect(
       const DeviceWorkloadProfile(
@@ -119,6 +119,7 @@ void main() {
     final service = DeviceWorkloadService(
       probe: () async => throw StateError('probe'),
     );
-    expect(await service.run((p) async => p.tier), DeviceWorkloadTier.limited);
+    await expectLater(service.run((p) async => p.tier),
+        throwsA(isA<DeviceWorkloadUnavailable>()));
   });
 }

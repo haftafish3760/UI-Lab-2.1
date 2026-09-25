@@ -3,7 +3,7 @@ import 'receipt_item_proposal.dart';
 import 'receipt_photo_text.dart';
 import 'receipt_reading_rows.dart';
 
-const receiptItemParserVersion = 'structural-items-v1';
+const receiptItemParserVersion = 'structural-items-v2';
 
 /// Structural, local parsing only: no merchant profiles, catalog or generator.
 /// Unknown quantity is not one. A missing line amount is not the receipt total.
@@ -28,10 +28,12 @@ ReceiptItemParseResult proposeReceiptItems(
     if (_administrative.hasMatch(text) ||
         _tender.hasMatch(text) ||
         _separator.hasMatch(text)) {
+      unresolved.addAll(pending);
       pending.clear();
       continue;
     }
     if (_adjustment.hasMatch(text)) {
+      unresolved.addAll(pending);
       unresolved.add(row);
       pending.clear();
       continue;

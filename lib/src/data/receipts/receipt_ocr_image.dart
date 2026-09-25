@@ -12,14 +12,16 @@ class ReceiptOcrImage {
   final double scaleY;
   final Directory _directory;
 
-  Future<void> dispose() async {
-    if (await _directory.exists()) await _directory.delete(recursive: true);
-  }
+  /// Releases the processing handle, not the file. Owner policy requires an
+  /// explicit user deletion action and confirmation even for app-created data.
+  Future<void> dispose() async {}
+  String get retainedDirectory => _directory.path;
 
   static Future<ReceiptOcrImage> prepare(
     String path,
     DeviceWorkloadProfile profile, {
     void Function()? checkActive,
+    Future<void> Function(int bytes)? beforeWrite,
   }) async {
     checkActive?.call();
     if (await File(path).length() > profile.maxEncodedImageBytes) {
@@ -59,6 +61,11 @@ class ReceiptOcrImage {
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
       checkActive?.call();
       if (bytes == null) throw StateError('Image conversion failed.');
+      if (bytes.lengthInBytes > 16 * 1024 * 1024) {
+        throw const DeviceWorkloadUnavailable('The processing copy exceeds the safe storage budget.');
+      }
+      await beforeWrite?.call(bytes.lengthInBytes);
+      checkActive?.call();
       temporary = await Directory.systemTemp.createTemp('receipt-ocr-');
       checkActive?.call();
       final target = File(
@@ -75,11 +82,6 @@ class ReceiptOcrImage {
         descriptor.height / height,
         temporary,
       );
-    } catch (_) {
-      if (temporary != null && await temporary.exists()) {
-        await temporary.delete(recursive: true);
-      }
-      rethrow;
     } finally {
       image?.dispose();
       codec?.dispose();

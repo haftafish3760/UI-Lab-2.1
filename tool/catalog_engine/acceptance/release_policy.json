@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "review_state": "draft",
+  "checks": [
+    {"id":"structure","requirement_ids":["OWNER-S2-P010","OWNER-S2-P033"],"tier":"fast","subjects":["pack"]},
+    {"id":"identity_semantics","requirement_ids":["OWNER-S2-P007","OWNER-S2-P008","OWNER-S2-P012","OWNER-S2-P013","OWNER-S2-P014"],"tier":"semantic","subjects":["pack"]},
+    {"id":"factual_verification","requirement_ids":["OWNER-S2-P018","OWNER-S2-P021","OWNER-S2-P022","OWNER-S5-P040","OWNER-S5-P041"],"tier":"release","subjects":["pack"]},
+    {"id":"source_rights_review","requirement_ids":["OWNER-S2-P023"],"tier":"release","subjects":["pack"]},
+    {"id":"trade_scope","requirement_ids":["OWNER-S2-P011","OWNER-S5-P004","OWNER-S6-P007"],"tier":"semantic","subjects":["pack"]},
+    {"id":"parser_accuracy","requirement_ids":["OWNER-S5-P007","OWNER-S5-P039"],"tier":"release","subjects":["pack"]},
+    {"id":"inventory_persistence","requirement_ids":["OWNER-S2-P009","OWNER-S2-P016","OWNER-S5-P013","OWNER-S5-P014","OWNER-S5-P017"],"tier":"release","subjects":["pack"]},
+    {"id":"migrations_history","requirement_ids":["OWNER-S2-P017","OWNER-S5-P010","OWNER-S5-P011","OWNER-S5-P012"],"tier":"release","subjects":["pack"]},
+    {"id":"ui_accessibility","requirement_ids":["OWNER-S2-P035","OWNER-S2-P036","OWNER-S2-P037"],"tier":"release","subjects":["pack"]},
+    {"id":"localization_search","requirement_ids":["OWNER-S2-P015","OWNER-S5-P018","OWNER-S5-P019","OWNER-S5-P020"],"tier":"release","subjects":["pack"]},
+    {"id":"pack_authenticity","requirement_ids":["OWNER-S2-P033","OWNER-S5-P035"],"tier":"release","subjects":["pack"]},
+    {"id":"download_abuse","requirement_ids":["OWNER-S5-P028","OWNER-S5-P029"],"tier":"release","subjects":["pack"]},
+    {"id":"concurrency_recovery","requirement_ids":["OWNER-S2-P032","OWNER-S5-P024","OWNER-S5-P025","OWNER-S5-P026","OWNER-S5-P027","OWNER-S5-P033"],"tier":"release","subjects":["pack"]},
+    {"id":"production_scale","requirement_ids":["OWNER-S2-P031","OWNER-S5-P030","OWNER-S5-P031","OWNER-S5-P032"],"tier":"release","subjects":["pack"]},
+    {"id":"security_privacy","requirement_ids":["OWNER-S2-P034","OWNER-S5-P023","OWNER-S5-P034"],"tier":"release","subjects":["pack"]},
+    {"id":"barcodes_packages","requirement_ids":["OWNER-S2-P020","OWNER-S5-P015","OWNER-S5-P016"],"tier":"semantic","subjects":["pack"]},
+    {"id":"changes_anomalies","requirement_ids":["OWNER-S2-P024","OWNER-S5-P037","OWNER-S5-P038","OWNER-S5-P042"],"tier":"semantic","subjects":["pack"]},
+    {"id":"oracle_independence","requirement_ids":["OWNER-S2-P005","OWNER-S5-P002","OWNER-S5-P039","OWNER-S5-P047"],"tier":"release","subjects":["pack"]},
+    {"id":"harness_mutation_regression","requirement_ids":["OWNER-S2-P026","OWNER-S2-P027","OWNER-S2-P040","OWNER-S5-P021","OWNER-S5-P022","OWNER-S5-P045"],"tier":"release","subjects":["pack"]},
+    {"id":"traceability_failure_analysis","requirement_ids":["OWNER-S2-P041","OWNER-S5-P003","OWNER-S5-P048","OWNER-S5-P051"],"tier":"release","subjects":["pack"]}
+  ]
+}

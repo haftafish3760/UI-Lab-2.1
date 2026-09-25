@@ -1,0 +1,117 @@
+[
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraActivity.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraActivity.kt",
+    "sha256": "1080bd6094b4e447a789dfff1f1146e4a9bd8c3eb81276ec7611553dc3c8ac79"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraAnalysis.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraAnalysis.kt",
+    "sha256": "c7192bea0eaf147b197dde146bc1e22208aa74c2f1155a9f19ac8f9286eb0579"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraAnalysisFrame.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraAnalysisFrame.kt",
+    "sha256": "4fff3d670e2a4e510bdd27011cffb6662ea8ff19ab804372e1153914e99217df"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraCaptureClose.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraCaptureClose.kt",
+    "sha256": "d00b9db2cb2fb32a6c51668d7337df5c2ad046605e01a43d48d3e1d75677abb7"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraCapturedQuality.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraCapturedQuality.kt",
+    "sha256": "57df2db5dad74d50f9ed46eb764002257e95450ea4d39464aa90ca44893bc72e"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraControlReadiness.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraControlReadiness.kt",
+    "sha256": "311ba84966c156d1c367b6de727068c9a1be986f89405fb43ab4a778faa89632"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraControls.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraControls.kt",
+    "sha256": "f34699d4cce52cc30184e29ff9d7c54c9a8a6cd278bd4d125b894f5a9d7b5a51"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraDiagnosticsLabels.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraDiagnosticsLabels.kt",
+    "sha256": "d13d149bd2aec4924c055e35aacadaa2dbf3b69fb97ebbb65e75ecfa81824b3a"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraDiagnosticsPayload.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraDiagnosticsPayload.kt",
+    "sha256": "caa3b5043c4db63a12fca444c10e90e04c0df035bf95d3800cf26261c78b1b5d"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraExposureControls.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraExposureControls.kt",
+    "sha256": "eca64076300d22a10e55279e48492b86142cb8a8c670c8c84891b9656fd55cfb"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraFraming.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraFraming.kt",
+    "sha256": "1dae833e7418946b153622f0aeb59d974051950ade5917285206ff1dce8a70ad"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraLiveReadabilitySignals.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraLiveReadabilitySignals.kt",
+    "sha256": "2fc045a706bed566e1ba512393e1207536d74cf01c63d4ac9271466bec5f7594"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraModels.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraModels.kt",
+    "sha256": "e542211702d92358b97fb64f412c467a16481488b08faad8bbd1f28d765b3407"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraPhotoQuality.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraPhotoQuality.kt",
+    "sha256": "30300c20b52776ed4e0b42b472108fc097942a51b92afb709d6d90d2b229b5b9"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraPhotoQualitySignals.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraPhotoQualitySignals.kt",
+    "sha256": "8376784260f76b21ab296f6fec2d5decfbf5daada2c37322c47f01ccfdf76264"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraPreCaptureExposure.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraPreCaptureExposure.kt",
+    "sha256": "28c11cd8f06de839441ebdc90107555659e694608c648144fd87efa4fdf25fa7"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraPreviousSectionDiagnostics.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraPreviousSectionDiagnostics.kt",
+    "sha256": "0a32fff3b9e82d2ab316b59bfdcdb250fe375885d868101bc2c8a0bf88b95246"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraPreviousSectionGuide.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraPreviousSectionGuide.kt",
+    "sha256": "56a88eea25344a3162ec02db766a3f3ff685cb17e81a15900abc0bac63c3e5f2"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraReviewSettings.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraReviewSettings.kt",
+    "sha256": "8e6007672717c5d55656eac2e14d604372b5f2d0402c36d102bb43d2111d4260"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraSessionArguments.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraSessionArguments.kt",
+    "sha256": "4a2fda2d2e2e13bfd23e9ac6f1235ac7d722f1c3c659be9f1e6b799481f4656d"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraSettingsDialog.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraSettingsDialog.kt",
+    "sha256": "71967e79a9be337e01f9032c91421bb2a9d60cd721a8cb1dfc02e06fa9d23527"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraSettingsViews.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraSettingsViews.kt",
+    "sha256": "35bbc990395c0fd2a6606f25001c5c052de72cc789bea620ff75850b166a87ac"
+  },
+  {
+    "source": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ReceiptCameraUiChrome.kt",
+    "destination": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\android\\app\\src\\main\\kotlin\\com\\maintainiac\\ui_lab_2_1\\ReceiptCameraUiChrome.kt",
+    "sha256": "e7d231a2f802c6fe3551cefcf624ca47c7e139411dcd7ae0661884230423f3e5"
+  }
+]

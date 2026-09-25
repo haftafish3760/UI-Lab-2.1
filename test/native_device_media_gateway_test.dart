@@ -62,8 +62,8 @@ void main() {
     () async {
       final root = await Directory.systemTemp.createTemp('picker-path-');
       try {
-        final first = File('${root.path}/receipt.pdf ');
-        final second = File('${root.path}/other.png');
+        final first = File('${root.path}${Platform.pathSeparator}receipt.pdf ');
+        final second = File('${root.path}${Platform.pathSeparator}other.png');
         await first.writeAsBytes([1, 2, 3]);
         await second.writeAsBytes([4, 5]);
         picker.result = [

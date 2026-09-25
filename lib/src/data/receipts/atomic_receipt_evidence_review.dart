@@ -1,3 +1,5 @@
+import '../storage/local_attachment_store.dart';
+import 'receipt_evidence_review_input.dart';
 import 'dart:convert';
 import '../storage/local_draft_checkpoint.dart';
 import '../storage/local_draft_store.dart';
@@ -65,7 +67,36 @@ class AtomicReceiptEvidenceReview {
             'Saved evidence review changed.',
           );
         }
-        final detailsPayload = input!['selectedDetails'];
+        final reviewInput = ReceiptEvidenceReviewInput.fromPayload(input!);
+        final stitch = reviewInput.stitchState;
+        if (stitch != null) {
+          reviewInput.validate(
+            receiptId: receiptId,
+            revision: expectedRevision,
+            availableIds: current.activeEvidence
+                .map((e) => e.evidenceId)
+                .toSet(),
+          );
+          for (var i = 0; i < stitch.evidenceIds.length; i++) {
+            if (!current.activeEvidence.any(
+              (e) =>
+                  e.evidenceId == stitch.evidenceIds[i] &&
+                  e.sha256 == stitch.sourceHashes[i],
+            )) {
+              throw const ReceiptDraftRevisionConflictException(
+                'Stitch preview sources changed.',
+              );
+            }
+          }
+          if (stitch.attachmentId != null) {
+            await LocalAttachmentStore(planBefore.database).verifiedFiles(
+              organizationId: permissions.organizationId,
+              ownerIds: {permissions.actorEmployeeId},
+              attachmentIds: {stitch.attachmentId!},
+            );
+          }
+        }
+        final detailsPayload = input['selectedDetails'];
         final itemReads = input.containsKey('itemReads')
             ? decodeReceiptItemReads(input)
             : current.activeItemReads;
@@ -92,6 +123,8 @@ class AtomicReceiptEvidenceReview {
           );
         }
         final updated = await controller.update(
+          stitchState: stitch,
+          replaceStitchState: true,
           itemReads: [
             for (final read in itemReads)
               if (ordered.contains(read.evidenceId)) read,

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "status": "engineering-fixtures-not-product-verification",
+  "families": [
+    {"id": "pressure_tee", "identity_attributes": ["material", "system"], "ports": ["run_a", "run_b", "branch"], "interchangeable_ports": [["run_a", "run_b"]]},
+    {"id": "conductor", "identity_attributes": ["material", "gauge_system", "gauge", "construction", "insulation", "voltage"], "ports": [], "interchangeable_ports": []},
+    {"id": "filter", "identity_attributes": ["media", "rating"], "ports": ["length", "width", "depth"], "interchangeable_ports": []}
+  ]
+}

@@ -14,6 +14,35 @@ that later checkpoints resolved; they are not a declaration of current completio
 
 ## Active SQLite implementation checkpoint — 2026-09-09
 
+### Cross-platform file preservation — September 19 owner requirement
+
+Owner direction in the device-capability task: the app must never overwrite
+anything on a user's device, whether phone or computer, on Android, iOS,
+Windows, macOS or another supported platform. It must never delete anything
+without the user first choosing an explicit Delete (or equivalent) action and
+then confirming deletion before the destructive operation occurs.
+
+Treat this as a required contract, not a claim that existing paths comply.
+Resource pressure, OCR completion, cache limits, sync, restore and a successful
+derived copy do not confer permission to delete user data. Preserve originals;
+exports/copies must not replace an existing destination. Storage protection must
+refuse/defer writes rather than silently reclaim user files. A deletion dialog
+must identify its target and consequences; cancellation performs no deletion.
+Enforcement and tests belong at the mutation boundary, not only in a widget.
+
+Owner follow-up explicitly includes information created by the app itself:
+reaching the 100 MB reserve must never cause the app to delete or overwrite
+its own information to make room. Only the user may choose what to delete,
+and deletion still requires confirmation. No temporary-file exception has been
+authorized. Existing OCR temporary cleanup and all resource-reclamation paths
+therefore require review; preserve existing information and defer new work.
+Normal user-directed record edits and durable autosave must retain their separate
+authorization/recovery contracts; neither is permission for pressure-triggered
+replacement or for overwriting imported originals.
+
+The shared device-capability system has no authority to delete files. Its
+100 MiB reserve is governed by `device_capabilities_blueprint.md`.
+
 This is progress evidence, not completion or production-security acceptance.
 The owner explicitly authorized the 2.1 SQLite/Drift conversion first. Latest
 owner follow-up authorizes continuing directly into the 5.7 inventory port only
@@ -1132,8 +1161,10 @@ packs. Cloud identity and post-download pack entitlement remain unresolved.
 Separate synchronization (including changes/deletions) from recoverable snapshots;
 design mode transitions, durable queues, new-device restore and conflict handling.
 No background schedule guarantees exact execution time on a mobile OS.
-Use a NEW isolated Firebase project. CLI 15.29.0 was locally verified; login,
-project creation, app registration, billing and rule deployment remain unfinished.
+The original separate-project direction is superseded by the September 15
+owner decision in `firebase_connection_checkpoint.md` and D34: use the selected
+existing Firebase project. Changes still require bounded app namespaces and
+verification of existing rules, bucket configuration and access before rollout.
 
 ## Distinguish the authorities
 
@@ -1151,6 +1182,34 @@ Earlier receipt-only paid scope is superseded. The owner discussed $2 ad removal
 and $5 ad-free cloud backup, later a possible 2 GB allowance. Final quota, provider
 allocation and sync-only entitlements remain unresolved. Ordinary local features
 remain usable; do not invent paywalls or provider cost guarantees.
+
+September 20 owner update: implement backup-upload allowance and abuse-protection
+infrastructure inside UI Lab 2.1; do not modify Maintainiac 5.7. The owner is
+still considering the freemium plan. Amounts, per-person bonuses, paid-seat
+requirements and trial duration remain UNDECIDED. None may become a default
+commercial entitlement merely because discussed in conversation.
+
+The discussed allowance measures cumulative successfully backed-up upload bytes,
+not device storage, current cloud occupancy or OCR processing. The server owns
+grant approval and usage; local SQLite remains the device persistence authority.
+No reset from changing an email, reinstalling, deleting a backup or re-adding a
+member. Retries of one durable upload attempt consume allowance once. Reserve
+bytes atomically before upload, preserve completed backups at exhaustion, and
+keep local workflows available. Network traffic controls separately bound retries
+and downloads; an uncharged retry is not unlimited bandwidth.
+
+Unique recognition is authorized for narrowly scoped abuse prevention, not as
+an addition to generic capability telemetry. Account history and trusted,
+pseudonymous eligibility evidence can support grant decisions; arbitrary client
+device IDs, email verification or App Check alone do not establish a new person's
+eligibility. Shared/secondhand devices need reviewed recovery. Provider validation,
+retention, operator permissions and account-deletion handling must be settled
+before automatic recognition is enabled. No hardware serial/advertising-ID
+collection or cross-app fingerprinting is implemented by this slice.
+
+Implementation and validation evidence: `../cloud_backup/README.md`. It records
+server transactions, object integrity, local emulator coverage and unconnected
+production prerequisites. This is not evidence of deployed protection.
 
 Job-photo bytes belong in the user's chosen local/external storage, not their
 paid Maintainiac receipt-backup allocation. Required provider directions are

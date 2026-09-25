@@ -1,0 +1,92 @@
+Window: "Tame Your Biz", App: ui_lab_2_1.exe.
+	0 window Tame Your Biz Secondary Actions: Raise
+		1 pane
+			425 group
+				426 group
+					427 group
+						428 group
+							429 group
+								430 text Tame Your Biz
+								431 text Field records
+								432 button Dashboard
+								433 button Work
+								434 button Expenses
+								435 button Materials
+								436 button Maintenance
+								437 text Records stay available offline.
+							438 group
+								439 group
+									440 button Open navigation menu
+									441 text ACTIVE VEHICLE Transit 12
+									442 text ODOMETER
+									443 text Not recorded
+									444 button Dashboard settings
+									445 text Saturday, September 19, 2026
+									446 button Start workday
+									447 text Technician. Change view
+									448 button Add
+									449 group
+										450 text Needs attention 0
+										451 text Payments $0.00
+										452 text Expenses $0.00
+										453 text Miles —
+										454 text Work 0/0
+									455 text Today's Plan
+									456 button Previous month
+									457 button September 2026
+									458 button Week
+									459 button Next month
+									460 text No stops planned
+									461 text Nothing is scheduled for this day.
+									462 text Mon
+									463 text Tue
+									464 text Wed
+									465 text Thu
+									466 text Fri
+									467 text Sat
+									468 text Sun
+									469 group
+										470 group
+											471 button Monday, August 31, 2026. Outside the selected month. No dashboard entries. 31
+											472 button Tuesday, September 1, 2026. No dashboard entries. 1
+											473 button Wednesday, September 2, 2026. No dashboard entries. 2
+											474 button Thursday, September 3, 2026. No dashboard entries. 3
+											475 button Friday, September 4, 2026. No dashboard entries. 4
+											476 button Saturday, September 5, 2026. No dashboard entries. 5
+											477 button Sunday, September 6, 2026. No dashboard entries. 6
+											478 button Monday, September 7, 2026. No dashboard entries. 7
+											479 button Tuesday, September 8, 2026. No dashboard entries. 8
+											480 button Wednesday, September 9, 2026. No dashboard entries. 9
+											481 button Thursday, September 10, 2026. No dashboard entries. 10
+											482 button Friday, September 11, 2026. No dashboard entries. 11
+											483 button Saturday, September 12, 2026. No dashboard entries. 12
+											484 button Sunday, September 13, 2026. No dashboard entries. 13
+											485 button Monday, September 14, 2026. No dashboard entries. 14
+											486 button Tuesday, September 15, 2026. No dashboard entries. 15
+											487 button Wednesday, September 16, 2026. No dashboard entries. 16
+											488 button Thursday, September 17, 2026. No dashboard entries. 17
+											489 button Friday, September 18, 2026. No dashboard entries. 18
+											490 button Saturday, September 19, 2026. Today. No dashboard entries. 19
+											491 button Sunday, September 20, 2026. No dashboard entries. 20
+											492 button Monday, September 21, 2026. No dashboard entries. 21
+											493 button Tuesday, September 22, 2026. No dashboard entries. 22
+											494 button Wednesday, September 23, 2026. No dashboard entries. 23
+											495 button Thursday, September 24, 2026. No dashboard entries. 24
+											496 button Friday, September 25, 2026. No dashboard entries. 25
+											497 button Saturday, September 26, 2026. No dashboard entries. 26
+											498 button Sunday, September 27, 2026. No dashboard entries. 27
+											499 button Monday, September 28, 2026. No dashboard entries. 28
+											500 button Tuesday, September 29, 2026. No dashboard entries. 29
+											501 button Wednesday, September 30, 2026. No dashboard entries. 30
+											502 button Thursday, October 1, 2026. Outside the selected month. No dashboard entries. 1
+											503 button Friday, October 2, 2026. Outside the selected month. No dashboard entries. 2
+											504 button Saturday, October 3, 2026. Outside the selected month. No dashboard entries. 3
+											505 button Sunday, October 4, 2026. Outside the selected month. No dashboard entries. 4
+		8 title bar (settable, string) Value: Tame Your Biz
+			9 menu bar System ID: MenuBar
+				10 menu item System
+			11 button Minimize
+			12 button Maximize
+			13 button Close
+
+The focused UI element is 1 pane.

@@ -6,9 +6,12 @@ import 'src/startup/ui_lab_startup_controller.dart';
 import 'src/startup/firebase_connection.dart';
 import 'src/data/account/firebase_account_gateway.dart';
 import 'src/shared/account_scope.dart';
+import 'src/data/device_capabilities/device_resource_monitor.dart';
+import 'src/data/device_capabilities/device_workload_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  DeviceResourceMonitor(DeviceWorkloadService.instance).start();
   final notifications = FlutterLocalNotificationGateway();
   final firebase = FirebaseConnection();
   final startup = UiLabStartupController(

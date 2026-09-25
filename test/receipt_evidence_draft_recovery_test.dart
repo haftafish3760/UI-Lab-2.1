@@ -119,6 +119,24 @@ void main() {
         }
 
         var controller = await openReview();
+        expect(find.text('Combine receipt sections'), findsOneWidget);
+        if (width == 390.0) {
+          // No native capability probe in this widget environment: the real
+          // action must leave a recoverable review, not start unbounded work.
+          await press('Combine receipt sections');
+          await waitForNativeSave(
+            tester,
+            () => find.text('Retry combining').evaluate().isNotEmpty,
+          );
+          expect(
+            find.textContaining('Your saved photos remain available'),
+            findsOneWidget,
+          );
+          expect(
+            controller.recordById('intake-test')!.activeEvidence.length,
+            2,
+          );
+        }
         tester
             .widget<ReceiptPhotoTextPanel>(find.byType(ReceiptPhotoTextPanel))
             .onUseDetails!(reviewedDetails);

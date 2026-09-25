@@ -1,0 +1,259 @@
+{
+  "purpose": "synthetic-engine-fixture",
+  "version": "fixture-1",
+  "scope": {
+    "plumbing": [
+      "pressure_tee"
+    ],
+    "electrical": [
+      "conductor"
+    ],
+    "hvac": [
+      "pressure_tee",
+      "filter"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "plumbing",
+      "parent": null,
+      "trade": "plumbing",
+      "label": "Plumbing"
+    },
+    {
+      "id": "electrical",
+      "parent": null,
+      "trade": "electrical",
+      "label": "Electrical"
+    },
+    {
+      "id": "hvac",
+      "parent": null,
+      "trade": "hvac",
+      "label": "Hvac"
+    },
+    {
+      "id": "p_fittings",
+      "parent": "plumbing",
+      "trade": "plumbing",
+      "label": "Fittings"
+    },
+    {
+      "id": "h_fittings",
+      "parent": "hvac",
+      "trade": "hvac",
+      "label": "Fittings"
+    },
+    {
+      "id": "e_wire",
+      "parent": "electrical",
+      "trade": "electrical",
+      "label": "Conductors"
+    },
+    {
+      "id": "h_filters",
+      "parent": "hvac",
+      "trade": "hvac",
+      "label": "Filters"
+    }
+  ],
+  "sources": [
+    {
+      "id": "fixture",
+      "classification": "synthetic_fixture",
+      "verification": "unverified",
+      "note": "Authored software test data. No product availability, ratings, compatibility or rights certification."
+    }
+  ],
+  "candidates": [
+    {
+      "family": "pressure_tee",
+      "attributes": {
+        "material": "copper",
+        "system": "fixture-pressure"
+      },
+      "ports": {
+        "run_a": {
+          "size": "3/4",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        },
+        "run_b": {
+          "size": "1/2",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        },
+        "branch": {
+          "size": "1/2",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        }
+      },
+      "paths": [
+        "p_fittings"
+      ],
+      "aliases": [
+        "synthetic tee"
+      ],
+      "source": "fixture"
+    },
+    {
+      "family": "pressure_tee",
+      "attributes": {
+        "material": "copper",
+        "system": "fixture-pressure"
+      },
+      "ports": {
+        "run_a": {
+          "size": "0.5",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        },
+        "run_b": {
+          "size": "0.75",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        },
+        "branch": {
+          "size": "0.5",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        }
+      },
+      "paths": [
+        "h_fittings"
+      ],
+      "aliases": [
+        "synthetic tee"
+      ],
+      "source": "fixture"
+    },
+    {
+      "family": "pressure_tee",
+      "attributes": {
+        "material": "copper",
+        "system": "fixture-pressure"
+      },
+      "ports": {
+        "run_a": {
+          "size": "3/4",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        },
+        "run_b": {
+          "size": "1/2",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        },
+        "branch": {
+          "size": "3/4",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        }
+      },
+      "paths": [
+        "p_fittings"
+      ],
+      "aliases": [
+        "synthetic tee"
+      ],
+      "source": "fixture"
+    },
+    {
+      "family": "pressure_tee",
+      "attributes": {
+        "material": "copper",
+        "system": "fixture-pressure"
+      },
+      "ports": {
+        "run_a": {
+          "size": "1/2",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        },
+        "run_b": {
+          "size": "1/2",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        },
+        "branch": {
+          "size": "1/2",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "solder"
+        }
+      },
+      "paths": [
+        "p_fittings"
+      ],
+      "aliases": [
+        "synthetic tee"
+      ],
+      "source": "fixture"
+    },
+    {
+      "family": "conductor",
+      "attributes": {
+        "material": "copper",
+        "gauge_system": "awg",
+        "gauge": "12",
+        "construction": "solid",
+        "insulation": "fixture-insulation",
+        "voltage": "600"
+      },
+      "ports": {},
+      "paths": [
+        "e_wire"
+      ],
+      "aliases": [
+        "synthetic conductor"
+      ],
+      "source": "fixture"
+    },
+    {
+      "family": "filter",
+      "attributes": {
+        "media": "fixture-media",
+        "rating": "unknown"
+      },
+      "ports": {
+        "length": {
+          "size": "20",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "none"
+        },
+        "width": {
+          "size": "16",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "none"
+        },
+        "depth": {
+          "size": "1",
+          "unit": "in",
+          "basis": "nominal",
+          "connection": "none"
+        }
+      },
+      "paths": [
+        "h_filters"
+      ],
+      "aliases": [
+        "synthetic filter"
+      ],
+      "source": "fixture"
+    }
+  ]
+}

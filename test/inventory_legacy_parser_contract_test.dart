@@ -62,7 +62,7 @@ void main() {
     );
   });
   test('independent: conflicting identities must reject the whole merge', () {
-    const changed = WorkSupplyItem(
+    final changed = WorkSupplyItem(
       id: coupling.id,
       name: 'Different fitting',
       trade: 'Plumbing',

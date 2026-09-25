@@ -1,3 +1,4 @@
+import 'receipt_stitch_draft_state.dart';
 import 'receipt_entry_setup.dart';
 import 'package:flutter/widgets.dart';
 
@@ -197,6 +198,8 @@ class ReceiptDraftUiController extends ChangeNotifier {
     List<ReceiptItemRead>? itemReads,
     ReceiptEntrySetup? entrySetup,
     bool replaceSelectedDetails = false,
+    ReceiptStitchDraftState? stitchState,
+    bool replaceStitchState = false,
   }) => _mutate(
     draftId: draftId,
     operation: ReceiptDraftUiOperation.update,
@@ -226,6 +229,7 @@ class ReceiptDraftUiController extends ChangeNotifier {
       final requested = current.copyWith(
         entrySetup: entrySetup,
         itemReads: itemReads,
+        stitchState: replaceStitchState ? stitchState : current.stitchState,
         selectedDetails: replaceSelectedDetails
             ? selectedDetails
             : current.selectedDetails,

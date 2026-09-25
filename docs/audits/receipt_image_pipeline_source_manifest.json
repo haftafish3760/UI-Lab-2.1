@@ -1,0 +1,401 @@
+{
+  "sourceRoot": "C:\\Users\\rjenk\\OneDrive\\Documents\\maintainiac5.7\\Maintainiac_5.7_Active\\lib\\shared\\widgets\\receipt_capture",
+  "targetRoot": "C:\\Users\\rjenk\\Documents\\UI Lab 2.1\\lib\\src\\data\\receipts\\image_pipeline",
+  "files": [
+    {
+      "source": "receipt_attachment_record.dart",
+      "sha256": "a91ab9ecbce5f99db016bcfc07c478c9c29a8736ddc044c946df91e985823636",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_attachment_record_serialization.dart",
+      "sha256": "cb9a94373636f9082084ecb6c5c29f2b26006e7868159e89880d14ed10782ec3",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_attachment_storage_models.dart",
+      "sha256": "ae43fe2fcadaf80ca374b5870f4f0d0b73b93e0fdcb35a3c5f7986c31aaed0cb",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_camera_fixture_matrix.dart",
+      "sha256": "19d308437af16a60062fc214709a1b7d46eb721f2c24696cbd676c207ed9c192",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_camera_result_diagnostics.dart",
+      "sha256": "3193bc097f0aca264212b3759c9da8f0163c9c666eddd3c2783b5096115b3c25",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_camera_result_models.dart",
+      "sha256": "965f420d3a3f3d34cc59642614377269d3ad1ea16e71b7236f82064b5b8b54dc",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_models.dart",
+      "sha256": "aaf3a1b0283189fa4ef48e307060f1753a18e56fd669cdd8df95d02eec5b0320",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_readiness_decision.dart",
+      "sha256": "cfe81329d7ca78ab085f5579f95a71f6de7ff53a6e3ecfff0a226a32a6297b50",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_brain_install_metadata.dart",
+      "sha256": "6b21651976da7ead513b2513a098918a99b663797bea0f243b042bc68f700e63",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_completion.dart",
+      "sha256": "1957cafefea551c7249ccd1e30b6a30431cc215f1c7e228e3dc456f2ad94fb38",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_continuation.dart",
+      "sha256": "51e28224148c97c6a3013538d0ec1aa629623e75d4dc227d16efef8e1b13a10d",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_handoff.dart",
+      "sha256": "715aaa59cafc24a95ad5f6c9db15229da87f5a7d61608c9425e48084a3ab1f22",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_handoff_brain_counts.dart",
+      "sha256": "ea534dfeeba18226cef6b26b33da8e2bdf86a0285feba0e87aa6eb94865fa09f",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_handoff_counts.dart",
+      "sha256": "4199b829015e8dbc0459c5dad7d31502097cb2ec41fb18668f3afea90946d8cc",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_handoff_labels.dart",
+      "sha256": "f53c7d27939fb12f8bea46350535806a6a17c50a4e61d5b6d8efdc4914c6a2ee",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_handoff_storage.dart",
+      "sha256": "54ca86f8edfe81ff2bda1219a19acfe8b3138d638f26f76780a3befb8261febd",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_helper_control_health_codes.dart",
+      "sha256": "2d940c5f606e74074ee1a7539dc722033bea9e764094f88d5225d24acc7a271e",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_helper_count_functions.dart",
+      "sha256": "8acd6942c8da8ac099de5027aa62beb4e8dd31651cf3ffc92f108f35078d7d61",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_helper_counts.dart",
+      "sha256": "2991fe03b1278ec66feccfc929650671299c5d4b8ea9d47831663a82bad33a43",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_helper_diagnostics.dart",
+      "sha256": "096c0f6eaca57049a69a8c613ec4499db6a44b76e1fb89f93725ceb750da2636",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_helper_health_codes.dart",
+      "sha256": "ddef6577659b54b872ad7843bb92952f675bdef1d1e13ea45d2be8e704a54ef4",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_helpers.dart",
+      "sha256": "09397995d3d20c41ffe0b771f31e64efa6ab86e17693e0401ad07d459c9549fa",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_metadata.dart",
+      "sha256": "27bc83317df5a932d3860e23fe0ea6044506a82b2fa3e6cb59e9249e4a93af12",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_native_brain_signals.dart",
+      "sha256": "303ac0265a50df30fd0e0fa1bf636f9c8a016dbaa861454531507c8ade1603eb",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_native_outcomes.dart",
+      "sha256": "b4577b9579117a8708feda2669abe9cdb060fba42861c3402b1eac2f29afbed6",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_native_signals.dart",
+      "sha256": "80dd0a89c0ffe467835be47c3b2733349cf97af1e0a3d37ad13b00c5c2264e37",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_next_review.dart",
+      "sha256": "e9cb1e1fbe193348d1a5aaef886ba6bdef7507eb7a3b460a122abfff73fe2403",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_section_order_counts.dart",
+      "sha256": "a3e03d095c884ecc9140004738f685fa3df0853219ce311d035fa4d61880bf9f",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_section_order_helpers.dart",
+      "sha256": "219554c8d08201a10bd811fbe567ea947fddbbfbda6bfcfb7be345bdcdc12e07",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_section_order_review.dart",
+      "sha256": "bde3bde8acd534cd1c95a256d4f5fe34a515519088e816adc9558cfe6fb85534",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_settings_health.dart",
+      "sha256": "9ffbd105c63dc914cd1a229105dea614f1dac9823da202a5ecbf34ac1ecc165f",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_review_result_warnings.dart",
+      "sha256": "75baea90e7df954cfd69cddaa03f1ad11b626d2c0add5574e7e33b94d46299f8",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_stitch_model_helpers.dart",
+      "sha256": "adfbc15b768da864a5d6e608fd182ad6b182d1b9bc22af55cde4095c887f375a",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_stitch_models.dart",
+      "sha256": "ea605913ac12f0a018130528276d39afa7cf21d8cc35741b6c2a147eac9e7b07",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_stitch_pair_models.dart",
+      "sha256": "40991eabab0f4297ae4c206fec1b0a3e0422bd19d20743b3c65bd6954379b2c8",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_capture_stitch_result_labels.dart",
+      "sha256": "ca550a92703d3b6a4ebde5e628ca487549eade976d496c498a067e2b8496c20e",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor.dart",
+      "sha256": "99e185bd07e314d6532a40f47f5667ba6037904bc636937e0bdf57fc68abf6a7",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_enhancement_helpers.dart",
+      "sha256": "cf46a46b8d1600addd226c0b1f9fa82d66a0ce6577ae078d65013530edf6ac8d",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_exposure_helpers.dart",
+      "sha256": "e91791a0ccf245b76d86894b85f51831cd61f12623e167279ed4d10eda271085",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_models.dart",
+      "sha256": "ea3cb06e47f58e85316b3008357267d06e72e0ed752485e73f0357d53db5e9ad",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_perspective_helpers.dart",
+      "sha256": "aa810124a44c1ec912ce934810424be3b258e284907d124fd495aa9146d0c95b",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_quality_helpers.dart",
+      "sha256": "40fe2f88a5d5f11a80b30fe95c44267c2851630946b055d6c6f7d07a0d92228f",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_resize_helpers.dart",
+      "sha256": "b93d0be05da5e6049bab58927d51966ac8179bb904c7f5b761db4c8ccbdda1db",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_scan_helpers.dart",
+      "sha256": "8a9eccbc4fd8df18cfdd94fcd46cf3c3fda5111ae50e68353bdf2a454c2f475b",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_source_prep.dart",
+      "sha256": "8a6a1bbabfd4b9f96edf2568134cfa27af64cc14aabd63ad3eccb98a78bf368d",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_api.dart",
+      "sha256": "b557767dd576da6118fd243855f9ffc070a2511428fd5d1b594f0e85a63eca08",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_composition.dart",
+      "sha256": "bb41a61f973cb9659c7a60c098faca46184e07eb11cf027f53585c2071e934ba",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_coordinate_refinement.dart",
+      "sha256": "4bc7d0aad581714551ada165038e2338072190b8cf810c1cc6d6a503d23b8786",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_duplicate_helpers.dart",
+      "sha256": "82762025626634377acf068456d9c487b9d934ef8b10b14d39edee3d6de858d6",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_fast_path.dart",
+      "sha256": "d756b752d3cd2daaa7d4a6af3fabbfad0b65b3c74652f6c10270d411e2095248",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_frame_transform.dart",
+      "sha256": "2bc59ff3de9c24b47aa3f4b0c18451c96fbe23dbcc4002efb497aa68e9df0f45",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_geometry_helpers.dart",
+      "sha256": "58cf4483d475160698238ae9a8c126f10f26b343ba9f995b8a929e2a6d82a988",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_helpers.dart",
+      "sha256": "28cde24ed8d7bcf6eec7c0e3a59f9fe8d2a04a68e1b0c7af83702ce18fe80be8",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_isolate.dart",
+      "sha256": "1cbb219a0158c54680989d9663b8911c736028fb20c88c5c3f3ba616810ae8e7",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_manual_pair.dart",
+      "sha256": "4696249035c84568145ab7ac31920c586a05fff735914b9e2b4f64a8eda9a165",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_native_guidance.dart",
+      "sha256": "0a52a344c50ca45297f8143ab8785dabce888b04295c9fa8fc34448364d8b3e0",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_overlap_search.dart",
+      "sha256": "28e3e05c4f5b751c714dda5fe84c90d24af0213f44ee6367605658976481252f",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_scoring_helpers.dart",
+      "sha256": "b89ae59705670e04918cb7a958f4eb355739d71885bf2fa3f4f24475d12633f7",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_search_budget.dart",
+      "sha256": "9f2a02dd8f0b18ec4d230eeaa46ece02f665d248c7a4e8d4d16eefdfbc9283c6",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_sequence_guidance.dart",
+      "sha256": "c39af13d0249ef7918bfcb2f82161aa73e04b026b595311143389c49c1267c01",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_sources.dart",
+      "sha256": "57afe67cb4ee97db612dc62f5ea47fbf6854c57bdcdc5247a730e5acd23885ac",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_support.dart",
+      "sha256": "18e9d0706e2a3eec97dba2680d12bf5bd7666f22c8b7ecb409bfd59a6f87e410",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_text_guidance.dart",
+      "sha256": "ce01c55af9c3bfe72cdeecfa4adb3c13846d7c6daba9bb43505425d9406f95df",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_stitch_transform_helpers.dart",
+      "sha256": "88904b1a164173d8562ce62aa158e398ddb911bea602bf3b8a91b4734082da8c",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_image_processor_storage_helpers.dart",
+      "sha256": "6fa6fd2b05b436276b8d0524a55f885b140b9c5e5d68379fb04659422662166c",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_native_saved_photo_warning.dart",
+      "sha256": "6c7273f2ad96717b70aa2e3ea6f7cad8c6cdfc86e84afed7beb93283fb610137",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_native_saved_photo_warning_details.dart",
+      "sha256": "5f37d7e3934ff006cc557d9e447805e276c2260e0462d75d0b483c693025032f",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_native_stitch_registration.dart",
+      "sha256": "9dc503c311e5d98676d248ba19c89396dd22706e1b6f45f7c7842649a130120b",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_photo_coverage_decision.dart",
+      "sha256": "6a3121492a1c8a822642dd9ed3ae34ced83617aec4fa6c90946dbbe0762d4105",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_photo_coverage_decision_from_signals.dart",
+      "sha256": "6825d8c17b709a3334a61accb1d7168097a482f4b306825a7c38a6f5cc3d2021",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_photo_coverage_decision_labels.dart",
+      "sha256": "25c28b8196e3211194780c265d0bd20dcf6ddae64f6692210be3cc57e8e90856",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_photo_coverage_evidence_helpers.dart",
+      "sha256": "0cd97c71dd0799b220fc9d969d26cc77197112a2b8c7c22219d82056d6bb134b",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_photo_path_identity.dart",
+      "sha256": "cc1ed89cc449dce45c4a736307767d6240ff8913f3de327ef98822102b31d5f4",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_photo_quality_models.dart",
+      "sha256": "22e5e2a6f1ed89d6358ab21f869a498f7886c4d9706037e03d6f9e8057b373cc",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_pipeline_trace.dart",
+      "sha256": "df14044a287a606721a7a049fd669cbf7b8d7d59962a9d6f6758ea0297a30e13",
+      "disposition": "copied for adaptation; not connected"
+    },
+    {
+      "source": "receipt_stitch_acceptance.dart",
+      "sha256": "28765c7ae325ea58f8a2e3174f47b4369914355b9913941d9fd9831edb9459db",
+      "disposition": "existing hardened target"
+    },
+    {
+      "source": "receipt_stitch_order_solver.dart",
+      "sha256": "4eddcca26b5686791431e9b59c8b942c6e68a89ee79055d9b38a143efa849a88",
+      "disposition": "existing hardened target"
+    },
+    {
+      "source": "receipt_stitch_text_evidence.dart",
+      "sha256": "0c3fe3ffbebaefd7a7105b238b8e083cbd4867889c804df428a84e29d0f98882",
+      "disposition": "existing hardened target"
+    },
+    {
+      "source": "receipt_stitch_text_evidence_similarity.dart",
+      "sha256": "f222488ca7c5a4789ee3761d09484580f238f1db3fbb70131f130f2571673fce",
+      "disposition": "existing hardened target"
+    }
+  ]
+}

@@ -10,6 +10,15 @@ Read these before changing UI:
 6. `docs/calendar_system_blueprint.md` for any calendar or dated-projection change
 7. the relevant screen-specific blueprint under `docs/`
 
+For catalog, Inventory, parser or validation-harness work, also read
+`docs/inventory_rebuild_plan.md` and the complete owner-supplied passages in
+`docs/inventory_migration/OWNER_VERBATIM_REQUIREMENTS_2026_09_18.md`.
+Re-read that verbatim record after context compression; do not substitute a
+summary for it. The owner authorized generator/harness implementation on the HP
+on September 18 after its documentation-only checkpoint. Read
+`docs/inventory_migration/CATALOG_ENGINEERING_CHECKPOINT_2026_09_18.md` for the
+current evidence and unfinished scope. No delegation is authorized.
+
 ## Repository boundary
 
 - This repository is the active UI/UX blueprint and test bed.
@@ -19,6 +28,23 @@ Read these before changing UI:
 - Do not take computer screenshots unless the owner explicitly reauthorizes it.
 
 ## Required implementation behavior
+
+### Owner data-preservation rule — September 19, 2026
+
+- On every supported platform (Android, iOS, Windows, macOS and others), the app
+  must not overwrite existing user information, including information the app
+  created itself, to make room or accommodate resource pressure.
+- The app must never automatically delete existing information to free storage.
+  Deletion requires the user to choose an explicit Delete (or equivalent) action
+  and then confirm that deletion before it occurs. Cancellation deletes nothing.
+- Reaching the minimum 100 MB free-storage reserve must stop or defer additional
+  storage-consuming work and explain that the user must choose what to remove.
+  It must never trigger automatic deletion, replacement or overwriting.
+- Preserve original files and existing export destinations. App ownership of a
+  file is not deletion permission. No exception for temporary processing files
+  has been authorized. Audit existing cleanup paths against this rule.
+- These are implementation requirements, not claims that existing code complies.
+  The owning detailed rule is in `docs/data_storage_sync_contract.md`.
 
 - Consistency is mandatory. Use `AppTheme`, `AppLayoutEngine`, and shared
   primitives; never create a private global breakpoint system inside a screen.
@@ -47,6 +73,13 @@ Read these before changing UI:
 - AI, OCR, GPS, and inferred data remain proposals until user-confirmed.
 
 ## Change discipline
+
+- Owner direction, September 19: continue authorized implementation and testing
+  in UI Lab 2.1 without stopping for repeated permission questions. Routine
+  engineering decisions are already authorized. Maintainiac 5.7 Active remains
+  strictly read-only; this authorization never permits changing it. Mandatory
+  host/sandbox restrictions still apply and must be described accurately if they
+  block execution; do not invent discretionary approval checkpoints.
 
 - Before substantial subsystem work or delegation, follow the required reuse
   assessment in `docs/maintainiac_app_blueprint.md` section 2. Inspect relevant

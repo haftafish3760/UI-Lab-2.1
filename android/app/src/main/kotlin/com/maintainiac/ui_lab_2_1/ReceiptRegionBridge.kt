@@ -13,6 +13,9 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.StandardMethodCodec
 import java.io.File
+import java.io.FilterOutputStream
+import java.io.OutputStream
+import android.os.StatFs
 
 /** Local derived images only. Serial background task queue, never the UI thread. */
 class ReceiptRegionBridge(private val context: Context) {
@@ -79,12 +82,13 @@ class ReceiptRegionBridge(private val context: Context) {
             }))
             require(raw.width.toLong() * raw.height <= maxPixels)
             upright = Bitmap.createBitmap(raw, 0, 0, raw.width, raw.height, transform, false)
+            require(StatFs(context.cacheDir.absolutePath).availableBytes >=
+                100L * 1024 * 1024 + 16L * 1024 * 1024)
             output = File.createTempFile("receipt-ocr-region-", ".png", context.cacheDir)
-            output.outputStream().use { require(upright.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+            BoundedOcrOutput(output.outputStream()).use {
+                require(upright.compress(Bitmap.CompressFormat.PNG, 100, it))
+            }
             return mapOf("path" to output.path, "width" to upright.width, "height" to upright.height)
-        } catch (error: Throwable) {
-            output?.delete()
-            throw error
         } finally {
             if (upright !== raw) upright?.recycle()
             raw?.recycle()
@@ -106,5 +110,17 @@ class ReceiptRegionBridge(private val context: Context) {
             else -> floatArrayOf(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f)
         }
         return Matrix().apply { setValues(values) }
+    }
+}
+
+private class BoundedOcrOutput(output: OutputStream) : FilterOutputStream(output) {
+    private var written = 0L
+    private fun admit(count: Int) {
+        require(count >= 0 && written + count <= 16L * 1024 * 1024)
+        written += count
+    }
+    override fun write(value: Int) { admit(1); out.write(value) }
+    override fun write(bytes: ByteArray, offset: Int, count: Int) {
+        admit(count); out.write(bytes, offset, count)
     }
 }

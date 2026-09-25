@@ -115,6 +115,7 @@ extension ReceiptEvidenceDraftWorkflow on ReceiptSubmissionSession {
                 orderedEvidenceIds: order,
                 selectedDetails: source.activeSelectedDetails,
                 itemReads: source.activeItemReads,
+                stitchState: source.activeStitchState,
                 selectedId: order.isEmpty
                     ? null
                     : order.contains(initiallySelectedId)
@@ -155,6 +156,18 @@ void _validateSelectedSource(
   ReceiptEvidenceReviewInput input,
   StoredReceiptDraft source,
 ) {
+  final stitch = input.stitchState;
+  if (stitch != null) {
+    for (var index = 0; index < stitch.evidenceIds.length; index++) {
+      if (!source.activeEvidence.any(
+        (item) =>
+            item.evidenceId == stitch.evidenceIds[index] &&
+            item.sha256 == stitch.sourceHashes[index],
+      )) {
+        throw StateError('Stitch sources no longer match the retained photos.');
+      }
+    }
+  }
   final details = input.selectedDetails;
   if (input.itemReads.any(
     (read) => !source.activeEvidence.any(

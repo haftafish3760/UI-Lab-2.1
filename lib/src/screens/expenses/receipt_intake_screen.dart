@@ -295,6 +295,7 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
         .push<ReceiptEvidenceReviewResult>(
           MaterialPageRoute(
             builder: (_) => ReceiptEvidenceReviewScreen(
+              allowAddPhotos: true,
               assistanceEnabled: _preferences.assistanceEnabled,
               evidence: List.unmodifiable(_evidence),
               permissions: widget.permissions,
@@ -316,6 +317,15 @@ class _ReceiptIntakeScreenState extends State<ReceiptIntakeScreen> {
     });
     if (committed == null && !await _persistDraft()) return;
     if (!mounted) return;
+    if (result.addPhotoSource case final source?) {
+      final previousCount = _evidence.length;
+      await _pickMedia(source);
+      if (!mounted) return;
+      await _openEvidenceReview(
+        _evidence.length > previousCount ? previousCount : initialIndex,
+      );
+      return;
+    }
     if (result.continueToDetails) {
       await _openReceiptEditor(
         imageCount: _evidence.length,

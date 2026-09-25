@@ -68,6 +68,7 @@ extension _ReceiptEvidenceDraftRecovery on _ReceiptEvidenceReviewScreenState {
     undoIndex: _undoIndex,
     selectedDetails: _selectedProposal,
     itemReads: _itemReads,
+    stitchState: _stitchState,
   );
 
   Map<String, ReceiptEvidenceSelection> get _reviewEvidenceById {
@@ -88,6 +89,9 @@ extension _ReceiptEvidenceDraftRecovery on _ReceiptEvidenceReviewScreenState {
     _undoItem = input.undoId == null ? null : byId[input.undoId];
     _undoIndex = input.undoIndex;
     _selectedProposal = input.selectedDetails;
+    _stitchState = input.stitchState;
+    _showCombined = _stitchState?.attachmentId != null;
+    _combinedFile = _loadCombinedPreview();
     _itemReads
       ..clear()
       ..addAll(input.itemReads);
@@ -167,7 +171,10 @@ extension _ReceiptEvidenceDraftRecovery on _ReceiptEvidenceReviewScreenState {
     }
   }
 
-  Future<void> _finish({required bool continueToDetails}) async {
+  Future<void> _finish({
+    required bool continueToDetails,
+    MediaPickerSource? addPhotoSource,
+  }) async {
     if (_readingEvidenceIds.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -178,7 +185,11 @@ extension _ReceiptEvidenceDraftRecovery on _ReceiptEvidenceReviewScreenState {
       );
       return;
     }
-    if (!_ready || _saving || (continueToDetails && _evidence.isEmpty)) return;
+    if (!_ready ||
+        _saving ||
+        _stitching ||
+        (continueToDetails && _evidence.isEmpty))
+      return;
     _capture();
     _refresh(() {
       _saving = true;
@@ -191,6 +202,7 @@ extension _ReceiptEvidenceDraftRecovery on _ReceiptEvidenceReviewScreenState {
           ReceiptEvidenceReviewResult(
             orderedEvidence: List.unmodifiable(_evidence),
             continueToDetails: continueToDetails,
+            addPhotoSource: addPhotoSource,
             committedReceipt: committed,
             suggestedDetails: committed != null
                 ? committed.activeSelectedDetails?.details

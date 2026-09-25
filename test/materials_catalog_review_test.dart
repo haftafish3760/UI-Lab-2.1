@@ -69,7 +69,7 @@ void main() {
     'shared engine selects three, two, then one from width and text size',
     () {
       int columns(double width, double scale) =>
-          AppLayoutEngine.materialsCatalogFor(
+          AppLayoutEngine.materialsInventoryFor(
             width,
             textScaler: TextScaler.linear(scale),
             longestWordWidth: 70 * scale,

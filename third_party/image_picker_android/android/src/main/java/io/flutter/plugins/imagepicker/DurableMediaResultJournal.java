@@ -37,7 +37,7 @@ final class DurableMediaResultJournal extends SQLiteOpenHelper {
   // Native directory sync is injected only by JVM tests whose filesystem model
   // cannot open directories. Production always uses the strict OS implementation.
   DurableMediaResultJournal(Context context, DirectorySync directorySync) {
-    super(context, "maintainiac_native_media.sqlite", null, 4);
+    super(context, "maintainiac_native_media.sqlite", null, 5);
     this.context = context.getApplicationContext();
     this.directorySync = directorySync;
   }
@@ -52,6 +52,7 @@ final class DurableMediaResultJournal extends SQLiteOpenHelper {
     createAcknowledgements(db);
     NativeMediaCleanup.createTable(db);
     NativeMediaStaging.createTable(db);
+    NativeReceiptCaptureLedger.createTable(db);
   }
 
   private static void createAcknowledgements(SQLiteDatabase db) {
@@ -59,7 +60,7 @@ final class DurableMediaResultJournal extends SQLiteOpenHelper {
   }
 
   @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-    if (oldVersion < 1 || oldVersion > 3 || newVersion != 4) {
+    if (oldVersion < 1 || oldVersion > 4 || newVersion != 5) {
       throw new IllegalStateException("Unsupported native media journal version");
     }
     if (oldVersion == 1) {
@@ -67,7 +68,8 @@ final class DurableMediaResultJournal extends SQLiteOpenHelper {
       db.execSQL("INSERT INTO acknowledgements SELECT request_key FROM handoff WHERE state='acknowledged'");
     }
     if (oldVersion < 3) NativeMediaCleanup.createTable(db);
-    NativeMediaStaging.createTable(db);
+    if (oldVersion < 4) NativeMediaStaging.createTable(db);
+    NativeReceiptCaptureLedger.createTable(db);
   }
 
   synchronized void begin(String key) {
@@ -76,7 +78,7 @@ final class DurableMediaResultJournal extends SQLiteOpenHelper {
     }
     cleanAcknowledgedCopies();
     SQLiteDatabase db = getWritableDatabase();
-    NativeMediaStaging.collectPreviousProcess(db, context, directorySync);
+    // Preserve prior-process staging until explicit user-confirmed deletion.
     db.beginTransaction();
     try {
       if (isAcknowledged(db, key)) throw new IllegalStateException("Media request already acknowledged");
@@ -112,8 +114,15 @@ final class DurableMediaResultJournal extends SQLiteOpenHelper {
     boolean acknowledged = isAcknowledged(getReadableDatabase(), key);
     if (!acknowledged) begin(key);
     List<String> paths = read(key);
+    boolean cameraCapture = !acknowledged
+        && NativeReceiptCaptureLedger.hasRequest(getReadableDatabase(), key);
+    if (cameraCapture && paths.isEmpty()) {
+      List<String> completed = NativeReceiptCaptureLedger.completed(
+          getReadableDatabase(), context, key);
+      if (!completed.isEmpty()) paths = storeResults(key, completed);
+    }
     result.put("paths", paths);
-    result.put("needsLegacyRecovery", !acknowledged && paths.isEmpty());
+    result.put("needsLegacyRecovery", !acknowledged && paths.isEmpty() && !cameraCapture);
     return result;
   }
 
@@ -167,6 +176,9 @@ final class DurableMediaResultJournal extends SQLiteOpenHelper {
         }
         if (!source.isFile() || source.length() == 0) throw new IOException("Media source unavailable");
         long expectedLength = source.length();
+        if (root.getUsableSpace() - expectedLength < 100L * 1024 * 1024) {
+          throw new IOException("Not enough storage to retain native media safely");
+        }
         String expectedDigest = digest(source);
         String name = source.getName();
         int dot = name.lastIndexOf('.');
@@ -193,20 +205,8 @@ final class DurableMediaResultJournal extends SQLiteOpenHelper {
       directorySync.flush(root);
       directorySync.flush(root.getParentFile());
     } catch (IOException | JSONException | RuntimeException failure) {
-      // These copies have never entered a SQL manifest. Never apply this cleanup
-      // after publication starts: a failed commit can have uncertain outcome.
-      for (File copy : provisional) {
-        try {
-          if (!root.getCanonicalFile().equals(root.getAbsoluteFile())) {
-            throw new IOException("Unpublished media cleanup location redirected");
-          }
-          if (copy.exists() && !copy.delete()) {
-            throw new IOException("Cannot remove unpublished native media");
-          }
-        } catch (IOException | RuntimeException cleanupFailure) {
-          failure.addSuppressed(cleanupFailure);
-        }
-      }
+      // Keep provisional files and their staging rows. App ownership does not
+      // authorize automatic deletion, even when publication failed.
       throw failure;
     }
     db.beginTransaction();
@@ -242,7 +242,14 @@ final class DurableMediaResultJournal extends SQLiteOpenHelper {
   }
 
   synchronized boolean cleanAcknowledgedCopies() {
-    return NativeMediaCleanup.collect(getWritableDatabase(), context, directorySync);
+    // Acknowledgement ends replay, not ownership or retention. The manifest
+    // remains in media_cleanup for a future explicit, confirmed removal flow.
+    return true;
+  }
+
+  void flushCaptureDirectory(File file) throws IOException {
+    directorySync.flush(file.getParentFile());
+    directorySync.flush(file.getParentFile().getParentFile());
   }
 
   private void finish(String key, boolean allowPending) {
@@ -315,7 +322,7 @@ final class DurableMediaResultJournal extends SQLiteOpenHelper {
     }
   }
 
-  private static String digest(File file) throws IOException {
+  static String digest(File file) throws IOException {
     try {
       MessageDigest hash = MessageDigest.getInstance("SHA-256");
       try (FileInputStream input = new FileInputStream(file)) {

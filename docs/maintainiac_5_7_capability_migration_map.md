@@ -1,5 +1,19 @@
 # Maintainiac 5.7 Capability Migration Map
 
+September 19 receipt authorization supersedes the earlier exclusion of camera
+and stitching reuse below. The owner authorized copying and repairing the
+5.7 camera/OCR/parser pipeline exclusively in UI Lab, with SQLite persistence.
+The current owning contract is Receipt/material intake section 4 and the
+evidence checkpoint is `audits/receipt_pipeline_port_2026_09_19.md`.
+5.7 remains read-only; device-capability work remains separately owned.
+
+September 19 owner authorization expands the device-capability slice to a full
+read-only audit and six-tier, brand-neutral shared system in UI Lab, using SQLite
+where persistence is needed. The owning contract is
+`device_capabilities_blueprint.md`; source dispositions, risks and unfinished
+verification are in `audits/device_capabilities_2026_09_19.md`. This supersedes the
+earlier three-tier scope below, not the protected-source boundary.
+
 September 14 owner authorization D38 starts the inventory/parsing transfer in
 UI Lab. See [the extraction checkpoint](inventory_migration/README.md) for
 the local source comparison, bounded catalog conversion and unresolved work.
@@ -862,8 +876,9 @@ Each slice receives its own source inventory and owner approval.
 6. **E6 Receipt Assistant.** Existing OCR/parser engine behind a proposal-only
    adapter, independent characterization parity, field/line review,
    search/paging, corrections, and reconciliation.
-7. **E7 Long-receipt engine.** New stitching implementation and adversarial image
-   fixtures; never a direct transplant.
+7. **E7 Long-receipt engine.** Adapt/repair the authorized legacy implementation
+   under the September 19 scope, with independent adversarial image fixtures
+   and on-device acceptance. Unverified copying does not complete this gate.
 8. **E8 Expense-to-job/material handoff.** Stable links and separate confirmed
    commands for job actuals, cost history, and vehicle stock.
 9. **E9 Optional backup/sync.** Outbox, versioned documents, proof blobs, quota,

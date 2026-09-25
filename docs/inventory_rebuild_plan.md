@@ -1,5 +1,43 @@
 # Inventory rebuild — September 16, 2026
 
+> **September 19 continuation — latest owner scope:** Catalog expansion is
+> deferred for release one. Prioritize useful standalone inventory, manual and
+> CSV/spreadsheet entry, user categories, search, purchase-price history, and
+> reliable receipt review. Review the whole app for consistency and missing
+> engineering safeguards. Durable storage, OCR and the long-receipt workflow
+> are explicit priorities. Earlier catalog-first directions below are historical.
+> Existing generator/harness work remains development infrastructure, not an
+> approved production catalog. Work is authorized on the HP; no delegation.
+
+Inventory list cells use the shared `AppLayoutEngine.inventoryListFor` contract:
+compact columns rather than one desktop-wide row. At ordinary text scaling,
+800 LP of local content width accommodates three columns and 1100 LP four;
+phone widths use one. Increased text size and complete-word measurements reduce
+columns when needed. The normal cell-width ceiling is 360 LP, with height growing
+for full readable text. Grid mode remains available. This rule concerns inventory
+cells, not unrelated operational forms or receipt previews. Widget checks are
+not visual acceptance on the owner's hardware.
+
+> **September 18 implementation resumed:** The owner explicitly authorized
+> starting the generator and independent harness on the HP. See the
+> [engineering checkpoint](inventory_migration/CATALOG_ENGINEERING_CHECKPOINT_2026_09_18.md)
+> for inspected legacy limitations, first-slice implementation, tests, open
+> requirements and failure analysis. The earlier pause checkpoint below is
+> historical. No delegation, Mac edits or live catalog publication is authorized.
+
+> **September 18, HP Windows — read before continuing:** The owner supplied and
+> endorsed a complete independent catalog/Inventory verification specification
+> and accompanying provenance/source-safety requirements. They are preserved
+> **word for word**, not summarized, in
+> [the owner verbatim requirements record](inventory_migration/OWNER_VERBATIM_REQUIREMENTS_2026_09_18.md).
+> Read that entire record after context compression and before future catalog,
+> inventory, parser or validation-harness work. It is a minimum requirement,
+> not a claim of implementation or acceptance. Further owner additions are expected.
+> Implementation remains paused pending the owner's go-ahead; the present
+> authorization is documentation only, on the HP, without delegation.
+> Conflicting older scope, device and authorization statements below are historical;
+> current owner directions and the linked record take precedence.
+
 > **September 17 desktop transfer correction:** The owner's latest direction is
 > Plumbing, Electrical and HVAC only, catalog first, followed by parser integration
 > with a rebuilt independently validated harness. Earlier all-21 and catalog-removal

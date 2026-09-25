@@ -1,0 +1,27 @@
+Window: "Tame Your Biz", App: ui_lab_2_1.exe.
+	0 window Tame Your Biz Secondary Actions: Raise
+		1 pane
+			2 group
+				3 group
+					4 group
+						5 group
+							6 group
+								7 button Back
+								8 group Expense setup
+							9 group
+								10 text Welcome to Expenses
+								11 text Let’s get a few things set up.
+								12 text How much detail would you like to save?
+								13 button Basic receipt Save the receipt total and an optional category. Individual items are not recorded.
+								14 button Detailed receipt Save the receipt total, each item, how many you bought, and its price. You can also choose a category.
+								15 text You can attach a receipt image with either option.
+								16 text You can change this when adding a receipt. The app remembers your last choice.
+								17 button Continue
+		18 title bar (settable, string) Value: Tame Your Biz
+			19 menu bar System ID: MenuBar
+				20 menu item System
+			21 button Minimize
+			22 button Maximize
+			23 button Close
+
+The focused UI element is 1 pane.

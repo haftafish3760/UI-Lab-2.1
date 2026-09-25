@@ -54,19 +54,20 @@ class MaterialsCatalogTiles extends StatelessWidget {
           longestWord = math.max(longestWord, measure(word));
         }
       }
-      final grid = AppLayoutEngine.materialsCatalogFor(
+      final grid = AppLayoutEngine.materialsInventoryFor(
         constraints.maxWidth,
         textScaler: scaler,
         longestWordWidth: longestWord,
       );
       final width = listView
-          ? math.min(
+          ? AppLayoutEngine.inventoryListFor(
               constraints.maxWidth,
-              AppLayoutEngine.maximumFormWorkspaceWidth,
-            )
+              textScaler: scaler,
+              longestWordWidth: longestWord,
+            ).tileWidth
           : grid.tileWidth;
       final textWidth = math.max(1.0, width - 24);
-      var height = 80.0;
+      var height = listView ? 56.0 : 80.0;
       for (final entry in entries) {
         height = math.max(
           height,
@@ -81,7 +82,7 @@ class MaterialsCatalogTiles extends StatelessWidget {
       return Align(
         alignment: AlignmentDirectional.centerStart,
         child: SizedBox(
-          width: listView ? width : constraints.maxWidth,
+          width: constraints.maxWidth,
           child: Wrap(
             spacing: grid.gap,
             runSpacing: grid.gap,
@@ -136,14 +137,18 @@ class MaterialsCatalogTiles extends StatelessWidget {
                                 ],
                                 Text(
                                   entry.label,
-                                  textAlign: TextAlign.center,
+                                  textAlign: listView
+                                      ? TextAlign.start
+                                      : TextAlign.center,
                                   style: style,
                                 ),
                                 if (entry.detail.isNotEmpty) ...[
                                   const SizedBox(height: 8),
                                   Text(
                                     entry.detail,
-                                    textAlign: TextAlign.center,
+                                    textAlign: listView
+                                        ? TextAlign.start
+                                        : TextAlign.center,
                                     style: style,
                                   ),
                                 ],

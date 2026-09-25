@@ -1,0 +1,8 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Local test rules only. Production rules must preserve other app paths.
+    // Admin SDK transactions own grants, membership, usage and abuse evidence.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

@@ -1,3 +1,4 @@
+import 'receipt_stitch_draft_state.dart';
 import 'receipt_selected_details.dart';
 import 'receipt_item_read.dart';
 
@@ -12,6 +13,7 @@ class ReceiptEvidenceReviewInput {
     this.undoId,
     this.undoIndex,
     this.selectedDetails,
+    this.stitchState,
     List<ReceiptItemRead> itemReads = const [],
   }) : orderedEvidenceIds = List.unmodifiable(orderedEvidenceIds),
        itemReads = List.unmodifiable(itemReads);
@@ -21,6 +23,7 @@ class ReceiptEvidenceReviewInput {
   final String? selectedId, undoId;
   final int? undoIndex;
   final ReceiptSelectedDetails? selectedDetails;
+  final ReceiptStitchDraftState? stitchState;
   final List<ReceiptItemRead> itemReads;
   int get selectedIndex =>
       selectedId == null ? 0 : orderedEvidenceIds.indexOf(selectedId!);
@@ -30,6 +33,17 @@ class ReceiptEvidenceReviewInput {
     required int revision,
     required Set<String> availableIds,
   }) {
+    final stitch = stitchState;
+    if (stitch != null &&
+        (stitch.evidenceIds.length != orderedEvidenceIds.length ||
+            List.generate(
+              orderedEvidenceIds.length,
+              (i) => stitch.evidenceIds[i] != orderedEvidenceIds[i],
+            ).any((changed) => changed))) {
+      throw StateError(
+        'Stitch preview does not match the selected section order.',
+      );
+    }
     if (sourceId != receiptId || sourceRevision != revision) {
       throw StateError('Receipt source changed.');
     }
@@ -62,6 +76,19 @@ class ReceiptEvidenceReviewInput {
     }
   }
 
+  ReceiptEvidenceReviewInput withStitchState(ReceiptStitchDraftState? state) =>
+      ReceiptEvidenceReviewInput(
+        sourceId: sourceId,
+        sourceRevision: sourceRevision,
+        orderedEvidenceIds: orderedEvidenceIds,
+        selectedId: selectedId,
+        undoId: undoId,
+        undoIndex: undoIndex,
+        selectedDetails: selectedDetails,
+        itemReads: itemReads,
+        stitchState: state,
+      );
+
   ReceiptEvidenceReviewInput select(int index) => ReceiptEvidenceReviewInput(
     sourceId: sourceId,
     sourceRevision: sourceRevision,
@@ -71,6 +98,7 @@ class ReceiptEvidenceReviewInput {
     undoIndex: undoIndex,
     selectedDetails: selectedDetails,
     itemReads: itemReads,
+    stitchState: stitchState,
   );
   ReceiptEvidenceReviewInput useDetails(ReceiptSelectedDetails? details) =>
       ReceiptEvidenceReviewInput(
@@ -82,6 +110,7 @@ class ReceiptEvidenceReviewInput {
         undoIndex: undoIndex,
         selectedDetails: details,
         itemReads: itemReads,
+        stitchState: stitchState,
       );
   ReceiptEvidenceReviewInput recordItems(ReceiptItemRead read) =>
       ReceiptEvidenceReviewInput(
@@ -92,6 +121,7 @@ class ReceiptEvidenceReviewInput {
         undoId: undoId,
         undoIndex: undoIndex,
         selectedDetails: selectedDetails,
+        stitchState: stitchState,
         itemReads: [
           for (final existing in itemReads)
             if (existing.evidenceId != read.evidenceId) existing,
@@ -154,6 +184,7 @@ class ReceiptEvidenceReviewInput {
   }
 
   Map<String, Object?> toPayload() => {
+    'stitchState': stitchState?.toJson(),
     'itemReads': itemReads.map((read) => read.toJson()).toList(),
     'selectedDetails': selectedDetails?.toJson(),
     'sourceId': sourceId,
@@ -165,6 +196,11 @@ class ReceiptEvidenceReviewInput {
   };
   factory ReceiptEvidenceReviewInput.fromPayload(Map<String, Object?> input) =>
       ReceiptEvidenceReviewInput(
+        stitchState: input['stitchState'] == null
+            ? null
+            : ReceiptStitchDraftState.fromJson(
+                (input['stitchState'] as Map).cast<String, Object?>(),
+              ),
         itemReads: decodeReceiptItemReads(input),
         selectedDetails: input['selectedDetails'] == null
             ? null

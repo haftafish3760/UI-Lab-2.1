@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/services.dart';
 
 import '../device_capabilities/device_workload_service.dart';
@@ -58,8 +56,6 @@ class AndroidReceiptRegion {
   final String path;
   final double scaleX, scaleY, offsetY;
 
-  Future<void> dispose() async {
-    final file = File(path);
-    if (await file.exists()) await file.delete();
-  }
+  /// File removal belongs to an explicit, confirmed user deletion workflow.
+  Future<void> dispose() async {}
 }

@@ -147,7 +147,9 @@ Evaluation uses the separate native receipt generator, local storage only,
 rotating batches of at most 100 retained receipt images on the S25 Ultra. Keep
 independent expected answers outside the app/parser, include unfamiliar merchant
 names and repeated legitimate items, and retain compact failure measurements.
-Do not reuse 5.7 stitching or modify the separately owned PDF system.
+The September 19 camera/stitching authorization in section 4 supersedes this
+checkpoint's earlier no-reuse restriction. The separately owned PDF system
+remains outside this implementation slice.
 
 Two receipt modes are required. Detailed includes individual line items and
 line prices/quantities as applicable. Basic records the receipt without requiring
@@ -187,6 +189,11 @@ Paid receipt backup is optional; refusing backup cannot block local saving or
 manual Basic/Detailed receipts. See `data_storage_sync_contract.md`.
 
 ### Shared device workload control — September 14 owner addition
+
+September 19: the expanded shared capability and resource-protection contract is
+owned by `device_capabilities_blueprint.md`. The three-tier implementation notes
+below describe the earlier checkpoint and remain historical until replaced by
+verified six-tier integration evidence. Receipt accuracy requirements still apply.
 
 September 15 accuracy acceptance target: the owner requires approximately
 97–98% accuracy. No current measurement establishes that target. Report exact
@@ -347,6 +354,11 @@ OCR or Materials proposals are introduced:
   labeled Earlier, Later, and Remove controls with an Undo path. Image and PDF
   previews support inspection without copying, exporting, or changing the
   original evidence.
+  September 19 implementation checkpoint: photo previews expose labeled Zoom in,
+  Zoom out, Fit receipt, and Full screen actions. Full-screen inspection has a
+  visible Back to receipt action and does not submit the draft. These controls
+  retain bounded decoding; zoom does not promise original-resolution fine print.
+  This is an implementation checkpoint, not owner approval of either receipt UI.
 - Saving review order persists the ordered stable evidence IDs through the
   authorized draft command and survives restart. If the save fails, the
   reviewed order remains visible as unsaved work while the last safe repository
@@ -492,12 +504,27 @@ without claiming to maintain exact truck counts.
    behind every Receipt Assistant proposal.
 9. Offline capture and review remain available. Sync happens later if enabled.
 
-Owner decision, September 14: leave the 5.7 long-receipt stitching engine behind.
-Build its replacement independently; do not copy the rejected preview/camera
-layout. Reuse suitable platform capture/recognition capabilities after assessment,
-not the legacy stitching implementation. Original ordered photos remain usable
-when stitching cannot establish a reliable overlap. Missing/duplicated sections,
-order and text legibility require independent image-based acceptance.
+Owner update, September 19, supersedes the September 14 no-stitcher-reuse decision:
+copy suitable 5.7 camera/OCR/parser behavior into UI Lab 2.1 and repair it there,
+including long-receipt stitching and previous/next ghost guidance. 5.7 remains
+strictly read-only. Replace transferred Hive persistence with shared SQLite
+receipt drafts and retained media. The device-capability implementation is
+separately owned and consumed through its shared workload interface.
+Original ordered photos remain usable when overlap cannot be established.
+Repeated identical purchases must not be discarded because rows look alike.
+Missing/duplicated sections, order and text legibility require independent
+image-based acceptance; copying code is not proof of correctness.
+
+Implementation checkpoint: the evidence-review route exposes an explicit
+Combine receipt sections action for two through eight ordered photos, saved
+processing/retry state, and a combined/original preview switch. Derived previews
+use verified retained attachments and SQLite draft/confirmation records. User
+selection of an original returns to that original. Reordering invalidates the
+combined preview without deleting evidence. Shared resource admission protects
+working-copy preparation and processing. This is not completion of camera
+capture, ghost-guide rendering, manual seam correction, Data Saver or on-device
+QA. Detailed evidence and outstanding work are in
+`audits/receipt_pipeline_port_2026_09_19.md`.
 
 Use existing native camera/picker capabilities. Ask for required OS permissions
 at the relevant action, explain denied/limited access, and preserve manual entry.

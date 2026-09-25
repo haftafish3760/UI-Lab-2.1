@@ -1,3 +1,8 @@
+import '../../data/receipts/receipt_stitch_draft_workflow.dart';
+import '../../data/receipts/receipt_stitch_draft_state.dart';
+import '../../data/storage/local_draft_store.dart';
+import '../../data/storage/local_media_picker_request.dart';
+import '../../data/storage/local_attachment_store.dart';
 import '../../shared/local_draft_scope.dart';
 import '../../data/receipts/receipt_evidence_review_input.dart';
 import 'dart:math' as math;
@@ -29,6 +34,7 @@ import '../../data/receipts/receipt_photo_text.dart';
 import 'receipt_photo_preview.dart';
 
 part 'receipt_evidence_review_widgets.dart';
+part 'receipt_evidence_stitching.dart';
 part 'receipt_evidence_draft_recovery.dart';
 
 @immutable
@@ -38,10 +44,12 @@ class ReceiptEvidenceReviewResult {
     required this.continueToDetails,
     this.committedReceipt,
     this.suggestedDetails,
+    this.addPhotoSource,
   });
 
   final List<ReceiptEvidenceSelection> orderedEvidence;
   final bool continueToDetails;
+  final MediaPickerSource? addPhotoSource;
   final StoredReceiptDraft? committedReceipt;
   final ReceiptFieldProposals? suggestedDetails;
 }
@@ -55,6 +63,7 @@ class ReceiptEvidenceReviewScreen extends StatefulWidget {
     this.receiptRevision,
     this.recoveredWorkflow,
     this.assistanceEnabled = false,
+    this.allowAddPhotos = false,
     super.key,
   });
 
@@ -65,6 +74,7 @@ class ReceiptEvidenceReviewScreen extends StatefulWidget {
   final int? receiptRevision;
   final ReceiptEvidenceDraftController? recoveredWorkflow;
   final bool assistanceEnabled;
+  final bool allowAddPhotos;
 
   @override
   State<ReceiptEvidenceReviewScreen> createState() =>
@@ -83,6 +93,9 @@ class _ReceiptEvidenceReviewScreenState
   bool _initialized = false;
   bool _ready = false;
   bool _saving = false;
+  bool _stitching = false, _showCombined = false;
+  ReceiptStitchDraftState? _stitchState;
+  Future<String?>? _combinedFile;
   final List<ReceiptItemRead> _itemReads = [];
   final Set<String> _readingEvidenceIds = {};
   String? _failure;
@@ -96,7 +109,7 @@ class _ReceiptEvidenceReviewScreenState
   @override
   DraftAutosaveSession? get navigationDraft => _draft;
   @override
-  bool get blockDraftNavigation => _saving;
+  bool get blockDraftNavigation => _saving || _stitching;
   void _refresh(VoidCallback change) => setState(change);
   @override
   void didChangeDependencies() {
@@ -144,7 +157,7 @@ class _ReceiptEvidenceReviewScreenState
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(_failure ?? 'Opening saved review…'),
+                    Text(_failure ?? 'Opening saved reviewâ€¦'),
                     TextButton(
                       onPressed: leaveDraftRoute,
                       child: const Text('Back to receipt'),
@@ -176,48 +189,53 @@ class _ReceiptEvidenceReviewScreenState
                       480.0,
                       math.max(240.0, constraints.maxHeight * 0.5),
                     );
-                    final preview = _EvidencePreviewPane(
-                      onItemsRead: _recordItems,
-                      onReadingChanged: _readingChanged,
-                      initialRead: _itemReads
-                          .where(
-                            (read) => read.evidenceId == _selected?.evidenceId,
-                          )
-                          .firstOrNull,
-                      assistanceEnabled: widget.assistanceEnabled,
-                      onUseDetails: (details) {
-                        if (_saving || _selected == null) return;
-                        setState(() {
-                          _suggestedDetails = details;
-                          _suggestedSourceIdentity = _selected!.identity;
-                          final source = _workflow?.source.activeEvidence
-                              .where(
-                                (item) =>
-                                    item.evidenceId == _selected!.evidenceId,
-                              )
-                              .firstOrNull;
-                          _selectedProposal = source == null
-                              ? null
-                              : ReceiptSelectedDetails(
-                                  evidenceId: source.evidenceId,
-                                  sha256: source.sha256,
-                                  details: details,
-                                );
-                        });
-                        _capture();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Details selected. Continue to review and edit them before saving.',
-                            ),
-                          ),
-                        );
-                      },
-                      evidence: _selected,
-                      selectedIndex: _selectedIndex,
-                      evidenceCount: _evidence.length,
-                      height: previewHeight,
-                    );
+                    final preview =
+                        _showCombined && _stitchState?.attachmentId != null
+                        ? _combinedPreview(previewHeight)
+                        : _EvidencePreviewPane(
+                            onItemsRead: _recordItems,
+                            onReadingChanged: _readingChanged,
+                            initialRead: _itemReads
+                                .where(
+                                  (read) =>
+                                      read.evidenceId == _selected?.evidenceId,
+                                )
+                                .firstOrNull,
+                            assistanceEnabled: widget.assistanceEnabled,
+                            onUseDetails: (details) {
+                              if (_saving || _selected == null) return;
+                              setState(() {
+                                _suggestedDetails = details;
+                                _suggestedSourceIdentity = _selected!.identity;
+                                final source = _workflow?.source.activeEvidence
+                                    .where(
+                                      (item) =>
+                                          item.evidenceId ==
+                                          _selected!.evidenceId,
+                                    )
+                                    .firstOrNull;
+                                _selectedProposal = source == null
+                                    ? null
+                                    : ReceiptSelectedDetails(
+                                        evidenceId: source.evidenceId,
+                                        sha256: source.sha256,
+                                        details: details,
+                                      );
+                              });
+                              _capture();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Details selected. Continue to review and edit them before saving.',
+                                  ),
+                                ),
+                              );
+                            },
+                            evidence: _selected,
+                            selectedIndex: _selectedIndex,
+                            evidenceCount: _evidence.length,
+                            height: previewHeight,
+                          );
                     final order = _EvidenceOrderPanel(
                       evidence: _evidence,
                       selectedIndex: _selectedIndex,
@@ -228,6 +246,7 @@ class _ReceiptEvidenceReviewScreenState
                               _reviewInput.select(index),
                               _reviewEvidenceById,
                             );
+                            _showCombined = false;
                           } else {
                             _selectedIndex = index;
                           }
@@ -317,6 +336,45 @@ class _ReceiptEvidenceReviewScreenState
                                   'Check every image or PDF and put receipt photos in top-to-bottom order.',
                                 ),
                                 const SizedBox(height: 14),
+                                _stitchControls(),
+                                if (widget.allowAddPhotos)
+                                  Wrap(
+                                    spacing: 8,
+                                    children: [
+                                      TextButton.icon(
+                                        onPressed:
+                                            _saving ||
+                                                _stitching ||
+                                                _readingEvidenceIds.isNotEmpty
+                                            ? null
+                                            : () => _finish(
+                                                continueToDetails: false,
+                                                addPhotoSource:
+                                                    MediaPickerSource.camera,
+                                              ),
+                                        icon: const Icon(
+                                          Icons.add_a_photo_outlined,
+                                        ),
+                                        label: const Text('Add photo'),
+                                      ),
+                                      TextButton.icon(
+                                        onPressed:
+                                            _saving ||
+                                                _stitching ||
+                                                _readingEvidenceIds.isNotEmpty
+                                            ? null
+                                            : () => _finish(
+                                                continueToDetails: false,
+                                                addPhotoSource:
+                                                    MediaPickerSource.library,
+                                              ),
+                                        icon: const Icon(
+                                          Icons.photo_library_outlined,
+                                        ),
+                                        label: const Text('Upload photos'),
+                                      ),
+                                    ],
+                                  ),
                                 if (layout.columns == 1) ...[
                                   preview,
                                   SizedBox(height: layout.gap),
@@ -340,7 +398,9 @@ class _ReceiptEvidenceReviewScreenState
                                 const SizedBox(height: 14),
                                 _ReviewActions(
                                   busy:
-                                      _saving || _readingEvidenceIds.isNotEmpty,
+                                      _saving ||
+                                      _stitching ||
+                                      _readingEvidenceIds.isNotEmpty,
                                   hasEvidence: _evidence.isNotEmpty,
                                   onSave: () =>
                                       _finish(continueToDetails: false),
@@ -361,7 +421,7 @@ class _ReceiptEvidenceReviewScreenState
   }
 
   void _move(int from, int to) {
-    if (!_ready || _saving) return;
+    if (!_ready || _saving || _stitching) return;
     if (to < 0 || to >= _evidence.length || from == to) return;
     if (_draft != null) {
       setState(
@@ -379,7 +439,7 @@ class _ReceiptEvidenceReviewScreenState
   }
 
   void _remove(int index) {
-    if (!_ready || _saving) return;
+    if (!_ready || _saving || _stitching) return;
     final removed = _evidence[index];
     setState(() {
       if (_draft != null) {
@@ -409,7 +469,7 @@ class _ReceiptEvidenceReviewScreenState
   }
 
   void _undo() {
-    if (_saving || !_ready || _undoItem == null) return;
+    if (_saving || _stitching || !_ready || _undoItem == null) return;
     setState(() {
       if (_draft != null) {
         _bindReview(_reviewInput.undo(), _reviewEvidenceById);

@@ -8,6 +8,7 @@ import '../app.dart';
 import 'application_media_coordinator.dart';
 import '../data/storage/native_device_media_gateway.dart';
 import '../data/receipts/receipt_draft_ui_lab_policy.dart';
+import '../data/receipts/receipt_camera_guides.dart';
 import '../data/work/work_persistence_session.dart';
 import '../data/work/directory_persistence_session.dart';
 import '../data/workday/workday_persistence_session.dart';
@@ -112,7 +113,11 @@ Future<Widget> openUiLabApplication({
       nativeNotificationGateway: nativeNotifications,
       mediaCoordinator: createApplicationMediaCoordinator(
         database: persistence.database,
-        gateway: NativeDeviceMediaGateway(),
+        gateway: NativeDeviceMediaGateway(
+          receiptCameraGuides: ReceiptCameraGuideResolver(
+            persistence.receiptDrafts, receiptDraftUiLabOwnerPermissions(),
+          ).forAppend,
+        ),
         receiptPermissions: receiptDraftUiLabOwnerPermissions(),
         receipts: persistence.receiptDrafts,
         work: workSession,

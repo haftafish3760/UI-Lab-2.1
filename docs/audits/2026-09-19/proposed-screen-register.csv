@@ -1,0 +1,105 @@
+id,tier,module,screen_or_surface,purpose_and_boundary,current_status
+SC-001,E,Foundation,First-run setup,"Business name, locale, currency, optional industry; ordinary local use without compulsory cloud account",proposed scope; implementation mapping pending
+SC-002,E,Foundation,Business profile,"Contact details, branding, document defaults; no invented business facts",proposed scope; implementation mapping pending
+SC-003,E,Foundation,Workspace and module preferences,Select useful modules; vehicles and field-worker terminology must not be prerequisites,proposed scope; implementation mapping pending
+SC-004,E,Foundation,Home / business overview,"Useful actions, outstanding work and record-backed totals; solo-owner experience",proposed scope; implementation mapping pending
+SC-005,E,Foundation,Navigation and global search,Find records across dates and modules; permissions apply before results and counts,proposed scope; implementation mapping pending
+SC-006,E,Foundation,Needs attention,Actionable issues linked to exact records; distinguish urgency from notifications,proposed scope; implementation mapping pending
+SC-007,E,Foundation,Notification history and preferences,"Read, dismiss, resolve and delivery states remain distinct",proposed scope; implementation mapping pending
+SC-008,E,Foundation,Settings home,"Consistent ownership of app, company, account and module settings",proposed scope; implementation mapping pending
+SC-009,E,Foundation,"Language, region and accessibility","English, Spanish and French scope; local dates, numbers, units, text scale and keyboard access",proposed scope; implementation mapping pending
+SC-010,E,Foundation,Help and recovery guidance,"Explain failed actions, recovery choices, app version and privacy-safe diagnostics",proposed scope; implementation mapping pending
+SC-011,E,Records,Customer directory,"Search, sort, filters, duplicate warnings and archived records",proposed scope; implementation mapping pending
+SC-012,E,Records,Customer add/edit,"Solo person or organization, contacts, notes and useful validation",proposed scope; implementation mapping pending
+SC-013,E,Records,Customer details/history,"Linked work, documents, balances and receipts without copying records",proposed scope; implementation mapping pending
+SC-014,E,Records,Customer sites / service addresses,Multiple sites when relevant; avoid requiring a service site for every business,proposed scope; implementation mapping pending
+SC-015,E,Work,Work overview,Cross-date outstanding work and clear distinctions among document types,proposed scope; implementation mapping pending
+SC-016,E,Work,Estimates directory,"Draft, awaiting response, accepted and closed states; discoverability independent of calendar",proposed scope; implementation mapping pending
+SC-017,E,Work,Estimate editor,"Line items, quantities, units, prices, notes and revision-aware autosave",proposed scope; implementation mapping pending
+SC-018,E,Work,Estimate detail and revision history,"Status, customer response, source links and explicit conversion",proposed scope; implementation mapping pending
+SC-019,E,Work,Quotes directory and editor,Explicit quote semantics and durable lifecycle; may share components with estimates,proposed scope; implementation mapping pending
+SC-020,E,Work,Document line-item selection,"Manual, reusable service or inventory lines; cost distinct from selling price",proposed scope; implementation mapping pending
+SC-021,E,Work,Document preview and export,Customer copy matches issued version; PDF save and operating-system share outcomes,proposed scope; implementation mapping pending
+SC-022,E,Work,Document delivery / acceptance record,Manual status and evidence supported without a hosted portal; revised content invalidates stale acceptance,proposed scope; implementation mapping pending
+SC-023,E,Work,Jobs / projects directory,"Searchable planned, active, completed and cancelled work, with original relationships",proposed scope; implementation mapping pending
+SC-024,E,Work,Job editor / assignment,"Customer, dates, duration, people and applicable location; no compulsory vehicle",proposed scope; implementation mapping pending
+SC-025,E,Work,Job detail / execution,"Notes, status, attachments, expenses, materials and actual time",proposed scope; implementation mapping pending
+SC-026,E,Work,Job completion / billing handoff,Completion separate from invoicing; preserve incomplete and return-visit work,proposed scope; implementation mapping pending
+SC-027,E,Work,Calendar / schedule,"Month, week and day views; exact owning records and conflict visibility",proposed scope; implementation mapping pending
+SC-028,E,Work,Schedule change / conflict review,Explain clashes and effects before changing assignments or dates,proposed scope; implementation mapping pending
+SC-029,E,Work,Invoices directory,"Draft, unpaid, overdue, partly paid, paid and voided states",proposed scope; implementation mapping pending
+SC-030,E,Work,Invoice editor / issuance,"Direct or job-linked invoices, due dates, explicit finalization and historical snapshot",proposed scope; implementation mapping pending
+SC-031,E,Work,Invoice detail / payment history,"Reconciled amount due, correction/void trail and linked records",proposed scope; implementation mapping pending
+SC-032,E,Work,Record payment / allocation,"Record money received externally; exact amounts, partial payments, duplicates and reversals",proposed scope; implementation mapping pending
+SC-033,E,Work,Payment history / detail,Trace receipt and allocation of money without pretending to process payments,proposed scope; implementation mapping pending
+SC-034,E,Expenses,Expense overview / directory,"Cross-date search, categories, receipt status and exact totals",proposed scope; implementation mapping pending
+SC-035,E,Expenses,Expense add/edit/detail,"Manual entry always usable; supplier, date, amount, business purpose, evidence and corrections",proposed scope; implementation mapping pending
+SC-036,E,Expenses,Expense category picker / management,Aliases and related terms across all 21 trades plus general business expenses; custom categories,proposed scope; implementation mapping pending
+SC-037,E,Expenses,Receipt source selection,"Camera, photo/file import and manual entry; permissions, cancellation and supported formats",proposed scope; implementation mapping pending
+SC-038,E,Expenses,Receipt capture,Readable framing and retake; preserve source until durable acceptance,proposed scope; implementation mapping pending
+SC-039,E,Expenses,Receipt evidence preview / editing,"Zoom, rotate, reorder, replace, remove and explicit original/derived-image distinction",proposed scope; implementation mapping pending
+SC-040,E,Expenses,Long-receipt capture / alignment,"Ordered overlapping photos, missing/duplicate section warnings and reviewable result",proposed scope; implementation mapping pending
+SC-041,E,Expenses,OCR progress / result review,"Editable proposed text and fields, uncertainty, source links and manual fallback",proposed scope; implementation mapping pending
+SC-042,E,Expenses,Receipt line review,"Quantity, package unit, unit cost, discounts and returns; unresolved values never invented",proposed scope; implementation mapping pending
+SC-043,E,Expenses,Receipt destination / allocation review,"Expense, job/material cost and optional stock effects; avoid duplicate financial records",proposed scope; implementation mapping pending
+SC-044,E,Expenses,Receipt drafts / interrupted intake recovery,"Resume, inspect failure and safely retry without duplicate expense or stock",proposed scope; implementation mapping pending
+SC-045,E,Expenses,Evidence viewer,Reopen retained originals from expenses and linked work; useful missing-file recovery,proposed scope; implementation mapping pending
+SC-046,E,Expenses,Expense correction / removed-record recovery,Explicit retention and restoration policy; historical business records protected,proposed scope; implementation mapping pending
+SC-047,C,Expenses,Recurring expense setup / occurrence review,"When enabled, distinguish planned obligations from actual paid expenses",proposed scope; implementation mapping pending
+SC-048,E,Inventory,Inventory home / category browser,User-owned categories and subcategories; grid and compact multicolumn list,proposed scope; implementation mapping pending
+SC-049,E,Inventory,Inventory search / filters,Search user-created items and aliases without a preloaded catalog,proposed scope; implementation mapping pending
+SC-050,E,Inventory,Item add/edit/detail,"Name, unit, category, optional identifiers, notes and purchase-cost history",proposed scope; implementation mapping pending
+SC-051,E,Inventory,Locations directory / editor,"Company stock, custom places and vehicles backed by actual profiles",proposed scope; implementation mapping pending
+SC-052,E,Inventory,Stock add/use/count/transfer,"Quantity, location, explicit operation and atomic history; no compulsory per-item scanning",proposed scope; implementation mapping pending
+SC-053,E,Inventory,Stock history / correction,"Who changed what, when and why; reversals preserve the trail",proposed scope; implementation mapping pending
+SC-054,E,Inventory,CSV / spreadsheet import source and mapping,"File/sheet/header selection, suggested mappings, units and locale handling",proposed scope; implementation mapping pending
+SC-055,E,Inventory,Import preview / duplicate review,"Row errors, ambiguous matches, new versus updated items and resulting quantities before commit",proposed scope; implementation mapping pending
+SC-056,E,Inventory,Import result / recovery,"Durable receipt of applied changes, rejected-row report and safe retry/undo policy",proposed scope; implementation mapping pending
+SC-057,E,Inventory,Purchase-price history,Supplier/date/quantity/unit/cost; do not overwrite old quotes or invoices,proposed scope; implementation mapping pending
+SC-058,C,Inventory,Low stock / replenishment list,User-enabled thresholds; unknown usage not falsely treated as exact stock,proposed scope; implementation mapping pending
+SC-059,C,People,Employee / helper directory and editor,Required before multi-user operation; active/archive states and historical identities,proposed scope; implementation mapping pending
+SC-060,C,People,Permissions / scope review,"Required before multi-user operation; real authority, revocation, own/team/company access",proposed scope; implementation mapping pending
+SC-061,C,People,Office / dispatch / worker views,"Authorized views of shared records, not separate copies or role-name-only access",proposed scope; implementation mapping pending
+SC-062,C,Time,Workday start / active / finish,"For businesses using time or field tracking; handle interruption, pauses and midnight",proposed scope; implementation mapping pending
+SC-063,C,Time,Time entries / correction approval,Actual duration and labor costs where used; expressly not payroll processing,proposed scope; implementation mapping pending
+SC-064,C,Vehicles,Vehicle / equipment directory and profiles,Optional module; real identifiers and availability instead of assumed default operational facts,proposed scope; implementation mapping pending
+SC-065,C,Vehicles,Trips / mileage entry and review,"Business-use records, manual correction, unknown distance and odometer handling",proposed scope; implementation mapping pending
+SC-066,C,Vehicles,"Maintenance / repair list, editor and detail","Owned assets, due rules, service history, costs and evidence",proposed scope; implementation mapping pending
+SC-067,E,Reports,Business reports / date selection,"Cash received, spending, receivables and job costs with explicit definitions",proposed scope; implementation mapping pending
+SC-068,E,Reports,Report source drill-down,Every total traceable to permission-allowed records and date boundaries,proposed scope; implementation mapping pending
+SC-069,E,Reports,Records export / export preview,"Human-readable and structured exports, attachment references and completeness checks",proposed scope; implementation mapping pending
+SC-070,E,Recovery,Saved drafts / unsaved changes,Resume pending edits and explain autosave versus final business save,proposed scope; implementation mapping pending
+SC-071,E,Recovery,Backup creation / verification,Local portable backup of records and evidence with integrity verification,proposed scope; implementation mapping pending
+SC-072,E,Recovery,Restore selection / preview / progress / result,"Compatibility, missing evidence, recoverable failure and existing-data protection",proposed scope; implementation mapping pending
+SC-073,E,Recovery,Storage health / recovery,"Disk-full, corrupt/unavailable storage, interrupted migration and retained last-good data",proposed scope; implementation mapping pending
+SC-074,E,Recovery,Record activity / change history,Authorized historical trail of consequential changes,proposed scope; implementation mapping pending
+SC-075,E,Recovery,Error / denied / unavailable states,"Route-level and action-level failures, offline behavior and useful next steps",proposed scope; implementation mapping pending
+SC-076,R,Work,Reusable services / common-job templates,Speed entry with editable labor and materials; never confuse estimate with actual usage,proposed scope; implementation mapping pending
+SC-077,R,Work,Repeat jobs / appointment series,"Exceptions, rescheduling and cancelled occurrences handled explicitly",proposed scope; implementation mapping pending
+SC-078,R,Records,Supplier directory and purchase history,Useful vendor lookup and cost comparison; avoid requiring duplicate entry,proposed scope; implementation mapping pending
+SC-079,R,Records,Customer merge review,Explicit conflict resolution and preserved related records,proposed scope; implementation mapping pending
+SC-080,R,Inventory,Saved import profiles,Reuse a supplier or user's column mappings without bypassing preview,proposed scope; implementation mapping pending
+SC-081,R,Inventory,Reorder worksheet / purchase order documents,"Local planning and export, no supplier API dependency",proposed scope; implementation mapping pending
+SC-082,R,Work,Tasks / checklists / reusable forms,Configurable for different businesses rather than trade-hardcoded forms,proposed scope; implementation mapping pending
+SC-083,R,Reports,Receivables aging and follow-up workspace,Local reminders and manual contact records; no automatic message service required,proposed scope; implementation mapping pending
+SC-084,R,Reports,Profitability and labor-cost review,"Explain included costs, missing data and labor-hour basis; no payroll calculations",proposed scope; implementation mapping pending
+SC-085,R,Foundation,Keyboard / bulk-action workflows,"Selection, preview and undo where safe; responsive to desktop productivity",proposed scope; implementation mapping pending
+SC-086,R,Foundation,Saved searches / favorites,Reduce repeated navigation without hiding authoritative records,proposed scope; implementation mapping pending
+SC-087,R,Recovery,Duplicate and reconciliation center,Review competing records/imports with evidence; never silent ambiguous merges,proposed scope; implementation mapping pending
+SC-088,R,Recovery,Local diagnostics export,Explicit review and redaction of customer data before sharing,proposed scope; implementation mapping pending
+SC-089,F,Inventory,Optional barcode / QR labels,"User demand first; distinguish item, package, bin and location",proposed scope; implementation mapping pending
+SC-090,F,Inventory,Verified catalog pack browser / manager,"Deferred; optional packs, provenance, integrity and independent validation",proposed scope; implementation mapping pending
+SC-091,F,Work,Advanced dispatch / capacity planning,"Crew skills, availability, workload and explainable recommendations",proposed scope; implementation mapping pending
+SC-092,F,Work,Service agreements / recurring-work plans,Operational schedule and documents only; legal drafting and billing integrations excluded,proposed scope; implementation mapping pending
+SC-093,F,Reports,Custom report builder,Reconciled measures and permission filtering; no general-ledger accounting promise,proposed scope; implementation mapping pending
+SC-094,F,Foundation,Configurable business workspaces,Different terminology and enabled modules without separate fragile app forks,proposed scope; implementation mapping pending
+SC-095,F,Records,Extended asset / serial / warranty records,Only for businesses with verified demand; retain documentary evidence,proposed scope; implementation mapping pending
+SC-096,F,Recovery,Advanced retention / review controls,Policy-driven archive and evidence exports after requirements are reviewed,proposed scope; implementation mapping pending
+SC-097,H,Cloud,Account / connected services settings,Existing Firebase presence recorded; no new integrations in this assignment,proposed scope; implementation mapping pending
+SC-098,H,Cloud,Cloud sync status / conflict resolution,"Historical blueprint requirement conflicts with current no-integration scope; deferred decision, not silently removed",proposed scope; implementation mapping pending
+SC-099,H,Cloud,Hosted customer portal / approvals / booking,Requires connected service/security/operational commitments; benchmark only for now,proposed scope; implementation mapping pending
+SC-100,H,Cloud,Automated external messages / payment collection,Provider dependencies and ongoing costs; out of current implementation scope,proposed scope; implementation mapping pending
+SC-101,X,Excluded,Payroll and payroll tax withholding,"No wage disbursement, withholding, payroll filings or payroll compliance service",proposed scope; implementation mapping pending
+SC-102,X,Excluded,Tax filing / tax advice / IRS certification,No filing engine or audit-ready guarantee; recordkeeping quality remains important,proposed scope; implementation mapping pending
+SC-103,X,Excluded,QuickBooks / banks / third-party accounting connectors,No integration implementation now,proposed scope; implementation mapping pending
+SC-104,X,Excluded,Legal or accounting professional services,"No legal drafting, compliance certification or professional representation",proposed scope; implementation mapping pending

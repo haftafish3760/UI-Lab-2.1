@@ -1,0 +1,8 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // No direct client writes, public links, deletion or overwrite. The bounded
+    // authenticated server route checks membership and reserves allowance.
+    match /{object=**} { allow read, write: if false; }
+  }
+}

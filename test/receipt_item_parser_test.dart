@@ -156,6 +156,21 @@ void main() {
     expect(result.unresolvedRows.single.text, 'WASHER');
   });
 
+  test(
+    'unpriced materials survive separators, payment and adjustment rows',
+    () {
+      for (final boundary in ['-----', 'CARD 10.00', 'DISCOUNT 1.00']) {
+        final result = parse('COPPER ELBOW\n$boundary\nTOTAL 10.00');
+        expect(result.items, isEmpty);
+        expect(
+          result.unresolvedRows.map((row) => row.text),
+          contains('COPPER ELBOW'),
+          reason: boundary,
+        );
+      }
+    },
+  );
+
   test('long text preserves every repeated line identity and amount', () {
     final result = parse(
       '${List.filled(1500, 'WASHER 2 ea x 1.25 2.50').join('\n')}\nTOTAL 3750.00',

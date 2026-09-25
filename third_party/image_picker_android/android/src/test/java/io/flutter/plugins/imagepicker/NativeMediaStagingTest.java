@@ -53,26 +53,26 @@ public class NativeMediaStagingTest {
     assertTrue(file.exists());
     assertEquals(1, count());
   }
-  @Test public void abandonedPartialCopyIsRemovedWithoutLosingPendingRequest() throws Exception {
+  @Test public void previousProcessPartialRemainsRecoverable() throws Exception {
     File file = partial();
     markPreviousProcess();
     journal.close();
     journal = new DurableMediaResultJournal(context, directory -> {});
     journal.begin("request_one");
-    assertFalse(file.exists());
-    assertEquals(0, count());
+    assertArrayEquals(new byte[] {1}, Files.readAllBytes(file.toPath()));
+    assertEquals(1, count());
     assertEquals("request_one", journal.activeKey());
     assertTrue(journal.read("request_one").isEmpty());
   }
-  @Test public void failedFlushRetainsOwnershipUntilRetry() throws Exception {
+  @Test public void reopeningPreservesPartialBytesAndOwnership() throws Exception {
     File file = partial();
     markPreviousProcess();
-    assertFalse(NativeMediaStaging.collectPreviousProcess(journal.getWritableDatabase(), context,
-        directory -> { throw new java.io.IOException("injected flush failure"); }));
-    assertFalse(file.exists());
+    journal.close();
+    journal = new DurableMediaResultJournal(context, directory -> { fail("Reopen must not flush or delete photos"); });
+    assertArrayEquals(new byte[] {1}, Files.readAllBytes(file.toPath()));
     assertEquals(1, count());
     journal.begin("request_one");
-    assertEquals(0, count());
+    assertEquals(1, count());
   }
   @Test public void publicationAndStagingRemovalAreAtomic() throws Exception {
     File source = new File(context.getCacheDir(), UUID.randomUUID() + ".jpg");
@@ -86,9 +86,9 @@ public class NativeMediaStagingTest {
     journal.getWritableDatabase().execSQL("DROP TRIGGER fail_ready");
     markPreviousProcess();
     journal.begin("request_one");
-    assertEquals(0, count());
+    assertEquals(1, count());
     List<String> copies = journal.storeResults("request_one", List.of(source.getPath()));
-    assertEquals(0, count());
+    assertEquals(1, count());
     assertEquals(copies, journal.read("request_one"));
     assertTrue(new File(copies.get(0)).exists());
   }
@@ -101,12 +101,15 @@ public class NativeMediaStagingTest {
     android.database.sqlite.SQLiteDatabase old = context.openOrCreateDatabase(
         "maintainiac_native_media.sqlite", 0, null);
     old.execSQL("DROP TABLE media_staging");
+    old.execSQL("DROP TABLE receipt_captures");
     old.setVersion(3);
     old.close();
     journal = new DurableMediaResultJournal(context, directory -> {});
     journal.begin("request_one");
-    assertEquals(4, journal.getReadableDatabase().getVersion());
+    assertEquals(5, journal.getReadableDatabase().getVersion());
     assertEquals(copies, journal.read("request_one"));
     assertEquals(0, count());
   }
 }
+
+

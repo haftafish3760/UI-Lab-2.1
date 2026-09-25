@@ -84,7 +84,8 @@ class LocalAttachmentStore {
       );
       return target;
     } finally {
-      if (await temporary.exists()) await temporary.delete();
+      // Preserve partial app-created data as well. Only a user-confirmed
+      // deletion may remove it; resource pressure or an import failure cannot.
     }
   }
 
