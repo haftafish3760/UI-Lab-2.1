@@ -9,20 +9,64 @@ import 'editor_input_lock.dart';
 mixin DraftNavigationGuard<T extends StatefulWidget> on State<T> {
   DraftAutosaveSession? get navigationDraft;
   bool get blockDraftNavigation => false;
+  bool get allowCleanDraftPop => false;
+  bool get requiresDraftPopGuard => navigationDraft != null;
   bool _allowDraftPop = false;
   bool _leavingDraft = false;
 
-  Widget guardDraftNavigation(Widget child) => PopScope(
-    canPop:
-        _allowDraftPop || (navigationDraft == null && !blockDraftNavigation),
-    onPopInvokedWithResult: (didPop, result) {
-      if (!didPop && !blockDraftNavigation) unawaited(leaveDraftRoute());
-    },
-    child: EditorInputLock(
+  double? _edgeDragDistance;
+
+  Widget guardDraftNavigation(Widget child) {
+    final canPop =
+        _allowDraftPop ||
+        (!blockDraftNavigation &&
+            (allowCleanDraftPop || !requiresDraftPopGuard));
+    Widget content = EditorInputLock(
       locked: _leavingDraft || blockDraftNavigation,
       child: child,
-    ),
-  );
+    );
+    // Flutter's iOS route swipe is disabled when PopScope protects unsaved
+    // input. Route a leading-edge swipe through the same save/discard policy.
+    // Clean routes retain Flutter's native interactive transition.
+    if (!canPop &&
+        !blockDraftNavigation &&
+        Theme.of(context).platform == TargetPlatform.iOS) {
+      final rtl = Directionality.of(context) == TextDirection.rtl;
+      final guardedContent = content;
+      content = LayoutBuilder(
+        builder: (context, constraints) => GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onHorizontalDragStart: (details) {
+            final fromEdge = rtl
+                ? constraints.maxWidth - details.localPosition.dx
+                : details.localPosition.dx;
+            _edgeDragDistance = fromEdge <= 28 ? 0 : null;
+          },
+          onHorizontalDragUpdate: (details) {
+            if (_edgeDragDistance != null) {
+              _edgeDragDistance =
+                  _edgeDragDistance! +
+                  (rtl ? -details.delta.dx : details.delta.dx);
+            }
+          },
+          onHorizontalDragCancel: () => _edgeDragDistance = null,
+          onHorizontalDragEnd: (_) {
+            final shouldLeave = (_edgeDragDistance ?? 0) >= 56;
+            _edgeDragDistance = null;
+            if (shouldLeave) unawaited(leaveDraftRoute());
+          },
+          child: guardedContent,
+        ),
+      );
+    }
+    return PopScope(
+      canPop: canPop,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && !blockDraftNavigation) unawaited(leaveDraftRoute());
+      },
+      child: content,
+    );
+  }
 
   Future<void> leaveDraftRoute([Object? result]) async {
     if (_leavingDraft || blockDraftNavigation) return;

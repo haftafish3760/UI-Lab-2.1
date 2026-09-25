@@ -83,9 +83,19 @@ void main() {
       await open();
       await tester.tap(find.byKey(const ValueKey('add-estimate-line-item')));
       await tester.pumpAndSettle();
-      await tester.enterText(field('Item name'), 'Valve');
-      await tester.enterText(field('Quantity'), '2.');
-      await back(WorkLineItemEditor);
+      await tester.tap(find.byType(DropdownButtonFormField<WorkLineItemType>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Material').last);
+      await tester.pumpAndSettle();
+      await tester.enterText(field('Material name'), 'Valve');
+      await tester.enterText(field('Quantity'), '2..');
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save unfinished item'));
+      await waitForNativeSave(
+        tester,
+        () => find.byType(WorkLineItemEditor).evaluate().isEmpty,
+      );
       await back(WorkItemsEditor);
       await tester.pumpWidget(const SizedBox.shrink());
       store.dispose();
@@ -95,21 +105,22 @@ void main() {
       work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
       store = PrototypeOperationsStore(workSession: work);
       await open();
-      await tester.tap(find.text('Continue unfinished item'));
+      await tester.tap(find.text('Valve'));
       await tester.pumpAndSettle();
       expect(
         tester.widget<TextField>(field('Quantity')).controller!.text,
-        '2.',
+        '2..',
       );
+      await tester.enterText(field('Quantity'), '2');
       await tester.ensureVisible(
-        find.widgetWithText(FilledButton, 'Add material'),
+        find.widgetWithText(FilledButton, 'Save item'),
       );
-      await tester.tap(find.widgetWithText(FilledButton, 'Add material'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Save item'));
       await waitForNativeSave(
         tester,
         () => find.byType(WorkLineItemEditor).evaluate().isEmpty,
       );
-      await tester.tap(find.text('Save materials'));
+      await tester.tap(find.text('Save items'));
       await waitForNativeSave(tester, () => work.failureMessage != null);
       expect(find.byType(WorkItemsEditor), findsOneWidget);
       expect(
@@ -119,7 +130,7 @@ void main() {
       await tester.runAsync(
         () => db.customStatement('DROP TRIGGER fail_materials'),
       );
-      await tester.tap(find.text('Save materials'));
+      await tester.tap(find.text('Save items'));
       await waitForNativeSave(
         tester,
         () => find.byType(WorkItemsEditor).evaluate().isEmpty,

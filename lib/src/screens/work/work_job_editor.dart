@@ -191,7 +191,7 @@ class _WorkJobEditorState extends State<WorkJobEditor>
                               title: _title,
                               purchaseOrder: _purchaseOrder,
                               scope: _scope,
-                              customers: _store.customers,
+                              customers: _jobCustomers,
                               selectedClient: _client,
                               selectedLocation: _location,
                               locations: _locationsFor(_client),
@@ -290,7 +290,20 @@ class _WorkJobEditorState extends State<WorkJobEditor>
     );
   }
 
+  List<WorkCustomerProfile> get _jobCustomers => [
+    ..._store.customers,
+    if (_sourceEstimate?.customerSnapshot != null &&
+        !_store.customers.any(
+          (customer) => customer.id == _sourceEstimate!.customerSnapshot!.id,
+        ))
+      _sourceEstimate!.customerSnapshot!,
+  ];
+
   List<WorkServiceLocation> _locationsFor(String? customerName) {
+    final snapshot = _sourceEstimate?.customerSnapshot;
+    if (snapshot != null && snapshot.name == customerName) {
+      return snapshot.locations;
+    }
     if (customerName == null) return const [];
     for (final customer in _store.customers) {
       if (customer.name == customerName) return customer.locations;

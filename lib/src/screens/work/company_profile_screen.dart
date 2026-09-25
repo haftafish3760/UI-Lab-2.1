@@ -1,4 +1,6 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
+import '../../data/work/company_document_branding.dart';
 
 import 'package:flutter/material.dart';
 
@@ -56,7 +58,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         WorkDetailHeader(
-                          label: 'My Info',
+                          label: 'Company profile',
                           selectedDay: widget.selectedDay,
                           onBack: () => Navigator.of(context).pop(),
                         ),
@@ -90,6 +92,9 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
     );
     if (!mounted || updated == null) return;
     setState(() => _profile = updated);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Company information saved.')));
     if (PrototypeOperationsScope.maybeOf(context)?.directorySession == null) {
       widget.onSaved(updated);
     }
@@ -109,13 +114,7 @@ class _CompanyIdentity extends StatelessWidget {
       children: [
         Row(
           children: [
-            CircleAvatar(
-              radius: 27,
-              child: Text(
-                _initials(profile.companyName),
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
+            _CompanyLogo(profile: profile),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -147,6 +146,42 @@ class _CompanyIdentity extends StatelessWidget {
   );
 }
 
+class _CompanyLogo extends StatelessWidget {
+  const _CompanyLogo({required this.profile});
+  final WorkCompanyProfile profile;
+  @override
+  Widget build(BuildContext context) {
+    final directory = PrototypeOperationsScope.maybeOf(
+      context,
+    )?.directorySession;
+    final fallback = CircleAvatar(
+      radius: 27,
+      child: Text(
+        _initials(profile.companyName),
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+    );
+    if (directory == null || profile.logoReference.isEmpty) return fallback;
+    return FutureBuilder<Uint8List?>(
+      future: CompanyDocumentBrandingService(
+        directory,
+      ).readLogo(profile.logoReference),
+      builder: (_, snapshot) => snapshot.hasData
+          ? SizedBox(
+              width: 72,
+              height: 72,
+              child: Image.memory(
+                snapshot.data!,
+                fit: BoxFit.contain,
+                semanticLabel: 'Company logo',
+                errorBuilder: (_, _, _) => fallback,
+              ),
+            )
+          : fallback,
+    );
+  }
+}
+
 class _CompanyDetailLanes extends StatelessWidget {
   const _CompanyDetailLanes({required this.profile, required this.layout});
 
@@ -171,7 +206,6 @@ class _CompanyDetailLanes extends StatelessWidget {
       rows: [
         ('Company logo', profile.logoLabel),
         ('Currency', profile.defaultCurrency),
-        ('Default payment terms', profile.defaultTerms),
       ],
     );
     if (layout.columns == 1) {

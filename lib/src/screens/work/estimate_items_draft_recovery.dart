@@ -2,7 +2,15 @@ part of 'estimate_items_screen.dart';
 
 extension _EstimateItemsDraftRecovery on _EstimateItemsScreenState {
   Future<void> _saveItems() async {
-    if (_saving || _pendingItem != null) return;
+    if (_saving) return;
+    if (_pendingItem != null) {
+      if (widget.onDraftChanged == null) return;
+      _publishItems();
+      // Retain the entire unfinished workspace through its parent recovery
+      // owner; do not consume it as a completed customer-facing item list.
+      await leaveDraftRoute();
+      return;
+    }
     final save = widget.onSave;
     if (save == null) {
       await leaveDraftRoute(List<WorkLineItem>.of(_items));
@@ -19,17 +27,16 @@ extension _EstimateItemsDraftRecovery on _EstimateItemsScreenState {
   }
 
   void _publishItems() => widget.onDraftChanged?.call(
-    WorkItemsDraftInput(items: _items, pendingItem: _pendingItem),
+    WorkItemsDraftInput(items: _items, pendingItems: _pendingItems.values),
   );
 
   void _changeItems(VoidCallback change) {
-    if (_pendingItem != null) return;
     _refresh(change);
     _publishItems();
   }
 
   void _capturePendingItem(WorkLineItemDraftInput input) {
-    _refresh(() => _pendingItem = input);
+    _refresh(() => _pendingItems[input.lineId] = input);
     _publishItems();
   }
 
@@ -41,20 +48,19 @@ extension _EstimateItemsDraftRecovery on _EstimateItemsScreenState {
       } else {
         _items[index] = item;
       }
-      _pendingItem = null;
+      _pendingItems.remove(item.id);
     });
     _publishItems();
   }
 
-  Future<void> _resumeItem() async {
-    final pending = _pendingItem;
-    if (pending == null) return;
+  Future<void> _resumeItem(WorkLineItemDraftInput pending) async {
     final item = await Navigator.of(context).push<WorkLineItem>(
       MaterialPageRoute(
         builder: (_) => WorkLineItemEditor(
           recoveryInput: pending,
           draftSession: widget.draftSession,
           onDraftChanged: _capturePendingItem,
+          onDiscardInput: _discardPendingItem,
           allowedTypes: _allowedTypes,
           selectedDay: widget.selectedDay,
           workspaceLabel: 'Estimate item',
@@ -64,47 +70,31 @@ extension _EstimateItemsDraftRecovery on _EstimateItemsScreenState {
     if (mounted && item != null) _acceptItem(item);
   }
 
-  Future<void> _discardItemChanges() async {
-    final confirmed = await showDialog<bool>(
+  void _discardPendingItem(String id) {
+    _refresh(() => _pendingItems.remove(id));
+    _publishItems();
+  }
+
+  Future<void> _confirmDiscardPending(WorkLineItemDraftInput pending) async {
+    final discard = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Discard item changes?'),
-        content: const Text(
-          'This removes unfinished item input and restores the items from before this editing session.',
+      builder: (dialog) => AlertDialog(
+        title: const Text('Discard unfinished changes?'),
+        content: Text(
+          'Discard changes to ${pending.name.trim().isEmpty ? "this item" : pending.name}? Previously saved items stay unchanged.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep working'),
+            onPressed: () => Navigator.pop(dialog, false),
+            child: const Text('Keep item'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
+            onPressed: () => Navigator.pop(dialog, true),
             child: const Text('Discard changes'),
           ),
         ],
       ),
     );
-    if (!mounted || confirmed != true) return;
-    final discard = widget.onDiscard;
-    if (discard != null) {
-      _refresh(() => _saving = true);
-      final discarded = await discard();
-      if (!mounted) return;
-      if (discarded) {
-        await finishDraftRoute();
-      } else {
-        _refresh(() => _saving = false);
-      }
-      return;
-    }
-
-    _refresh(() {
-      _items
-        ..clear()
-        ..addAll(widget.initialItems);
-      _pendingItem = null;
-    });
-    _publishItems();
-    await leaveDraftRoute(List<WorkLineItem>.of(widget.initialItems));
+    if (mounted && discard == true) _discardPendingItem(pending.lineId);
   }
 }

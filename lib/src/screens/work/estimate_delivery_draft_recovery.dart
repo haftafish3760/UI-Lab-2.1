@@ -105,11 +105,21 @@ extension _DeliveryRecovery on _EstimateDeliveryScreenState {
       }
       _preparedRecord = record;
       if (mounted) {
-        await deliverWorkPdf(context, record, switch (_method) {
-          EstimateDeliveryMethod.print => WorkPdfAction.print,
-          EstimateDeliveryMethod.savedPdf => WorkPdfAction.save,
-          _ => WorkPdfAction.share,
-        });
+        await deliverWorkPdf(
+          context,
+          record,
+          switch (_method) {
+            EstimateDeliveryMethod.print => WorkPdfAction.print,
+            EstimateDeliveryMethod.savedPdf => WorkPdfAction.save,
+            _ => WorkPdfAction.share,
+          },
+          recipient: _recipient.text,
+          composeMethod: switch (_method) {
+            EstimateDeliveryMethod.email => 'email',
+            EstimateDeliveryMethod.textMessage => 'textMessage',
+            _ => null,
+          },
+        );
         if (mounted) await finishDraftRoute(record);
       }
     } on Object catch (error) {

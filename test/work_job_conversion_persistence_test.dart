@@ -7,7 +7,7 @@ import 'support/storage/database_harness.dart';
 
 void main() {
   test(
-    'job and estimate conversion commit together; failed and stale conversions preserve the source',
+    'verbal approval converts atomically without signature; failed and stale conversions preserve source',
     () async {
       final harness = await DatabaseHarness.create();
       addTearDown(harness.dispose);
@@ -24,11 +24,25 @@ void main() {
         pricing: WorkPricingModel.flatRate,
         estimateStage: EstimateStage.approved,
         total: 50,
-        customerSignature: WorkCustomerSignature(
-          signedBy: 'Customer',
-          signedOn: DateTime(2026, 9, 9),
-          signedRevision: 1,
-        ),
+        items: const [
+          WorkLineItem(
+            id: 'labor',
+            type: WorkLineItemType.labor,
+            name: 'Repair',
+            quantity: 1,
+            unit: 'hour',
+            customerPrice: 50,
+          ),
+        ],
+        customerApprovals: [
+          WorkCustomerApproval(
+            method: CustomerApprovalMethod.verbal,
+            customerName: 'Customer',
+            recordedByEmployeeId: work.permissions.actorEmployeeId,
+            recordedOn: DateTime(2026, 9, 9),
+            revision: 1,
+          ),
+        ],
       );
       expect(await work.create(estimate), isTrue);
       WorkRecord job(String id) => WorkRecord(
@@ -40,6 +54,7 @@ void main() {
         detail: 'Approved scope',
         pricing: WorkPricingModel.flatRate,
         sourceId: estimate.id,
+        items: estimate.items,
         total: 50,
       );
       final revision = work.storageRevisionFor(estimate.id);
@@ -105,7 +120,7 @@ void main() {
       expect(
         reopened.records
             .singleWhere((r) => r.id == estimate.id)
-            .hasCurrentCustomerSignature,
+            .hasCurrentCustomerApproval,
         isTrue,
       );
     },

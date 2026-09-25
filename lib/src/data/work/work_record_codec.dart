@@ -1,3 +1,4 @@
+import 'work_contact_codec.dart';
 import 'models/work_models.dart';
 import 'models/estimate_models.dart';
 import 'work_payload_values.dart';
@@ -10,6 +11,9 @@ Map<String, Object?> encodeWorkRecord(WorkRecord value) => {
   'purchaseOrderNumber': value.purchaseOrderNumber,
   'title': value.title,
   'client': value.client,
+  'customerSnapshot': value.customerSnapshot == null
+      ? null
+      : encodeWorkCustomerProfile(value.customerSnapshot!),
   'detail': value.detail,
   'pricing': value.pricing.name,
   'sourceId': value.sourceId,
@@ -34,6 +38,12 @@ Map<String, Object?> encodeWorkRecord(WorkRecord value) => {
   'tax': encodeWorkDecimal(value.tax),
   'total': encodeWorkDecimal(value.total),
   'revision': value.revision,
+  'customerApprovals': value.customerApprovals
+      .map((approval) => approval.toJson())
+      .toList(),
+  'businessSignature': value.businessSignature == null
+      ? null
+      : encodeWorkCustomerSignature(value.businessSignature!),
   'customerSignature': value.customerSignature == null
       ? null
       : encodeWorkCustomerSignature(value.customerSignature!),
@@ -66,6 +76,11 @@ WorkRecord decodeWorkRecord(Map<String, Object?> json) => WorkRecord(
   purchaseOrderNumber: json['purchaseOrderNumber'] as String? ?? '',
   title: json['title'] as String,
   client: json['client'] as String,
+  customerSnapshot: json['customerSnapshot'] == null
+      ? null
+      : decodeWorkCustomerProfile(
+          (json['customerSnapshot'] as Map).cast<String, Object?>(),
+        ),
   detail: json['detail'] as String,
   pricing: WorkPricingModel.values.byName(json['pricing'] as String),
   sourceId: json['sourceId'] == null ? null : json['sourceId'] as String,
@@ -105,6 +120,17 @@ WorkRecord decodeWorkRecord(Map<String, Object?> json) => WorkRecord(
   tax: decodeWorkDecimal(json['tax']),
   total: decodeWorkDecimal(json['total']),
   revision: json['revision'] as int,
+  customerApprovals: List.unmodifiable(
+    (json['customerApprovals'] as List? ?? const []).map(
+      (entry) =>
+          WorkCustomerApproval.fromJson((entry as Map).cast<String, Object?>()),
+    ),
+  ),
+  businessSignature: json['businessSignature'] == null
+      ? null
+      : decodeWorkCustomerSignature(
+          (json['businessSignature'] as Map).cast<String, Object?>(),
+        ),
   customerSignature: json['customerSignature'] == null
       ? null
       : decodeWorkCustomerSignature(

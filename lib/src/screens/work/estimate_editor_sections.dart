@@ -64,13 +64,6 @@ class _EstimateIdentitySection extends StatelessWidget {
           customerOnly ? 'Client information' : 'Estimate information',
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        const SizedBox(height: 4),
-        Text(
-          '$number · This number stays with the estimate through every revision.',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
         const SizedBox(height: 12),
         if (customerOnly) ...[
           KeyedSubtree(
@@ -90,17 +83,17 @@ class _EstimateIdentitySection extends StatelessWidget {
               ),
               items: [
                 if (selectedClient != null &&
-                    !customers.any(
-                      (customer) => customer.name == selectedClient,
-                    ))
+                    !customers.any((customer) => customer.id == selectedClient))
                   DropdownMenuItem<String>(
                     value: selectedClient,
                     child: Text(selectedClient!),
                   ),
                 for (final customer in customers)
                   DropdownMenuItem<String>(
-                    value: customer.name,
-                    child: Text(customer.name),
+                    value: customer.id,
+                    child: Text(
+                      '${customer.name}${customer.companyName.isEmpty ? '' : ' · ${customer.companyName}'}${customer.phone.isEmpty ? '' : ' · ${customer.phone}'}',
+                    ),
                   ),
               ],
               onChanged: onClientChanged,

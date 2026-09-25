@@ -21,7 +21,7 @@ WorkRecord buildConfirmedJob(
   final source = input.sourceEstimate;
   if (source != null &&
       (source.resolvedEstimateStage != EstimateStage.approved ||
-          !source.hasCurrentCustomerSignature)) {
+          !source.hasCurrentCustomerApproval)) {
     throw const JobInputValidation(
       'This estimate revision is not currently customer-approved.',
     );
@@ -44,8 +44,13 @@ WorkRecord buildConfirmedJob(
     purchaseOrderNumber: input.purchaseOrderNumber.trim(),
     title: input.title.trim(),
     client: input.client!,
+    customerSnapshot: source?.customerSnapshot,
     detail: input.scope.trim(),
     pricing: input.pricing,
+    template: source?.template ?? 'Service standard',
+    terms: source?.terms ?? '',
+    discount: source?.discount ?? 0,
+    tax: source?.tax ?? 0,
     sourceId: source?.id,
     assignee: input.assignee,
     assignedEmployeeIds: List.unmodifiable(input.assignedEmployeeIds),

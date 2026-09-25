@@ -13,6 +13,7 @@ class WorkLineItemDraftInput {
     required this.type,
     required this.unit,
     required this.billingTreatment,
+    this.workers = '1',
     this.original,
     this.sourceExpenseId,
     this.sourceExpenseLineId,
@@ -20,6 +21,7 @@ class WorkLineItemDraftInput {
     this.sourceStockId,
     this.initialCost,
   });
+  final String workers;
   final String lineId, name, description, quantity, price, cost, unit;
   final WorkLineItemType type;
   final JobMaterialBillingTreatment billingTreatment;
@@ -36,6 +38,7 @@ class WorkLineItemDraftInput {
     'name': name,
     'description': description,
     'quantity': quantity,
+    'workers': workers,
     'price': price,
     'cost': cost,
     'type': type.name,
@@ -58,6 +61,7 @@ class WorkLineItemDraftInput {
         name: payload['name'] as String,
         description: payload['description'] as String,
         quantity: payload['quantity'] as String,
+        workers: payload['workers'] as String? ?? '1',
         price: payload['price'] as String,
         cost: payload['cost'] as String,
         type: WorkLineItemType.values.byName(payload['type'] as String),
@@ -79,7 +83,13 @@ class WorkLineItemDraftInput {
   }) {
     if (name.trim().isEmpty) throw StateError('Enter an item name.');
     final parsedQuantity = double.tryParse(quantity);
-    final parsedPrice = price.trim().isEmpty ? 0.0 : double.tryParse(price);
+    final workerCount = type == WorkLineItemType.labor && unit == 'hour'
+        ? int.tryParse(workers)
+        : 1;
+    if (workerCount == null || workerCount < 1) {
+      throw StateError('Enter a whole number of workers, at least one.');
+    }
+    final parsedPrice = double.tryParse(price);
     final parsedCost = cost.trim().isEmpty ? null : double.tryParse(cost);
     final chargesCustomer =
         !jobMaterialMode ||
@@ -99,12 +109,27 @@ class WorkLineItemDraftInput {
         'Enter a positive quantity and valid non-negative prices.',
       );
     }
+    final totalUnits = parsedQuantity * workerCount;
+    final customerRate = canSetCustomerPrice
+        ? (chargesCustomer ? parsedPrice ?? 0 : 0)
+        : original?.customerPrice ?? 0;
+    final internalRate = canViewInternalCost
+        ? parsedCost
+        : original?.internalUnitCost ?? double.tryParse(initialCost ?? '');
+    if (!totalUnits.isFinite ||
+        !(totalUnits * customerRate).isFinite ||
+        (internalRate != null && !(totalUnits * internalRate).isFinite)) {
+      throw StateError(
+        'The calculated amount is too large. Check quantity and prices.',
+      );
+    }
     return WorkLineItem(
       id: lineId,
       type: type,
       name: name.trim(),
       description: description.trim(),
-      quantity: parsedQuantity,
+      quantity: totalUnits,
+      workerCount: workerCount,
       unit: unit,
       customerPrice: canSetCustomerPrice
           ? (chargesCustomer ? parsedPrice ?? 0 : 0)

@@ -52,39 +52,47 @@ class PdfEngine {
       );
       document.addPage(
         pw.MultiPage(
-          pageFormat: page.format,
-          margin: pw.EdgeInsets.all(page.margin),
+          pageTheme: pw.PageTheme(
+            pageFormat: page.format,
+            theme: pw.ThemeData.withFont(base: regular, bold: bold),
+            margin: pw.EdgeInsets.all(page.margin),
+            buildBackground: (_) =>
+                definition.background(context) ?? pw.SizedBox(),
+          ),
           maxPages: page.maxPages,
-          theme: pw.ThemeData.withFont(base: regular, bold: bold),
-          header: (_) => pw.Padding(
-            padding: const pw.EdgeInsets.only(bottom: 8),
-            child: pw.Text(
-              definition.reference,
-              style: const pw.TextStyle(fontSize: 9),
+          header: (_) => definition.decoratePageLabel(
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(bottom: 8),
+              child: pw.Text(
+                definition.reference,
+                style: const pw.TextStyle(fontSize: 9),
+              ),
             ),
           ),
-          footer: (ctx) => pw.Column(
-            children: [
-              if (branding.footerText.isNotEmpty)
-                pw.Text(
-                  branding.footerText,
-                  style: const pw.TextStyle(fontSize: 8),
-                ),
-              pw.Row(
-                children: [
-                  pw.Expanded(
-                    child: pw.Text(
-                      definition.reference,
-                      style: const pw.TextStyle(fontSize: 8),
-                    ),
-                  ),
+          footer: (ctx) => definition.decoratePageLabel(
+            pw.Column(
+              children: [
+                if (branding.footerText.isNotEmpty)
                   pw.Text(
-                    'Page ${ctx.pageNumber} of ${ctx.pagesCount}',
+                    branding.footerText,
                     style: const pw.TextStyle(fontSize: 8),
                   ),
-                ],
-              ),
-            ],
+                pw.Row(
+                  children: [
+                    pw.Expanded(
+                      child: pw.Text(
+                        definition.reference,
+                        style: const pw.TextStyle(fontSize: 8),
+                      ),
+                    ),
+                    pw.Text(
+                      'Page ${ctx.pageNumber} of ${ctx.pagesCount}',
+                      style: const pw.TextStyle(fontSize: 8),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
           build: (_) => definition.compose(context),
         ),

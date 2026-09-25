@@ -69,7 +69,8 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
     with DraftNavigationGuard {
   @override
   DraftAutosaveSession? get navigationDraft => widget.draftSession;
-  WorkLineItemDraftInput? _pendingItem;
+  final _pendingItems = <String, WorkLineItemDraftInput>{};
+  WorkLineItemDraftInput? get _pendingItem => _pendingItems.values.firstOrNull;
   bool _confirming = false;
   String? _confirmationError;
   @override
@@ -83,7 +84,9 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
       _items
         ..clear()
         ..addAll(input.items);
-      _pendingItem = input.pendingItem;
+      _pendingItems.addEntries(
+        input.pendingItems.map((item) => MapEntry(item.lineId, item)),
+      );
     }
   }
 
@@ -128,22 +131,26 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
                           ),
                           if (widget.draftSession case final session?)
                             NestedEditorDraftStatus(session: session),
-                          if (_pendingItem != null) ...[
-                            const Text(
-                              'Finish or discard the unfinished item before starting another.',
+                          for (final pending in _pendingItems.values)
+                            ListTile(
+                              title: Text(
+                                pending.name.trim().isEmpty
+                                    ? 'Unnamed ${pending.type.label.toLowerCase()}'
+                                    : pending.name,
+                              ),
+                              subtitle: Text(
+                                '${pending.type.label} · Unfinished item',
+                              ),
+                              onTap: () => _resumeItem(pending),
+                              trailing: IconButton(
+                                tooltip: 'Discard unfinished changes',
+                                icon: const Icon(Icons.close),
+                                onPressed: () =>
+                                    _confirmDiscardPending(pending),
+                              ),
                             ),
-                            TextButton(
-                              onPressed: _resumeItem,
-                              child: const Text('Continue unfinished item'),
-                            ),
-                          ],
                           if (_confirmationError != null)
                             Text(_confirmationError!),
-                          if (widget.draftSession != null)
-                            TextButton(
-                              onPressed: _discardItemChanges,
-                              child: const Text('Discard item changes'),
-                            ),
                           const SizedBox(height: 14),
                           Text(
                             widget.workspaceLabel,
@@ -159,7 +166,7 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
                           ),
                           const SizedBox(height: 12),
                           _ImportActions(
-                            enabled: _pendingItem == null,
+                            enabled: true,
                             onAdd: _addNewItem,
                             addLabel: _materialOnly
                                 ? 'Add material manually'
@@ -180,7 +187,7 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
                           else
                             for (final item in _items)
                               _LineItemRow(
-                                enabled: _pendingItem == null,
+                                enabled: true,
                                 item: item,
                                 canViewCustomerPrice:
                                     widget.canViewCustomerPrice ||
@@ -209,11 +216,19 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 620),
               child: FilledButton.icon(
-                onPressed: _pendingItem == null && !_confirming
+                onPressed:
+                    !_confirming &&
+                        (_pendingItem == null || widget.onDraftChanged != null)
                     ? _confirmItems
                     : null,
                 icon: const Icon(Icons.save_outlined),
-                label: Text(_materialOnly ? 'Save materials' : 'Save items'),
+                label: Text(
+                  _pendingItem != null
+                      ? 'Save progress'
+                      : _materialOnly
+                      ? 'Save materials'
+                      : 'Save items',
+                ),
               ),
             ),
           ),
@@ -223,14 +238,12 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
   }
 
   Future<void> _addNewItem() async {
-    if (_pendingItem != null) return;
     final item = await Navigator.of(context).push<WorkLineItem>(
       MaterialPageRoute(
         builder: (_) => WorkLineItemEditor(
           draftSession: widget.draftSession,
-          onDraftChanged: widget.onDraftChanged == null
-              ? null
-              : _capturePendingItem,
+          onDraftChanged: _capturePendingItem,
+          onDiscardInput: _discardPendingItem,
           initialType: widget.allowedTypes.first,
           initialUnit: 'item',
           allowedTypes: widget.allowedTypes,
@@ -246,14 +259,12 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
   }
 
   Future<void> _editItem(WorkLineItem original) async {
-    if (_pendingItem != null) return;
     final updated = await Navigator.of(context).push<WorkLineItem>(
       MaterialPageRoute(
         builder: (_) => WorkLineItemEditor(
           draftSession: widget.draftSession,
-          onDraftChanged: widget.onDraftChanged == null
-              ? null
-              : _capturePendingItem,
+          onDraftChanged: _capturePendingItem,
+          onDiscardInput: _discardPendingItem,
           initialItem: original,
           allowedTypes: widget.allowedTypes,
           canViewInternalCost: widget.canViewInternalCost,
@@ -271,7 +282,6 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
   }
 
   Future<void> _addFromMaterials() async {
-    if (_pendingItem != null) return;
     if (!widget.allowMaterialCostHistory) return;
     final source = await Navigator.of(context).push<MaterialCostRecord>(
       MaterialPageRoute(
@@ -285,9 +295,8 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
       MaterialPageRoute(
         builder: (_) => WorkLineItemEditor(
           draftSession: widget.draftSession,
-          onDraftChanged: widget.onDraftChanged == null
-              ? null
-              : _capturePendingItem,
+          onDraftChanged: _capturePendingItem,
+          onDiscardInput: _discardPendingItem,
           initialType: WorkLineItemType.material,
           initialName: source.materialName,
           initialUnit: source.unitLabel,
@@ -307,7 +316,6 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
   }
 
   Future<void> _linkEvidence() async {
-    if (_pendingItem != null) return;
     if (!widget.allowExpenseEvidence) return;
     final expense = await Navigator.of(context).push<ExpenseRecord>(
       MaterialPageRoute(
@@ -331,9 +339,8 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
       MaterialPageRoute(
         builder: (_) => WorkLineItemEditor(
           draftSession: widget.draftSession,
-          onDraftChanged: widget.onDraftChanged == null
-              ? null
-              : _capturePendingItem,
+          onDraftChanged: _capturePendingItem,
+          onDiscardInput: _discardPendingItem,
           initialType: WorkLineItemType.material,
           initialName: source.description,
           initialQuantity: source.quantity,
@@ -354,7 +361,6 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
   }
 
   Future<void> _addFromTruckStock() async {
-    if (_pendingItem != null) return;
     if (!widget.allowTruckStock) return;
     final store = PrototypeOperationsScope.of(context);
     final source = await Navigator.of(context).push<InventoryStockRecord>(
@@ -374,9 +380,8 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
       MaterialPageRoute(
         builder: (_) => WorkLineItemEditor(
           draftSession: widget.draftSession,
-          onDraftChanged: widget.onDraftChanged == null
-              ? null
-              : _capturePendingItem,
+          onDraftChanged: _capturePendingItem,
+          onDiscardInput: _discardPendingItem,
           initialType: WorkLineItemType.material,
           initialName: source.materialName,
           initialUnit: source.unitLabel,

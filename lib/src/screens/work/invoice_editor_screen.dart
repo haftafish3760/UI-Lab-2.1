@@ -82,6 +82,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
   late DateTime _issuedOn;
   late DateTime _dueOn;
   String? _sourceJobId;
+  WorkCustomerProfile? _customerSnapshot;
   String? _client;
   String? _location;
   var _pricing = WorkPricingModel.flatRate;
@@ -130,6 +131,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
     super.initState();
     final existing = widget.initialRecord;
     final source = widget.sourceJob;
+    _customerSnapshot = existing?.customerSnapshot ?? source?.customerSnapshot;
     _recordId = existing?.id ?? newLocalRecordIdentity('invoice');
     _creatorId =
         existing?.createdByEmployeeId ?? widget.createdByEmployeeId ?? 'alex';
@@ -144,12 +146,15 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
       text: existing?.detail ?? source?.detail ?? '',
     );
     _discount = TextEditingController(
-      text: (existing?.discount ?? 0).toStringAsFixed(2),
+      text: (existing?.discount ?? source?.discount ?? 0).toStringAsFixed(2),
     );
-    _tax = TextEditingController(text: (existing?.tax ?? 0).toStringAsFixed(2));
+    _tax = TextEditingController(
+      text: (existing?.tax ?? source?.tax ?? 0).toStringAsFixed(2),
+    );
     _terms = TextEditingController(
       text:
           existing?.terms ??
+          source?.terms ??
           'Payment is due within 14 days of the invoice date.',
     );
     _issuedOn = DateUtils.dateOnly(existing?.issuedOn ?? widget.initialDay);
@@ -313,11 +318,15 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
     if (source == null) return;
     _updateInput(() {
       _sourceJobId = source.id;
+      _customerSnapshot = source.customerSnapshot;
       _client = source.client;
       _location = source.serviceLocation;
       _title.text = source.title;
       _summary.text = source.detail;
       _pricing = source.pricing;
+      _discount.text = source.discount.toStringAsFixed(2);
+      _tax.text = source.tax.toStringAsFixed(2);
+      _terms.text = source.terms;
       _items = [...source.items.where((item) => item.includedInInvoiceFromJob)];
     });
   }
@@ -326,6 +335,9 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
     final locations = _locationsFor(value);
     _updateInput(() {
       _client = value;
+      _customerSnapshot = _store.customers
+          .where((customer) => customer.name == value)
+          .firstOrNull;
       _location = locations.firstOrNull?.address;
     });
   }
@@ -342,6 +354,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
     }
     _updateInput(() {
       _client = customer.name;
+      _customerSnapshot = customer;
       _location = customer.locations.firstOrNull?.address;
     });
   }
@@ -394,8 +407,6 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
       }
     });
   }
-
-
 }
 
 double _moneyValue(TextEditingController controller) =>

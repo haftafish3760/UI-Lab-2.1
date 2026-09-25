@@ -18,43 +18,99 @@ class _EstimateItemActions extends StatelessWidget {
   final VoidCallback onExpense;
 
   @override
-  Widget build(BuildContext context) => Wrap(
-    spacing: 8,
-    runSpacing: 8,
-    children: [
+  Widget build(BuildContext context) {
+    final primary = <Widget>[
       if (category != EstimateItemCategory.materialsAndCharges)
         FilledButton.icon(
           key: const ValueKey('add-estimate-labor'),
           onPressed: onLabor,
           icon: const Icon(Icons.engineering_outlined),
-          label: const Text('Add labor'),
+          label: const Text('Add labor', textAlign: TextAlign.center),
         ),
-      if (category != EstimateItemCategory.labor) ...[
+      if (category != EstimateItemCategory.labor)
         FilledButton.icon(
           key: const ValueKey('add-estimate-material'),
           onPressed: onMaterial,
           icon: const Icon(Icons.add_box_outlined),
-          label: const Text('Add material'),
+          label: const Text('Add material', textAlign: TextAlign.center),
         ),
-        OutlinedButton.icon(
-          onPressed: onHistory,
-          icon: const Icon(Icons.inventory_2_outlined),
-          label: const Text('Add from materials'),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (AppLayoutEngine.stackCompactFieldsFor(
+              constraints.maxWidth,
+              textScaler: MediaQuery.textScalerOf(context),
+            )) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final button in primary)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: button,
+                    ),
+                ],
+              );
+            }
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var index = 0; index < primary.length; index++) ...[
+                    if (index > 0) const SizedBox(width: 8),
+                    Expanded(child: primary[index]),
+                  ],
+                ],
+              ),
+            );
+          },
         ),
-        OutlinedButton.icon(
-          key: const ValueKey('link-receipt-expense'),
-          onPressed: onExpense,
-          icon: const Icon(Icons.receipt_long_outlined),
-          label: const Text('Link receipt or expense'),
-        ),
-        OutlinedButton.icon(
-          onPressed: onOther,
-          icon: const Icon(Icons.add_business_outlined),
-          label: const Text('Add other charge'),
-        ),
+        if (category != EstimateItemCategory.labor) ...[
+          const SizedBox(height: 8),
+          PopupMenuButton<String>(
+            tooltip: 'Import materials, link expense, or add another charge',
+            onSelected: (value) {
+              switch (value) {
+                case 'materials':
+                  onHistory();
+                case 'expense':
+                  onExpense();
+                case 'other':
+                  onOther();
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'materials',
+                child: Text('Add from materials'),
+              ),
+              PopupMenuItem(
+                key: ValueKey('link-receipt-expense'),
+                value: 'expense',
+                child: Text('Link receipt or expense'),
+              ),
+              PopupMenuItem(value: 'other', child: Text('Add other charge')),
+            ],
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_circle_outline),
+                  SizedBox(width: 8),
+                  Flexible(child: Text('More item options')),
+                  Icon(Icons.arrow_drop_down),
+                ],
+              ),
+            ),
+          ),
+        ],
       ],
-    ],
-  );
+    );
+  }
 }
 
 class _ItemSection extends StatelessWidget {

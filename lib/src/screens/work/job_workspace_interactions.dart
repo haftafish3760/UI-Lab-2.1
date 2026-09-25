@@ -10,6 +10,22 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
     );
     if (!permissions.canCreate) return;
     final store = PrototypeOperationsScope.of(context);
+    final existing = store.workRecords
+        .where(
+          (record) =>
+              record.kind == WorkRecordKind.invoice &&
+              record.sourceId == _sourceRecord.id,
+        )
+        .firstOrNull;
+    if (existing != null) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) =>
+              InvoiceDetailScreen(record: existing, permissions: permissions),
+        ),
+      );
+      return;
+    }
     final invoice = await Navigator.of(context).push<WorkRecord>(
       MaterialPageRoute(
         builder: (_) =>
@@ -81,7 +97,7 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
       JobStatus.needsReturnVisit => WorkRecordStatus.needsReturnVisit,
       JobStatus.completed => WorkRecordStatus.completed,
     };
-    await _commitJobChange(
+    final saved = await _commitJobChange(
       _job.copyWith(status: status),
       _sourceRecord.copyWith(
         status: recordStatus,
@@ -90,6 +106,33 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
             : _sourceRecord.completedOn,
       ),
     );
+    if (saved &&
+        mounted &&
+        status == JobStatus.completed &&
+        invoicePermissionsForView(
+          OperationalScope.of(context).view,
+        ).canCreate) {
+      final create = await showDialog<bool>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          title: const Text('Job completed'),
+          content: const Text(
+            'Create the invoice from the completed work and approved additions?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialog, false),
+              child: const Text('Later'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialog, true),
+              child: const Text('Create invoice'),
+            ),
+          ],
+        ),
+      );
+      if (mounted && create == true) await _createInvoice();
+    }
   }
 
   Future<void> _linkExistingExpense() async {

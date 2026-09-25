@@ -1,3 +1,5 @@
+import 'estimate_template_document.dart';
+import 'estimate_terms_editor.dart';
 import 'documents/customer_pdf_screen.dart';
 import 'documents/document_template.dart';
 import 'document_template_screen.dart';
@@ -117,6 +119,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
   DateTime? _followUpOn;
   DateTime? _proposedServiceOn;
   String? _client;
+  WorkCustomerProfile? _customerSnapshot;
   var _pricing = WorkPricingModel.flatRate;
   var _template = 'Service standard';
   var _items = <WorkLineItem>[];
@@ -133,6 +136,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
     super.initState();
     final existing = widget.initialRecord;
     _baseRecord = existing;
+    _customerSnapshot = existing?.customerSnapshot;
     _estimateId = existing?.id ?? newLocalRecordIdentity('estimate');
     _creatorId =
         existing?.createdByEmployeeId ??
@@ -244,23 +248,28 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
             heightFactor: 1,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 620),
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
-                  foregroundColor: Theme.of(context).colorScheme.onSecondary,
-                ),
-                key: ValueKey(
-                  widget.initialRecord == null
-                      ? 'save-estimate-draft'
-                      : 'save-estimate-changes',
-                ),
-                onPressed: _draftReady && !_saving ? _save : null,
-                icon: const Icon(Icons.save_outlined),
-                label: Text(
-                  widget.initialRecord == null
-                      ? 'Save estimate draft'
-                      : 'Save estimate changes',
-                ),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    key: const ValueKey('estimate-live-pdf-preview'),
+                    onPressed: _draftReady && !_saving ? _previewPdf : null,
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    label: const Text('Preview'),
+                  ),
+                  FilledButton.icon(
+                    key: ValueKey(
+                      widget.initialRecord == null
+                          ? 'save-estimate-draft'
+                          : 'save-estimate-changes',
+                    ),
+                    onPressed: _draftReady && !_saving ? _save : null,
+                    icon: const Icon(Icons.save_outlined),
+                    label: const Text('Save estimate'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -333,15 +342,18 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
   Future<void> _addClient() async {
     final customer = await Navigator.of(context).push<WorkCustomerProfile>(
       MaterialPageRoute(
-        builder: (_) => CustomerEditScreen(selectedDay: _createdOn),
+        builder: (_) => CustomerEditScreen(
+          selectedDay: _createdOn,
+          offerEstimateOnly: true,
+        ),
       ),
     );
     if (!mounted || customer == null) return;
-    final store = PrototypeOperationsScope.of(context);
-    if (store.directorySession == null) {
-      store.replaceCustomers([...store.customers, customer]);
-    }
-    _changeEstimateInput(() => _client = customer.name);
+    _changeEstimateInput(() {
+      _client = customer.name;
+      _customerSnapshot = customer;
+    });
+    await _draft?.flush();
   }
 
   Future<void> _pickDate(
@@ -356,8 +368,6 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
     );
     if (mounted && date != null) _changeEstimateInput(() => assign(date));
   }
-
-
 
   void _message(String text) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));

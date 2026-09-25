@@ -9,6 +9,8 @@ abstract class PdfDocumentDefinition {
   String get title;
   String get reference;
   DateTime? get createdAt => null;
+  pw.Widget? background(PdfLayoutContext context) => null;
+  pw.Widget decoratePageLabel(pw.Widget label) => label;
   void validate();
   List<pw.Widget> compose(PdfLayoutContext context);
 }

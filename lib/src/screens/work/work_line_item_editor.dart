@@ -83,6 +83,7 @@ class WorkLineItemEditor extends StatefulWidget {
     this.draftSession,
     this.recoveryInput,
     this.onDraftChanged,
+    this.onDiscardInput,
     this.initialType = WorkLineItemType.material,
     this.initialName = '',
     this.initialUnit = 'item',
@@ -104,6 +105,7 @@ class WorkLineItemEditor extends StatefulWidget {
   final DraftAutosaveSession? draftSession;
   final WorkLineItemDraftInput? recoveryInput;
   final ValueChanged<WorkLineItemDraftInput>? onDraftChanged;
+  final ValueChanged<String>? onDiscardInput;
   final WorkLineItem? initialItem;
   final WorkLineItemType initialType;
   final String initialName;
@@ -138,17 +140,29 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
   void initState() {
     super.initState();
     _restoreInput();
-    for (final controller in [_name, _description, _quantity, _price, _cost]) {
+    _baseline = _input.toPayload().toString();
+    for (final controller in [
+      _name,
+      _description,
+      _quantity,
+      _price,
+      _cost,
+      _workers,
+    ]) {
       controller.addListener(_captureInput);
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _captureInput();
-    });
   }
 
-  bool get _materialOnly =>
-      widget.allowedTypes.length == 1 &&
-      widget.allowedTypes.single == WorkLineItemType.material;
+  late final String _baseline;
+  bool _exitPromptOpen = false;
+  bool get _dirty => _input.toPayload().toString() != _baseline;
+  @override
+  bool get allowCleanDraftPop => !_dirty;
+  @override
+  bool get requiresDraftPopGuard => _dirty;
+
+  @override
+  Future<void> leaveDraftRoute([Object? result]) => _leaveItem(result);
 
   late final _name = TextEditingController(
     text: _original?.name ?? widget.initialName,
@@ -156,8 +170,15 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
   late final _description = TextEditingController(
     text: _original?.description ?? '',
   );
+  late final _workers = TextEditingController(
+    text: (_original?.workerCount ?? 1).toString(),
+  );
   late final _quantity = TextEditingController(
-    text: _formatWorkQuantity(_original?.quantity ?? widget.initialQuantity),
+    text: _formatWorkQuantity(
+      _original == null
+          ? widget.initialQuantity
+          : _original!.quantity / _original!.workerCount,
+    ),
   );
   late final _price = TextEditingController(
     text: _original?.customerPrice.toStringAsFixed(2) ?? '',
@@ -188,6 +209,7 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
     _name.dispose();
     _description.dispose();
     _quantity.dispose();
+    _workers.dispose();
     _price.dispose();
     _cost.dispose();
     super.dispose();
@@ -211,8 +233,8 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                       children: [
                         WorkDetailHeader(
                           label: _original == null
-                              ? 'Add ${widget.workspaceLabel}'
-                              : 'Edit ${widget.workspaceLabel}',
+                              ? 'Add ${_type.label.toLowerCase()}'
+                              : 'Edit ${_type.label.toLowerCase()}',
                           selectedDay: widget.selectedDay ?? DateTime.now(),
                           onBack: () => leaveDraftRoute(),
                         ),
@@ -239,8 +261,10 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                         ],
                         TextField(
                           controller: _name,
-                          decoration: const InputDecoration(
-                            labelText: 'Item name',
+                          decoration: InputDecoration(
+                            labelText: _type == WorkLineItemType.labor
+                                ? 'Labor name'
+                                : '${_type.label} name',
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -252,6 +276,19 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                           ),
                         ),
                         const SizedBox(height: 10),
+                        if (_type == WorkLineItemType.labor &&
+                            _unit == 'hour') ...[
+                          TextField(
+                            controller: _workers,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Number of workers',
+                              helperText:
+                                  'Use a separate labor entry for different rates or hours.',
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
                         _NumberAndUnitRow(
                           quantity: _quantity,
                           unit: _unit,
@@ -310,6 +347,13 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                               labelText: _unit == 'hour'
                                   ? 'Price per hour'
                                   : 'Price per $_unit',
+                              prefixIcon: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('\$'),
+                              ),
+                              prefixIconConstraints: const BoxConstraints(
+                                minWidth: 36,
+                              ),
                               suffixText: 'USD',
                             ),
                           )
@@ -332,24 +376,69 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
-                            decoration: const InputDecoration(
-                              labelText: 'Internal cost per unit (optional)',
+                            decoration: InputDecoration(
+                              labelText:
+                                  _type == WorkLineItemType.labor &&
+                                      _unit == 'hour'
+                                  ? 'Your cost per worker-hour (optional)'
+                                  : 'Your cost per $_unit (optional)',
+                              helperMaxLines: 3,
                               helperText:
-                                  'Private cost is never shown on the customer estimate.',
+                                  'Private cost for estimated gross profit. Never shown on the customer copy.',
+                              prefixIcon: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('\$'),
+                              ),
+                              prefixIconConstraints: const BoxConstraints(
+                                minWidth: 36,
+                              ),
                               suffixText: 'USD',
                             ),
                           ),
                         ],
                         const SizedBox(height: 16),
+                        if (widget.canSetCustomerPrice && _chargesCustomer)
+                          AnimatedBuilder(
+                            animation: Listenable.merge([
+                              _quantity,
+                              _price,
+                              _workers,
+                            ]),
+                            builder: (context, _) {
+                              final workers =
+                                  _type == WorkLineItemType.labor &&
+                                      _unit == 'hour'
+                                  ? int.tryParse(_workers.text) ?? 0
+                                  : 1;
+                              final quantity =
+                                  (double.tryParse(_quantity.text) ?? 0) *
+                                  workers;
+                              final price = double.tryParse(_price.text);
+                              final total =
+                                  price != null &&
+                                      quantity.isFinite &&
+                                      price.isFinite &&
+                                      quantity > 0 &&
+                                      price >= 0 &&
+                                      (quantity * price).isFinite
+                                  ? quantity * price
+                                  : null;
+                              return SectionCard(
+                                child: Text(
+                                  total == null
+                                      ? 'Item total — enter quantity and price'
+                                      : 'Item total: ${workers > 1 ? '$workers workers × ' : ''}${_quantity.text} × \$${price!.toStringAsFixed(2)} = \$${total.toStringAsFixed(2)}',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                              );
+                            },
+                          ),
+                        const SizedBox(height: 12),
                         FilledButton(
                           onPressed: _save,
-                          child: Text(
-                            _original == null
-                                ? _materialOnly
-                                      ? 'Add material'
-                                      : 'Add line item'
-                                : 'Save item changes',
-                          ),
+                          child: const Text('Save item'),
                         ),
                       ],
                     ),

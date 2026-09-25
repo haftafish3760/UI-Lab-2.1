@@ -2,7 +2,15 @@ part of 'work_items_editor.dart';
 
 extension _WorkItemsDraftRecovery on _WorkItemsEditorState {
   Future<void> _confirmItems() async {
-    if (_confirming || _pendingItem != null) return;
+    if (_confirming) return;
+    if (_pendingItem != null) {
+      if (widget.onDraftChanged == null) return;
+      _publishItems();
+      // Retain the entire unfinished workspace through its parent recovery
+      // owner; do not consume it as a completed customer-facing item list.
+      await leaveDraftRoute();
+      return;
+    }
     if (widget.onConfirm == null) {
       await leaveDraftRoute(List<WorkLineItem>.of(_items));
       return;
@@ -25,17 +33,16 @@ extension _WorkItemsDraftRecovery on _WorkItemsEditorState {
   }
 
   void _publishItems() => widget.onDraftChanged?.call(
-    WorkItemsDraftInput(items: _items, pendingItem: _pendingItem),
+    WorkItemsDraftInput(items: _items, pendingItems: _pendingItems.values),
   );
 
   void _changeItems(VoidCallback change) {
-    if (_pendingItem != null) return;
     _refresh(change);
     _publishItems();
   }
 
   void _capturePendingItem(WorkLineItemDraftInput input) {
-    _refresh(() => _pendingItem = input);
+    _refresh(() => _pendingItems[input.lineId] = input);
     _publishItems();
   }
 
@@ -47,20 +54,19 @@ extension _WorkItemsDraftRecovery on _WorkItemsEditorState {
       } else {
         _items[index] = item;
       }
-      _pendingItem = null;
+      _pendingItems.remove(item.id);
     });
     _publishItems();
   }
 
-  Future<void> _resumeItem() async {
-    final pending = _pendingItem;
-    if (pending == null) return;
+  Future<void> _resumeItem(WorkLineItemDraftInput pending) async {
     final item = await Navigator.of(context).push<WorkLineItem>(
       MaterialPageRoute(
         builder: (_) => WorkLineItemEditor(
           recoveryInput: pending,
           draftSession: widget.draftSession,
           onDraftChanged: _capturePendingItem,
+          onDiscardInput: _discardPendingItem,
           allowedTypes: widget.allowedTypes,
           canViewInternalCost: widget.canViewInternalCost,
           canSetCustomerPrice: widget.canSetCustomerPrice,
@@ -73,50 +79,31 @@ extension _WorkItemsDraftRecovery on _WorkItemsEditorState {
     if (mounted && item != null) _acceptItem(item);
   }
 
-  Future<void> _discardItemChanges() async {
-    final confirmed = await showDialog<bool>(
+  void _discardPendingItem(String id) {
+    _refresh(() => _pendingItems.remove(id));
+    _publishItems();
+  }
+
+  Future<void> _confirmDiscardPending(WorkLineItemDraftInput pending) async {
+    final discard = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Discard item changes?'),
-        content: const Text(
-          'This removes unfinished item input and restores the items from before this editing session.',
+      builder: (dialog) => AlertDialog(
+        title: const Text('Discard unfinished changes?'),
+        content: Text(
+          'Discard changes to ${pending.name.trim().isEmpty ? "this item" : pending.name}? Previously saved items stay unchanged.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep working'),
+            onPressed: () => Navigator.pop(dialog, false),
+            child: const Text('Keep item'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
+            onPressed: () => Navigator.pop(dialog, true),
             child: const Text('Discard changes'),
           ),
         ],
       ),
     );
-    if (!mounted || confirmed != true) return;
-    if (widget.onDiscard != null) {
-      _refresh(() => _confirming = true);
-      try {
-        await widget.onDiscard!();
-        if (mounted) await finishDraftRoute();
-      } on Object {
-        if (mounted) {
-          _refresh(() {
-            _confirming = false;
-            _confirmationError =
-                'Unfinished materials could not be discarded. They have been preserved.';
-          });
-        }
-      }
-      return;
-    }
-    _refresh(() {
-      _items
-        ..clear()
-        ..addAll(widget.initialItems);
-      _pendingItem = null;
-    });
-    _publishItems();
-    await leaveDraftRoute(List<WorkLineItem>.of(widget.initialItems));
+    if (mounted && discard == true) _discardPendingItem(pending.lineId);
   }
 }

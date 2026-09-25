@@ -1,3 +1,5 @@
+import 'estimate_customer_approval_dialog.dart';
+import '../../data/work/work_record_detail_codec.dart';
 import 'invoice_editor_screen.dart';
 import 'invoice_detail_screen.dart';
 import 'invoice_permissions.dart';
@@ -387,6 +389,9 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
   }
 
   WorkCustomerProfile? _customerFor(List<WorkCustomerProfile> customers) {
+    if (_sourceRecord.customerSnapshot != null) {
+      return _sourceRecord.customerSnapshot;
+    }
     final expected = _sourceRecord.client.trim().toLowerCase();
     for (final customer in customers) {
       if (customer.name.trim().toLowerCase() == expected) return customer;

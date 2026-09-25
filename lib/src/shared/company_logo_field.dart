@@ -10,11 +10,13 @@ class CompanyLogoField extends StatefulWidget {
     required this.reference,
     required this.service,
     required this.onChanged,
+    this.onBusyChanged,
     super.key,
   });
   final String reference;
   final CompanyDocumentBrandingService? service;
   final ValueChanged<String> onChanged;
+  final ValueChanged<bool>? onBusyChanged;
   @override
   State<CompanyLogoField> createState() => _CompanyLogoFieldState();
 }
@@ -45,11 +47,9 @@ class _CompanyLogoFieldState extends State<CompanyLogoField> {
       _busy = true;
       _error = null;
     });
+    widget.onBusyChanged?.call(true);
     try {
-      final selected = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['png', 'jpg', 'jpeg'],
-      );
+      final selected = await FilePicker.pickFiles(type: FileType.image);
       final file = selected.isEmpty ? null : selected.single.path;
       if (file == null || !mounted) return;
       final reference = await widget.service!.retainLogo(File(file));
@@ -63,51 +63,70 @@ class _CompanyLogoFieldState extends State<CompanyLogoField> {
         );
       }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() => _busy = false);
+        widget.onBusyChanged?.call(false);
+      }
     }
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Text('Company logo', style: Theme.of(context).textTheme.titleMedium),
-      FutureBuilder<Uint8List?>(
-        future: _image,
-        builder: (_, snapshot) => snapshot.hasData
-            ? SizedBox(
-                height: 100,
-                child: Image.memory(
-                  snapshot.data!,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, _, _) => const Text(
-                    'Logo unavailable. Documents will use the company name.',
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.zero,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Logo preview', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 10),
+        FutureBuilder<Uint8List?>(
+          future: _image,
+          builder: (_, snapshot) =>
+              widget.reference.isNotEmpty &&
+                  snapshot.connectionState == ConnectionState.waiting
+              ? const Text('Loading company logo…')
+              : widget.reference.isNotEmpty && !snapshot.hasData
+              ? const Text(
+                  'Your saved logo could not be loaded. Try reopening this screen or choose another photo.',
+                )
+              : snapshot.hasData
+              ? SizedBox(
+                  height: 56,
+                  child: Image.memory(
+                    snapshot.data!,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => const Text(
+                      'Logo unavailable. Documents will use the company name.',
+                    ),
                   ),
+                )
+              : const Text(
+                  'Add your company logo here. It will appear on estimates and invoices.',
                 ),
-              )
-            : const Text(
-                'Optional. Documents can use your company name without a logo.',
+        ),
+        if (_error != null) Text(_error!),
+        Wrap(
+          spacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _busy || widget.service == null ? null : _choose,
+              icon: const Icon(Icons.add_photo_alternate_outlined),
+              label: Text(
+                _busy
+                    ? 'Adding logo…'
+                    : widget.reference.isEmpty
+                    ? 'Choose photo'
+                    : 'Change photo',
               ),
-      ),
-      if (_error != null) Text(_error!),
-      Wrap(
-        spacing: 8,
-        children: [
-          OutlinedButton.icon(
-            onPressed: _busy || widget.service == null ? null : _choose,
-            icon: const Icon(Icons.add_photo_alternate_outlined),
-            label: Text(_busy ? 'Adding logo…' : 'Choose PNG or JPEG'),
-          ),
-          if (widget.reference.isNotEmpty)
-            TextButton(
-              onPressed: _busy ? null : () => widget.onChanged(''),
-              child: const Text('Remove logo'),
             ),
-        ],
-      ),
-      const Text(
-        'Review the logo above, then save company information to use it on documents.',
-      ),
-    ],
+            if (widget.reference.isNotEmpty)
+              TextButton(
+                onPressed: _busy ? null : () => widget.onChanged(''),
+                child: const Text('Remove logo'),
+              ),
+          ],
+        ),
+        const Text('Shown on your estimates, quotes, and invoices.'),
+      ],
+    ),
   );
 }

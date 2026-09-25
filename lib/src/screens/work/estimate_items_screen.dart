@@ -55,7 +55,8 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
   bool _saving = false;
   @override
   bool get blockDraftNavigation => _saving;
-  WorkLineItemDraftInput? _pendingItem;
+  final _pendingItems = <String, WorkLineItemDraftInput>{};
+  WorkLineItemDraftInput? get _pendingItem => _pendingItems.values.firstOrNull;
   void _refresh(VoidCallback change) => setState(change);
   List<WorkLineItemType> get _allowedTypes => _editingLabor
       ? const [WorkLineItemType.labor]
@@ -72,7 +73,9 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
       _items
         ..clear()
         ..addAll(input.items);
-      _pendingItem = input.pendingItem;
+      _pendingItems.addEntries(
+        input.pendingItems.map((item) => MapEntry(item.lineId, item)),
+      );
     }
   }
 
@@ -128,16 +131,6 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
                           NestedEditorDraftStatus(
                             session: widget.draftSession!,
                           ),
-                        if (_pendingItem != null)
-                          FilledButton.tonal(
-                            onPressed: _resumeItem,
-                            child: const Text('Continue unfinished item'),
-                          ),
-                        if (widget.draftSession != null)
-                          TextButton(
-                            onPressed: _discardItemChanges,
-                            child: const Text('Discard item changes'),
-                          ),
                         const SizedBox(height: 14),
                         Text(
                           _editingLabor
@@ -180,6 +173,24 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
                           onExpense: _addFromExpense,
                         ),
                         const SizedBox(height: 14),
+                        for (final pending in _pendingItems.values)
+                          ListTile(
+                            title: Text(
+                              pending.name.trim().isEmpty
+                                  ? 'Unnamed ${pending.type.label.toLowerCase()}'
+                                  : pending.name,
+                            ),
+                            subtitle: Text(
+                              '${pending.type.label} · Unfinished ${pending.original == null ? "item" : "changes"}',
+                            ),
+                            leading: const Icon(Icons.edit_note_outlined),
+                            onTap: () => _resumeItem(pending),
+                            trailing: IconButton(
+                              tooltip: 'Discard unfinished changes',
+                              icon: const Icon(Icons.close),
+                              onPressed: () => _confirmDiscardPending(pending),
+                            ),
+                          ),
                         if (_editingLabor || _editingAll) ...[
                           _ItemSection(
                             title: 'Labor',
@@ -232,9 +243,15 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
             constraints: const BoxConstraints(maxWidth: 620),
             child: FilledButton.icon(
               key: const ValueKey('save-estimate-items'),
-              onPressed: _pendingItem == null && !_saving ? _saveItems : null,
+              onPressed:
+                  !_saving &&
+                      (_pendingItem == null || widget.onDraftChanged != null)
+                  ? _saveItems
+                  : null,
               icon: const Icon(Icons.save_outlined),
-              label: const Text('Save items'),
+              label: Text(
+                _pendingItem == null ? 'Save items' : 'Save progress',
+              ),
             ),
           ),
         ),
@@ -246,17 +263,21 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
     WorkLineItemType type,
     List<WorkLineItemType> allowedTypes,
   ) async {
-    if (_pendingItem != null) return;
     final item = await Navigator.of(context).push<WorkLineItem>(
       MaterialPageRoute(
         builder: (_) => WorkLineItemEditor(
           initialType: type,
           initialUnit: type == WorkLineItemType.labor ? 'hour' : 'item',
-          allowedTypes: allowedTypes,
+          allowedTypes:
+              type == WorkLineItemType.labor ||
+                  type == WorkLineItemType.material
+              ? [type]
+              : allowedTypes,
           selectedDay: widget.selectedDay,
           workspaceLabel: 'Estimate item',
           draftSession: widget.draftSession,
           onDraftChanged: _capturePendingItem,
+          onDiscardInput: _discardPendingItem,
         ),
       ),
     );
@@ -264,7 +285,6 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
   }
 
   Future<void> _addFromHistory() async {
-    if (_pendingItem != null) return;
     final source = await Navigator.of(context).push<MaterialCostRecord>(
       MaterialPageRoute(
         builder: (_) => MaterialCostSourcePicker(
@@ -286,6 +306,7 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
           workspaceLabel: 'Estimate item',
           draftSession: widget.draftSession,
           onDraftChanged: _capturePendingItem,
+          onDiscardInput: _discardPendingItem,
         ),
       ),
     );
@@ -293,7 +314,6 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
   }
 
   Future<void> _addFromExpense() async {
-    if (_pendingItem != null) return;
     final expense = await Navigator.of(context).push<ExpenseRecord>(
       MaterialPageRoute(
         builder: (_) => ExpenseEvidenceSourcePicker(
@@ -326,6 +346,7 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
           workspaceLabel: 'Estimate item',
           draftSession: widget.draftSession,
           onDraftChanged: _capturePendingItem,
+          onDiscardInput: _discardPendingItem,
         ),
       ),
     );
@@ -333,7 +354,12 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
   }
 
   Future<void> _edit(WorkLineItem original) async {
-    if (_pendingItem != null) return;
+    final pending = _pendingItems[original.id];
+    if (pending != null) {
+      await _resumeItem(pending);
+      return;
+    }
+
     final allowedTypes = _editingLabor
         ? const [WorkLineItemType.labor]
         : widget.category == EstimateItemCategory.materialsAndCharges
@@ -353,6 +379,7 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
           workspaceLabel: 'Estimate item',
           draftSession: widget.draftSession,
           onDraftChanged: _capturePendingItem,
+          onDiscardInput: _discardPendingItem,
         ),
       ),
     );

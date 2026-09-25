@@ -172,12 +172,57 @@ extension _CustomerEditorPersistence on _CustomerEditScreenState {
   }
 
   Future<void> _confirmCustomer() async {
+    final phoneDigits = UsPhoneInputFormatter.digits(_phone.text);
+    if (phoneDigits.isNotEmpty && phoneDigits.length != 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Enter the 10-digit phone number, including area code.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    bool saveToDirectory = true;
+    if (widget.offerEstimateOnly && _editingCustomer == null) {
+      final choice = await showDialog<bool>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          title: const Text('Save as a new client?'),
+          content: const Text(
+            'Keep this customer in your client list for future work, or use their information only for this estimate.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialog, false),
+              child: const Text('This estimate only'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialog, true),
+              child: const Text('Save new client'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || choice == null) return;
+      saveToDirectory = choice;
+    }
     _captureCustomerInput();
     _refresh(() => _saving = true);
     try {
       final WorkCustomerProfile? customer;
-      if (_directory == null) {
+      if (_directory == null || !saveToDirectory) {
         customer = buildConfirmedCustomer(_customerInput);
+        if (saveToDirectory) {
+          final store = PrototypeOperationsScope.of(context);
+          await store.replaceCustomers([
+            ...store.customers.where((entry) => entry.id != customer!.id),
+            customer,
+          ]);
+        }
+        // Keep the recovery copy until the estimate itself is durably saved.
+        await _draft?.flush();
       } else {
         final workflow = _workflow;
         if (workflow == null) {

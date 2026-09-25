@@ -22,11 +22,19 @@ Future<Uint8List> generateCustomerPdf(
       : await const PdfImageResolver().resolve(
           () async => logoLoader == null ? null : await logoLoader(reference),
         );
+  Future<Uint8List?> masonryAsset(String name) async {
+    if (template.layout != DocumentLayout.masonry) return null;
+    final bytes = await rootBundle.load('assets/document_templates/$name');
+    return bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes);
+  }
+
   return const CustomerPdfGenerator().generate(
     document,
     regularFont: fonts.regular,
     boldFont: fonts.bold,
     logo: logo,
+    panelArtwork: await masonryAsset('masonry-slab-v3.png'),
+    pageArtwork: await masonryAsset('masonry-wall-v3.png'),
     artwork: art?.buffer.asUint8List(art.offsetInBytes, art.lengthInBytes),
     templateId: template.id,
   );

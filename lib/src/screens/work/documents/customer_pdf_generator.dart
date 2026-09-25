@@ -15,19 +15,30 @@ class CustomerPdfGenerator {
     required ByteData regularFont,
     required ByteData boldFont,
     Uint8List? artwork,
+    Uint8List? panelArtwork,
+    Uint8List? pageArtwork,
     String? templateId,
     PdfImageResult? logo,
   }) async {
     final template = DocumentTemplate.resolve(templateId ?? data.templateId);
     return (await const PdfEngine().render(
-      WorkPdfDefinition(data, artwork: artwork),
+      WorkPdfDefinition(
+        data,
+        artwork: artwork,
+        layout: template.layout,
+        panelArtwork: panelArtwork,
+        pageArtwork: pageArtwork,
+      ),
       branding:
           data.branding ??
           PdfBranding(companyName: data.company, address: data.companyDetails),
       regularFont: regularFont,
       boldFont: boldFont,
       logo: logo,
-      page: PdfPageConfig(landscape: template.landscape),
+      page: PdfPageConfig(
+        landscape: template.landscape,
+        margin: template.layout.index >= DocumentLayout.masonry.index ? 52 : 32,
+      ),
       theme: PdfDocumentTheme(
         accent: data.branding?.accentColor ?? template.accent,
         printerFriendly: template.printerFriendly,

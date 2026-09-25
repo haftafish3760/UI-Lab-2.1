@@ -1,3 +1,5 @@
+import 'work_customer_approval.dart';
+
 enum WorkPricingModel { flatRate, timeAndMaterials }
 
 enum WorkLineItemType {
@@ -48,6 +50,8 @@ class WorkLineItem {
     required this.unit,
     required this.customerPrice,
     this.description = '',
+    this.workerCount = 1,
+    this.changeApproval,
     this.internalUnitCost,
     this.sourceExpenseId,
     this.sourceExpenseLineId,
@@ -61,7 +65,11 @@ class WorkLineItem {
   final WorkLineItemType type;
   final String name;
   final String description;
+
+  /// Total billable units, including all workers for hourly labor.
   final double quantity;
+  final int workerCount;
+  final WorkCustomerApproval? changeApproval;
   final String unit;
   final double customerPrice;
   final double? internalUnitCost;
@@ -77,8 +85,9 @@ class WorkLineItem {
 
   bool get includedInInvoiceFromJob =>
       !isJobAddition ||
-      resolvedJobMaterialBillingTreatment ==
-          JobMaterialBillingTreatment.invoiceCandidate;
+      (resolvedJobMaterialBillingTreatment ==
+              JobMaterialBillingTreatment.invoiceCandidate &&
+          changeApproval != null);
 
   double get total => quantity * customerPrice;
 }

@@ -39,6 +39,8 @@ class JobLineItem {
     required this.unit,
     required this.unitPrice,
     this.technicianNote,
+    this.workerCount = 1,
+    this.changeApproval,
     this.internalUnitCost,
     this.sourceExpenseId,
     this.sourceExpenseLineId,
@@ -52,6 +54,8 @@ class JobLineItem {
   final JobLineKind kind;
   final String description;
   final double quantity;
+  final int workerCount;
+  final WorkCustomerApproval? changeApproval;
   final String unit;
   final double unitPrice;
   final String? technicianNote;
@@ -79,6 +83,8 @@ class JobLineItem {
     name: description,
     description: technicianNote ?? '',
     quantity: quantity,
+    workerCount: workerCount,
+    changeApproval: changeApproval,
     unit: unit,
     customerPrice: unitPrice,
     internalUnitCost: internalUnitCost,
@@ -103,6 +109,8 @@ class JobLineItem {
     },
     description: item.name,
     quantity: item.quantity,
+    workerCount: item.workerCount,
+    changeApproval: item.changeApproval,
     unit: item.unit,
     unitPrice: item.customerPrice,
     technicianNote: item.description.isEmpty ? null : item.description,
@@ -180,7 +188,8 @@ class ActiveJobRecord {
         (item) =>
             item.isJobAddition &&
             item.resolvedJobMaterialBillingTreatment ==
-                JobMaterialBillingTreatment.invoiceCandidate,
+                JobMaterialBillingTreatment.invoiceCandidate &&
+            item.changeApproval != null,
       )
       .fold(0, (total, item) => total + item.total);
 
@@ -188,8 +197,11 @@ class ActiveJobRecord {
       .where(
         (item) =>
             item.isJobAddition &&
-            item.resolvedJobMaterialBillingTreatment ==
-                JobMaterialBillingTreatment.customerApprovalRequired,
+            (item.resolvedJobMaterialBillingTreatment ==
+                    JobMaterialBillingTreatment.customerApprovalRequired ||
+                (item.resolvedJobMaterialBillingTreatment ==
+                        JobMaterialBillingTreatment.invoiceCandidate &&
+                    item.changeApproval == null)),
       )
       .fold(0, (total, item) => total + item.total);
 

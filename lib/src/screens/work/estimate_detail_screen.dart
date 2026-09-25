@@ -1,3 +1,5 @@
+import '../../data/work/estimate_customer_approval.dart';
+import 'estimate_customer_approval_dialog.dart';
 import '../../shared/editor_input_lock.dart';
 import '../../data/work/work_persistence_session.dart';
 import 'package:flutter/material.dart';
@@ -252,14 +254,62 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
     await _update(delivery);
   }
 
-  Future<void> _collectSignature() async {
+  Future<void> _recordCustomerApproval({bool createJobAfter = false}) async {
+    if (_saving || !widget.permissions.canCollectSignature) return;
     if (!_record.companyReviewAllowsCustomerApproval) {
+      _showCompanyReviewRequired();
+      return;
+    }
+    final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
+    final actor = work?.permissions.actorEmployeeId;
+    if (actor == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'An active business user is required to record approval.',
+          ),
+        ),
+      );
+      return;
+    }
+    final approval = await showDialog<WorkCustomerApproval>(
+      context: context,
+      builder: (_) =>
+          EstimateCustomerApprovalDialog(record: _record, actorId: actor),
+    );
+    if (!mounted || approval == null) return;
+    try {
+      await _update(_record.recordCustomerApproval(approval));
+      if (mounted && createJobAfter && _record.hasCurrentCustomerApproval) {
+        widget.onCreateJob(_record);
+      }
+    } on StateError catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message.toString())));
+      }
+    }
+  }
+
+  Future<void> _createApprovedJob() async {
+    if (_record.hasCurrentCustomerApproval &&
+        _record.resolvedEstimateStage == EstimateStage.approved) {
+      widget.onCreateJob(_record);
+    } else {
+      await _recordCustomerApproval(createJobAfter: true);
+    }
+  }
+
+  Future<void> _collectSignature({bool forBusiness = false}) async {
+    if (!forBusiness && !_record.companyReviewAllowsCustomerApproval) {
       _showCompanyReviewRequired();
       return;
     }
     final signed = await Navigator.of(context).push<WorkRecord>(
       MaterialPageRoute(
-        builder: (_) => EstimateSignatureScreen(record: _record),
+        builder: (_) =>
+            EstimateSignatureScreen(record: _record, forBusiness: forBusiness),
       ),
     );
     if (!mounted || signed == null) return;

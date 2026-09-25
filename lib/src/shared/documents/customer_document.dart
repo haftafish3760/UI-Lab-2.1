@@ -28,6 +28,9 @@ class CustomerDocument {
     this.revision = 1,
     this.draft = false,
     this.signatureSvg,
+    this.businessSignatureSvg,
+    this.businessSignedBy,
+    this.businessSignedOn,
     this.signedBy,
     this.signedOn,
   });
@@ -43,6 +46,8 @@ class CustomerDocument {
   final int totalCents, discountCents, taxCents, revision;
   final bool draft;
   final String? signatureSvg, signedBy;
+  final String? businessSignatureSvg, businessSignedBy;
+  final DateTime? businessSignedOn;
   final DateTime? signedOn;
   Map<String, Object?> toPortalJson() => {
     'kind': kind,

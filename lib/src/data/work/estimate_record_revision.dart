@@ -1,3 +1,5 @@
+import 'models/work_contact_models.dart';
+import 'work_contact_codec.dart';
 import 'models/estimate_models.dart';
 import 'models/work_models.dart';
 
@@ -6,6 +8,7 @@ extension EstimateRecordEditing on WorkRecord {
     required String title,
     String? purchaseOrderNumber,
     required String client,
+    WorkCustomerProfile? customerSnapshot,
     required String scope,
     required WorkPricingModel pricing,
     required List<WorkLineItem> items,
@@ -23,6 +26,13 @@ extension EstimateRecordEditing on WorkRecord {
             purchaseOrderNumber != this.purchaseOrderNumber) ||
         title != this.title ||
         client != this.client ||
+        (customerSnapshot != null &&
+            encodeWorkCustomerProfile(customerSnapshot).toString() !=
+                (this.customerSnapshot == null
+                    ? ''
+                    : encodeWorkCustomerProfile(
+                        this.customerSnapshot!,
+                      ).toString())) ||
         scope != detail ||
         pricing != this.pricing ||
         !_sameLineItems(items, this.items) ||
@@ -61,6 +71,9 @@ extension EstimateRecordEditing on WorkRecord {
       purchaseOrderNumber: purchaseOrderNumber ?? this.purchaseOrderNumber,
       title: title,
       client: client,
+      customerSnapshot:
+          customerSnapshot ??
+          (client == this.client ? this.customerSnapshot : null),
       detail: scope,
       pricing: pricing,
       sourceId: sourceId,
@@ -86,6 +99,8 @@ extension EstimateRecordEditing on WorkRecord {
       tax: tax,
       total: (subtotal - discount + tax).clamp(0, double.infinity),
       revision: nextRevision,
+      customerApprovals: customerApprovals,
+      businessSignature: businessSignature,
       customerSignature: signatureWasCurrent
           ? customerSignature!.invalidate(
               changedOn,
@@ -102,10 +117,10 @@ extension EstimateRecordEditing on WorkRecord {
                 revision: revision,
                 changedOn: changedOn,
                 total: total,
-                description: signatureWasCurrent
+                description: hasCurrentCustomerApproval
                     ? 'Customer-approved revision replaced by updated estimate details.'
                     : 'Customer-visible estimate details updated.',
-                customerApproved: signatureWasCurrent,
+                customerApproved: hasCurrentCustomerApproval,
               ),
             ])
           : estimateRevisionHistory,
@@ -131,6 +146,7 @@ bool _sameLineItems(List<WorkLineItem> left, List<WorkLineItem> right) {
         a.name != b.name ||
         a.description != b.description ||
         a.quantity != b.quantity ||
+        a.workerCount != b.workerCount ||
         a.unit != b.unit ||
         a.customerPrice != b.customerPrice ||
         a.internalUnitCost != b.internalUnitCost ||

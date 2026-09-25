@@ -6,6 +6,36 @@ import 'support/storage/database_harness.dart';
 
 void main() {
   test(
+    'business signature is durable and does not grant customer approval',
+    () async {
+      final harness = await DatabaseHarness.create();
+      addTearDown(harness.dispose);
+      final work = await openSeededTestWorkSession(await harness.open());
+      addTearDown(work.dispose);
+      final base = work.records.singleWhere(
+        (record) => record.id == 'est-1040',
+      );
+      final workflow = await work.openEstimateSignatureDraft(
+        base.id,
+        forBusiness: true,
+      );
+      workflow.updateName('Business owner');
+      workflow.updateInk(
+        SignatureInk([
+          [(0.1, 0.2), (0.8, 0.7)],
+        ]),
+      );
+      workflow.setAccepted(true);
+      final saved = (await workflow.confirm())!;
+      expect(saved.businessSignature!.signedBy, 'Business owner');
+      expect(saved.customerSignature, base.customerSignature);
+      expect(saved.hasCurrentCustomerApproval, base.hasCurrentCustomerApproval);
+      expect(saved.resolvedEstimateStage, base.resolvedEstimateStage);
+      await workflow.session.close();
+    },
+  );
+
+  test(
     'normalized signature and first approval time survive failed consumption and reopen',
     () async {
       final harness = await DatabaseHarness.create();

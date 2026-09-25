@@ -26,7 +26,7 @@ Future<void> openSavedWorkDocument(
             initialRecord: record,
             onUpdated: store.updateWorkRecord,
             onCreateJob: (estimate) async {
-              if (!estimate.hasCurrentCustomerSignature ||
+              if (!estimate.hasCurrentCustomerApproval ||
                   estimate.resolvedEstimateStage != EstimateStage.approved) {
                 return;
               }

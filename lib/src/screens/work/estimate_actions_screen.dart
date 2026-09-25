@@ -39,7 +39,7 @@ class EstimateActionsScreen extends StatelessWidget {
           onTap: () => _finish(context, EstimateAction.markReady),
         ),
       if (stage == EstimateStage.approved &&
-          record.hasCurrentCustomerSignature &&
+          record.hasCurrentCustomerApproval &&
           permissions.canConvertToJob)
         _ActionTile(
           key: const ValueKey('preview-create-job'),

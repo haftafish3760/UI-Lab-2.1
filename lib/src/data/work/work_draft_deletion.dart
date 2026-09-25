@@ -8,6 +8,7 @@ extension WorkDraftDeletion on WorkPersistenceSession {
           ? record.resolvedEstimateStage == EstimateStage.draft
           : record.status == WorkRecordStatus.draft) &&
       record.customerSignature == null &&
+      record.customerApprovals.isEmpty &&
       record.estimateDeliveries.isEmpty &&
       !_records.values.any((other) => other.sourceId == record.id) &&
       !_entries.values.any(

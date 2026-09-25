@@ -27,6 +27,7 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
     tax: _tax.text,
     terms: _terms.text,
     client: _client,
+    customerSnapshot: _customerSnapshot,
     pricing: _pricing,
     template: _template,
     createdOn: _createdOn,
@@ -49,6 +50,12 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
 
   Future<void> _openEstimateDraft() async {
     final work = _work;
+    if (widget.initialRecord == null && widget.recoveredWorkflow == null) {
+      final preferred = PrototypeOperationsScope.of(
+        context,
+      ).companyProfile.defaultEstimateTerms;
+      if (preferred.isNotEmpty) _terms.text = preferred;
+    }
     if (work == null) {
       if (widget.recoveredWorkflow != null) {
         await _workflow?.session.close().catchError((Object _) {});
@@ -120,6 +127,7 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
     _discount.text = record.discount.toStringAsFixed(2);
     _tax.text = record.tax.toStringAsFixed(2);
     _terms.text = record.terms;
+    _customerSnapshot = record.customerSnapshot;
     _createdOn =
         record.estimateDates?.createdOn ??
         record.createdOn ??
@@ -145,6 +153,7 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
     _discount.text = input.discount;
     _tax.text = input.tax;
     _terms.text = input.terms;
+    _customerSnapshot = input.customerSnapshot;
     _client = input.client;
     _pricing = input.pricing;
     _template = input.template;

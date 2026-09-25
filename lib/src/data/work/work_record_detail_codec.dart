@@ -8,6 +8,8 @@ Map<String, Object?> encodeWorkLineItem(WorkLineItem value) => {
   'name': value.name,
   'description': value.description,
   'quantity': encodeWorkDecimal(value.quantity),
+  'workerCount': value.workerCount,
+  'changeApproval': value.changeApproval?.toJson(),
   'unit': value.unit,
   'customerPrice': encodeWorkDecimal(value.customerPrice),
   'internalUnitCost': value.internalUnitCost == null
@@ -27,6 +29,12 @@ WorkLineItem decodeWorkLineItem(Map<String, Object?> json) => WorkLineItem(
   name: json['name'] as String,
   description: json['description'] as String,
   quantity: decodeWorkDecimal(json['quantity']),
+  workerCount: json['workerCount'] as int? ?? 1,
+  changeApproval: json['changeApproval'] == null
+      ? null
+      : WorkCustomerApproval.fromJson(
+          (json['changeApproval'] as Map).cast<String, Object?>(),
+        ),
   unit: json['unit'] as String,
   customerPrice: decodeWorkDecimal(json['customerPrice']),
   internalUnitCost: json['internalUnitCost'] == null

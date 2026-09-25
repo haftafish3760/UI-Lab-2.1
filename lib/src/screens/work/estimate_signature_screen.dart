@@ -18,9 +18,11 @@ class EstimateSignatureScreen extends StatefulWidget {
   const EstimateSignatureScreen({
     required this.record,
     this.recoveredWorkflow,
+    this.forBusiness = false,
     super.key,
   });
   final WorkRecord record;
+  final bool forBusiness;
   final EstimateSignatureDraftController? recoveredWorkflow;
 
   @override
@@ -30,7 +32,10 @@ class EstimateSignatureScreen extends StatefulWidget {
 
 class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
     with DraftNavigationGuard {
-  late final _name = TextEditingController(text: _base.client);
+  bool get _forBusiness => _workflow?.input.forBusiness ?? widget.forBusiness;
+  late final _name = TextEditingController(
+    text: widget.forBusiness ? '' : _base.client,
+  );
   final _strokes = <List<Offset>>[];
   var _accepted = false;
   final _padKey = GlobalKey();
@@ -86,7 +91,9 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         WorkDetailHeader(
-                          label: 'Customer signature',
+                          label: _forBusiness
+                              ? 'Business signature'
+                              : 'Customer signature',
                           selectedDay:
                               _base.estimateDates?.createdOn ?? DateTime.now(),
                           onBack: () => leaveDraftRoute(),
@@ -94,7 +101,9 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Approve estimate in person',
+                          _forBusiness
+                              ? 'Sign for your business'
+                              : 'Approve estimate in person',
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 4),
@@ -102,6 +111,25 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
                           '${_base.number} · Revision ${_base.revision} · \$${_base.total.toStringAsFixed(2)}',
                         ),
                         const SizedBox(height: 14),
+                        SectionCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                _base.title,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              Text(_base.detail),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Terms and conditions',
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                              Text(_base.terms),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                         if (_draft != null)
                           EditorDraftStatus(
                             state: _draft!.state,
@@ -121,8 +149,10 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
                                     'signature-customer-name',
                                   ),
                                   controller: _name,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Customer name',
+                                  decoration: InputDecoration(
+                                    labelText: _forBusiness
+                                        ? 'Your name'
+                                        : 'Customer name',
                                   ),
                                 ),
                                 const SizedBox(height: 12),
@@ -195,10 +225,12 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
                                       ListTileControlAffinity.leading,
                                   value: _accepted,
                                   title: Text(
-                                    'I approve revision ${_base.revision} for \$${_base.total.toStringAsFixed(2)}',
+                                    _forBusiness
+                                        ? 'I sign revision ${_base.revision} on behalf of my business'
+                                        : 'I approve revision ${_base.revision} for \$${_base.total.toStringAsFixed(2)}',
                                   ),
                                   subtitle: const Text(
-                                    'Changing customer-visible scope or price will cancel this approval and require a new signature.',
+                                    'This signature applies to this revision. Changes require a fresh review and approval.',
                                   ),
                                   onChanged: (value) =>
                                       _changeAcceptance(value ?? false),
@@ -214,7 +246,11 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
                               ? _save
                               : null,
                           icon: const Icon(Icons.verified_outlined),
-                          label: const Text('Save customer approval'),
+                          label: Text(
+                            _forBusiness
+                                ? 'Save business signature'
+                                : 'Save customer approval',
+                          ),
                         ),
                       ],
                     ),

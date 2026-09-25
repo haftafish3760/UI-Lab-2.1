@@ -13,6 +13,7 @@ class EstimateSignatureInput {
     required this.name,
     required this.ink,
     this.accepted = false,
+    this.forBusiness = false,
     this.confirmedAt,
   });
   final WorkRecord base;
@@ -20,22 +21,26 @@ class EstimateSignatureInput {
   final String name;
   final SignatureInk ink;
   final bool accepted;
+  final bool forBusiness;
   final DateTime? confirmedAt;
 
   EstimateSignatureInput withName(String value) => EstimateSignatureInput(
     base: base,
+    forBusiness: forBusiness,
     baseRevision: baseRevision,
     name: value,
     ink: ink,
   );
   EstimateSignatureInput withInk(SignatureInk value) => EstimateSignatureInput(
     base: base,
+    forBusiness: forBusiness,
     baseRevision: baseRevision,
     name: name,
     ink: value,
   );
   EstimateSignatureInput withAcceptance(bool value) => EstimateSignatureInput(
     base: base,
+    forBusiness: forBusiness,
     baseRevision: baseRevision,
     name: name,
     ink: ink,
@@ -48,6 +53,7 @@ class EstimateSignatureInput {
     }
     return EstimateSignatureInput(
       base: base,
+      forBusiness: forBusiness,
       baseRevision: baseRevision,
       name: name,
       ink: ink,
@@ -63,6 +69,16 @@ class EstimateSignatureInput {
         confirmedAt == null) {
       throw StateError('Signature input is not ready for approval.');
     }
+    if (forBusiness) {
+      return base.copyWith(
+        businessSignature: WorkCustomerSignature(
+          signedBy: name.trim(),
+          signedOn: confirmedAt!,
+          signedRevision: base.revision,
+          ink: ink,
+        ),
+      );
+    }
     return base.recordEstimateSignature(name.trim(), confirmedAt!, ink: ink);
   }
 
@@ -71,6 +87,7 @@ class EstimateSignatureInput {
     'baseRevision': baseRevision,
     'name': name,
     'accepted': accepted,
+    'forBusiness': forBusiness,
     'ink': ink.toJson(),
     'confirmedAt': confirmedAt?.toIso8601String(),
   };
@@ -81,6 +98,7 @@ class EstimateSignatureInput {
     baseRevision: payload['baseRevision'] as int,
     name: payload['name'] as String,
     accepted: payload['accepted'] as bool,
+    forBusiness: payload['forBusiness'] as bool? ?? false,
     ink: SignatureInk.fromJson((payload['ink'] as Map).cast<String, Object?>()),
     confirmedAt: payload['confirmedAt'] == null
         ? null
@@ -140,6 +158,7 @@ extension EstimateSignatureDraftWorkflow on WorkPersistenceSession {
   Future<EstimateSignatureDraftController> openEstimateSignatureDraft(
     String recordId, {
     DraftRecoverySelection? recoverySelection,
+    bool forBusiness = false,
   }) async {
     final current = records.where((r) => r.id == recordId).firstOrNull;
     if (current == null ||
@@ -153,7 +172,7 @@ extension EstimateSignatureDraftWorkflow on WorkPersistenceSession {
       domain: 'work/estimate-signature',
       draftId:
           recoverySelection?.draftId ??
-          'edit-${permissions.actorEmployeeId}-$recordId',
+          '${forBusiness ? 'business' : 'edit'}-${permissions.actorEmployeeId}-$recordId',
       ownerId: permissions.actorEmployeeId,
     );
     void validate(EstimateSignatureInput input) {
@@ -194,7 +213,8 @@ extension EstimateSignatureDraftWorkflow on WorkPersistenceSession {
           EstimateSignatureInput(
             base: current,
             baseRevision: storageRevisionFor(recordId),
-            name: current.client,
+            name: forBusiness ? '' : current.client,
+            forBusiness: forBusiness,
             ink: SignatureInk(const []),
           ),
         );

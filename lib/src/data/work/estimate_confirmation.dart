@@ -70,10 +70,11 @@ WorkRecord buildConfirmedEstimate(
     convertedOn: existing?.estimateDates?.convertedOn,
   );
   if (existing != null) {
-    return existing.reviseEstimate(
+    final revised = existing.reviseEstimate(
       title: title,
       purchaseOrderNumber: input.purchaseOrderNumber.trim(),
       client: client,
+      customerSnapshot: input.customerSnapshot,
       scope: scope,
       pricing: input.pricing,
       items: input.items,
@@ -85,6 +86,11 @@ WorkRecord buildConfirmedEstimate(
       dates: dates,
       changedOn: now,
     );
+    return !missingCustomerDetails &&
+            input.items.isNotEmpty &&
+            revised.resolvedEstimateStage == EstimateStage.draft
+        ? revised.withEstimateStage(EstimateStage.readyToSend, now)
+        : revised;
   }
   return WorkRecord(
     id: input.estimateId,
@@ -93,18 +99,23 @@ WorkRecord buildConfirmedEstimate(
     purchaseOrderNumber: input.purchaseOrderNumber.trim(),
     title: title,
     client: client,
+    customerSnapshot: input.customerSnapshot,
     detail: scope,
     pricing: input.pricing,
     createdOn: input.createdOn,
     createdByEmployeeId: input.creatorId,
-    status: WorkRecordStatus.draft,
+    status: !missingCustomerDetails && input.items.isNotEmpty
+        ? WorkRecordStatus.ready
+        : WorkRecordStatus.draft,
     items: List.unmodifiable(input.items),
     template: input.template,
     terms: input.terms.trim(),
     discount: discount,
     tax: tax,
     total: total,
-    estimateStage: EstimateStage.draft,
+    estimateStage: !missingCustomerDetails && input.items.isNotEmpty
+        ? EstimateStage.readyToSend
+        : EstimateStage.draft,
     estimateDates: dates,
     sitePhotos: List.unmodifiable(input.sitePhotos),
   );

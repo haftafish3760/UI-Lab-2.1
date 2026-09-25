@@ -41,7 +41,7 @@ extension _EstimateWorkspaceActions on _EstimateWorkspaceScreenState {
       );
       return;
     }
-    if (!estimate.hasCurrentCustomerSignature ||
+    if (!estimate.hasCurrentCustomerApproval ||
         estimate.resolvedEstimateStage != EstimateStage.approved) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

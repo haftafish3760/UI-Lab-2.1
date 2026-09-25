@@ -129,7 +129,7 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text(
-                                'Recipient and approval copy',
+                                'Recipient and document review',
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                               const SizedBox(height: 8),
@@ -145,7 +145,8 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                                 decoration: InputDecoration(
                                   labelText: _recipientLabel,
                                   helperText:
-                                      'Confirm this before any customer document leaves the app.',
+                                      'Check the recipient before opening the composer.',
+                                  helperMaxLines: 3,
                                 ),
                               ),
                               const SizedBox(height: 10),
@@ -158,7 +159,7 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                                   'I reviewed the customer copy and recipient',
                                 ),
                                 subtitle: Text(
-                                  'Approval will apply only to revision ${_base.revision}.',
+                                  'You are reviewing revision ${_base.revision}. This does not record customer approval.',
                                 ),
                                 onChanged:
                                     !_ready ||
@@ -182,7 +183,7 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                               .secondaryContainer
                               .withValues(alpha: .55),
                           child: const Text(
-                            'Email and text open your device’s sharing options with the PDF attached. Choose the customer and send in that app. Some text apps cannot attach PDFs; a customer portal link will need the configured online service. Opening sharing does not confirm delivery.',
+                            'Email and text open a composer with the recipient and PDF where supported. Review them before sending. Some text apps cannot attach PDFs; use email or Share PDF instead. Opening a composer does not confirm delivery or customer approval.',
                           ),
                         ),
                         const SizedBox(height: 16),
