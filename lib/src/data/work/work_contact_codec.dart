@@ -55,6 +55,7 @@ Map<String, Object?> encodeWorkCompanyProfile(WorkCompanyProfile value) => {
   'email': value.email,
   'website': value.website,
   'address': value.address,
+  'addressParts': value.addressParts,
   'logoLabel': value.logoLabel,
   'logoReference': value.logoReference,
   'licenseNumber': value.licenseNumber,
@@ -62,25 +63,34 @@ Map<String, Object?> encodeWorkCompanyProfile(WorkCompanyProfile value) => {
   'documentFooter': value.documentFooter,
   'documentAccentColor': value.documentAccentColor,
   'defaultTerms': value.defaultTerms,
+  'estimateTermsTemplates': value.estimateTermsTemplates,
+  'defaultEstimateTerms': value.defaultEstimateTerms,
   'defaultCurrency': value.defaultCurrency,
 };
 
-WorkCompanyProfile decodeWorkCompanyProfile(Map<String, Object?> json) =>
-    WorkCompanyProfile(
-      requireEstimateApproval:
-          json['requireEstimateApproval'] as bool? ?? false,
-      companyName: json['companyName'] as String,
-      businessCategory: json['businessCategory'] as String,
-      phone: json['phone'] as String,
-      email: json['email'] as String,
-      website: json['website'] as String,
-      address: json['address'] as String,
-      logoLabel: json['logoLabel'] as String,
-      logoReference: json['logoReference'] as String? ?? '',
-      licenseNumber: json['licenseNumber'] as String? ?? '',
-      businessIdentifier: json['businessIdentifier'] as String? ?? '',
-      documentFooter: json['documentFooter'] as String? ?? '',
-      documentAccentColor: json['documentAccentColor'] as int?,
-      defaultTerms: json['defaultTerms'] as String,
-      defaultCurrency: json['defaultCurrency'] as String,
-    );
+WorkCompanyProfile decodeWorkCompanyProfile(
+  Map<String, Object?> json,
+) => WorkCompanyProfile(
+  requireEstimateApproval: json['requireEstimateApproval'] as bool? ?? false,
+  companyName: json['companyName'] as String,
+  businessCategory: json['businessCategory'] as String,
+  phone: json['phone'] as String,
+  email: json['email'] as String,
+  website: json['website'] as String,
+  address: json['address'] as String,
+  addressParts: Map.unmodifiable(
+    (json['addressParts'] as Map? ?? const {}).cast<String, String>(),
+  ),
+  logoLabel: json['logoLabel'] as String,
+  logoReference: json['logoReference'] as String? ?? '',
+  licenseNumber: json['licenseNumber'] as String? ?? '',
+  businessIdentifier: json['businessIdentifier'] as String? ?? '',
+  documentFooter: json['documentFooter'] as String? ?? '',
+  documentAccentColor: json['documentAccentColor'] as int?,
+  defaultTerms: json['defaultTerms'] as String,
+  estimateTermsTemplates: Map.unmodifiable(
+    (json['estimateTermsTemplates'] as Map? ?? const {}).cast<String, String>(),
+  ),
+  defaultEstimateTerms: json['defaultEstimateTerms'] as String? ?? '',
+  defaultCurrency: json['defaultCurrency'] as String,
+);

@@ -60,7 +60,7 @@ void main() {
               find.byKey(const ValueKey('estimate-primary-job')),
             )
             .onPressed,
-        isNull,
+        isNotNull,
       );
       await tester.tap(find.byKey(const ValueKey('estimate-primary-edit')));
       await tester.pumpAndSettle();

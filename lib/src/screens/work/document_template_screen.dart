@@ -1,14 +1,13 @@
-import '../../shared/documents/document_image_scope.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:printing/printing.dart';
+import '../../shared/documents/document_image_scope.dart';
+import '../../layout/app_layout_engine.dart';
 import 'documents/customer_document.dart';
 import 'documents/document_pdf_assets.dart';
 import 'documents/document_template.dart';
-import 'documents/customer_pdf_screen.dart';
-import '../../layout/app_layout_engine.dart';
+import 'document_template_browser.dart';
 
-class DocumentTemplateScreen extends StatelessWidget {
+class DocumentTemplateScreen extends StatefulWidget {
   const DocumentTemplateScreen({
     required this.selectedId,
     required this.document,
@@ -17,130 +16,143 @@ class DocumentTemplateScreen extends StatelessWidget {
   final String selectedId;
   final CustomerDocument document;
   @override
+  State<DocumentTemplateScreen> createState() => _DocumentTemplateScreenState();
+}
+
+class _DocumentTemplateScreenState extends State<DocumentTemplateScreen> {
+  String _category = 'All';
+  List<DocumentTemplate> get _templates => DocumentTemplate.catalog
+      .where((template) => _category == 'All' || template.category == _category)
+      .toList();
+  Future<void> _open(int index) async {
+    final selected = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DocumentTemplateBrowser(
+          document: widget.document,
+          templates: _templates,
+          initialIndex: index,
+        ),
+      ),
+    );
+    if (mounted && selected != null) Navigator.pop(context, selected);
+  }
+
+  @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Choose a template')),
     body: LayoutBuilder(
       builder: (context, constraints) {
-        final layout = AppLayoutEngine.workFor(
+        final columns = AppLayoutEngine.templateColumnsFor(
           constraints.maxWidth,
           textScaler: MediaQuery.textScalerOf(context),
         );
-        // Rasterize only visible template rows. Ten simultaneous PDF readers can
-        // exhaust a phone's memory before the user has chosen a design.
-        final columns = layout.columns;
-        return ListView.builder(
-          padding: const EdgeInsets.all(8),
-          scrollCacheExtent: const ScrollCacheExtent.pixels(0),
-          itemCount: (DocumentTemplate.catalog.length / columns).ceil(),
-          itemBuilder: (context, row) => Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Center(
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 16,
-                children: [
-                  for (final template
-                      in DocumentTemplate.catalog
-                          .skip(row * columns)
-                          .take(columns))
-                    SizedBox(
-                      width: (constraints.maxWidth - 16).clamp(
-                        0,
-                        layout.laneWidth,
-                      ),
-                      child: Card(
-                        margin: EdgeInsets.zero,
-                        clipBehavior: Clip.antiAlias,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            SizedBox(
-                              height: 340,
-                              child: PdfPreview(
-                                key: ValueKey(
-                                  'template-preview-${template.id}',
-                                ),
-                                build: (_) => generateCustomerPdf(
-                                  document,
-                                  templateId: template.id,
-                                  logoLoader: DocumentImageScope.maybeOf(
-                                    context,
-                                  ),
-                                ),
-                                useActions: false,
-                                canChangeOrientation: false,
-                                canChangePageFormat: false,
-                                canDebug: false,
-                                allowPrinting: false,
-                                allowSharing: false,
-                                onError: (_, _) => const Center(
-                                  child: Text(
-                                    'Preview unavailable. Tap Preview to retry.',
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text(
-                                    template.label,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
-                                  ),
-                                  Text(template.description),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(context).push<void>(
-                                              MaterialPageRoute(
-                                                builder: (_) =>
-                                                    CustomerPdfScreen(
-                                                      document: document,
-                                                      templateId: template.id,
-                                                    ),
-                                              ),
-                                            ),
-                                        child: const Text('Preview'),
-                                      ),
-                                      FilledButton.icon(
-                                        key: ValueKey(
-                                          'use-template-${template.id}',
-                                        ),
-                                        onPressed: () => Navigator.of(
-                                          context,
-                                        ).pop(template.id),
-                                        icon: Icon(
-                                          DocumentTemplate.resolve(
-                                                    selectedId,
-                                                  ).id ==
-                                                  template.id
-                                              ? Icons.check
-                                              : Icons.description_outlined,
-                                        ),
-                                        label: const Text('Use template'),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+        final templates = _templates;
+        final width =
+            (constraints.maxWidth - 24 - (columns - 1) * 12) / columns;
+        return ListView(
+          padding: const EdgeInsets.all(12),
+          children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final category in {
+                  'All',
+                  ...DocumentTemplate.catalog.map((t) => t.category),
+                })
+                  ChoiceChip(
+                    label: Text(category),
+                    selected: category == _category,
+                    onSelected: (_) => setState(() => _category = category),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            for (var row = 0; row < (templates.length / columns).ceil(); row++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var col = 0; col < columns; col++) ...[
+                      if (col > 0) const SizedBox(width: 12),
+                      if (row * columns + col < templates.length)
+                        SizedBox(
+                          width: width,
+                          child: _tile(
+                            templates[row * columns + col],
+                            row * columns + col,
+                            width,
+                          ),
                         ),
-                      ),
-                    ),
-                ],
+                    ],
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
+    ),
+  );
+  Widget _tile(DocumentTemplate template, int index, double width) => Card(
+    margin: EdgeInsets.zero,
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: () => _open(index),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            button: true,
+            label: 'Enlarge ${template.label}',
+            child: IgnorePointer(
+              child: SizedBox(
+                height: template.landscape ? width * 0.71 : width * 1.414,
+                child: PdfPreview(
+                  key: ValueKey('template-preview-${template.id}'),
+                  build: (_) => generateCustomerPdf(
+                    widget.document,
+                    templateId: template.id,
+                    logoLoader: DocumentImageScope.maybeOf(context),
+                  ),
+                  padding: EdgeInsets.zero,
+                  previewPageMargin: EdgeInsets.zero,
+                  useActions: false,
+                  canChangeOrientation: false,
+                  canChangePageFormat: false,
+                  canDebug: false,
+                  allowPrinting: false,
+                  allowSharing: false,
+                  onError: (_, _) =>
+                      const Center(child: Text('Tap to open preview')),
+                ),
               ),
             ),
           ),
-        );
-      },
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  template.label,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                if (DocumentTemplate.resolve(widget.selectedId).id ==
+                    template.id)
+                  const Text('Selected'),
+                const Text('Tap document to enlarge'),
+                FilledButton(
+                  key: ValueKey('use-template-${template.id}'),
+                  onPressed: () => Navigator.pop(context, template.id),
+                  child: const Text('Use template'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }

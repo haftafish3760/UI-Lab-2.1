@@ -13,9 +13,9 @@ String estimateDeliveryRecipient(
   EstimateDeliveryMethod method,
   Iterable<WorkCustomerProfile> customers,
 ) {
-  WorkCustomerProfile? customer;
+  WorkCustomerProfile? customer = base.customerSnapshot;
   for (final candidate in customers) {
-    if (candidate.name == base.client) customer = candidate;
+    if (customer == null && candidate.name == base.client) customer = candidate;
   }
   return switch (method) {
     EstimateDeliveryMethod.email => customer?.email ?? '',

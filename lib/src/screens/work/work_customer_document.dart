@@ -9,14 +9,23 @@ CustomerDocument workCustomerDocument(
   WorkCompanyProfile company,
   WorkCustomerProfile? customer,
 ) {
+  customer = record.customerSnapshot ?? customer;
   final signature = record.hasCurrentCustomerSignature
       ? record.customerSignature
       : null;
-  final ink = signature?.ink;
-  String point((double, double) p) =>
-      '${(p.$1 * 280).toStringAsFixed(2)} ${(p.$2 * 72).toStringAsFixed(2)}';
-  final svg = ink?.hasInk == true
-      ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 72"><g fill="none" stroke="#172c3d" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">${ink!.strokes.where((s) => s.length > 1).map((s) => '<path d="M ${point(s.first)} ${s.skip(1).map((p) => 'L ${point(p)}').join(' ')}"/>').join()}</g></svg>'
+  String? renderSignature(WorkCustomerSignature? value) {
+    final ink = value?.ink;
+    String point((double, double) p) =>
+        '${(p.$1 * 280).toStringAsFixed(2)} ${(p.$2 * 72).toStringAsFixed(2)}';
+    return ink?.hasInk == true
+        ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 72"><g fill="none" stroke="#172c3d" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">${ink!.strokes.where((s) => s.length > 1).map((s) => '<path d="M ${point(s.first)} ${s.skip(1).map((p) => 'L ${point(p)}').join(' ')}"/>').join()}</g></svg>'
+        : null;
+  }
+
+  final svg = renderSignature(signature);
+  final businessSignature =
+      record.businessSignature?.isCurrentFor(record.revision) == true
+      ? record.businessSignature
       : null;
   return CustomerDocument(
     kind: switch (record.kind) {
@@ -77,6 +86,9 @@ CustomerDocument workCustomerDocument(
         ),
     ],
     signatureSvg: svg,
+    businessSignatureSvg: renderSignature(businessSignature),
+    businessSignedBy: businessSignature?.signedBy,
+    businessSignedOn: businessSignature?.signedOn,
     signedBy: signature?.signedBy,
     signedOn: signature?.signedOn,
   );

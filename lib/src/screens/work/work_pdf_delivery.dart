@@ -16,8 +16,10 @@ enum WorkPdfAction { share, save, print }
 Future<void> deliverWorkPdf(
   BuildContext context,
   WorkRecord record,
-  WorkPdfAction action,
-) async {
+  WorkPdfAction action, {
+  String? recipient,
+  String? composeMethod,
+}) async {
   final store = PrototypeOperationsScope.of(context);
   final work = store.workSession;
   work?.requireActiveDraftOwner();
@@ -100,6 +102,8 @@ Future<void> deliverWorkPdf(
         WorkPdfAction.share => PdfExportAction.share,
       },
       subject: '$label ${record.number}',
+      recipient: recipient,
+      composeMethod: composeMethod,
       text:
           'Please review the attached ${label.toLowerCase()} for ${record.title}.',
       shareOrigin: box == null

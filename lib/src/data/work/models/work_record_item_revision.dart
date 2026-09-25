@@ -19,10 +19,10 @@ extension WorkRecordItemRevision on WorkRecord {
               revision: revision,
               changedOn: changedOn,
               total: total,
-              description: signatureWasCurrent
+              description: hasCurrentCustomerApproval
                   ? 'Customer-approved revision replaced by updated items or pricing.'
                   : 'Items or pricing updated.',
-              customerApproved: signatureWasCurrent,
+              customerApproved: hasCurrentCustomerApproval,
             ),
           ]
         : estimateRevisionHistory;
@@ -36,6 +36,7 @@ extension WorkRecordItemRevision on WorkRecord {
       number: number,
       title: title,
       client: client,
+      customerSnapshot: customerSnapshot,
       detail: detail,
       pricing: pricing,
       sourceId: sourceId,
@@ -50,7 +51,7 @@ extension WorkRecordItemRevision on WorkRecord {
       scheduledEnd: scheduledEnd,
       completedOn: completedOn,
       createdByEmployeeId: createdByEmployeeId,
-      status: signatureWasCurrent && kind == WorkRecordKind.estimate
+      status: hasCurrentCustomerApproval && kind == WorkRecordKind.estimate
           ? WorkRecordStatus.ready
           : status,
       items: List.unmodifiable(revisedItems),
@@ -61,6 +62,8 @@ extension WorkRecordItemRevision on WorkRecord {
       tax: tax,
       total: (revisedSubtotal - discount + tax).clamp(0, double.infinity),
       revision: revision + 1,
+      customerApprovals: customerApprovals,
+      businessSignature: businessSignature,
       customerSignature: signatureWasCurrent
           ? customerSignature!.invalidate(
               changedOn,
@@ -106,6 +109,7 @@ bool _sameWorkItems(List<WorkLineItem> left, List<WorkLineItem> right) {
         a.name != b.name ||
         a.description != b.description ||
         a.quantity != b.quantity ||
+        a.workerCount != b.workerCount ||
         a.unit != b.unit ||
         a.customerPrice != b.customerPrice ||
         a.internalUnitCost != b.internalUnitCost ||

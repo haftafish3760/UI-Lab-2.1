@@ -2,7 +2,6 @@ part of 'estimate_detail_screen.dart';
 
 extension _EstimatePrimaryActions on _EstimateDetailScreenState {
   Widget _primaryActions() {
-    final colors = Theme.of(context).extension<AppSemanticColors>()!;
     final tone = OperationalCardPalette.plan;
     final work = PrototypeOperationsScope.of(context).workSession;
     final draft = _record.resolvedEstimateStage == EstimateStage.draft;
@@ -36,6 +35,12 @@ extension _EstimatePrimaryActions on _EstimateDetailScreenState {
               children: [
                 if (widget.permissions.canEditItems)
                   FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: OperationalCardTone.darkInk,
+                      foregroundColor: OperationalCardTone.ink,
+                      disabledBackgroundColor: tone.row,
+                      disabledForegroundColor: OperationalCardTone.darkInk,
+                    ),
                     key: const ValueKey('estimate-primary-edit'),
                     onPressed: _editEstimate,
                     icon: const Icon(Icons.edit_outlined),
@@ -60,13 +65,19 @@ extension _EstimatePrimaryActions on _EstimateDetailScreenState {
                   key: const ValueKey('estimate-primary-preview'),
                   onPressed: _preview,
                   icon: const Icon(Icons.picture_as_pdf_outlined),
-                  label: const Text('Preview PDF'),
+                  label: const Text('Preview'),
                 ),
                 if (canSend ||
                     (_record.requiresCompanyReview &&
                         !_record.companyReviewAllowsCustomerApproval &&
                         widget.permissions.canEditItems))
                   FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: OperationalCardTone.darkInk,
+                      foregroundColor: OperationalCardTone.ink,
+                      disabledBackgroundColor: tone.row,
+                      disabledForegroundColor: OperationalCardTone.darkInk,
+                    ),
                     key: const ValueKey('estimate-primary-send'),
                     onPressed: _reviewAndSend,
                     icon: const Icon(Icons.send_outlined),
@@ -77,9 +88,20 @@ extension _EstimatePrimaryActions on _EstimateDetailScreenState {
                           : 'Send estimate',
                     ),
                   ),
-                if (!draft &&
-                    _record.companyReviewAllowsCustomerApproval &&
+                if (_record.companyReviewAllowsCustomerApproval &&
                     widget.permissions.canCollectSignature &&
+                    _record.resolvedEstimateStage != EstimateStage.converted)
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: OperationalCardTone.darkInk,
+                      backgroundColor: tone.row,
+                    ),
+                    onPressed: _recordCustomerApproval,
+                    icon: const Icon(Icons.draw_outlined),
+                    label: const Text('Record customer approval'),
+                  ),
+                if (widget.permissions.canCollectSignature &&
+                    _record.companyReviewAllowsCustomerApproval &&
                     _record.resolvedEstimateStage != EstimateStage.converted)
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
@@ -88,31 +110,48 @@ extension _EstimatePrimaryActions on _EstimateDetailScreenState {
                     ),
                     onPressed: _collectSignature,
                     icon: const Icon(Icons.draw_outlined),
-                    label: const Text('Record customer approval'),
+                    label: const Text('Sign in person'),
+                  ),
+                if (widget.permissions.canEditItems)
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: OperationalCardTone.darkInk,
+                      backgroundColor: tone.row,
+                    ),
+                    onPressed: () => _collectSignature(forBusiness: true),
+                    icon: const Icon(Icons.edit_document),
+                    label: const Text('Business signature'),
                   ),
                 if (widget.permissions.canConvertToJob)
                   FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: OperationalCardTone.darkInk,
+                      foregroundColor: OperationalCardTone.ink,
+                      disabledBackgroundColor: tone.row,
+                      disabledForegroundColor: OperationalCardTone.darkInk,
+                    ),
                     key: const ValueKey('estimate-primary-job'),
                     onPressed:
-                        _record.hasCurrentCustomerSignature &&
-                            _record.resolvedEstimateStage ==
-                                EstimateStage.approved
-                        ? () => widget.onCreateJob(_record)
-                        : null,
+                        _record.resolvedEstimateStage == EstimateStage.converted
+                        ? null
+                        : _createApprovedJob,
                     icon: const Icon(Icons.event_available_outlined),
                     label: const Text('Create and assign job'),
                   ),
                 if (work != null && work.canDeleteDraft(_record))
                   TextButton.icon(
                     key: const ValueKey('estimate-primary-delete'),
-                    style: TextButton.styleFrom(foregroundColor: colors.danger),
+                    style: TextButton.styleFrom(
+                      foregroundColor: OperationalCardTone.ink,
+                      backgroundColor: const Color(0xFF7F1D1D),
+                    ),
                     onPressed: _deleteEstimateDraft,
                     icon: const Icon(Icons.delete_outline),
                     label: const Text('Delete draft'),
                   ),
               ],
             ),
-            if (!_record.hasCurrentCustomerSignature &&
+            if (!_record.hasCurrentCustomerApproval &&
                 _record.resolvedEstimateStage != EstimateStage.converted) ...[
               const SizedBox(height: 10),
               const Text(

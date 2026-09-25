@@ -16,7 +16,6 @@ List<WorkLineItem> editableJobMaterials(
     .where(
       (item) =>
           item.isJobAddition &&
-          item.type == WorkLineItemType.material &&
           canEditJobMaterialTreatment(
             item.resolvedJobMaterialBillingTreatment,
             permissions,
@@ -81,7 +80,6 @@ class JobMaterialsDraftInput {
     if (additions.map((item) => item.id).toSet().length != additions.length ||
         additions.any(
           (item) =>
-              item.type != WorkLineItemType.material ||
               protectedIds.contains(item.id) ||
               !canEditJobMaterialTreatment(
                 item.resolvedJobMaterialBillingTreatment,
@@ -90,6 +88,16 @@ class JobMaterialsDraftInput {
         )) {
       throw StateError(
         'These materials cannot be changed with the current permissions.',
+      );
+    }
+    if (additions.any(
+      (item) =>
+          item.resolvedJobMaterialBillingTreatment ==
+              JobMaterialBillingTreatment.invoiceCandidate &&
+          item.changeApproval == null,
+    )) {
+      throw StateError(
+        'Record customer approval for billable additions before saving.',
       );
     }
     return base.reviseItems([

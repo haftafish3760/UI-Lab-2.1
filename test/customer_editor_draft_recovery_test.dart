@@ -110,8 +110,8 @@ void main() {
         tester,
         () => field('Client name').evaluate().isNotEmpty,
       );
-      expect(tester.widget<TextField>(field('Phone')).controller!.text, '555-');
-      await tester.enterText(field('Phone'), '555-0101');
+      expect(tester.widget<TextField>(field('Phone')).controller!.text, '(555');
+      await tester.enterText(field('Phone'), '2025550101');
       await save();
       await waitForNativeSave(tester, () => directory.failureMessage != null);
       expect(find.byType(CustomerEditScreen), findsOneWidget);
@@ -142,7 +142,7 @@ void main() {
         store.customers
             .singleWhere((value) => value.name == 'Recovered client')
             .phone,
-        '555-0101',
+        '(202) 555-0101',
       );
       expect(
         await tester.runAsync(

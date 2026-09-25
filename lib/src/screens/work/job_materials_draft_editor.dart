@@ -35,7 +35,7 @@ extension _JobMaterialsDraftEditor on _JobWorkspaceScreenState {
           builder: (_) => WorkItemsEditor(
             initialItems: existing,
             pricing: base.pricing,
-            workspaceLabel: 'Job materials',
+            workspaceLabel: 'Job items',
             draftSession: draft,
             recoveryInput: workflow?.input.workspace,
             onDraftChanged: workflow?.updateWorkspace,
@@ -44,6 +44,44 @@ extension _JobMaterialsDraftEditor on _JobWorkspaceScreenState {
               if (!mounted ||
                   !_applyStockChanges(existing, additions, apply: false)) {
                 return false;
+              }
+              final needsApproval = additions
+                  .where(
+                    (item) =>
+                        item.resolvedJobMaterialBillingTreatment ==
+                            JobMaterialBillingTreatment.invoiceCandidate &&
+                        item.changeApproval == null,
+                  )
+                  .toList();
+              if (needsApproval.isNotEmpty) {
+                if (work == null) return false;
+                final approval = await showDialog<WorkCustomerApproval>(
+                  context: context,
+                  builder: (_) => EstimateCustomerApprovalDialog(
+                    record: base,
+                    actorId: work.permissions.actorEmployeeId,
+                    summary:
+                        'Approve these job additions:\n${needsApproval.map((item) => '${item.name}: \$${item.total.toStringAsFixed(2)}').join('\n')}\nTotal: \$${needsApproval.fold(0.0, (sum, item) => sum + item.total).toStringAsFixed(2)}',
+                  ),
+                );
+                if (!mounted || approval == null) return false;
+                final evidence = {
+                  ...approval.toJson(),
+                  'revision': base.revision + 1,
+                };
+                additions = [
+                  for (final item in additions)
+                    if (needsApproval.contains(item))
+                      decodeWorkLineItem({
+                        ...encodeWorkLineItem(item),
+                        'changeApproval': evidence,
+                      })
+                    else
+                      item,
+                ];
+                workflow?.updateWorkspace(
+                  WorkItemsDraftInput(items: additions),
+                );
               }
               bool saved;
               if (workflow != null) {
@@ -69,7 +107,7 @@ extension _JobMaterialsDraftEditor on _JobWorkspaceScreenState {
               if (saved) _applyStockChanges(existing, additions);
               return saved;
             },
-            allowedTypes: const [WorkLineItemType.material],
+            allowedTypes: WorkLineItemType.values,
             allowMaterialCostHistory: widget.permissions.canViewInternalCost,
             allowExpenseEvidence:
                 widget.permissions.canLinkExpenses &&

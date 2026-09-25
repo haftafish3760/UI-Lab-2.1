@@ -32,6 +32,7 @@ class WorkDraftRepository {
             ? current.record.resolvedEstimateStage != EstimateStage.draft
             : current.record.status != WorkRecordStatus.draft) ||
         current.record.customerSignature != null ||
+        current.record.customerApprovals.isNotEmpty ||
         current.record.estimateDeliveries.isNotEmpty) {
       throw const LocalRecordConflict('The draft changed.');
     }

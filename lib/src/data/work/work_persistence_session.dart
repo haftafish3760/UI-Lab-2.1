@@ -24,6 +24,7 @@ import 'work_draft_repository.dart';
 import 'work_assignment_validation.dart';
 
 part 'work_job_conversion.dart';
+part 'work_customer_approval_validation.dart';
 part 'work_draft_deletion.dart';
 
 /// The single Work read-model cache for an app session. SQLite is authoritative;
@@ -190,7 +191,7 @@ class WorkPersistenceSession extends ChangeNotifier {
             );
           }
           final current = _records[record.id];
-
+          _validateCustomerApprovalChanges(record, current);
           if (current != null &&
               current.createdByEmployeeId != record.createdByEmployeeId) {
             throw StateError('The record creator cannot be rewritten.');

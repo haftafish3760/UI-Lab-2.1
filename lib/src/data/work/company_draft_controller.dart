@@ -10,13 +10,15 @@ class CompanyDraftInput {
   const CompanyDraftInput({
     required this.baseProfile,
     required this.baseRevision,
-    required this.logoLabel, this.logoReference = '',
+    required this.logoLabel,
+    this.logoReference = '',
     required this.name,
     required this.category,
     required this.phone,
     required this.email,
     required this.website,
     required this.address,
+    this.addressParts = const {},
     required this.terms,
   });
 
@@ -30,6 +32,7 @@ class CompanyDraftInput {
   final String email;
   final String website;
   final String address;
+  final Map<String, String> addressParts;
   final String terms;
 
   WorkCompanyProfile confirmedProfile() {
@@ -46,7 +49,9 @@ class CompanyDraftInput {
       email: email.trim(),
       website: website.trim(),
       address: address.trim(),
-      logoLabel: logoLabel, logoReference: logoReference,
+      addressParts: addressParts,
+      logoLabel: logoLabel,
+      logoReference: logoReference,
       defaultTerms: terms.trim(),
     );
   }
@@ -54,13 +59,15 @@ class CompanyDraftInput {
   Map<String, Object?> toPayload() => {
     'baseProfile': encodeWorkCompanyProfile(baseProfile),
     'baseRevision': baseRevision,
-    'logoLabel': logoLabel, 'logoReference': logoReference,
+    'logoLabel': logoLabel,
+    'logoReference': logoReference,
     'name': name,
     'category': category,
     'phone': phone,
     'email': email,
     'website': website,
     'address': address,
+    'addressParts': addressParts,
     'terms': terms,
   };
 
@@ -70,13 +77,20 @@ class CompanyDraftInput {
           (input['baseProfile'] as Map).cast<String, Object?>(),
         ),
         baseRevision: input['baseRevision'] as int,
-        logoLabel: input['logoLabel'] as String, logoReference: input['logoReference'] as String? ?? (input['baseProfile'] as Map)['logoReference'] as String? ?? '',
+        logoLabel: input['logoLabel'] as String,
+        logoReference:
+            input['logoReference'] as String? ??
+            (input['baseProfile'] as Map)['logoReference'] as String? ??
+            '',
         name: input['name'] as String,
         category: input['category'] as String,
         phone: input['phone'] as String,
         email: input['email'] as String,
         website: input['website'] as String,
         address: input['address'] as String,
+        addressParts: Map.unmodifiable(
+          (input['addressParts'] as Map? ?? const {}).cast<String, String>(),
+        ),
         terms: input['terms'] as String,
       );
 }

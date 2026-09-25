@@ -18,10 +18,11 @@ WorkRecord buildConfirmedInvoice(
       'Review and save the unfinished invoice items first.',
     );
   }
-  if (!previewIncomplete && (input.client == null ||
-      input.title.trim().isEmpty ||
-      input.summary.trim().isEmpty ||
-      input.items.isEmpty)) {
+  if (!previewIncomplete &&
+      (input.client == null ||
+          input.title.trim().isEmpty ||
+          input.summary.trim().isEmpty ||
+          input.items.isEmpty)) {
     throw const InvoiceInputValidation(
       'Choose a customer and enter the work completed with at least one invoice item.',
     );
@@ -52,6 +53,9 @@ WorkRecord buildConfirmedInvoice(
     purchaseOrderNumber: input.purchaseOrderNumber.trim(),
     title: input.title.trim(),
     client: input.client ?? 'Client not selected',
+    customerSnapshot:
+        input.customerSnapshot ??
+        (input.client == existing?.client ? existing?.customerSnapshot : null),
     detail: input.summary.trim(),
     pricing: input.pricing,
     sourceId: input.sourceJobId,

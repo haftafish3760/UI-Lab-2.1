@@ -26,67 +26,69 @@ class _PdfDocumentViewState extends State<PdfDocumentView> {
   }
 
   @override
-  Widget build(BuildContext context) => Stack(
-    fit: StackFit.expand,
+  Widget build(BuildContext context) => Column(
     children: [
-      PdfViewPinch(
-        controller: _controller,
-        builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
-          options: const DefaultBuilderOptions(),
-          documentLoaderBuilder: (_) =>
-              const Center(child: CircularProgressIndicator()),
-          pageLoaderBuilder: (_) =>
-              const Center(child: CircularProgressIndicator()),
-          errorBuilder: (_, _) => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'This PDF could not be opened. It may be missing, damaged, or protected. Your saved information is unchanged.',
+      Expanded(
+        child: PdfViewPinch(
+          controller: _controller,
+          builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
+            options: const DefaultBuilderOptions(),
+            documentLoaderBuilder: (_) =>
+                const Center(child: CircularProgressIndicator()),
+            pageLoaderBuilder: (_) =>
+                const Center(child: CircularProgressIndicator()),
+            errorBuilder: (_, _) => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'This PDF could not be opened. It may be missing, damaged, or protected. Your saved information is unchanged.',
+                ),
               ),
             ),
           ),
+          onDocumentLoaded: (d) {
+            if (mounted) setState(() => _pages = d.pagesCount);
+          },
+          onPageChanged: (p) {
+            if (mounted) setState(() => _page = p);
+          },
         ),
-        onDocumentLoaded: (d) {
-          if (mounted) setState(() => _pages = d.pagesCount);
-        },
-        onPageChanged: (p) {
-          if (mounted) setState(() => _page = p);
-        },
       ),
-      if (_pages != null)
-        PositionedDirectional(
-          bottom: 8,
-          end: 8,
-          child: Material(
-            color: Theme.of(context).colorScheme.surfaceContainerHigh,
-            child: Padding(
-              padding: const EdgeInsets.all(6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    tooltip: 'Previous page',
-                    onPressed: _page <= 1
-                        ? null
-                        : () => _controller.previousPage(
-                            duration: const Duration(milliseconds: 180),
-                            curve: Curves.easeOut,
-                          ),
-                    icon: const Icon(Icons.chevron_left),
+      if ((_pages ?? 0) > 1)
+        Material(
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: 'Previous page',
+                  onPressed: _page <= 1
+                      ? null
+                      : () => _controller.previousPage(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOut,
+                        ),
+                  icon: const Icon(Icons.chevron_left),
+                ),
+                Expanded(
+                  child: Text(
+                    'Page $_page of $_pages',
+                    textAlign: TextAlign.center,
                   ),
-                  Text('Page $_page of $_pages'),
-                  IconButton(
-                    tooltip: 'Next page',
-                    onPressed: _page >= _pages!
-                        ? null
-                        : () => _controller.nextPage(
-                            duration: const Duration(milliseconds: 180),
-                            curve: Curves.easeOut,
-                          ),
-                    icon: const Icon(Icons.chevron_right),
-                  ),
-                ],
-              ),
+                ),
+                IconButton(
+                  tooltip: 'Next page',
+                  onPressed: _page >= _pages!
+                      ? null
+                      : () => _controller.nextPage(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOut,
+                        ),
+                  icon: const Icon(Icons.chevron_right),
+                ),
+              ],
             ),
           ),
         ),

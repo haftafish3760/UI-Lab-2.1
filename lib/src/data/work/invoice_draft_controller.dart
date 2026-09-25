@@ -1,3 +1,5 @@
+import 'models/work_contact_models.dart';
+import 'work_contact_codec.dart';
 import 'work_items_draft_input.dart';
 import '../storage/local_draft_checkpoint.dart';
 import 'models/work_models.dart';
@@ -18,6 +20,7 @@ class InvoiceDraftInput {
     required this.tax,
     required this.terms,
     required this.client,
+    this.customerSnapshot,
     required this.pricing,
     required this.template,
     required this.createdOn,
@@ -42,6 +45,7 @@ class InvoiceDraftInput {
   final String tax;
   final String terms;
   final String? client;
+  final WorkCustomerProfile? customerSnapshot;
   final WorkPricingModel pricing;
   final String template;
   final DateTime createdOn;
@@ -66,6 +70,9 @@ class InvoiceDraftInput {
     'tax': tax,
     'terms': terms,
     'client': client,
+    'customerSnapshot': customerSnapshot == null
+        ? null
+        : encodeWorkCustomerProfile(customerSnapshot!),
     'pricing': pricing.name,
     'template': template,
     'createdOn': createdOn.toIso8601String(),
@@ -92,6 +99,11 @@ class InvoiceDraftInput {
         tax: input['tax'] as String,
         terms: input['terms'] as String,
         client: input['client'] as String?,
+        customerSnapshot: input['customerSnapshot'] == null
+            ? null
+            : decodeWorkCustomerProfile(
+                (input['customerSnapshot'] as Map).cast<String, Object?>(),
+              ),
         pricing: WorkPricingModel.values.byName(input['pricing'] as String),
         template: input['template'] as String,
         createdOn: DateTime.parse(input['createdOn'] as String),

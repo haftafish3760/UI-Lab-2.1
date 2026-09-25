@@ -9,6 +9,7 @@ class WorkCompanyProfile {
     required this.email,
     required this.website,
     required this.address,
+    this.addressParts = const {},
     required this.logoLabel,
     this.logoReference = '',
     this.licenseNumber = '',
@@ -16,6 +17,8 @@ class WorkCompanyProfile {
     this.documentFooter = '',
     this.documentAccentColor,
     required this.defaultTerms,
+    this.estimateTermsTemplates = const {},
+    this.defaultEstimateTerms = '',
     required this.defaultCurrency,
     this.requireEstimateApproval = false,
   });
@@ -26,6 +29,7 @@ class WorkCompanyProfile {
   final String email;
   final String website;
   final String address;
+  final Map<String, String> addressParts;
   final String logoLabel,
       logoReference,
       licenseNumber,
@@ -33,6 +37,8 @@ class WorkCompanyProfile {
       documentFooter;
   final int? documentAccentColor;
   final String defaultTerms;
+  final Map<String, String> estimateTermsTemplates;
+  final String defaultEstimateTerms;
   final String defaultCurrency;
   final bool requireEstimateApproval;
 
@@ -43,6 +49,7 @@ class WorkCompanyProfile {
     String? email,
     String? website,
     String? address,
+    Map<String, String>? addressParts,
     String? logoLabel,
     String? logoReference,
     String? licenseNumber,
@@ -50,6 +57,8 @@ class WorkCompanyProfile {
     String? documentFooter,
     int? documentAccentColor,
     String? defaultTerms,
+    Map<String, String>? estimateTermsTemplates,
+    String? defaultEstimateTerms,
     String? defaultCurrency,
     bool? requireEstimateApproval,
   }) => WorkCompanyProfile(
@@ -61,6 +70,7 @@ class WorkCompanyProfile {
     email: email ?? this.email,
     website: website ?? this.website,
     address: address ?? this.address,
+    addressParts: Map.unmodifiable(addressParts ?? this.addressParts),
     logoLabel: logoLabel ?? this.logoLabel,
     logoReference: logoReference ?? this.logoReference,
     licenseNumber: licenseNumber ?? this.licenseNumber,
@@ -68,6 +78,10 @@ class WorkCompanyProfile {
     documentFooter: documentFooter ?? this.documentFooter,
     documentAccentColor: documentAccentColor ?? this.documentAccentColor,
     defaultTerms: defaultTerms ?? this.defaultTerms,
+    estimateTermsTemplates: Map.unmodifiable(
+      estimateTermsTemplates ?? this.estimateTermsTemplates,
+    ),
+    defaultEstimateTerms: defaultEstimateTerms ?? this.defaultEstimateTerms,
     defaultCurrency: defaultCurrency ?? this.defaultCurrency,
   );
 }

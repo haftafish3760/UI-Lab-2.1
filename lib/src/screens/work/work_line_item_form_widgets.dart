@@ -40,7 +40,7 @@ class _NumberAndUnitRow extends StatelessWidget {
         controller: quantity,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         decoration: InputDecoration(
-          labelText: unit == 'hour' ? 'Hours' : 'Quantity',
+          labelText: unit == 'hour' ? 'Hours per worker' : 'Quantity',
         ),
       ),
       DropdownButtonFormField<String>(
@@ -58,7 +58,7 @@ class _NumberAndUnitRow extends StatelessWidget {
     ];
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (AppLayoutEngine.stackFormFieldsFor(
+        if (AppLayoutEngine.stackCompactFieldsFor(
           constraints.maxWidth,
           textScaler: MediaQuery.textScalerOf(context),
         )) {

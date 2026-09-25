@@ -120,19 +120,33 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        await tester.enterText(field('Item name'), 'Valve replacement');
-        await tester.enterText(field(labor ? 'Hours' : 'Quantity'), '2.');
-        await backUntilGone(WorkLineItemEditor);
-        expect(find.text('Continue unfinished item'), findsOneWidget);
+        await tester.enterText(
+          field(labor ? 'Labor name' : 'Material name'),
+          'Valve replacement',
+        );
+        await tester.enterText(
+          field(labor ? 'Hours per worker' : 'Quantity'),
+          '2.',
+        );
+        await tester.pump();
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Save unfinished item'));
+        await waitForNativeSave(
+          tester,
+          () => find.byType(WorkLineItemEditor).evaluate().isEmpty,
+        );
+        expect(find.text('Valve replacement'), findsOneWidget);
         expect(
           tester
               .widget<FilledButton>(
-                find.widgetWithText(FilledButton, 'Save items'),
+                find.widgetWithText(FilledButton, 'Save progress'),
               )
               .onPressed,
-          isNull,
+          isNotNull,
         );
-        await backUntilGone(EstimateItemsScreen);
+        await tester.tap(find.text('Save progress'));
+        await waitForNativeSave(tester, () => find.byType(EstimateItemsScreen).evaluate().isEmpty);
         await tester.tap(find.byKey(const ValueKey('save-estimate-draft')));
         await tester.pumpAndSettle();
         expect(
@@ -151,15 +165,18 @@ void main() {
         store = PrototypeOperationsStore(workSession: work);
         await openEstimate(restoring: true);
         await openItems();
-        await tester.tap(find.text('Continue unfinished item'));
+        await tester.tap(find.text('Valve replacement'));
         await tester.pumpAndSettle();
         expect(
-          tester.widget<TextField>(field('Item name')).controller!.text,
+          tester
+              .widget<TextField>(field(labor ? 'Labor name' : 'Material name'))
+              .controller!
+              .text,
           'Valve replacement',
         );
         expect(
           tester
-              .widget<TextField>(field(labor ? 'Hours' : 'Quantity'))
+              .widget<TextField>(field(labor ? 'Hours per worker' : 'Quantity'))
               .controller!
               .text,
           '2.',
@@ -168,15 +185,17 @@ void main() {
           field(labor ? 'Price per hour' : 'Price per item'),
           '25',
         );
+        await tester.pumpAndSettle();
         await tester.ensureVisible(
-          find.widgetWithText(FilledButton, 'Add line item'),
+          find.widgetWithText(FilledButton, 'Save item'),
         );
-        await tester.tap(find.widgetWithText(FilledButton, 'Add line item'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Save item'));
         await waitForNativeSave(
           tester,
           () => find.byType(WorkLineItemEditor).evaluate().isEmpty,
         );
-        expect(find.text('Continue unfinished item'), findsNothing);
+        expect(find.textContaining('Unfinished'), findsNothing);
         await tester.tap(find.text('Save items'));
         await waitForNativeSave(
           tester,

@@ -17,7 +17,10 @@ extension _SignatureRecovery on _EstimateSignatureScreenState {
       if (work != null) {
         final workflow =
             widget.recoveredWorkflow ??
-            await work.openEstimateSignatureDraft(widget.record.id);
+            await work.openEstimateSignatureDraft(
+              widget.record.id,
+              forBusiness: widget.forBusiness,
+            );
         if (widget.recoveredWorkflow != null) {
           work.validateEstimateSignatureHandoff(workflow, widget.record.id);
         }
@@ -41,6 +44,7 @@ extension _SignatureRecovery on _EstimateSignatureScreenState {
       } else {
         _previewInput = EstimateSignatureInput(
           base: _base,
+          forBusiness: widget.forBusiness,
           baseRevision: 0,
           name: _name.text,
           ink: _ink,

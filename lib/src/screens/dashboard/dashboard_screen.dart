@@ -1,4 +1,11 @@
 import 'dart:math' as math;
+import '../../shared/screen_layout_configuration.dart';
+import '../../shared/screen_layout_edit_controls.dart';
+import '../../shared/screen_widget_board.dart';
+import '../../shell/app_menu_scope.dart';
+import 'admin_widget_catalog.dart';
+import 'admin_business_widgets.dart';
+import '../expenses/reports_screen.dart';
 import '../../data/workday/workday_persistence_session.dart';
 import '../../data/workday/workday_read_models.dart';
 import '../../data/workday/stored_workday_record.dart';
@@ -58,6 +65,7 @@ part 'dashboard_screen_actions.dart';
 part 'dashboard_plan_actions.dart';
 part 'dashboard_manual_entry_actions.dart';
 part 'dashboard_body_layout.dart';
+part 'admin_dashboard_workspace.dart';
 part 'dashboard_command_bar.dart';
 part 'dashboard_attention_actions.dart';
 part 'dashboard_projection_actions.dart';
@@ -153,6 +161,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   setState(() => _selectedDate = dashboardToday),
               attentionItems: attentionItems,
               onOpenAllAttention: () => _openAttentionList(attentionQuery),
+              onOpenAttention: _openAttentionItem,
               onOpenPlan: _openPlan,
               onPlanAction: _handlePlanAction,
               onOpenEntry: _openEntry,

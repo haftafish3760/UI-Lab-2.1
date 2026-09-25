@@ -74,7 +74,7 @@ class _WorkDocumentPreviewScreenState extends State<WorkDocumentPreviewScreen> {
               PopupMenuItem<String>(
                 enabled: false,
                 child: Text(
-                  _record.hasCurrentCustomerSignature
+                  _record.hasCurrentCustomerApproval
                       ? 'Customer approval is current'
                       : 'Customer approval has not been recorded',
                 ),
@@ -105,7 +105,7 @@ class _WorkDocumentPreviewScreenState extends State<WorkDocumentPreviewScreen> {
               ),
             if (_record.kind == WorkRecordKind.estimate &&
                 _record.status == WorkRecordStatus.accepted &&
-                _record.hasCurrentCustomerSignature)
+                _record.hasCurrentCustomerApproval)
               const PopupMenuItem(
                 value: 'job',
                 key: ValueKey('preview-create-job'),

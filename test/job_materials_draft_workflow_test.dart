@@ -37,6 +37,69 @@ const job = WorkRecord(
 );
 void main() {
   test(
+    'billable labor additions require documented approval and persist for invoicing',
+    () async {
+      final harness = await DatabaseHarness.create();
+      addTearDown(harness.dispose);
+      final work = await openUiLabWorkSession(await harness.open());
+      addTearDown(work.dispose);
+      expect(await work.create(job), isTrue);
+      final workflow = await work.openJobMaterialsDraft(
+        job.id,
+        materialPermissions: const JobWorkspacePermissions.development(),
+      );
+      addTearDown(workflow.session.close);
+      WorkLineItem labor(WorkCustomerApproval? approval) => WorkLineItem(
+        id: 'extra-labor',
+        type: WorkLineItemType.labor,
+        name: 'Approved extra installation',
+        quantity: 6,
+        workerCount: 2,
+        unit: 'hour',
+        customerPrice: 25,
+        isJobAddition: true,
+        jobMaterialBillingTreatment:
+            JobMaterialBillingTreatment.invoiceCandidate,
+        changeApproval: approval,
+      );
+      workflow.updateWorkspace(WorkItemsDraftInput(items: [labor(null)]));
+      await expectLater(workflow.confirm(), throwsStateError);
+      expect(labor(null).includedInInvoiceFromJob, isFalse);
+      final approval = WorkCustomerApproval(
+        method: CustomerApprovalMethod.verbal,
+        customerName: 'Customer',
+        recordedByEmployeeId: work.permissions.actorEmployeeId,
+        recordedOn: DateTime(2026, 9, 24),
+        revision: job.revision + 1,
+        note: 'Approved six additional worker-hours for 150 dollars.',
+      );
+      workflow.updateWorkspace(WorkItemsDraftInput(items: [labor(approval)]));
+      final saved = await workflow.confirm();
+      expect(saved, isNotNull, reason: work.failureMessage);
+      expect(saved!.items.first.id, procurement.id);
+      expect(saved.items.last.workerCount, 2);
+      expect(saved.items.last.includedInInvoiceFromJob, isTrue);
+      expect(
+        saved.items
+            .where((item) => item.includedInInvoiceFromJob)
+            .fold<double>(0, (total, item) => total + item.total),
+        180,
+      );
+      final reopened = await openUiLabWorkSession(await harness.open());
+      addTearDown(reopened.dispose);
+      expect(
+        reopened.records
+            .singleWhere((record) => record.id == job.id)
+            .items
+            .last
+            .changeApproval!
+            .method,
+        CustomerApprovalMethod.verbal,
+      );
+    },
+  );
+
+  test(
     'materials recover and retry atomically without converting protected procurement lines',
     () async {
       final harness = await DatabaseHarness.create();

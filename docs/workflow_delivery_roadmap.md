@@ -267,6 +267,51 @@ and independent security review; they do not prove absence of all vulnerabilitie
 
 ## Current progress
 
+### September 23 Admin review and connected follow-up work
+
+Implementation evidence, September 23: Admin composition and page-gear layout
+editing are implemented; calendar remains required. Eighteen focused tests pass
+across `admin_dashboard_redesign_test.dart`, `admin_dashboard_layout_storage_test.dart`
+and `dashboard_owner_presentation_test.dart`, covering responsive/text scaling,
+add/remove/reorder/cancel/restore, policy visibility, SQLite reopen and existing
+presentation behavior. Focused analysis passes. The macOS debug build launched.
+Live visual inspection remains unverified: Computer Use denied app access.
+Full analysis still reports the pre-existing inventory parser test constant
+expression error and unrelated lint notices. Existing old Admin composition
+tests require updating to the superseding design; these results are not a full
+suite or owner acceptance. Layout storage is device-local; production user grants,
+expense approval policy and owner agenda remain the separate follow-ups below.
+
+- [ ] Accept the compact Admin default and page-gear customization on narrow and
+  wide screens. Preserve the calendar, view selector, source-record routes and
+  consistent green Entries/blue planning meaning. Technician changes are excluded.
+- [ ] Add an owner administrative agenda for calls, customer meetings, site
+  visits and bidding, distinct from technician fieldwork. Determine its owning
+  task/appointment model before creating a second schedule.
+- [ ] Complete permission-based per-user layout grants and storage ownership;
+  the current UI Lab layout preference is device-local development presentation.
+- [ ] Connect expense/estimate approval policy controls: all, above an amount,
+  or none, with authorized reviewers and conditional UI. Under-threshold
+  expenses are still recorded; they skip approval, not recordkeeping. Resolve
+  existing pending requests when policy changes without silently approving them.
+  Owning policy requirements: Operations section 10. Initial employee/setup
+  questions follow later; development access must remain available without setup.
+- [ ] Complete employee Timesheets and daily/weekly review, corrections and
+  access enforcement, per Operations section 8. No payroll inference.
+- [ ] Review estimate/invoice required-deposit amount/percentage, due point,
+  contractor-provided terms, customer agreement and remaining balance; keep
+  received payments distinct from expected deposits and avoid double counting.
+- [ ] Design manual sync, Wi-Fi-only/limited-data choices, pending/failure states,
+  conflict handling and recovery under the existing data/storage/sync contract.
+  Saving locally must not depend on connectivity; sync is not backup.
+- [ ] Refresh identified demonstration dates from the preceding weekend through
+  the following week coherently. Do not rewrite real records or use the destructive
+  Work-example reset as a shortcut. Demo-date changes have not been executed here.
+
+Implementation evidence for this slice must distinguish source changes, tests,
+platform build and actual rendered review. The global screen audit is canceled;
+shared-layout checks occur one screen at a time when authorized.
+
 - [x] Capture this conversation and distinguish requirements from proposals.
 - [x] Inspect Start Workday screen, draft controller, SQLite repository and donor
   odometer/color evidence; see the linked review for limits.

@@ -26,6 +26,7 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
     issuedOn: _issuedOn,
     dueOn: _dueOn,
     sourceJobId: _sourceJobId,
+    customerSnapshot: _customerSnapshot,
     location: _location,
     paymentMethod: _paymentMethod,
     pendingLineItem: _itemDraftInput,
@@ -110,6 +111,7 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
     _issuedOn = input.issuedOn;
     _dueOn = input.dueOn;
     _sourceJobId = input.sourceJobId;
+    _customerSnapshot = input.customerSnapshot;
     _location = input.location;
     _paymentMethod = input.paymentMethod;
     _itemDraftInput = input.pendingLineItem;

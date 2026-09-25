@@ -6,6 +6,39 @@ import 'package:ui_lab_2_1/src/shared/documents/pdf/pdf_export_service.dart';
 import 'package:ui_lab_2_1/src/shared/documents/pdf/pdf_export_feedback.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'email composer receives recipient and exact PDF without claiming delivery',
+    () async {
+      const channel = MethodChannel('maintainiac/document_compose');
+      MethodCall? received;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            received = call;
+            return 'unconfirmed';
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null),
+      );
+      final bytes = Uint8List.fromList('%PDF-1.7 test'.codeUnits);
+      final outcome = await const PdfExportService().export(
+        DocumentSource(
+          origin: DocumentOrigin.generated,
+          fileName: 'Estimate',
+          authorize: () async {},
+          readBytes: () async => bytes,
+        ),
+        PdfExportAction.share,
+        recipient: 'customer@example.com',
+        composeMethod: 'email',
+      );
+      expect(received!.arguments['recipient'], 'customer@example.com');
+      expect(received!.arguments['bytes'], bytes);
+      expect(outcome, PdfExportOutcome.unconfirmed);
+    },
+  );
+
   final bytes = Uint8List.fromList('%PDF-1.7\nfixture\n%%EOF'.codeUnits);
   DocumentSource source({
     Future<void> Function()? authorize,

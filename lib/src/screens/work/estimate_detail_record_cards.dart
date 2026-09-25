@@ -8,6 +8,9 @@ class _EstimateStatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final stage = record.resolvedEstimateStage;
     final signature = record.customerSignature;
+    final approval = record.customerApprovals
+        .where((entry) => entry.revision == record.revision)
+        .lastOrNull;
     return SectionCard(
       backgroundColor: stage.needsAttention
           ? Theme.of(
@@ -27,7 +30,18 @@ class _EstimateStatusCard extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           Text(stage.nextStep),
-          if (record.hasCurrentCustomerSignature) ...[
+          if (approval != null) ...[
+            const Divider(height: 22),
+            Text(
+              'Approved by ${approval.customerName}',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            Text('${approval.method.label} · Revision ${approval.revision}'),
+            Text(
+              'Recorded by ${approval.recordedByEmployeeId} on ${approval.recordedOn.toLocal()}',
+            ),
+            if (approval.note.isNotEmpty) Text(approval.note),
+          ] else if (record.hasCurrentCustomerSignature) ...[
             const Divider(height: 22),
             const Text(
               'Customer approval is current',

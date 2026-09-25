@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_demo_data.dart';
-import 'package:ui_lab_2_1/src/screens/work/work_screen.dart';
+import 'package:ui_lab_2_1/src/screens/work/estimate_detail_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
@@ -22,18 +22,19 @@ Future<void> _pumpWork(WidgetTester tester) async {
       store: store,
       child: OperationalScope(
         controller: scope,
-        child: MaterialApp(theme: AppTheme.light, home: const WorkScreen()),
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: EstimateDetailScreen(
+            initialRecord: prototypeDemoWorkRecords().firstWhere(
+              (record) => record.id == 'est-1042',
+            ),
+            onUpdated: (_) {},
+            onCreateJob: (_) {},
+          ),
+        ),
       ),
     ),
   );
-  await tester.pumpAndSettle();
-}
-
-Future<void> _openEstimates(WidgetTester tester) async {
-  final action = find.byKey(const ValueKey('open-estimates'));
-  await tester.ensureVisible(action);
-  await tester.pumpAndSettle();
-  await tester.tap(action);
   await tester.pumpAndSettle();
 }
 
@@ -72,10 +73,6 @@ void main() {
     tester,
   ) async {
     await _pumpWork(tester);
-    await _openEstimates(tester);
-    final record = find.byKey(const ValueKey('estimate-row-est-1042'));
-    await tester.tap(record);
-    await tester.pumpAndSettle();
 
     final editItems = find.byKey(const ValueKey('edit-estimate-items'));
     await tester.dragUntilVisible(
@@ -89,22 +86,20 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('add-estimate-material')));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Item name'),
+      find.widgetWithText(TextField, 'Material name'),
       'Additional washer',
     );
     await tester.enterText(
-      find.widgetWithText(TextField, 'Customer price per unit'),
+      find.widgetWithText(TextField, 'Price per item'),
       '1',
     );
-    await tester.tap(find.text('Add line item'));
+    await tester.tap(find.text('Save item'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('save-estimate-items')));
     await tester.pumpAndSettle();
 
     expect(find.text('Customer approval required again'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('estimate-actions-fab')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('preview-create-job')), findsNothing);
+    expect(find.byKey(const ValueKey('estimate-primary-job')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -112,9 +107,6 @@ void main() {
     tester,
   ) async {
     await _pumpWork(tester);
-    await _openEstimates(tester);
-    await tester.tap(find.byKey(const ValueKey('estimate-row-est-1042')));
-    await tester.pumpAndSettle();
 
     final editItems = find.byKey(const ValueKey('edit-estimate-items'));
     await tester.dragUntilVisible(
@@ -138,10 +130,10 @@ void main() {
     await tester.tap(existing);
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Item name'),
+      find.widgetWithText(TextField, 'Material name'),
       'Customer-selected kitchen faucet',
     );
-    await tester.tap(find.text('Save item changes'));
+    await tester.tap(find.text('Save item'));
     await tester.pumpAndSettle();
     expect(find.text('Customer-selected kitchen faucet'), findsOneWidget);
 

@@ -28,8 +28,10 @@ class PdfImageResolver {
     this.maxBytes = 12 * 1024 * 1024,
     this.maxPixels = 24000000,
     this.maxDimension = 1600,
+    this.allowCommonFormats = false,
   });
   final int maxBytes, maxPixels, maxDimension;
+  final bool allowCommonFormats;
   Future<PdfImageResult> resolve(Future<Uint8List?> Function() read) async {
     try {
       return decode(await read());
@@ -57,10 +59,17 @@ class PdfImageResolver {
           bytes[0] == 255 &&
           bytes[1] == 216 &&
           bytes[2] == 255;
-      if (!png && !jpeg) {
+      if (!png && !jpeg && !allowCommonFormats) {
         return const PdfImageResult(issue: PdfImageIssue.unsupported);
       }
-      final decoder = png ? img.PngDecoder() : img.JpegDecoder();
+      final decoder = allowCommonFormats
+          ? img.findDecoderForData(bytes)
+          : png
+          ? img.PngDecoder()
+          : img.JpegDecoder();
+      if (decoder == null) {
+        return const PdfImageResult(issue: PdfImageIssue.unsupported);
+      }
       final info = decoder.startDecode(bytes);
       if (info == null || info.width <= 0 || info.height <= 0) {
         return const PdfImageResult(issue: PdfImageIssue.corrupt);

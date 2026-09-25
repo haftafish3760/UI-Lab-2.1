@@ -595,6 +595,31 @@ show six records; the three-record statements below remain the compact default.
 
 ## 10. Admin Company Overview Contract
 
+September 23 owner direction supersedes the older Admin lane and header rules
+below. Admin is an owner/company operations workspace, not a technician stop
+plan. Keep a compact charcoal Dashboard header with hamburger/global navigation
+and the page gear. Company/employee scope moves into the main controls below
+the header alongside the retained Admin/Technician selector. Retain the calendar.
+The scope button reads “Viewing: Company Overview” or “Viewing: [employee name]”
+so its label describes the current selection rather than calling company scope
+an employee. Its menu offers Company Overview and individual employee names.
+Use shared local-width and TextScaler geometry with independently flowing
+widget columns; the calendar must not create a blank gap above billing.
+Sections use at most a parent surface plus record-row surfaces in ordinary use.
+Recorded entries are green; plans/schedules are blue across screens.
+
+The page gear exposes Customize dashboard. Editing previews the actual layout,
+with labeled add/remove/reorder controls, restore defaults, Save and Cancel.
+The calendar and context/view controls cannot be removed. Widget selection
+cannot grant record access. Other screens need this pattern in later individual
+screen slices; this does not authorize redesigning Technician now.
+Approvals are conditional on enabled company approval policy and reviewer access,
+not merely on an Admin label or having employees. Setup is a later workflow;
+development review must not require onboarding. Existing UI Lab development
+grants remain a limitation, not production permission verification.
+
+Historical composition (superseded where it conflicts with the direction above):
+
 - Switching to Admin opens Company Overview first; it does not arbitrarily pick
   an employee or imply permission to all company data.
 - Active employees remain a compact horizontal strip at every width. Selecting

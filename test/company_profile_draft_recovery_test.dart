@@ -90,12 +90,29 @@ void main() {
       }
 
       await open();
-      await tester.enterText(field('Company name'), 'Recovered business');
-      await tester.enterText(field('Website'), 'https://');
-      await tester.binding.handlePopRoute();
+      await save();
       await waitForNativeSave(
         tester,
         () => find.byType(CompanyProfileEditScreen).evaluate().isEmpty,
+      );
+      expect(store.companyProfile.companyName, originalName);
+      await open();
+      await tester.enterText(field('Company name'), 'Recovered business');
+      await tester.enterText(field('Website'), 'https://');
+      await tester.enterText(field('Street address'), '42 Trade Road');
+      await tester.enterText(field('Apartment or suite (optional)'), 'Suite 3');
+      await tester.enterText(field('City'), 'Roanoke');
+      await tester.enterText(field('State'), 'VA');
+      await tester.enterText(field('ZIP code'), '24012');
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Save company changes?'), findsOneWidget);
+      await tester.tap(find.text('Keep editing'));
+      await tester.pumpAndSettle();
+      // Simulate interruption rather than deliberately discarding the draft.
+      await waitForNativeSave(
+        tester,
+        () => find.text('Draft saved on this device').evaluate().isNotEmpty,
       );
       expect(store.companyProfile.companyName, originalName);
       await tester.pumpWidget(const SizedBox.shrink());
@@ -103,7 +120,9 @@ void main() {
       directory.dispose();
       await tester.runAsync(() => harness.close(database));
       database = (await tester.runAsync(harness.open))!;
-      directory = (await tester.runAsync(() => openSeededTestDirectory(database)))!;
+      directory = (await tester.runAsync(
+        () => openSeededTestDirectory(database),
+      ))!;
       store = PrototypeOperationsStore(directorySession: directory);
       await tester.runAsync(
         () => database.customStatement("""
@@ -147,6 +166,11 @@ void main() {
       );
       expect(store.companyProfile.companyName, 'Recovered business');
       expect(store.companyProfile.website, 'https://example.test');
+      expect(
+        store.companyProfile.address,
+        '42 Trade Road\nSuite 3\nRoanoke, VA 24012',
+      );
+      expect(store.companyProfile.addressParts['city'], 'Roanoke');
       expect(store.companyProfile.defaultCurrency, 'CAD');
       expect(
         await tester.runAsync(

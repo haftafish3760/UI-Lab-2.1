@@ -12,7 +12,7 @@ extension WorkJobConversion on WorkPersistenceSession {
         source.kind != WorkRecordKind.estimate ||
         source.revision != expectedSourceDocumentRevision ||
         source.resolvedEstimateStage != EstimateStage.approved ||
-        !source.hasCurrentCustomerSignature ||
+        !source.hasCurrentCustomerApproval ||
         _records.containsKey(job.id)) {
       return _reject(
         'The approved estimate changed. Review it before creating a job.',
@@ -48,7 +48,7 @@ extension WorkJobConversion on WorkPersistenceSession {
       if (source == null ||
           source.kind != WorkRecordKind.estimate ||
           source.resolvedEstimateStage != EstimateStage.approved ||
-          !source.hasCurrentCustomerSignature ||
+          !source.hasCurrentCustomerApproval ||
           converted == null ||
           converted.resolvedEstimateStage != EstimateStage.converted ||
           converted.revision != source.revision ||

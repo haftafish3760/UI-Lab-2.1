@@ -25,13 +25,6 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
           icon: Icons.dashboard_customize_outlined,
           onTap: _chooseTemplate,
         ),
-        DocumentFormSection(
-          key: const ValueKey('estimate-live-pdf-preview'),
-          title: 'Preview customer PDF',
-          summary: 'Full-screen preview using the current form and template',
-          icon: Icons.picture_as_pdf_outlined,
-          onTap: _previewPdf,
-        ),
         _section(
           'estimate-dates',
           'Proposed schedule and dates',
@@ -122,7 +115,7 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
               ? 'Add terms'
               : 'Terms added - Tap to review',
           Icons.rule_outlined,
-          () => DocumentTermsField(controller: _terms),
+          () => EstimateTermsEditor(controller: _terms),
         ),
         _EstimateSitePhotosSection(
           photoCount: _sitePhotos.length,
@@ -144,10 +137,24 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
     title: _title,
     purchaseOrder: _purchaseOrder,
     scope: _scope,
-    customers: PrototypeOperationsScope.of(context).customers,
-    selectedClient: _client,
+    customers: [
+      ...PrototypeOperationsScope.of(context).customers,
+      if (_customerSnapshot != null &&
+          !PrototypeOperationsScope.of(
+            context,
+          ).customers.any((customer) => customer.id == _customerSnapshot!.id))
+        _customerSnapshot!,
+    ],
+    selectedClient: _customerSnapshot?.id ?? _client,
     pricing: _pricing,
-    onClientChanged: (value) => _changeEstimateInput(() => _client = value),
+    onClientChanged: (value) => _changeEstimateInput(() {
+      final customer = [
+        ...PrototypeOperationsScope.of(context).customers,
+        ?_customerSnapshot,
+      ].where((customer) => customer.id == value).firstOrNull;
+      _client = customer?.name ?? value;
+      _customerSnapshot = customer;
+    }),
     onAddClient: _addClient,
     onPricingChanged: (value) => _changeEstimateInput(() => _pricing = value),
   );

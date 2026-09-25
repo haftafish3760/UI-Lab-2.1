@@ -4,6 +4,7 @@ import '../data/storage/app_preferences_repository.dart';
 import '../data/storage/app_preference_keys.dart';
 import '../data/storage/serialized_async_actions.dart';
 import 'package:flutter/material.dart';
+import 'screen_layout_configuration.dart';
 
 enum AppLanguage {
   english(Locale('en', 'US')),
@@ -162,11 +163,33 @@ class AppPreferencesController extends ChangeNotifier {
           .toString(),
   }, draftCheckpoint: draftCheckpoint);
   Set<String>? _dashboardActions;
+  List<String> _adminDashboardWidgets = List.of(
+    AdminDashboardLayoutConfiguration.defaults,
+  );
+  List<String> get adminDashboardWidgets =>
+      List.unmodifiable(_adminDashboardWidgets);
+  Future<bool> setAdminDashboardWidgets(List<String> widgets) {
+    if (!AdminDashboardLayoutConfiguration.isValid(widgets)) {
+      throw ArgumentError('Invalid dashboard layout.');
+    }
+    return _save(
+      AdminDashboardLayoutConfiguration.preferenceKey,
+      jsonEncode(widgets),
+    );
+  }
+
   Set<String>? get dashboardActions =>
       _dashboardActions == null ? null : Set.unmodifiable(_dashboardActions!);
   Future<bool> setDashboardActions(Set<String> actions) =>
       _save('dashboardActions', jsonEncode(actions.toList()..sort()));
   void _apply(Map<String, String> values) {
+    if (values[AdminDashboardLayoutConfiguration.preferenceKey]
+        case final String value) {
+      final decoded = jsonDecode(value);
+      if (AdminDashboardLayoutConfiguration.isValid(decoded)) {
+        _adminDashboardWidgets = (decoded as List).cast<String>();
+      }
+    }
     if (values['receiptDetailPreference'] case final String value) {
       _receiptDetailPreference = ReceiptDetailPreference.values.byName(value);
     }

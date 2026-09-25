@@ -1,3 +1,4 @@
+import '../../shared/us_phone_input_formatter.dart';
 import '../../data/work/directory_draft_handoff.dart';
 import '../../data/work/customer_confirmation.dart';
 import '../../data/work/customer_draft_workflow.dart';
@@ -23,11 +24,13 @@ class CustomerEditScreen extends StatefulWidget {
   const CustomerEditScreen({
     required this.selectedDay,
     this.initialCustomer,
+    this.offerEstimateOnly = false,
     this.recoveredWorkflow,
     super.key,
   });
 
   final DateTime selectedDay;
+  final bool offerEstimateOnly;
   final WorkCustomerProfile? initialCustomer;
   final CustomerDraftController? recoveredWorkflow;
 
@@ -216,6 +219,8 @@ class _CustomerEditScreenState extends State<CustomerEditScreen>
                                   label: Text(
                                     editing
                                         ? 'Save client changes'
+                                        : widget.offerEstimateOnly
+                                        ? 'Use customer'
                                         : 'Save client',
                                   ),
                                 ),
@@ -291,10 +296,15 @@ class _IdentityForm extends StatelessWidget {
         _AdaptiveFieldPair(
           first: TextField(
             controller: phone,
+            keyboardType: TextInputType.phone,
+            autofillHints: const [AutofillHints.telephoneNumberNational],
+            inputFormatters: const [UsPhoneInputFormatter()],
             decoration: const InputDecoration(labelText: 'Phone'),
           ),
           second: TextField(
             controller: email,
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
             decoration: const InputDecoration(labelText: 'Email'),
           ),
         ),

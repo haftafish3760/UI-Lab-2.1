@@ -121,6 +121,20 @@ abstract final class AppLayoutEngine {
     return availableWidth < minimumFieldWidth * 2 + fieldGap + scaleAllowance;
   }
 
+  /// Quantity/unit pairs have shorter values than ordinary text fields.
+  static bool stackCompactFieldsFor(
+    double width, {
+    TextScaler textScaler = TextScaler.noScaling,
+  }) => width < 280 + _layoutScalePenalty(textScaler) * 180;
+
+  static int templateColumnsFor(
+    double width, {
+    TextScaler textScaler = TextScaler.noScaling,
+  }) {
+    final minimum = 280 + _layoutScalePenalty(textScaler) * 140;
+    return ((width - 12) / (minimum + 12)).floor().clamp(1, 4);
+  }
+
   /// Bounded width for one cohesive data-entry form.
   ///
   /// Forms may use two internal field columns, but never stretch into a wide

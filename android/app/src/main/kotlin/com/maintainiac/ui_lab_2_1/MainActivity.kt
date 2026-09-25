@@ -7,6 +7,7 @@ class MainActivity : FlutterActivity() {
     private var receiptCameraBridge: ReceiptCameraBridge? = null
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        DocumentComposeBridge(this).register(flutterEngine.dartExecutor.binaryMessenger)
         DeviceWorkloadBridge(this).register(flutterEngine.dartExecutor.binaryMessenger)
         ReceiptRegionBridge(applicationContext).register(flutterEngine.dartExecutor.binaryMessenger)
         receiptCameraBridge = ReceiptCameraBridge(this).also {

@@ -13,12 +13,20 @@ void main() {
     () {
       final raw = legacyItemsWorkspace();
       final input = WorkItemsDraftInput.fromPayload(raw);
-      expect(input.toPayload(), raw);
+      expect(input.pendingItems, hasLength(1));
+      expect(input.pendingItem!.lineId, 'pending-line');
+      expect(
+        WorkItemsDraftInput.fromPayload(
+          input.toPayload(),
+        ).pendingItem!.quantity,
+        '1.',
+      );
       (raw['pendingItem'] as Map)['quantity'] = 'Changed elsewhere';
       expect(input.pendingItem!.quantity, '1.');
       expect(() => input.items.clear(), throwsUnsupportedError);
       final output = input.toPayload();
-      (output['pendingItem'] as Map)['name'] = 'Changed output';
+      ((output['pendingItems'] as List).single as Map)['name'] =
+          'Changed output';
       expect(input.pendingItem!.name, 'Unfinished item');
     },
   );

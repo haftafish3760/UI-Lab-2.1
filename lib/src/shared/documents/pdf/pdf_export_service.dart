@@ -1,5 +1,5 @@
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/widgets.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 import '../document_source.dart';
@@ -20,6 +20,8 @@ class PdfExportService {
     Rect shareOrigin = const Rect.fromLTWH(0, 0, 1, 1),
     String? subject,
     String? text,
+    String? recipient,
+    String? composeMethod,
   }) async {
     final bytes = await source.open();
     if (bytes.length < 5 || String.fromCharCodes(bytes.take(5)) != '%PDF-') {
@@ -49,6 +51,34 @@ class PdfExportService {
             ? PdfExportOutcome.completed
             : PdfExportOutcome.cancelled;
       case PdfExportAction.share:
+        if (composeMethod != null &&
+            recipient != null &&
+            recipient.trim().isNotEmpty) {
+          try {
+            final result =
+                await const MethodChannel(
+                  'maintainiac/document_compose',
+                ).invokeMethod<String>('compose', {
+                  'bytes': bytes,
+                  'recipient': recipient.trim(),
+                  'method': composeMethod,
+                  'name': name,
+                  'subject': subject,
+                  'text': text,
+                });
+            return result == 'cancelled'
+                ? PdfExportOutcome.cancelled
+                : PdfExportOutcome.unconfirmed;
+          } on MissingPluginException {
+            throw StateError(
+              'Recipient-aware composition is unavailable on this device. Choose Share PDF to use an installed app.',
+            );
+          } on PlatformException catch (error) {
+            throw StateError(
+              error.message ?? 'The composer could not open. Try Share PDF.',
+            );
+          }
+        }
         final result = await (shareFile ?? SharePlus.instance.share)(
           ShareParams(
             subject: subject,

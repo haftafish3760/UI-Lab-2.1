@@ -1,3 +1,6 @@
+import 'work_contact_models.dart';
+import 'work_customer_approval.dart';
+export 'work_customer_approval.dart';
 import 'signature_ink.dart';
 export 'signature_ink.dart';
 import 'estimate_models.dart';
@@ -71,6 +74,7 @@ class WorkRecord {
     this.purchaseOrderNumber = '',
     required this.title,
     required this.client,
+    this.customerSnapshot,
     required this.detail,
     required this.pricing,
     this.sourceId,
@@ -96,6 +100,8 @@ class WorkRecord {
     this.total = 0,
     this.revision = 1,
     this.customerSignature,
+    this.businessSignature,
+    this.customerApprovals = const [],
     this.estimateStage,
     this.estimateDates,
     this.estimateDeliveries = const [],
@@ -114,6 +120,7 @@ class WorkRecord {
   final String purchaseOrderNumber;
   final String title;
   final String client;
+  final WorkCustomerProfile? customerSnapshot;
   final String detail;
   final WorkPricingModel pricing;
   final String? sourceId;
@@ -139,6 +146,12 @@ class WorkRecord {
   final double total;
   final int revision;
   final WorkCustomerSignature? customerSignature;
+  final WorkCustomerSignature? businessSignature;
+  final List<WorkCustomerApproval> customerApprovals;
+
+  bool get hasCurrentCustomerApproval =>
+      hasCurrentCustomerSignature ||
+      customerApprovals.any((approval) => approval.revision == revision);
   final EstimateStage? estimateStage;
   final EstimateDates? estimateDates;
   final List<EstimateDeliveryRecord> estimateDeliveries;
@@ -223,6 +236,8 @@ class WorkRecord {
     String? estimateCompanyReviewNote,
     List<EstimateCompanyReviewEvent>? estimateCompanyReviewHistory,
     List<String>? linkedExpenseIds,
+    List<WorkCustomerApproval>? customerApprovals,
+    WorkCustomerSignature? businessSignature,
   }) => WorkRecord(
     id: id,
     kind: kind,
@@ -230,6 +245,7 @@ class WorkRecord {
     purchaseOrderNumber: purchaseOrderNumber,
     title: title,
     client: client,
+    customerSnapshot: customerSnapshot,
     detail: detail,
     pricing: pricing,
     sourceId: sourceId,
@@ -259,6 +275,10 @@ class WorkRecord {
     total: total,
     revision: revision,
     customerSignature: customerSignature,
+    businessSignature: businessSignature ?? this.businessSignature,
+    customerApprovals: List.unmodifiable(
+      customerApprovals ?? this.customerApprovals,
+    ),
     estimateStage: estimateStage,
     estimateDates: estimateDates,
     estimateDeliveries: estimateDeliveries,
@@ -370,11 +390,15 @@ class WorkRecord {
       deliveries: [
         ...estimateDeliveries,
         EstimateDeliveryRecord(
-          method: onlineEvidence == null ? EstimateDeliveryMethod.inPerson : EstimateDeliveryMethod.deviceShare,
+          method: onlineEvidence == null
+              ? EstimateDeliveryMethod.inPerson
+              : EstimateDeliveryMethod.deviceShare,
           recipient: signedBy,
           occurredOn: signedOn,
           revision: revision,
-          description: onlineEvidence ?? 'Customer approved revision $revision in person.',
+          description:
+              onlineEvidence ??
+              'Customer approved revision $revision in person.',
         ),
       ],
     );
@@ -394,6 +418,7 @@ class WorkRecord {
     purchaseOrderNumber: purchaseOrderNumber,
     title: title,
     client: client,
+    customerSnapshot: customerSnapshot,
     detail: detail,
     pricing: pricing,
     sourceId: sourceId,
@@ -419,6 +444,8 @@ class WorkRecord {
     total: total,
     revision: revision,
     customerSignature: signature ?? customerSignature,
+    businessSignature: businessSignature,
+    customerApprovals: customerApprovals,
     estimateStage: stage,
     estimateDates: dates,
     estimateDeliveries: List.unmodifiable(deliveries ?? estimateDeliveries),
