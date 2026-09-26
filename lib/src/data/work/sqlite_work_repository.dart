@@ -10,6 +10,7 @@ import '../storage/local_record_command.dart';
 import '../storage/local_record_store.dart';
 import 'work_record_codec.dart';
 import 'work_financial_codec.dart';
+import 'work_document_numbering.dart';
 
 class PersistedWorkRecord {
   const PersistedWorkRecord({
@@ -151,6 +152,9 @@ class SqliteWorkRepository {
           );
         }
       }
+      final numberClaims = await WorkDocumentNumbering(
+        this,
+      ).claimsFor(organizationId: organizationId, mutations: mutations);
       if (draftCheckpoint != null &&
           !await LocalDraftStore(database).consumeIfUnchanged(
             organizationId: organizationId,
@@ -173,6 +177,7 @@ class SqliteWorkRepository {
         commandId: commandId,
         occurredAt: occurredAt,
         writes: [
+          ...numberClaims,
           ...mutations.map(
             (mutation) => LocalRecordWrite(
               domain: 'work/records',

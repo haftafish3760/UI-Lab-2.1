@@ -154,9 +154,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
         existing?.createdByEmployeeId ??
         widget.createdByEmployeeId ??
         demoEmployees.first.id;
-    _number =
-        existing?.number ??
-        'Estimate ${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+    _number = existing?.number ?? 'Estimate 1';
     _title = TextEditingController(text: existing?.title ?? '');
     _scope = TextEditingController(text: existing?.detail ?? '');
     _discount = TextEditingController(

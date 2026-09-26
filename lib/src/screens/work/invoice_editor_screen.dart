@@ -150,9 +150,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
     _creatorId =
         existing?.createdByEmployeeId ?? widget.createdByEmployeeId ?? 'alex';
     _createdOn = existing?.createdOn ?? DateUtils.dateOnly(DateTime.now());
-    _number =
-        existing?.number ??
-        'Invoice ${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+    _number = existing?.number ?? 'Invoice 1';
     _title = TextEditingController(
       text: existing?.title ?? source?.title ?? '',
     );

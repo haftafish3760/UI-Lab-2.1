@@ -22,6 +22,7 @@ import 'work_session_permissions.dart';
 import 'work_status_history.dart';
 import 'work_draft_repository.dart';
 import 'work_assignment_validation.dart';
+import 'work_document_numbering.dart';
 
 part 'work_job_conversion.dart';
 part 'work_customer_approval_validation.dart';
@@ -73,6 +74,17 @@ class WorkPersistenceSession extends ChangeNotifier {
   bool get isSaving => _pendingWrites > 0;
   String? get failureMessage => _failureMessage;
   int storageRevisionFor(String recordId) => _versions[recordId] ?? 0;
+
+  Future<String> nextDocumentNumber(WorkRecordKind kind) async {
+    requireActiveDraftOwner();
+    if (!permissions.editableKinds.contains(kind) ||
+        kind == WorkRecordKind.job) {
+      throw StateError('Document numbering is unavailable.');
+    }
+    return WorkDocumentNumbering(
+      repository,
+    ).previewNext(organizationId: permissions.organizationId, kind: kind);
+  }
 
   DraftRecoveryQuery recoveryFor(WorkRecordKind kind) {
     if (_disposed || !permissions.editableKinds.contains(kind)) {

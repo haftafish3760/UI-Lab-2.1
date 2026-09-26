@@ -31,6 +31,8 @@ class _EstimateSitePhotosSection extends StatelessWidget {
 class _EstimateIdentitySection extends StatelessWidget {
   const _EstimateIdentitySection({
     required this.number,
+    required this.canEditNumber,
+    required this.onNumberChanged,
     this.customerOnly = false,
     required this.title,
     required this.purchaseOrder,
@@ -42,6 +44,8 @@ class _EstimateIdentitySection extends StatelessWidget {
   });
 
   final String number;
+  final bool canEditNumber;
+  final ValueChanged<String> onNumberChanged;
   final bool customerOnly;
   final TextEditingController title;
   final TextEditingController purchaseOrder;
@@ -113,9 +117,15 @@ class _EstimateIdentitySection extends StatelessWidget {
                 context,
                 'Document number',
                 TextFormField(
+                  key: const ValueKey('estimate-document-number'),
                   initialValue: number,
-                  readOnly: true,
-                  decoration: _lineDecoration(),
+                  readOnly: !canEditNumber,
+                  onChanged: canEditNumber ? onNumberChanged : null,
+                  decoration: _lineDecoration().copyWith(
+                    helperText: canEditNumber
+                        ? 'You can choose a different number before saving.'
+                        : null,
+                  ),
                 ),
               );
               final purchaseOrderField = _labeledField(

@@ -57,6 +57,9 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
       return;
     }
     try {
+      if (widget.initialRecord == null && widget.recoveredWorkflow == null) {
+        _number = await work.nextDocumentNumber(WorkRecordKind.invoice);
+      }
       _baseStorageRevision = work.storageRevisionFor(_recordId);
       _entryInput = canonicalJson(_draftInput().toPayload());
       final workflow =

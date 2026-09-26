@@ -142,6 +142,8 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
   Widget _identity({required bool customerOnly}) => _EstimateIdentitySection(
     customerOnly: customerOnly,
     number: _number,
+    canEditNumber: widget.initialRecord == null,
+    onNumberChanged: (value) => _changeEstimateInput(() => _number = value),
     title: _title,
     purchaseOrder: _purchaseOrder,
     scope: _scope,

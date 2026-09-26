@@ -172,6 +172,21 @@ Primary regions:
 - Estimate information: title, app-generated or user-entered number, PO/reference,
   created date, proposed service date or window, validity, pricing method,
   currency, tax treatment, and status. A proposed date is not a scheduled job.
+
+The app's stable record ID is separate from the customer-facing document number.
+New estimates suggest the next company-wide estimate number and new invoices
+suggest the next company-wide invoice number; the two counts are independent.
+The business may enter its existing starting number or another custom number
+before the first save. A chosen numeric ending advances the next suggestion
+by one (for example, 777 then 778), while a one-off custom number does not
+silently renumber already saved documents. Saving checks for duplicates across
+the whole company, including records created by other employees, in the same
+transaction as the document. Deleted or superseded numbers remain reserved so
+they cannot later identify a different customer's document. A provisional
+number shown on two unsaved forms is not a reservation; the second save must
+reject a collision and let its author choose an available number. Existing
+saved document numbers are not silently rewritten. The source estimate number
+remains a link on a converted job/invoice; the invoice uses its own number.
 - Company and customer: sender snapshot, customer, service location, contacts.
 - Scope: description, inclusions, exclusions, assumptions, notes, and attachments.
 - Job-site photos: camera, photo library, or file; optional plain-language note,
@@ -218,6 +233,15 @@ conversion together, checks the captured source revision/current signature, and
 rejects competing conversions. The editor stays open if confirmation fails; raw
 job main-form and nested item input now autosave separately, retain on Back,
 and are consumed only with successful confirmation.
+
+New Job presents a prominent direct-job action before the optional estimate
+chooser. Choosing an estimate opens that exact document for approval review;
+it does not skip straight to conversion. Estimate choices use the same compact,
+fully tappable bordered rows as the other Work lists, with number, work title,
+customer and approval state visible. They grow when text is enlarged instead
+of reserving large empty card space. A new direct job has resumable unfinished
+input even when no estimate or quote exists; it does not require filling out
+a proposal first.
 
 September 14 repair checkpoint: Work exposed Employees and a separate Drafts
 route. A later in-progress repair replaces the Work entry with Employee status;

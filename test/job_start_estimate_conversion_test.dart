@@ -11,10 +11,62 @@ import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
 
 void main() {
+  testWidgets('job starting choices remain readable at large text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final day = DateTime(2026, 9, 24);
+    final store = PrototypeOperationsStore(
+      workRecords: [
+        WorkRecord(
+          id: 'compact-estimate',
+          kind: WorkRecordKind.estimate,
+          number: 'Estimate 2003',
+          title: 'Bathroom fan installation',
+          client: 'Morgan Reed',
+          detail: 'Install fan',
+          pricing: WorkPricingModel.flatRate,
+          createdOn: day,
+        ),
+      ],
+    );
+    final scope = OperationalScopeController(view: AppViewMode.admin);
+    addTearDown(store.dispose);
+    addTearDown(scope.dispose);
+    await tester.pumpWidget(
+      PrototypeOperationsScope(
+        store: store,
+        child: OperationalScope(
+          controller: scope,
+          child: MaterialApp(
+            theme: AppTheme.dark,
+            home: MediaQuery(
+              data: const MediaQueryData(
+                size: Size(320, 700),
+                textScaler: TextScaler.linear(1.7),
+              ),
+              child: JobStartScreen(initialDay: day),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Create job without an estimate'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('job-start-estimate-compact-estimate')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'new job entry uses the chosen approved estimate for scheduling',
     (tester) async {
-      tester.view.physicalSize = const Size(1400, 1200);
+      tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -58,7 +110,11 @@ void main() {
         'approved repair',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Open estimate'));
+      final choice = find.byKey(
+        const ValueKey('job-start-estimate-route-estimate'),
+      );
+      expect(tester.getSize(choice).height, lessThan(110));
+      await tester.tap(choice);
       await tester.pumpAndSettle();
       expect(find.byType(EstimateDetailScreen), findsOneWidget);
       final action = find.byKey(const ValueKey('estimate-primary-job'));

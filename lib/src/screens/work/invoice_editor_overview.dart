@@ -134,6 +134,8 @@ extension _InvoiceEditorOverview on _InvoiceEditorScreenState {
   Widget _identity({required bool customerOnly}) => _InvoiceIdentitySection(
     customerOnly: customerOnly,
     number: _number,
+    canEditNumber: widget.initialRecord == null,
+    onNumberChanged: (value) => _updateInput(() => _number = value),
     title: _title,
     purchaseOrder: _purchaseOrder,
     summary: _summary,

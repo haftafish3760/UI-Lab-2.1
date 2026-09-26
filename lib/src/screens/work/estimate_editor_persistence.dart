@@ -74,6 +74,9 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
       return;
     }
     try {
+      if (widget.initialRecord == null && widget.recoveredWorkflow == null) {
+        _number = await work.nextDocumentNumber(WorkRecordKind.estimate);
+      }
       if (widget.initialRecord != null) {
         _applyCurrentEstimate(work.editableEstimate(_estimateId));
       }

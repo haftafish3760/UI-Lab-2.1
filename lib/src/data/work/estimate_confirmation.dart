@@ -13,6 +13,9 @@ WorkRecord buildConfirmedEstimate(
   EstimateDraftInput input, {
   required DateTime now,
 }) {
+  if (input.number.trim().isEmpty) {
+    throw const EstimateInputValidation('Enter an estimate number.');
+  }
   if (input.pendingLineItems.isNotEmpty) {
     throw const EstimateInputValidation(
       'Review and save the unfinished estimate items first.',
@@ -95,7 +98,7 @@ WorkRecord buildConfirmedEstimate(
   return WorkRecord(
     id: input.estimateId,
     kind: WorkRecordKind.estimate,
-    number: input.number,
+    number: input.number.trim(),
     purchaseOrderNumber: input.purchaseOrderNumber.trim(),
     title: title,
     client: client,

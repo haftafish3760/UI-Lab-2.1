@@ -54,6 +54,8 @@ class _InvoiceSourceSection extends StatelessWidget {
 class _InvoiceIdentitySection extends StatelessWidget {
   const _InvoiceIdentitySection({
     required this.number,
+    required this.canEditNumber,
+    required this.onNumberChanged,
     this.customerOnly = false,
     required this.title,
     required this.purchaseOrder,
@@ -70,6 +72,8 @@ class _InvoiceIdentitySection extends StatelessWidget {
   });
 
   final String number;
+  final bool canEditNumber;
+  final ValueChanged<String> onNumberChanged;
   final bool customerOnly;
   final TextEditingController title;
   final TextEditingController purchaseOrder;
@@ -163,9 +167,16 @@ class _InvoiceIdentitySection extends StatelessWidget {
         ],
         if (!customerOnly) ...[
           TextFormField(
+            key: const ValueKey('invoice-document-number'),
             initialValue: number,
-            readOnly: true,
-            decoration: const InputDecoration(labelText: 'Document number'),
+            readOnly: !canEditNumber,
+            onChanged: canEditNumber ? onNumberChanged : null,
+            decoration: InputDecoration(
+              labelText: 'Document number',
+              helperText: canEditNumber
+                  ? 'You can choose a different number before saving.'
+                  : null,
+            ),
           ),
           const SizedBox(height: 10),
           TextField(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/prototype_operations_store.dart';
 import '../../layout/app_layout_engine.dart';
-import '../../shared/section_card.dart';
 import 'estimate_models.dart';
 import 'work_job_editor.dart';
 import 'work_models.dart';
@@ -57,79 +56,127 @@ class _JobStartScreenState extends State<JobStartScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('New job')),
       body: LayoutBuilder(
-        builder: (context, constraints) => ListView(
-          padding: AppLayoutEngine.pageInsetsFor(
-            constraints.maxWidth,
-          ).copyWith(top: 16, bottom: 24),
-          children: [
-            if (!canCreate)
-              const Text('Your access does not allow creating jobs.')
-            else ...[
-              Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton.icon(
-                  key: const ValueKey('job-without-estimate'),
-                  onPressed: _withoutEstimate,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Create without an estimate'),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Start from an estimate',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Choose an estimate to review its approval and create the job. '
-                'Its customer, items and prices carry over.',
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                key: const ValueKey('job-estimate-search'),
-                decoration: const InputDecoration(
-                  labelText: 'Find an estimate',
-                  hintText: 'Customer, title or estimate number',
-                  prefixIcon: Icon(Icons.search),
-                ),
-                onChanged: (value) => setState(() => _query = value),
-              ),
-              const SizedBox(height: 12),
-              if (estimates.isEmpty)
-                Text(
-                  _query.trim().isEmpty
-                      ? 'No estimates are available to turn into jobs yet.'
-                      : 'No estimates match your search.',
-                ),
-              for (final record in estimates)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: SectionCard(
+        builder: (context, constraints) => Center(
+          child: SizedBox(
+            width: AppLayoutEngine.formWorkspaceWidthFor(
+              constraints.maxWidth -
+                  AppLayoutEngine.pageInsetsFor(
+                    constraints.maxWidth,
+                  ).horizontal,
+            ),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 24),
+              children: [
+                if (!canCreate)
+                  const Text('Your access does not allow creating jobs.')
+                else ...[
+                  FilledButton.icon(
+                    key: const ValueKey('job-without-estimate'),
+                    onPressed: _withoutEstimate,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create job without an estimate'),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Start from an estimate',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Choose an estimate to review its approval and create the job. '
+                    'Its customer, items and prices carry over.',
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const ValueKey('job-estimate-search'),
+                    decoration: const InputDecoration(
+                      labelText: 'Find an estimate',
+                      hintText: 'Customer, title or estimate number',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (value) => setState(() => _query = value),
+                  ),
+                  const SizedBox(height: 12),
+                  if (estimates.isEmpty)
+                    Text(
+                      _query.trim().isEmpty
+                          ? 'No estimates are available to turn into jobs yet.'
+                          : 'No estimates match your search.',
+                    ),
+                  for (final record in estimates)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _EstimateChoiceRow(
+                        record: record,
+                        onOpen: () => _openEstimate(record),
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EstimateChoiceRow extends StatelessWidget {
+  const _EstimateChoiceRow({required this.record, required this.onOpen});
+
+  final WorkRecord record;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final approval = record.hasCurrentCustomerApproval
+        ? 'Customer approval recorded'
+        : 'Review customer approval';
+    return Semantics(
+      button: true,
+      label:
+          'Open estimate ${record.number}, ${record.title}, '
+          '${record.client}, $approval',
+      child: Material(
+        color: colors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(7),
+          side: BorderSide(color: colors.outline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: ValueKey('job-start-estimate-${record.id}'),
+          onTap: onOpen,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 60),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+              child: Row(
+                children: [
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           '${record.number} · ${record.title}',
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         Text(record.client),
                         Text(
-                          record.hasCurrentCustomerApproval
-                              ? 'Customer approval recorded'
-                              : 'Review customer approval before creating a job',
-                        ),
-                        const SizedBox(height: 8),
-                        TextButton.icon(
-                          onPressed: () => _openEstimate(record),
-                          icon: const Icon(Icons.description_outlined),
-                          label: const Text('Open estimate'),
+                          approval,
+                          style: TextStyle(color: colors.onSurfaceVariant),
                         ),
                       ],
                     ),
                   ),
-                ),
-            ],
-          ],
+                  const SizedBox(width: 8),
+                  const Icon(Icons.chevron_right_rounded),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

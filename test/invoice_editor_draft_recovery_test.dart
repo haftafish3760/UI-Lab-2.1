@@ -103,7 +103,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Save draft'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Save draft'),
+        ),
+      );
       await waitForNativeSave(
         tester,
         () => find

@@ -13,6 +13,9 @@ WorkRecord buildConfirmedInvoice(
   WorkRecord? existing,
   bool previewIncomplete = false,
 }) {
+  if (input.number.trim().isEmpty) {
+    throw const InvoiceInputValidation('Enter an invoice number.');
+  }
   if (input.pendingLineItem != null) {
     throw const InvoiceInputValidation(
       'Review and save the unfinished invoice items first.',
@@ -49,7 +52,7 @@ WorkRecord buildConfirmedInvoice(
   return WorkRecord(
     id: input.recordId,
     kind: WorkRecordKind.invoice,
-    number: input.number,
+    number: input.number.trim(),
     purchaseOrderNumber: input.purchaseOrderNumber.trim(),
     title: input.title.trim(),
     client: input.client ?? 'Client not selected',
