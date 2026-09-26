@@ -749,6 +749,14 @@ price/markup, invoice, or job completion.
 Status: required future workflow; this documentation does not establish that
 employee time tracking or weekly review is implemented or verified.
 
+Current in-progress UI Lab slice: an authorized employee can open a read-only
+list of their saved workday records from the main menu; authorized managers can
+open an employee's same list from Work > Employee status. This is a session
+list, not the required weekly reconciliation, correction-request, or approval
+workflow. The current workday writer still requires a manager grant, so an
+ordinary employee cannot yet start their own workday. Do not present this
+slice as completion of employee timesheets.
+
 - Begin Workday on the technician dashboard must start a durable time record
   associated with that employee's stable profile identity. End Workday records
   its end. Records remain available across app restarts and offline use; they

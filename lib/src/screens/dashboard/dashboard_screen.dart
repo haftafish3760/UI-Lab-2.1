@@ -32,6 +32,7 @@ import 'dashboard_attention_screen.dart';
 import 'dashboard_backdrop.dart';
 import 'dashboard_calendar.dart';
 import 'dashboard_date_heading.dart';
+import 'dashboard_employee_status_summary.dart';
 import 'dashboard_day_screen.dart';
 import 'dashboard_models.dart';
 import 'dashboard_record_navigation.dart';

@@ -1,5 +1,5 @@
 import 'job_start_screen.dart';
-import '../../shell/employee_directory_screen.dart';
+import 'employee_status_screen.dart';
 import '../../theme/operational_card_palette.dart';
 import '../../shared/operational_section_heading.dart';
 import '../../shared/recorded_entries_section.dart';
@@ -174,12 +174,11 @@ class _WorkScreenState extends State<WorkScreen> {
                             final employees = OutlinedButton.icon(
                               onPressed: () => Navigator.of(context).push<void>(
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      const EmployeeDirectoryScreen(),
+                                  builder: (_) => const EmployeeStatusScreen(),
                                 ),
                               ),
                               icon: const Icon(Icons.people_outline),
-                              label: const Text('Employees'),
+                              label: const Text('Employee status'),
                             );
                             return LayoutBuilder(
                               builder: (context, constraints) {

@@ -14,11 +14,13 @@ class JobAssignmentEditorSheet extends StatefulWidget {
   const JobAssignmentEditorSheet({
     required this.record,
     this.work,
+    this.initialEmployeeId,
     this.recoveredWorkflow,
     super.key,
   });
   final WorkRecord record;
   final WorkPersistenceSession? work;
+  final String? initialEmployeeId;
   final JobAssignmentDraftController? recoveredWorkflow;
   @override
   State<JobAssignmentEditorSheet> createState() =>
@@ -70,6 +72,17 @@ class _JobAssignmentEditorSheetState extends State<JobAssignmentEditorSheet>
         _employeeIds = workflow.input.employeeIds.toSet();
         _vehicle = workflow.input.vehicle;
         final draft = workflow.session;
+        if (draft.savedRevision == 0 && widget.initialEmployeeId != null) {
+          _employeeIds.add(widget.initialEmployeeId!);
+          _assignee =
+              (PrototypeOperationsScope.of(
+                        context,
+                      ).directorySession?.employees ??
+                      [])
+                  .where((employee) => _employeeIds.contains(employee.id))
+                  .map((employee) => employee.name)
+                  .join(', ');
+        }
         _subscription = draft.changes.listen((_) {
           if (mounted) setState(() {});
         });
@@ -77,6 +90,17 @@ class _JobAssignmentEditorSheetState extends State<JobAssignmentEditorSheet>
         _assignee = _base.assignee ?? 'Unassigned';
         _employeeIds = _base.assignedEmployeeIds.toSet();
         _vehicle = _base.vehicle ?? 'No vehicle assigned';
+        if (widget.initialEmployeeId != null) {
+          _employeeIds.add(widget.initialEmployeeId!);
+          _assignee =
+              (PrototypeOperationsScope.of(
+                        context,
+                      ).directorySession?.employees ??
+                      [])
+                  .where((employee) => _employeeIds.contains(employee.id))
+                  .map((employee) => employee.name)
+                  .join(', ');
+        }
       }
       if (!mounted) return;
       setState(() => _ready = true);

@@ -1,5 +1,6 @@
 import '../../data/prototype_operations_store.dart';
 import '../../data/work/directory_persistence_session.dart';
+import '../../data/work/employee_work_status.dart';
 import 'package:flutter/material.dart';
 
 import '../../layout/app_layout_engine.dart';
@@ -151,14 +152,26 @@ class WorkScopeHeader extends StatelessWidget {
 }
 
 List<EmployeeStatus> workEmployeeOptions(BuildContext context) {
-  final directory = PrototypeOperationsScope.maybeOf(context)?.directorySession;
+  final store = PrototypeOperationsScope.maybeOf(context);
+  final directory = store?.directorySession;
   if (directory == null) return demoEmployees;
+  final work = store?.workSession;
+  final workday = store?.workdaySession;
+  final now = DateTime.now();
   return [
     for (final e in directory.employees.where((e) => e.active))
       EmployeeStatus(
         e.id,
         e.name,
-        e.status,
+        work == null
+            ? 'Job status unavailable'
+            : employeeWorkStatus(
+                employeeId: e.id,
+                visibleJobs: work.records,
+                visibleWorkdays:
+                    workday?.records.map((item) => item.record) ?? const [],
+                now: now,
+              ).label,
         Icons.person_outline,
         Theme.of(context).colorScheme.primary,
       ),

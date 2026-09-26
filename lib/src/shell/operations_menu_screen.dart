@@ -6,6 +6,7 @@ import '../screens/expenses/reports_screen.dart';
 import '../data/prototype_operations_store.dart';
 import '../screens/work/company_profile_screen.dart';
 import '../screens/work/saved_clients_screen.dart';
+import '../screens/work/employee_timesheet_screen.dart';
 import '../shared/app_preferences.dart';
 import '../theme/app_theme.dart';
 import '../layout/app_layout_engine.dart';
@@ -78,6 +79,31 @@ class OperationsMenuScreen extends StatelessWidget {
                     onTap: () =>
                         _open(context, const EmployeeDirectoryScreen()),
                   ),
+                Builder(
+                  builder: (context) {
+                    final workday = PrototypeOperationsScope.maybeOf(
+                      context,
+                    )?.workdaySession;
+                    if (workday == null ||
+                        !workday.access.employeeIds.contains(
+                          workday.access.actorEmployeeId,
+                        )) {
+                      return const SizedBox.shrink();
+                    }
+                    return _MenuDestination(
+                      key: const ValueKey('menu-my-timesheet'),
+                      icon: Icons.access_time_rounded,
+                      title: 'My timesheet',
+                      detail: 'See your recorded workday time',
+                      onTap: () => _open(
+                        context,
+                        EmployeeTimesheetScreen(
+                          employeeId: workday.access.actorEmployeeId,
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 if (PrototypeOperationsScope.maybeOf(
                       context,
                     )?.directorySession?.permissions.canViewVehicles ??

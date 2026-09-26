@@ -92,7 +92,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Work home keeps Drafts and Employees on one phone row', (
+  testWidgets('Work home keeps Drafts and Employee status on one phone row', (
     tester,
   ) async {
     final harness = (await tester.runAsync(DatabaseHarness.create))!;
@@ -104,13 +104,28 @@ void main() {
 
     await pumpHome(tester, 375, 1, directorySession: directory);
     final drafts = find.byKey(const ValueKey('open-work-drafts'));
-    final employees = find.widgetWithText(OutlinedButton, 'Employees');
+    final employees = find.widgetWithText(OutlinedButton, 'Employee status');
     expect(employees, findsOneWidget);
     expect(tester.getTopLeft(drafts).dy, tester.getTopLeft(employees).dy);
     expect(
       tester.getRect(drafts).right,
       lessThan(tester.getRect(employees).left),
     );
+    await tester.tap(employees);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('employee-status-screen')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('employee-status-alex')), findsOneWidget);
+    expect(find.text('On a job'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('employee-status-alex')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('employee-work-status-alex')),
+      findsOneWidget,
+    );
+    expect(find.text('Latest recorded status'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

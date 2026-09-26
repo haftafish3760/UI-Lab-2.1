@@ -219,9 +219,16 @@ rejects competing conversions. The editor stays open if confirmation fails; raw
 job main-form and nested item input now autosave separately, retain on Back,
 and are consumed only with successful confirmation.
 
-September 14 repair checkpoint: Work now exposes Employees and a separate Drafts
-route. Job creation and assignment select active saved employee profiles by stable
-ID, including multiple employees. Add employee opens the shared profile editor
+September 14 repair checkpoint: Work exposed Employees and a separate Drafts
+route. A later in-progress repair replaces the Work entry with Employee status;
+the private profile directory remains in the main menu. The status list and
+Dashboard summary derive labels from visible saved job/workday records, and the
+employee detail opens job assignment through the existing assignment editor.
+The Work status route and Payments entry point were visually checked on the
+USB-connected S25 Ultra. This is a saved-record view, not live location or
+dispatch; assignment save and timesheet permissions still need broader device
+acceptance. Job creation and assignment select active saved employee profiles
+by stable ID, including multiple employees. Add employee opens the shared profile editor
 from job assignment after flushing unfinished job input; a newly saved profile is
 selected on return. Assignment changes recheck the explicit assignment grant and
 active profile identities inside the SQLite commit transaction. The dashboard

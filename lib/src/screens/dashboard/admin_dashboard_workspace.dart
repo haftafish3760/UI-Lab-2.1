@@ -172,6 +172,10 @@ class _AdminDashboardWorkspaceState extends State<_AdminDashboardWorkspace> {
                 const SizedBox(height: 12),
                 if (editing) _editorToolbar(),
                 if (!editing) ...[
+                  if (body.employee == null) ...[
+                    const DashboardEmployeeStatusSummary(),
+                    const SizedBox(height: 12),
+                  ],
                   AdminAttentionSummary(
                     items: body.attentionItems,
                     onOpen: body.onOpenAllAttention,
