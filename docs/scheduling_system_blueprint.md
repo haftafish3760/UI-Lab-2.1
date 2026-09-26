@@ -237,6 +237,10 @@ manual scheduling and rescheduling. This is local conflict prevention, not a
 claim of synchronized multi-device availability, travel-time calculation,
 working-hours policy, or complete schedule optimization. Missing resource
 assignment cannot establish employee availability.
+The bounded Find openings search now returns several chronological options,
+including more than one within the same selected day when the checked crew
+and vehicle fit. These are alternatives, not reservations; confirmation still
+rechecks the booking and saved gap.
 
 ### Hard requirements and preferences
 

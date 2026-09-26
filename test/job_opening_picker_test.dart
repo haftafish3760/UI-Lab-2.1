@@ -60,6 +60,7 @@ void main() {
         await tester.ensureVisible(find.text('Find openings'));
         await tester.tap(find.text('Find openings'));
         await tester.pumpAndSettle();
+        expect(find.text('Use time'), findsNWidgets(3));
         await tester.ensureVisible(find.text('Use time').first);
         await tester.tap(find.text('Use time').first);
         await tester.pumpAndSettle();

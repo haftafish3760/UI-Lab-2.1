@@ -65,12 +65,12 @@ void main() {
           JobScheduleWindow(DateTime(2030, 1, 1, 10), DateTime(2030, 1, 1, 17)),
         ],
       );
-      expect(openings.single.start, DateTime(2030, 1, 1, 10, 30));
+      expect(openings.first.start, DateTime(2030, 1, 1, 10, 30));
       expect(
         await work.create(
           candidate.copyWith(
-            scheduledStart: openings.single.start,
-            scheduledEnd: openings.single.end,
+            scheduledStart: openings.first.start,
+            scheduledEnd: openings.first.end,
           ),
         ),
         isTrue,

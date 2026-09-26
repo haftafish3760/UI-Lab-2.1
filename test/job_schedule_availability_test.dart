@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/work/job_schedule_availability.dart';
 import 'package:ui_lab_2_1/src/data/work/models/work_models.dart';
-import 'package:ui_lab_2_1/src/data/work/models/work_record_item_revision.dart';
 
 void main() {
   DateTime at(int hour, [int day = 1]) => DateTime(2030, 1, day, hour);
@@ -68,6 +67,32 @@ void main() {
       expect(openings.single.end, at(16));
     },
   );
+  test('offers several distinct same-day openings without booking them', () {
+    final engine = JobScheduleAvailability([
+      job('busy', 10, 11, bufferMinutes: 30),
+    ]);
+    final openings = engine.firstOpenings(
+      windows: [JobScheduleWindow(at(9), at(17))],
+      duration: const Duration(hours: 1),
+      employeeIds: {'a'},
+      limit: 3,
+    );
+    expect(openings.map((slot) => slot.start), [
+      DateTime(2030, 1, 1, 11, 30),
+      DateTime(2030, 1, 1, 12, 30),
+      DateTime(2030, 1, 1, 13, 30),
+    ]);
+    for (final opening in openings) {
+      expect(
+        engine.conflicts(
+          start: opening.start,
+          end: opening.end,
+          employeeIds: {'a'},
+        ),
+        isEmpty,
+      );
+    }
+  });
   test(
     'vehicle conflict blocks a different employee and current job is excluded',
     () {
@@ -83,6 +108,7 @@ void main() {
               employeeIds: {'a'},
               vehicle: 'Truck',
               excludingJobId: 'self',
+              limit: 1,
             )
             .single
             .start,
@@ -112,6 +138,7 @@ void main() {
               duration: const Duration(hours: 2),
               employeeIds: {'a'},
               notBefore: at(12),
+              limit: 1,
             )
             .single
             .start,
@@ -130,9 +157,10 @@ void main() {
         ],
         duration: const Duration(hours: 1),
         employeeIds: {'a'},
+        limit: 20,
       );
       expect(openings.first.start, at(10, 2));
-      expect(openings.last.start, at(9, 3));
+      expect(openings.any((slot) => slot.start == at(9, 3)), isTrue);
     },
   );
   test('incomplete booked duration never produces a false opening', () {
@@ -193,6 +221,7 @@ void main() {
       duration: const Duration(hours: 1),
       employeeIds: {'a'},
       bufferMinutes: 30,
+      limit: 1,
     );
     expect(openings.single.start, DateTime(2030, 1, 1, 11, 30));
     expect(

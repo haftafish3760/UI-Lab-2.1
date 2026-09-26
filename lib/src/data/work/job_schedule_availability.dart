@@ -123,7 +123,9 @@ class JobScheduleAvailability {
           if (!results.any((slot) => slot.start == candidate)) {
             results.add(JobScheduleOpening(candidate, candidate.add(duration)));
           }
-          break; // First opening in each explicitly offered window.
+          if (results.length >= limit) return List.unmodifiable(results);
+          candidate = candidate.add(duration);
+          continue;
         }
         candidate = busy
             .map(
@@ -137,7 +139,6 @@ class JobScheduleAvailability {
             )
             .reduce((a, b) => a.isAfter(b) ? a : b);
       }
-      if (results.length >= limit) break;
     }
     return List.unmodifiable(results);
   }
