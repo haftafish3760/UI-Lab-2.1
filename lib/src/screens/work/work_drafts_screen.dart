@@ -174,101 +174,118 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Drafts')),
       body: LayoutBuilder(
-        builder: (context, constraints) => ListView(
-          padding: AppLayoutEngine.pageInsetsFor(
-            constraints.maxWidth,
-          ).copyWith(top: 12, bottom: 24),
-          children: [
-            Text(
-              'Continue your saved work',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                'Choose a draft to continue editing. Returning to Work never opens a draft automatically.',
-              ),
-            ),
-            if (_loading) const LinearProgressIndicator(),
-            if (_error != null) Text(_error!),
-            if (_error != null)
-              TextButton(onPressed: _reload, child: const Text('Retry')),
-            if (!_loading && records.isEmpty && _input.isEmpty)
-              const Text('No drafts yet. Start a new document from Add Work.'),
-            for (final record in records) ...[
-              ListTile(
-                tileColor: Theme.of(
-                  context,
-                ).extension<AppSemanticColors>()!.draftSurface,
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.description_outlined),
-                title: Text(
-                  record.title.isEmpty
-                      ? 'Untitled ${record.kind.name}'
-                      : record.title,
-                ),
-                subtitle: Text(
-                  '${record.client} · ${record.number}\nLast edited: ${_dateLabel(record.estimateDates?.lastEditedOn ?? record.createdOn)}',
-                ),
-                onTap: _busy ? null : () => _run(() => _openRecord(record)),
-                trailing: work!.canDeleteDraft(record)
-                    ? IconButton(
+        builder: (context, constraints) {
+          final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
+          final width = AppLayoutEngine.formWorkspaceWidthFor(
+            constraints.maxWidth - insets.horizontal,
+          );
+          return Center(
+            child: SizedBox(
+              width: width,
+              child: ListView(
+                padding: const EdgeInsets.only(top: 12, bottom: 24),
+                children: [
+                  Text(
+                    'Continue your saved work',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      'Choose a draft to continue editing. Returning to Work never opens a draft automatically.',
+                    ),
+                  ),
+                  if (_loading) const LinearProgressIndicator(),
+                  if (_error != null) Text(_error!),
+                  if (_error != null)
+                    TextButton(onPressed: _reload, child: const Text('Retry')),
+                  if (!_loading && records.isEmpty && _input.isEmpty)
+                    const Text(
+                      'No drafts yet. Start a new document from Add Work.',
+                    ),
+                  for (final record in records) ...[
+                    ListTile(
+                      tileColor: Theme.of(
+                        context,
+                      ).extension<AppSemanticColors>()!.draftSurface,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.description_outlined),
+                      title: Text(
+                        record.title.isEmpty
+                            ? 'Untitled ${record.kind.name}'
+                            : record.title,
+                      ),
+                      subtitle: Text(
+                        '${record.client} · ${record.number}\nLast edited: ${_dateLabel(record.estimateDates?.lastEditedOn ?? record.createdOn)}',
+                      ),
+                      onTap: _busy
+                          ? null
+                          : () => _run(() => _openRecord(record)),
+                      trailing: work!.canDeleteDraft(record)
+                          ? IconButton(
+                              tooltip: 'Delete draft',
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: _busy
+                                  ? null
+                                  : () => _run(() async {
+                                      if (await _confirmDelete(record.title) &&
+                                          mounted &&
+                                          !await work.deleteDraft(record)) {
+                                        throw StateError(
+                                          'Draft deletion failed.',
+                                        );
+                                      }
+                                    }),
+                            )
+                          : null,
+                    ),
+                    const Divider(height: 1),
+                  ],
+                  for (final entry in _input) ...[
+                    ListTile(
+                      tileColor: Theme.of(
+                        context,
+                      ).extension<AppSemanticColors>()!.draftSurface,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(entry.preview.title),
+                      subtitle: Text(
+                        '${entry.workflowLabel}\nLast edited: ${_dateLabel(entry.updatedAt)}',
+                      ),
+                      onTap:
+                          _busy ||
+                              entry.preview.availability !=
+                                  DraftRecoveryAvailability.recoverable
+                          ? null
+                          : () => _run(() async {
+                              final resumed = await _recovery!.resume(entry);
+                              if (context.mounted) {
+                                await openPrimaryWorkRecovery(context, resumed);
+                              } else {
+                                await switch (resumed) {
+                                  ResumedEstimateDraft(:final controller) =>
+                                    controller.session.close(),
+                                  ResumedInvoiceDraft(:final controller) =>
+                                    controller.session.close(),
+                                  ResumedJobDraft(:final controller) =>
+                                    controller.session.close(),
+                                };
+                              }
+                            }),
+                      trailing: IconButton(
                         tooltip: 'Delete draft',
                         icon: const Icon(Icons.delete_outline),
                         onPressed: _busy
                             ? null
-                            : () => _run(() async {
-                                if (await _confirmDelete(record.title) &&
-                                    mounted &&
-                                    !await work.deleteDraft(record)) {
-                                  throw StateError('Draft deletion failed.');
-                                }
-                              }),
-                      )
-                    : null,
+                            : () => _run(() => _deleteInput(entry)),
+                      ),
+                    ),
+                    const Divider(height: 1),
+                  ],
+                ],
               ),
-              const Divider(height: 1),
-            ],
-            for (final entry in _input)
-              ListTile(
-                tileColor: Theme.of(
-                  context,
-                ).extension<AppSemanticColors>()!.draftSurface,
-                contentPadding: EdgeInsets.zero,
-                title: Text(entry.preview.title),
-                subtitle: Text(
-                  '${entry.workflowLabel}\nLast edited: ${_dateLabel(entry.updatedAt)}',
-                ),
-                onTap:
-                    _busy ||
-                        entry.preview.availability !=
-                            DraftRecoveryAvailability.recoverable
-                    ? null
-                    : () => _run(() async {
-                        final resumed = await _recovery!.resume(entry);
-                        if (context.mounted) {
-                          await openPrimaryWorkRecovery(context, resumed);
-                        } else {
-                          await switch (resumed) {
-                            ResumedEstimateDraft(:final controller) =>
-                              controller.session.close(),
-                            ResumedInvoiceDraft(:final controller) =>
-                              controller.session.close(),
-                            ResumedJobDraft(:final controller) =>
-                              controller.session.close(),
-                          };
-                        }
-                      }),
-                trailing: IconButton(
-                  tooltip: 'Delete draft',
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: _busy
-                      ? null
-                      : () => _run(() => _deleteInput(entry)),
-                ),
-              ),
-          ],
-        ),
+            ),
+          );
+        },
       ),
     );
   }

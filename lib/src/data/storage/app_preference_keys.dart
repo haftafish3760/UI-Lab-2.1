@@ -16,7 +16,7 @@ abstract final class AppPreferenceKeys {
   static const expenseDisplayDraftDomain = 'device/expense-display-editor';
   static const expenseDisplayDraftId = 'expenses';
   static const workListDraftDomain = 'device/work-list-editor';
-  static const workListIds = {'jobs', 'estimates', 'invoices'};
+  static const workListIds = {'jobs', 'estimates', 'invoices', 'scheduling'};
   static const workListChoices = {
     'showStatusDetails',
     'showAssignments',

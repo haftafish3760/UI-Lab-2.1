@@ -355,7 +355,7 @@ least one authorized record requires review.
   adding or editing is an explicit action rather than an always-live form.
 - Payments is a distinct ledger tied to invoice IDs. Recording a full payment
   updates that invoice's payment state in the shared prototype store; its own
-  calendar counts Payment records and pushes a separate dated Payments route.
+  calendar counts Payment records and selects the date in the same workspace.
   `Record payment` from Work Calendar Day opens that Payments workspace already
   scoped to the selected date; it never ends in a message telling the user to
   navigate there manually.

@@ -150,6 +150,8 @@ workspaces. New Estimate and New Invoice open fresh forms immediately; existing
 unfinished input never interrupts that action. The Drafts route presents saved
 draft records and unfinished input in one destination, associates recovered edits
 with their existing record, and shows customer/work identity and last-edited dates.
+The Drafts list uses visible dividers between both saved records and recoverable
+input, and stays at a readable width on larger screens.
 Returning to Work never automatically opens a draft. Resume is an explicit choice.
 An estimate draft opens its editing form; its saved record also exposes permitted
 deletion, editing, items, PDF preview and sending without an obscuring floating menu.
@@ -179,6 +181,11 @@ Primary regions:
 - Items: labor, materials, equipment, procurement, fees, discount, tax, deposit.
 - Totals: subtotal, adjustments, tax, total, required deposit, and balance basis.
 - Terms and delivery: payment terms, acceptance method, signature, delivery history.
+
+Estimate information uses persistent labels above line-style fields. The two
+short number fields may share a row when local width and text scale allow; the
+title and proposed-work text use the full form width. Proposed work grows with
+the text and the page scrolls, so the input does not impose a six-line limit.
 
 An estimate supports Draft, Ready, Sent, Viewed, Accepted, Rejected, Revision
 requested, Expired, Cancelled, and Converted states. Editing after acceptance
@@ -318,6 +325,9 @@ customer-facing description. Material rows may begin manually, from confirmed
 material cost history, or from a recorded expense/receipt. Linking evidence
 never silently turns the full receipt total into a customer charge; the human
 reviews and edits quantity, description, cost, markup, and price.
+On the Estimate Items screen, Labor, Materials, and other-charge sections appear
+only after their first item is added. Empty sections do not instruct the user
+to tap an item that does not exist.
 
 September 14 owner direction: Add items for Estimates, Invoices and itemized
 Quotes must offer clearly labeled Add from materials and Add from previous
@@ -772,6 +782,10 @@ a payment` remain separate answers. A denied user cannot obtain records by
 opening a route directly; an amount-denied user does not query or render payment
 history, balances, or item prices; and every mutating handler rechecks its grant
 instead of relying on a hidden button.
+The display view does not revoke a company owner's active Work-session payment
+grant. Work home and its Payments route use that grant to show Record payment;
+the company-wide ledger remains restricted to company-wide authority until
+employee-scoped payment queries are enforced throughout the route.
 
 Every Invoice creation entry point uses one dedicated editor. The user first
 chooses a source Job or `Direct invoice`; choosing a Job copies its customer,

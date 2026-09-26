@@ -3,9 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/work/directory_persistence_session.dart';
+import 'package:ui_lab_2_1/src/data/work/sqlite_work_repository.dart';
+import 'package:ui_lab_2_1/src/data/work/work_persistence_session.dart';
+import 'package:ui_lab_2_1/src/data/work/work_session_permissions.dart';
 import 'package:ui_lab_2_1/src/layout/app_layout_engine.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_schedule_screen.dart';
+import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
 import 'package:ui_lab_2_1/src/shared/app_view_mode.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
@@ -17,13 +21,18 @@ Future<void> pumpHome(
   double width,
   double scale, {
   DirectoryPersistenceSession? directorySession,
+  WorkPersistenceSession? workSession,
+  AppViewMode view = AppViewMode.admin,
 }) async {
   tester.view.physicalSize = Size(width, 900);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  final store = PrototypeOperationsStore(directorySession: directorySession);
-  final scope = OperationalScopeController(view: AppViewMode.admin);
+  final store = PrototypeOperationsStore(
+    directorySession: directorySession,
+    workSession: workSession,
+  );
+  final scope = OperationalScopeController(view: view);
   addTearDown(store.dispose);
   addTearDown(scope.dispose);
   await tester.pumpWidget(
@@ -48,12 +57,49 @@ Future<void> pumpHome(
 }
 
 void main() {
+  testWidgets('Work Payments shows Record payment for owner session', (
+    tester,
+  ) async {
+    final harness = (await tester.runAsync(DatabaseHarness.create))!;
+    addTearDown(harness.dispose);
+    final session = (await tester.runAsync(
+      () async => WorkPersistenceSession.open(
+        SqliteWorkRepository(await harness.open()),
+        WorkSessionPermissions(
+          organizationId: 'business',
+          actorEmployeeId: 'owner',
+          permissionRevision: 'owner-1',
+          visibleCreatorIds: {'owner'},
+          editableKinds: WorkRecordKind.values.toSet(),
+          canManageOtherCreators: true,
+          canRecordPayments: true,
+        ),
+      ),
+    ))!;
+    addTearDown(session.dispose);
+
+    await pumpHome(
+      tester,
+      375,
+      1,
+      workSession: session,
+      view: AppViewMode.technician,
+    );
+    await tester.tap(find.byKey(const ValueKey('quick-payments')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('payments-screen')), findsOneWidget);
+    expect(find.byKey(const ValueKey('record-payment-fab')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Work home keeps Drafts and Employees on one phone row', (
     tester,
   ) async {
-    final harness = await DatabaseHarness.create();
+    final harness = (await tester.runAsync(DatabaseHarness.create))!;
     addTearDown(harness.dispose);
-    final directory = await openSeededTestDirectory(await harness.open());
+    final directory = (await tester.runAsync(
+      () async => openSeededTestDirectory(await harness.open()),
+    ))!;
     addTearDown(directory.dispose);
 
     await pumpHome(tester, 375, 1, directorySession: directory);
@@ -61,7 +107,10 @@ void main() {
     final employees = find.widgetWithText(OutlinedButton, 'Employees');
     expect(employees, findsOneWidget);
     expect(tester.getTopLeft(drafts).dy, tester.getTopLeft(employees).dy);
-    expect(tester.getRect(drafts).right, lessThan(tester.getRect(employees).left));
+    expect(
+      tester.getRect(drafts).right,
+      lessThan(tester.getRect(employees).left),
+    );
     expect(tester.takeException(), isNull);
   });
 

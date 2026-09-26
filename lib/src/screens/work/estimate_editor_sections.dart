@@ -107,35 +107,69 @@ class _EstimateIdentitySection extends StatelessWidget {
           const SizedBox(height: 10),
         ],
         if (!customerOnly) ...[
-          TextFormField(
-            initialValue: number,
-            readOnly: true,
-            decoration: const InputDecoration(labelText: 'Document number'),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final numberField = _labeledField(
+                context,
+                'Document number',
+                TextFormField(
+                  initialValue: number,
+                  readOnly: true,
+                  decoration: _lineDecoration(),
+                ),
+              );
+              final purchaseOrderField = _labeledField(
+                context,
+                'Purchase order number (optional)',
+                TextField(
+                  controller: purchaseOrder,
+                  decoration: _lineDecoration(),
+                ),
+              );
+              if (AppLayoutEngine.stackFormFieldsFor(
+                constraints.maxWidth,
+                textScaler: MediaQuery.textScalerOf(context),
+              )) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    numberField,
+                    const SizedBox(height: 14),
+                    purchaseOrderField,
+                  ],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: numberField),
+                  const SizedBox(width: 12),
+                  Expanded(child: purchaseOrderField),
+                ],
+              );
+            },
           ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: purchaseOrder,
-            decoration: const InputDecoration(
-              labelText: 'Purchase order number (optional)',
+          const SizedBox(height: 14),
+          _labeledField(
+            context,
+            'Estimate title',
+            TextField(
+              key: const ValueKey('estimate-title'),
+              controller: title,
+              decoration: _lineDecoration(
+                hintText: 'Example: Replace kitchen faucet',
+              ),
             ),
           ),
-          const SizedBox(height: 10),
-
-          TextField(
-            key: const ValueKey('estimate-title'),
-            controller: title,
-            decoration: const InputDecoration(
-              labelText: 'Estimate title',
-              hintText: 'Example: Replace kitchen faucet',
-            ),
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
+          _fieldLabel(context, 'Proposed work'),
+          const SizedBox(height: 4),
           TextField(
             controller: scope,
-            minLines: 3,
-            maxLines: 6,
-            decoration: const InputDecoration(
-              labelText: 'Proposed work',
+            keyboardType: TextInputType.multiline,
+            minLines: 4,
+            maxLines: null,
+            decoration: _lineDecoration(
               helperText: 'State what is included, excluded, and expected.',
               helperMaxLines: 4,
             ),
@@ -143,6 +177,37 @@ class _EstimateIdentitySection extends StatelessWidget {
         ],
       ],
     ),
+  );
+
+  Widget _labeledField(BuildContext context, String label, Widget field) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _fieldLabel(context, label),
+          const SizedBox(height: 4),
+          field,
+        ],
+      );
+
+  Widget _fieldLabel(BuildContext context, String label) => Text(
+    label,
+    style: Theme.of(
+      context,
+    ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+  );
+
+  InputDecoration _lineDecoration({
+    String? hintText,
+    String? helperText,
+    int? helperMaxLines,
+  }) => InputDecoration(
+    hintText: hintText,
+    helperText: helperText,
+    helperMaxLines: helperMaxLines,
+    isDense: true,
+    border: const UnderlineInputBorder(),
+    enabledBorder: const UnderlineInputBorder(),
+    focusedBorder: const UnderlineInputBorder(),
   );
 }
 

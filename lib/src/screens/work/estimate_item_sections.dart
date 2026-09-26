@@ -71,6 +71,7 @@ class _EstimateItemActions extends StatelessWidget {
         if (category != EstimateItemCategory.labor) ...[
           const SizedBox(height: 8),
           PopupMenuButton<String>(
+            key: const ValueKey('estimate-more-item-options'),
             tooltip: 'Import materials, link expense, or add another charge',
             onSelected: (value) {
               switch (value) {
@@ -94,9 +95,16 @@ class _EstimateItemActions extends StatelessWidget {
               ),
               PopupMenuItem(value: 'other', child: Text('Add other charge')),
             ],
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Row(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.add_circle_outline),

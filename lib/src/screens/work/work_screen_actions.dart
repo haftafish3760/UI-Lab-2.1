@@ -272,7 +272,10 @@ extension _WorkScreenActions on _WorkScreenState {
       : const EstimatePermissions.technicianDevelopment();
 
   InvoicePermissions get _invoicePermissions =>
-      invoicePermissionsForView(_view);
+      invoicePermissionsForWorkSession(
+        _view,
+        PrototypeOperationsScope.of(context).workSession?.permissions,
+      );
 
   void _openInvoice(WorkRecord record) {
     Navigator.of(context).push(

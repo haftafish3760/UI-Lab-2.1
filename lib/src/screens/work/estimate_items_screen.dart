@@ -191,7 +191,8 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
                               onPressed: () => _confirmDiscardPending(pending),
                             ),
                           ),
-                        if (_editingLabor || _editingAll) ...[
+                        if ((_editingLabor || _editingAll) &&
+                            _labor.isNotEmpty) ...[
                           _ItemSection(
                             title: 'Labor',
                             helper:
@@ -201,9 +202,11 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
                             onEdit: _edit,
                             onRemove: _remove,
                           ),
-                          if (_editingAll) const SizedBox(height: 12),
+                          if (_editingAll &&
+                              (_materials.isNotEmpty || _other.isNotEmpty))
+                            const SizedBox(height: 12),
                         ],
-                        if (!_editingLabor) ...[
+                        if (!_editingLabor && _materials.isNotEmpty) ...[
                           _ItemSection(
                             title: 'Materials',
                             helper:
@@ -213,18 +216,18 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
                             onEdit: _edit,
                             onRemove: _remove,
                           ),
-                          if (_other.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _ItemSection(
-                              title: 'Equipment and other charges',
-                              helper:
-                                  'Equipment, material pickup, disposal, and other charges. Tap an item to edit it.',
-                              emptyText: '',
-                              items: _other,
-                              onEdit: _edit,
-                              onRemove: _remove,
-                            ),
-                          ],
+                        ],
+                        if (!_editingLabor && _other.isNotEmpty) ...[
+                          if (_materials.isNotEmpty) const SizedBox(height: 12),
+                          _ItemSection(
+                            title: 'Equipment and other charges',
+                            helper:
+                                'Equipment, material pickup, disposal, and other charges. Tap an item to edit it.',
+                            emptyText: '',
+                            items: _other,
+                            onEdit: _edit,
+                            onRemove: _remove,
+                          ),
                         ],
                       ],
                     ),

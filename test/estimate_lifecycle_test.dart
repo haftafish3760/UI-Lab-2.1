@@ -331,10 +331,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(todayCell);
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('estimate-day-screen')), findsOneWidget);
-      final datedEstimate = find.byKey(
-        const ValueKey('estimate-day-row-est-1042'),
+      expect(
+        find.byKey(const ValueKey('work-estimate-workspace')),
+        findsOneWidget,
       );
+      expect(find.byKey(const ValueKey('estimate-day-screen')), findsNothing);
+      final datedEstimate = find.byKey(const ValueKey('estimate-row-est-1042'));
       await tester.ensureVisible(datedEstimate);
       await tester.tap(datedEstimate);
       await tester.pumpAndSettle();
@@ -342,8 +344,6 @@ void main() {
         find.byKey(const ValueKey('estimate-detail-est-1042')),
         findsOneWidget,
       );
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
 
@@ -359,15 +359,17 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(tomorrowCell);
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('estimate-day-screen')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('work-estimate-workspace')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('estimate-day-screen')), findsNothing);
       expect(
         find.textContaining('No estimates are recorded for this date'),
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('estimate-row-est-1042')), findsNothing);
 
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
       expect(
         find.byKey(const ValueKey('work-estimate-workspace')),
         findsOneWidget,

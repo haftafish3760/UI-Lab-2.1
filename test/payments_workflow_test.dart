@@ -1,14 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
+import 'package:ui_lab_2_1/src/data/work/work_session_permissions.dart';
 import 'package:ui_lab_2_1/src/screens/work/invoice_permissions.dart';
 import 'package:ui_lab_2_1/src/screens/work/payments_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
+import 'package:ui_lab_2_1/src/shared/app_view_mode.dart';
 import 'package:ui_lab_2_1/src/shared/recorded_entries_section.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
 
 void main() {
+  testWidgets('owner payment grant shows Record payment in Technician view', (
+    tester,
+  ) async {
+    final store = PrototypeOperationsStore(workRecords: const []);
+    addTearDown(store.dispose);
+    WorkSessionPermissions grants({
+      required bool companyWide,
+      required bool canRecord,
+    }) => WorkSessionPermissions(
+      organizationId: 'business',
+      actorEmployeeId: 'owner',
+      permissionRevision: 'owner-1',
+      visibleCreatorIds: {'owner'},
+      editableKinds: {WorkRecordKind.invoice},
+      canManageOtherCreators: companyWide,
+      canRecordPayments: canRecord,
+    );
+
+    final allowed = invoicePermissionsForWorkSession(
+      AppViewMode.technician,
+      grants(companyWide: true, canRecord: true),
+    );
+    await _pumpPayments(
+      tester,
+      store,
+      DateTime(2026, 9, 26),
+      permissions: allowed,
+    );
+    expect(find.byKey(const ValueKey('record-payment-fab')), findsOneWidget);
+
+    final denied = invoicePermissionsForWorkSession(
+      AppViewMode.technician,
+      grants(companyWide: true, canRecord: false),
+    );
+    await _pumpPayments(
+      tester,
+      store,
+      DateTime(2026, 9, 26),
+      permissions: denied,
+    );
+    expect(find.byKey(const ValueKey('record-payment-fab')), findsNothing);
+    expect(
+      invoicePermissionsForWorkSession(
+        AppViewMode.technician,
+        grants(companyWide: false, canRecord: true),
+      ).canRecordPayment,
+      isFalse,
+    );
+  });
+
   test('paid invoices stop projecting their former due date', () {
     final issuedOn = DateTime(2026, 8, 5);
     final invoice = _invoice(

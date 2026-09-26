@@ -38,6 +38,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   late var _selectedDay = DateUtils.dateOnly(
     widget.initialDay ?? DateTime.now(),
   );
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   PrototypeOperationsStore get _store => PrototypeOperationsScope.of(context);
 
@@ -82,6 +89,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               textScaler: MediaQuery.textScalerOf(context),
             );
             return ListView(
+              controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(0, 10, 0, 96),
               children: [
                 Padding(
@@ -191,12 +199,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   void _openDay(DateTime day) {
     setState(() => _selectedDay = DateUtils.dateOnly(day));
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) =>
-            PaymentDayScreen(initialDay: day, permissions: widget.permissions),
-      ),
-    );
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   Future<void> _recordPayment() async {

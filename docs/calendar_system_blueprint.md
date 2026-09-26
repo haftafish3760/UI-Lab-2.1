@@ -164,8 +164,12 @@ calendar component and require cross-module regression coverage.
 
 ## Day routes
 
-Tapping a date always pushes a real route with Back behavior. It never replaces
-the current page body while pretending to be navigation.
+Owner correction, September 26: Jobs, Estimates, Invoices, and Payments already
+show the selected day's records in their workspace. Tapping their calendar date
+updates that workspace and brings its date and records into view; it does not
+push a second screen repeating the same list. Scheduling also selects the day
+in place. Dashboard and the combined Work calendar retain their distinct day
+routes because they bring together records from more than one workspace.
 
 - **Dashboard Day:** combined authorized projections from every enabled module,
   sorted by actual event time. Undated all-day or due items follow timed items
@@ -187,8 +191,8 @@ Every day row states its record type, status, time when known, useful title, and
 owning context. Each record has its own compact bordered container. The day
 route uses the same date-first and Needs Attention hierarchy as its module.
 
-The current UI Lab routes Dashboard, Work, Jobs, Estimates, Invoices, Payments,
-Expenses, and Materials date taps to real dated screens. Work-owned day rows
+Dashboard, combined Work, Expenses, and Materials may route to dated screens.
+Work-owned day rows
 open the exact Job, Estimate, Invoice, or payment owner rather than routing to a
 general workspace and making the operator locate the record again. Job,
 Estimate, and Invoice dated routes retain previous/next-day review. Their

@@ -42,6 +42,7 @@ class JobListWorkspaceScreen extends StatefulWidget {
 class _JobListWorkspaceScreenState extends State<JobListWorkspaceScreen> {
   late var _selectedDay = DateUtils.dateOnly(widget.initialDay);
   final _search = TextEditingController();
+  final _scrollController = ScrollController();
   var _showAllDateJobs = false;
   var _showAllActiveJobs = false;
   var _fixturePreferences = const WorkRecordDisplayPreferences();
@@ -55,6 +56,7 @@ class _JobListWorkspaceScreenState extends State<JobListWorkspaceScreen> {
   @override
   void dispose() {
     _search.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -96,6 +98,7 @@ class _JobListWorkspaceScreenState extends State<JobListWorkspaceScreen> {
               attentionItems,
             );
             return ListView(
+              controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(0, 10, 0, 96),
               children: [
                 Padding(
@@ -362,9 +365,6 @@ class _JobListWorkspaceScreenState extends State<JobListWorkspaceScreen> {
 
   List<WorkRecord> get _jobsForSelectedDay => _jobsForDay(_selectedDay);
 
-  List<WorkRecord> _allJobsForDay(DateTime day) =>
-      _sortJobs(_scopedJobs.where((record) => record.occursOn(day)));
-
   List<WorkRecord> get _activeJobs {
     const activeStates = {
       WorkRecordStatus.enRoute,
@@ -423,23 +423,15 @@ class _JobListWorkspaceScreenState extends State<JobListWorkspaceScreen> {
       setState(() => _selectedDay = DateUtils.dateOnly(day));
 
   void _openDay(DateTime day) {
-    final selected = DateUtils.dateOnly(day);
-    _selectDay(selected);
-    Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => JobDayScreen(
-          initialDay: selected,
-          preferences: _preferences,
-          recordsForDay: _allJobsForDay,
-          attentionItemsForDay: _attentionItemsForDay,
-          onOpenRecord: _openJob,
-          onDismissAttention: (date, items) => _store.attentionCenter.dismiss(
-            _attentionQueryForDay(date),
-            items,
-          ),
-        ),
-      ),
-    );
+    _search.clear();
+    _selectDay(day);
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   void _refresh(VoidCallback change) => setState(change);

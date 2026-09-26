@@ -92,7 +92,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Jobs calendar opens a dated route and exact Job record', (
+  testWidgets('Jobs calendar selects the day in place and opens its Job', (
     tester,
   ) async {
     await _pumpJobs(tester, const Size(390, 844));
@@ -106,8 +106,8 @@ void main() {
     await tester.tap(day);
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('job-day-screen')), findsOneWidget);
-    expect(find.byKey(const ValueKey('job-day-records')), findsOneWidget);
+    expect(find.byKey(const ValueKey('work-job-workspace')), findsOneWidget);
+    expect(find.byKey(const ValueKey('job-day-screen')), findsNothing);
     final job = find.byKey(const ValueKey('job-row-job-1038'));
     await tester.ensureVisible(job);
     await tester.tap(find.ancestor(of: job, matching: find.byType(InkWell)));

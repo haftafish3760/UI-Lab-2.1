@@ -162,7 +162,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Payments opens a dated ledger and calendar route', (
+  testWidgets('Payments calendar selects a day in the same ledger', (
     tester,
   ) async {
     await _pumpWork(tester, const Size(390, 844));
@@ -181,7 +181,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('payment-day-screen')), findsOneWidget);
+    expect(find.byKey(const ValueKey('payments-screen')), findsOneWidget);
+    expect(find.byKey(const ValueKey('payment-day-screen')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -352,16 +353,19 @@ void main() {
 
     expect(find.text('Estimate items'), findsWidgets);
     expect(find.byKey(const ValueKey('add-estimate-material')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('estimate-more-item-options')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('link-receipt-expense')), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('add-estimate-material')));
     await tester.pumpAndSettle();
-    expect(find.text('Item type'), findsOneWidget);
-    expect(find.text('Item name'), findsOneWidget);
+    expect(find.text('Material name'), findsOneWidget);
     expect(find.text('Quantity'), findsOneWidget);
     expect(find.text('Unit of measure'), findsOneWidget);
     expect(find.text('Price per item'), findsOneWidget);
-    expect(find.text('Internal cost per unit (optional)'), findsOneWidget);
+    expect(find.text('Your cost per item (optional)'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -379,6 +383,8 @@ void main() {
     await tester.tap(items);
     await tester.pumpAndSettle();
 
+    await tester.tap(find.byKey(const ValueKey('estimate-more-item-options')));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Add from materials'));
     await tester.pumpAndSettle();
     expect(find.text('Braided faucet supply line'), findsOneWidget);
@@ -387,7 +393,7 @@ void main() {
     final fields = tester.widgetList<TextField>(find.byType(TextField));
     expect(
       fields
-          .firstWhere((field) => field.decoration?.labelText == 'Item name')
+          .firstWhere((field) => field.decoration?.labelText == 'Material name')
           .controller
           ?.text,
       'Braided faucet supply line',
@@ -396,31 +402,26 @@ void main() {
       fields
           .firstWhere(
             (field) =>
-                field.decoration?.labelText ==
-                'Internal cost per unit (optional)',
+                field.decoration?.labelText == 'Your cost per each (optional)',
           )
           .controller
           ?.text,
       '18.75',
     );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Price per each'),
+      '42.00',
+    );
+    await tester.pump();
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
-    // Back retains the imported item; finish it before starting another source.
-    expect(find.text('Continue unfinished item'), findsOneWidget);
-    await tester.tap(find.text('Continue unfinished item'));
+    expect(find.text('Save item changes?'), findsOneWidget);
+    await tester.tap(find.text('Save changes'));
     await tester.pumpAndSettle();
-    expect(
-      tester
-          .widgetList<TextField>(find.byType(TextField))
-          .firstWhere((field) => field.decoration?.labelText == 'Item name')
-          .controller
-          ?.text,
-      'Braided faucet supply line',
-    );
-    await tester.tap(find.text('Add line item'));
+    expect(find.text('Braided faucet supply line'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('estimate-more-item-options')));
     await tester.pumpAndSettle();
-    expect(find.text('Continue unfinished item'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('link-receipt-expense')));
     await tester.pumpAndSettle();
     expect(find.text('Use a receipt item'), findsWidgets);
@@ -443,6 +444,42 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  for (final width in [390.0, 1440.0]) {
+    testWidgets('Estimate information reflows labeled fields at $width LP', (
+      tester,
+    ) async {
+      await _pumpWork(tester, Size(width, 900));
+      await tester.tap(find.text('Add work'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('work-action-createEstimate')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('estimate-information')));
+      await tester.pumpAndSettle();
+
+      final number = tester.getTopLeft(find.text('Document number'));
+      final purchaseOrder = tester.getTopLeft(
+        find.text('Purchase order number (optional)'),
+      );
+      if (width < 600) {
+        expect(purchaseOrder.dy, greaterThan(number.dy));
+      } else {
+        expect(purchaseOrder.dy, number.dy);
+      }
+      final workField = tester.widget<TextField>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is TextField &&
+              widget.keyboardType == TextInputType.multiline,
+        ),
+      );
+      expect(workField.maxLines, isNull);
+      expect(workField.minLines, 4);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('Work preserves content at large accessibility text', (
     tester,

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_schedule_screen.dart';
+import 'package:ui_lab_2_1/src/shared/app_preferences.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
 
 void main() {
@@ -43,18 +44,23 @@ void main() {
           ],
         );
         addTearDown(store.dispose);
+        final preferences = AppPreferencesController();
+        addTearDown(preferences.dispose);
         await tester.pumpWidget(
           PrototypeOperationsScope(
             store: store,
-            child: MaterialApp(
-              theme: AppTheme.light,
-              builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(
-                  context,
-                ).copyWith(textScaler: const TextScaler.linear(1.5)),
-                child: child!,
+            child: AppPreferencesScope(
+              controller: preferences,
+              child: MaterialApp(
+                theme: AppTheme.light,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(textScaler: const TextScaler.linear(1.5)),
+                  child: child!,
+                ),
+                home: WorkScheduleScreen(initialDay: day),
               ),
-              home: WorkScheduleScreen(initialDay: day),
             ),
           ),
         );

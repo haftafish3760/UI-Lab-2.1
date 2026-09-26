@@ -16,7 +16,6 @@ import 'estimate_editor_screen.dart';
 import 'estimate_models.dart';
 import 'work_job_editor.dart';
 import 'work_attention_list_screen.dart';
-import 'work_document_day_screen.dart';
 import 'work_models.dart';
 import 'work_month_calendar.dart';
 import 'work_record_settings_screen.dart';
@@ -399,25 +398,8 @@ class _EstimateWorkspaceScreenState extends State<EstimateWorkspaceScreen> {
   }
 
   void _openCalendarDay(DateTime day) {
-    final selected = DateUtils.dateOnly(day);
-    _selectDay(selected);
-    Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => WorkDocumentDayScreen(
-          initialDay: selected,
-          kind: WorkRecordKind.estimate,
-          preferences: _preferences,
-          showFinancials: widget.permissions.canViewEstimateTotals,
-          recordsForDay: _recordsForDay,
-          attentionItemsForDay: _attentionItemsForDay,
-          onOpenRecord: _openEstimate,
-          onDismissAttention: (date, items) => _store.attentionCenter.dismiss(
-            _attentionQueryForDay(date),
-            items,
-          ),
-        ),
-      ),
-    );
+    _search.clear();
+    _selectDay(day, revealDate: true);
   }
 
   Future<void> _createEstimate() async {

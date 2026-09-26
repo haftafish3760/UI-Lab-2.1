@@ -15,7 +15,6 @@ import 'invoice_editor_screen.dart';
 import 'invoice_detail_screen.dart';
 import 'invoice_permissions.dart';
 import 'work_attention_list_screen.dart';
-import 'work_document_day_screen.dart';
 import 'work_models.dart';
 import 'work_month_calendar.dart';
 import 'work_record_settings_screen.dart';
@@ -42,6 +41,7 @@ class InvoiceWorkspaceScreen extends StatefulWidget {
 class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
   late var _selectedDay = DateUtils.dateOnly(widget.initialDay);
   final _search = TextEditingController();
+  final _scrollController = ScrollController();
   var _showAllDateInvoices = false;
   var _showAllOpenInvoices = false;
   var _fixturePreferences = const WorkRecordDisplayPreferences();
@@ -61,6 +61,7 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
   @override
   void dispose() {
     _search.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -111,6 +112,7 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
               textScaler: MediaQuery.textScalerOf(context),
             );
             return ListView(
+              controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(0, 10, 0, 96),
               children: [
                 Padding(
@@ -360,25 +362,15 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
       setState(() => _selectedDay = DateUtils.dateOnly(day));
 
   void _openCalendarDay(DateTime day) {
-    final selected = DateUtils.dateOnly(day);
-    _selectDay(selected);
-    Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => WorkDocumentDayScreen(
-          initialDay: selected,
-          kind: WorkRecordKind.invoice,
-          preferences: _preferences,
-          showFinancials: widget.permissions.canViewFinancials,
-          recordsForDay: _invoicesForDay,
-          attentionItemsForDay: _attentionItemsForDay,
-          onOpenRecord: _openInvoice,
-          onDismissAttention: (date, items) => _store.attentionCenter.dismiss(
-            _attentionQueryForDay(date),
-            items,
-          ),
-        ),
-      ),
-    );
+    _search.clear();
+    _selectDay(day);
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   Future<void> _openSettings() async {
