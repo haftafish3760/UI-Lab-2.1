@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:ui_lab_2_1/src/data/receipts/receipt_combined_preview.dart';
 import 'package:image/image.dart' as img;
 import 'package:ui_lab_2_1/src/data/receipts/receipt_draft_record.dart';
 import 'package:ui_lab_2_1/src/data/receipts/receipt_draft_repository.dart';
@@ -136,6 +137,12 @@ void main() {
             attachmentIds: {attachmentId},
           );
       expect(img.decodeImage(await files.single.readAsBytes()), isNotNull);
+      expect(await session.verifiedCombinedPreview(review), files.single.path);
+      final otherSession = await openEvidenceSession(persistence);
+      await expectLater(
+        otherSession.verifiedCombinedPreview(review),
+        throwsStateError,
+      );
       for (final original in source.activeEvidence) {
         expect(await File(original.localPath).exists(), isTrue);
       }

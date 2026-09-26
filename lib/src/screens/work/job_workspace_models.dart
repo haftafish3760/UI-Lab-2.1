@@ -275,7 +275,9 @@ ActiveJobRecord activeJobForRecord(
         ? record.jobNotes
         : 'No job notes recorded.',
     estimateNumber: record.sourceId ?? 'Direct job',
-    estimateTerms: record.pricing == WorkPricingModel.flatRate
+    estimateTerms: record.sourceId != null
+        ? 'Estimated cost'
+        : record.pricing == WorkPricingModel.flatRate
         ? 'Flat rate'
         : 'Time and materials',
     lineItems: record.items.map(JobLineItem.fromWorkLineItem).toList(),

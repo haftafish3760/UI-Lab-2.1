@@ -68,35 +68,27 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Work home separates compact records and unfinished drafts', (
+  testWidgets('Work home separates the daily plan, entries, and drafts', (
     tester,
   ) async {
     await _pumpWorkHome(tester, const Size(390, 844));
 
     const rowKeys = [
-      'work-attention-est-1039',
-      'work-job-row-job-1038',
-      'work-estimate-row-est-1042',
-      'work-estimate-draft-est-1040',
-      'work-invoice-row-inv-2088',
+      'work-plan-row-job-1038',
+      'work-entry-row-est-1042',
+      'work-entry-row-inv-2088',
     ];
     for (final key in rowKeys) {
       final row = find.byKey(ValueKey(key));
       expect(row, findsOneWidget);
       expect(
         tester.getSize(row).height,
-        lessThanOrEqualTo(72),
-        reason: '$key must remain a compact phone record',
+        lessThanOrEqualTo(130),
+        reason: '$key must remain a readable phone record',
       );
     }
-    expect(
-      find.byKey(const ValueKey('work-estimate-drafts-heading')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('work-estimate-row-est-1039')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('open-work-drafts')), findsOneWidget);
+    expect(find.byKey(const ValueKey('work-entry-row-est-1040')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -115,7 +107,7 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
-    final job = find.byKey(const ValueKey('work-job-row-job-1038'));
+    final job = find.byKey(const ValueKey('work-plan-row-job-1038'));
     await tester.ensureVisible(job);
     await tester.pumpAndSettle();
     await tester.tap(job);
@@ -127,7 +119,7 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
-    final invoice = find.byKey(const ValueKey('work-invoice-row-inv-2088'));
+    final invoice = find.byKey(const ValueKey('work-entry-row-inv-2088'));
     await tester.ensureVisible(invoice);
     await tester.pumpAndSettle();
     await tester.tap(invoice);
@@ -136,7 +128,10 @@ void main() {
       find.byKey(const ValueKey('invoice-detail-inv-2088')),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey('invoice-actions-fab')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('invoice-primary-preview')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -195,32 +190,26 @@ void main() {
     await _pumpWorkHome(tester, const Size(1200, 900));
 
     final attention = find.byKey(const ValueKey('work-attention-section'));
-    final jobs = find.byKey(const ValueKey('work-jobs-section'));
+    final plan = find.byKey(const ValueKey('work-plan-section'));
+    final entries = find.byKey(const ValueKey('work-entries-section'));
     expect(find.byKey(const ValueKey('work-1-column-queues')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('work-2-column-attention')),
       findsOneWidget,
     );
     expect(tester.getSize(attention).width, lessThanOrEqualTo(480));
-    expect(tester.getTopLeft(attention).dx, tester.getTopLeft(jobs).dx);
-    final jobsX = tester.getTopLeft(jobs).dx;
-    final estimatesX = tester
-        .getTopLeft(find.byKey(const ValueKey('work-estimates-section')))
-        .dx;
-    final invoicesX = tester
-        .getTopLeft(find.byKey(const ValueKey('work-invoices-section')))
-        .dx;
-    expect(jobsX, estimatesX);
-    expect(estimatesX, invoicesX);
+    expect(tester.getTopLeft(attention).dx, tester.getTopLeft(plan).dx);
+    final jobsX = tester.getTopLeft(plan).dx;
+    expect(jobsX, tester.getTopLeft(entries).dx);
     expect(
       tester.getTopLeft(find.text('Work Calendar')).dx,
       greaterThan(jobsX),
     );
     expect(find.byKey(const ValueKey('work-actions-inline')), findsOneWidget);
     expect(find.byKey(const ValueKey('work-actions-fab')), findsNothing);
-    expect(find.text('New job'), findsOneWidget);
-    expect(find.text('New estimate'), findsOneWidget);
-    expect(find.text('New invoice'), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-jobs')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-estimates')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-invoices')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

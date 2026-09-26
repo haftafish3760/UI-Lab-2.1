@@ -61,14 +61,7 @@ void main() {
         await tester.enterText(quantity, '');
         await tester.binding.handlePopRoute();
         await waitForNativeSave(tester, () => quantity.evaluate().isEmpty);
-        expect(
-          tester
-              .widget<FilledButton>(
-                find.byKey(const ValueKey('save-estimate-items')),
-              )
-              .onPressed,
-          isNull,
-        );
+        expect(find.text('Save progress'), findsOneWidget);
         await tester.binding.handlePopRoute();
         await waitForNativeSave(
           tester,
@@ -81,11 +74,11 @@ void main() {
         db = (await tester.runAsync(harness.open))!;
         work = (await tester.runAsync(() => openSeededTestWorkSession(db)))!;
         await open();
-        await tester.tap(find.text('Continue unfinished item'));
+        await tester.tap(find.textContaining('Unfinished changes'));
         await tester.pumpAndSettle();
         expect(tester.widget<TextField>(quantity).controller!.text, '');
         await tester.enterText(quantity, '3.');
-        final saveLine = find.text('Save item changes');
+        final saveLine = find.text('Save item');
         await tester.ensureVisible(saveLine);
         await tester.tap(saveLine);
         await tester.pump();
@@ -114,6 +107,8 @@ void main() {
         await tester.runAsync(
           () => db.customStatement('DROP TRIGGER fail_item_draft'),
         );
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
         await tester.tap(save);
         await tester.pump();
         await waitForNativeSave(

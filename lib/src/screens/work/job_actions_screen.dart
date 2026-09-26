@@ -42,7 +42,12 @@ class _JobActionsScreen extends StatelessWidget {
     ];
     final operationActions = <_JobAction>[
       if (permissions.canChangeStatus) ..._statusActions(job.status),
-      if (permissions.canChangeStatus) _JobAction.reschedule,
+      if (permissions.canEditJob &&
+          (PrototypeOperationsScope.maybeOf(
+                context,
+              )?.workSession?.permissions.canScheduleJobs ??
+              true))
+        _JobAction.reschedule,
       if (permissions.canEditJob) _JobAction.reassign,
     ];
     return Scaffold(

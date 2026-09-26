@@ -18,6 +18,7 @@ class JobDraftInput {
     required this.sourceStorageRevision,
     required this.scheduledStart,
     required this.scheduledEnd,
+    this.scheduleBufferMinutes = 30,
     required this.client,
     required this.location,
     required this.assignee,
@@ -38,6 +39,7 @@ class JobDraftInput {
   final int sourceStorageRevision;
   final DateTime scheduledStart;
   final DateTime scheduledEnd;
+  final int scheduleBufferMinutes;
   final String? client;
   final String? location;
   final String? assignee;
@@ -58,6 +60,7 @@ class JobDraftInput {
     'sourceStorageRevision': sourceStorageRevision,
     'start': scheduledStart.toIso8601String(),
     'end': scheduledEnd.toIso8601String(),
+    'scheduleBufferMinutes': scheduleBufferMinutes,
     'client': client,
     'location': location,
     'assignee': assignee,
@@ -85,6 +88,7 @@ class JobDraftInput {
         sourceStorageRevision: input['sourceStorageRevision'] as int,
         scheduledStart: DateTime.parse(input['start'] as String),
         scheduledEnd: DateTime.parse(input['end'] as String),
+        scheduleBufferMinutes: input['scheduleBufferMinutes'] as int? ?? 30,
         client: input['client'] as String?,
         location: input['location'] as String?,
         assignee: input['assignee'] as String?,

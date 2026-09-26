@@ -1,3 +1,4 @@
+import 'company_contact_card.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import '../../data/work/company_document_branding.dart';
@@ -69,6 +70,11 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                         ),
                         const SizedBox(height: 14),
                         _CompanyDetailLanes(profile: _profile, layout: layout),
+                        const SizedBox(height: 14),
+                        CompanyContactCard(
+                          profile: _profile,
+                          logo: _CompanyLogo(profile: _profile),
+                        ),
                       ],
                     ),
                   ),

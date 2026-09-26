@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_demo_data.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_workspace_screen.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
@@ -14,20 +15,25 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final scope = OperationalScopeController();
+    final store = PrototypeOperationsStore();
     addTearDown(scope.dispose);
+    addTearDown(store.dispose);
     await tester.pumpWidget(
-      OperationalScope(
-        controller: scope,
-        child: MediaQuery(
-          data: const MediaQueryData(
-            size: Size(600, 900),
-            textScaler: TextScaler.linear(2),
-          ),
-          child: MaterialApp(
-            theme: AppTheme.light,
-            home: JobWorkspaceScreen(
-              workRecord: prototypeDemoWorkRecords().firstWhere(
-                (record) => record.id == 'job-1038',
+      PrototypeOperationsScope(
+        store: store,
+        child: OperationalScope(
+          controller: scope,
+          child: MediaQuery(
+            data: const MediaQueryData(
+              size: Size(600, 900),
+              textScaler: TextScaler.linear(2),
+            ),
+            child: MaterialApp(
+              theme: AppTheme.light,
+              home: JobWorkspaceScreen(
+                workRecord: prototypeDemoWorkRecords().firstWhere(
+                  (record) => record.id == 'job-1038',
+                ),
               ),
             ),
           ),

@@ -13,7 +13,10 @@ class WorkSessionPermissions {
     this.canRecordPayments = false,
     this.canDeleteDrafts = false,
     this.canAssignJobs = false,
+    this.canScheduleJobs = false,
     this.canShareDocuments = false,
+    this.canRecordCustomerApproval = false,
+    this.canCollectSignature = false,
   }) : visibleCreatorIds = Set.unmodifiable(visibleCreatorIds),
        editableKinds = Set.unmodifiable(editableKinds);
 
@@ -27,7 +30,10 @@ class WorkSessionPermissions {
   final bool canRecordPayments;
   final bool canDeleteDrafts;
   final bool canAssignJobs;
+  final bool canScheduleJobs;
   final bool canShareDocuments;
+  final bool canRecordCustomerApproval;
+  final bool canCollectSignature;
 
   bool canEdit(WorkRecord record) =>
       editableKinds.contains(record.kind) &&

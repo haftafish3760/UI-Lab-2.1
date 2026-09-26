@@ -29,6 +29,19 @@ current evidence and unfinished scope. No delegation is authorized.
 
 ## Required implementation behavior
 
+### Owner rule: no hard-coded business records
+
+- Business records and unfinished user work must come from the shared durable
+  storage system, not hard-coded examples, fabricated fallback records, or
+  automatic example-data recreation. This applies to every screen and workflow.
+- Development records must be ordinary editable, persistently saved records,
+  subject to the same confirmed-delete and recovery behavior as real records.
+  They must not become contents of the application shipped to new customers.
+- Empty storage must remain honestly empty. Missing storage or failed reads must
+  show an appropriate unavailable/error state, never substitute fake records.
+- The owning detailed policy and audit limitations are in
+  `docs/data_storage_sync_contract.md`, "Business data and example isolation".
+
 ### Owner data-preservation rule — September 19, 2026
 
 - On every supported platform (Android, iOS, Windows, macOS and others), the app

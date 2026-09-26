@@ -1,3 +1,5 @@
+import 'estimate_approval_screen.dart';
+import '../../data/storage/local_record_command.dart';
 import 'estimate_template_document.dart';
 import 'estimate_terms_editor.dart';
 import 'documents/customer_pdf_screen.dart';
@@ -73,6 +75,15 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
   bool _initialized = false;
   bool _draftReady = false;
   bool _saving = false;
+  String? _entryInput;
+  @override
+  bool get confirmDraftExit =>
+      _draftReady &&
+      _entryInput != null &&
+      canonicalJson(_estimateInput.toPayload()) != _entryInput;
+  @override
+  bool get requiresDraftPopGuard => confirmDraftExit || navigationDraft != null;
+
   String? _saveError;
   late String _estimateId;
   late String _creatorId;
@@ -81,6 +92,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
   @override
   bool get blockDraftNavigation => _saving;
   final _sectionChanges = ValueNotifier<int>(0);
+  final _scrollController = ScrollController();
   late final Listenable _formChanges = Listenable.merge([
     _sectionChanges,
     _purchaseOrder,
@@ -120,7 +132,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
   DateTime? _proposedServiceOn;
   String? _client;
   WorkCustomerProfile? _customerSnapshot;
-  var _pricing = WorkPricingModel.flatRate;
+  var _pricing = WorkPricingModel.timeAndMaterials;
   var _template = 'Service standard';
   var _items = <WorkLineItem>[];
   var _itemDraftInputs = <String, WorkItemsDraftInput>{};
@@ -165,7 +177,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
     _followUpOn = existing?.estimateDates?.followUpOn;
     _proposedServiceOn = existing?.estimateDates?.proposedServiceOn;
     _client = existing?.client ?? widget.initialClient;
-    _pricing = existing?.pricing ?? WorkPricingModel.flatRate;
+    _pricing = existing?.pricing ?? WorkPricingModel.timeAndMaterials;
     _template = existing?.template ?? 'Service standard';
     _items = [...?existing?.items];
     _sitePhotos = [...?existing?.sitePhotos];
@@ -176,6 +188,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
     unawaited(_draftSubscription?.cancel());
     unawaited(_draft?.close().catchError((Object _) {}));
     _sectionChanges.dispose();
+    _scrollController.dispose();
     _purchaseOrder.dispose();
     _title.dispose();
     _scope.dispose();
@@ -204,7 +217,8 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
                 child: SizedBox(
                   width: layout.workspaceWidth,
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(0, 10, 0, 96),
+                    controller: _scrollController,
+                    padding: const EdgeInsets.fromLTRB(0, 10, 0, 20),
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -250,24 +264,36 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
               constraints: const BoxConstraints(maxWidth: 620),
               child: Wrap(
                 alignment: WrapAlignment.center,
-                spacing: 12,
+                spacing: 8,
                 runSpacing: 8,
                 children: [
-                  OutlinedButton.icon(
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    key: const ValueKey('estimate-close'),
+                    onPressed: !_saving ? () => leaveDraftRoute() : null,
+                    child: const Text('Close'),
+                  ),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
                     key: const ValueKey('estimate-live-pdf-preview'),
                     onPressed: _draftReady && !_saving ? _previewPdf : null,
-                    icon: const Icon(Icons.picture_as_pdf_outlined),
-                    label: const Text('Preview'),
+                    child: const Text('Preview'),
                   ),
-                  FilledButton.icon(
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
                     key: ValueKey(
                       widget.initialRecord == null
                           ? 'save-estimate-draft'
                           : 'save-estimate-changes',
                     ),
                     onPressed: _draftReady && !_saving ? _save : null,
-                    icon: const Icon(Icons.save_outlined),
-                    label: const Text('Save estimate'),
+                    child: const Text('Save estimate'),
                   ),
                 ],
               ),

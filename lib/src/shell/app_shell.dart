@@ -25,6 +25,36 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   var _selectedIndex = 0;
   bool _openingExpenses = false;
+  bool _dashboardHandlesBack = false;
+  final _dashboardNavigator = GlobalKey<NavigatorState>();
+  final _workNavigator = GlobalKey<NavigatorState>();
+
+  NavigatorState? get _activeNavigator => switch (_selectedIndex) {
+    0 => _dashboardNavigator.currentState,
+    1 => _workNavigator.currentState,
+    _ => null,
+  };
+
+  Widget _moduleNavigator(
+    GlobalKey<NavigatorState> key,
+    Widget home,
+  ) => NotificationListener<NavigationNotification>(
+    onNotification: (notification) {
+      if (key == _dashboardNavigator &&
+          _dashboardHandlesBack != notification.canHandlePop) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _dashboardHandlesBack != notification.canHandlePop) {
+            setState(() => _dashboardHandlesBack = notification.canHandlePop);
+          }
+        });
+      }
+      return false;
+    },
+    child: Navigator(
+      key: key,
+      onGenerateRoute: (_) => MaterialPageRoute<void>(builder: (_) => home),
+    ),
+  );
 
   static const _modules = <Widget>[
     DashboardScreen(),
@@ -53,9 +83,17 @@ class _AppShellState extends State<AppShell> {
     final navigation = AppLayoutEngine.navigationFor(availableSize);
     final desktop = navigation == AppNavigationMode.rail;
     return PopScope(
-      canPop: _selectedIndex == 0,
+      canPop: _selectedIndex == 0 && !_dashboardHandlesBack,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && _selectedIndex != 0) _selectModule(0);
+        if (didPop) return;
+        final navigator = _activeNavigator;
+        if (navigator != null && navigator.canPop()) {
+          // maybePop consults the editor's save/discard guard. Do not jump
+          // modules when a protected route elects to stay open.
+          navigator.maybePop();
+        } else if (_selectedIndex != 0) {
+          _selectModule(0);
+        }
       },
       child: Scaffold(
         body: SafeArea(
@@ -76,7 +114,11 @@ class _AppShellState extends State<AppShell> {
                       Expanded(
                         child: IndexedStack(
                           index: _selectedIndex,
-                          children: _modules,
+                          children: [
+                            _moduleNavigator(_dashboardNavigator, _modules[0]),
+                            _moduleNavigator(_workNavigator, _modules[1]),
+                            ..._modules.skip(2),
+                          ],
                         ),
                       ),
                       if (desktop && _selectedIndex == 1)

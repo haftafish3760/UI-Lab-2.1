@@ -224,12 +224,32 @@ class _WorkDayScreenState extends State<WorkDayScreen> {
         builder: (_) => EstimateDetailScreen(
           initialRecord: record,
           onUpdated: store.updateWorkRecord,
-          onCreateJob: (_) async {},
+          onCreateJob: _createJobFromEstimate,
           permissions: permissions,
         ),
       ),
     );
     if (mounted) setState(() {});
+  }
+
+  Future<void> _createJobFromEstimate(WorkRecord estimate) async {
+    final job = await Navigator.of(context).push<WorkRecord>(
+      MaterialPageRoute(
+        builder: (_) => WorkJobEditor(
+          sourceEstimate: estimate,
+          initialDay: estimate.estimateDates?.proposedServiceOn ?? _day,
+        ),
+      ),
+    );
+    if (!mounted || job == null) return;
+    final store = PrototypeOperationsScope.of(context);
+    if (store.workSession == null) {
+      store.addWorkRecord(job);
+      store.updateWorkRecord(
+        estimate.withEstimateStage(EstimateStage.converted, DateTime.now()),
+      );
+    }
+    setState(() {});
   }
 
   void _openInvoice(WorkRecord record) {

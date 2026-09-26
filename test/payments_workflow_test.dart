@@ -57,6 +57,14 @@ void main() {
             sourceId: 'INV-3000',
             paymentMethod: 'Check',
           ),
+          PrototypeFinancialEntry(
+            id: 'paid-invoice-payment',
+            kind: PrototypeFinancialKind.paymentReceived,
+            occurredOn: today,
+            amountCents: 22500,
+            sourceId: 'invoice-paid',
+            paymentMethod: 'Cash',
+          ),
         ],
       );
       addTearDown(store.dispose);
@@ -156,6 +164,34 @@ void main() {
     expect(find.text('Payments received'), findsOneWidget);
     expect(find.byKey(const ValueKey('record-payment-fab')), findsNothing);
   });
+
+  test(
+    'a stale invoice status cannot hide a balance or allow overpayment',
+    () async {
+      final invoice = _invoice(
+        id: 'invoice-stale',
+        number: 'INV-STALE',
+        status: WorkRecordStatus.paid,
+        total: 100,
+      );
+      final store = PrototypeOperationsStore(workRecords: [invoice]);
+      addTearDown(store.dispose);
+      final today = DateUtils.dateOnly(DateTime.now());
+      final excessive = PrototypeFinancialEntry(
+        id: 'too-much',
+        kind: PrototypeFinancialKind.paymentReceived,
+        occurredOn: today,
+        amountCents: 10001,
+        sourceId: invoice.id,
+        paymentMethod: 'Cash',
+      );
+      expect(await store.recordInvoicePayment(invoice, excessive), isFalse);
+      expect(
+        store.financialEntries.where((entry) => entry.id == excessive.id),
+        isEmpty,
+      );
+    },
+  );
 }
 
 Future<void> _pumpPayments(

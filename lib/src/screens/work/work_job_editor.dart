@@ -1,3 +1,4 @@
+import '../../data/storage/local_record_command.dart';
 import '../../data/work/directory_persistence_session.dart';
 import 'add_job_employee_button.dart';
 import '../../shared/utility_form_section.dart';
@@ -22,6 +23,7 @@ import 'work_contact_models.dart';
 import 'work_detail_header.dart';
 import 'work_items_editor.dart';
 import 'work_models.dart';
+import 'job_opening_picker.dart';
 
 part 'work_job_editor_sections.dart';
 part 'work_job_draft_recovery.dart';
@@ -48,6 +50,15 @@ class WorkJobEditor extends StatefulWidget {
 class _WorkJobEditorState extends State<WorkJobEditor>
     with DraftNavigationGuard {
   bool _saving = false;
+  String? _entryInput;
+  @override
+  bool get confirmDraftExit =>
+      _draftReady &&
+      _entryInput != null &&
+      canonicalJson(_jobInput.toPayload()) != _entryInput;
+  @override
+  bool get requiresDraftPopGuard => confirmDraftExit || navigationDraft != null;
+
   int _sourceStorageRevision = 0;
   late String _jobId = newLocalRecordIdentity('job');
   late JobDraftController? _workflow = widget.recoveredWorkflow;
@@ -74,6 +85,7 @@ class _WorkJobEditorState extends State<WorkJobEditor>
   late DateTime _endDay;
   var _startTime = const TimeOfDay(hour: 9, minute: 0);
   var _endTime = const TimeOfDay(hour: 11, minute: 0);
+  int _bufferMinutes = 30;
   String? _client;
   String? _location;
   String? _assignee;
@@ -209,6 +221,13 @@ class _WorkJobEditorState extends State<WorkJobEditor>
                             _JobScheduleSection(
                               start: _startDateTime,
                               end: _endDateTime,
+                              bufferMinutes: _bufferMinutes,
+                              onBufferChanged: (value) =>
+                                  _changeJobInput(() => _bufferMinutes = value),
+                              onFindOpening:
+                                  (_store.workSession?.permissions.canScheduleJobs ?? false)
+                                      ? _findOpening
+                                      : null,
                               onStartDay: () => _pickDay(start: true),
                               onStartTime: () => _pickTime(start: true),
                               onEndDay: () => _pickDay(start: false),
@@ -288,6 +307,49 @@ class _WorkJobEditorState extends State<WorkJobEditor>
         ),
       ),
     );
+  }
+
+  Future<void> _findOpening() async {
+    final work = _store.workSession;
+    if (work == null) return;
+    final start = _startDateTime;
+    final end = _endDateTime;
+    if (!end.isAfter(start)) {
+      _refresh(() => _formError = 'Set an end time after the start first.');
+      return;
+    }
+    final proposal = WorkRecord(
+      id: _jobId,
+      kind: WorkRecordKind.job,
+      number: _number,
+      title: _title.text,
+      client: _client ?? 'Client not selected',
+      detail: _scope.text,
+      pricing: _pricing,
+      createdByEmployeeId: work.permissions.actorEmployeeId,
+      assignedEmployeeIds: List.unmodifiable(_employeeIds),
+      vehicle: _vehicle,
+      scheduledStart: start,
+      scheduledEnd: end,
+      scheduleBufferMinutes: _bufferMinutes,
+    );
+    final selected = await showDialog<DateTime>(
+      context: context,
+      builder: (_) => JobOpeningPicker(
+        job: proposal,
+        work: work,
+        initialDay: _startDay,
+      ),
+    );
+    if (!mounted || selected == null) return;
+    final selectedEnd = selected.add(end.difference(start));
+    _changeJobInput(() {
+      _startDay = DateUtils.dateOnly(selected);
+      _startTime = TimeOfDay.fromDateTime(selected);
+      _endDay = DateUtils.dateOnly(selectedEnd);
+      _endTime = TimeOfDay.fromDateTime(selectedEnd);
+      _formError = null;
+    });
   }
 
   List<WorkCustomerProfile> get _jobCustomers => [

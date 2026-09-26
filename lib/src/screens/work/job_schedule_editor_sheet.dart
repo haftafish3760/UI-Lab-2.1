@@ -1,3 +1,4 @@
+import 'job_opening_picker.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../data/storage/draft_autosave_session.dart';
@@ -28,6 +29,7 @@ class _JobScheduleEditorSheetState extends State<JobScheduleEditorSheet>
   final _minute = TextEditingController();
   late DateTime _day;
   String _period = 'AM';
+  int _bufferMinutes = 0;
   late WorkRecord _base;
   late JobScheduleDraftController? _workflow = widget.recoveredWorkflow;
   DraftAutosaveSession? get _draft => _workflow?.session;
@@ -69,6 +71,7 @@ class _JobScheduleEditorSheetState extends State<JobScheduleEditorSheet>
         _hour.text = input.hour;
         _minute.text = input.minute;
         _period = input.period;
+        _bufferMinutes = input.bufferMinutes;
         final draft = workflow.session;
         _subscription = draft.changes.listen((_) {
           if (mounted) setState(() {});
@@ -100,6 +103,7 @@ class _JobScheduleEditorSheetState extends State<JobScheduleEditorSheet>
       hour: _hour.text,
       minute: _minute.text,
       period: _period,
+      bufferMinutes: _bufferMinutes,
     );
   }
 
@@ -117,6 +121,7 @@ class _JobScheduleEditorSheetState extends State<JobScheduleEditorSheet>
               hour: _hour.text,
               minute: _minute.text,
               period: _period,
+              bufferMinutes: _bufferMinutes,
             ).confirmedRecord();
       if (record == null) {
         throw StateError(
@@ -187,6 +192,7 @@ class _JobScheduleEditorSheetState extends State<JobScheduleEditorSheet>
     _hour.text = input.hour;
     _minute.text = input.minute;
     _period = input.period;
+    _bufferMinutes = input.bufferMinutes;
   }
 
   void _change(VoidCallback change) {
@@ -265,6 +271,73 @@ class _JobScheduleEditorSheetState extends State<JobScheduleEditorSheet>
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  key: const ValueKey('reschedule-gap'),
+                  initialValue: _bufferMinutes,
+                  decoration: const InputDecoration(
+                    labelText: 'Minimum gap between jobs',
+                    helperText: 'Allow time for travel or a job running long.',
+                  ),
+                  items:
+                      [
+                            0,
+                            15,
+                            30,
+                            60,
+                            120,
+                            if (!const [
+                              0,
+                              15,
+                              30,
+                              60,
+                              120,
+                            ].contains(_bufferMinutes))
+                              _bufferMinutes,
+                          ]
+                          .map(
+                            (minutes) => DropdownMenuItem(
+                              value: minutes,
+                              child: Text(
+                                minutes == 0 ? 'No gap' : '$minutes minutes',
+                              ),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) {
+                    if (value != null) _change(() => _bufferMinutes = value);
+                  },
+                ),
+                const SizedBox(height: 12),
+                if (widget.work != null)
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.event_available_outlined),
+                    label: const Text('Find an opening'),
+                    onPressed: () async {
+                      final selected = await showDialog<DateTime>(
+                        context: context,
+                        builder: (_) => JobOpeningPicker(
+                          job: (_workflow?.input.base ?? _base).copyWith(
+                            scheduleBufferMinutes: _bufferMinutes,
+                          ),
+                          work: widget.work!,
+                          initialDay: _day,
+                        ),
+                      );
+                      if (!mounted || selected == null) return;
+                      _change(() {
+                        _day = DateUtils.dateOnly(selected);
+                        _hour.text =
+                            (selected.hour % 12 == 0 ? 12 : selected.hour % 12)
+                                .toString();
+                        _minute.text = selected.minute.toString().padLeft(
+                          2,
+                          '0',
+                        );
+                        _period = selected.hour < 12 ? 'AM' : 'PM';
+                      });
+                    },
+                  ),
                 const SizedBox(height: 12),
                 SegmentedButton<String>(
                   segments: const [

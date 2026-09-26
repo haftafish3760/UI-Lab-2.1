@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/notifications/native_notification_gateway.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_database.dart';
 import 'package:ui_lab_2_1/src/data/storage/local_draft_store.dart';
+import 'package:ui_lab_2_1/src/data/work/work_review_examples.dart';
 import 'package:ui_lab_2_1/src/startup/open_ui_lab_application.dart';
 
 void main() {
@@ -21,6 +22,8 @@ void main() {
         final first = await open();
         await closeUnstartedApplication(first);
         var db = LocalDatabase.file(file);
+        // Explicit fixtures belong only to this disposable test database.
+        await loadRequestedWorkExamples(db);
         await LocalDraftStore(db).save(
           organizationId: 'test-company',
           domain: 'unfinished',

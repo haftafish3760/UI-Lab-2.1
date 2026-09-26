@@ -77,10 +77,11 @@ class _EstimateScopeCard extends StatelessWidget {
         Text(record.detail),
         const Divider(height: 22),
         Text(
-          'Pricing: ${record.pricing == WorkPricingModel.flatRate ? 'Flat rate' : 'Time and materials'}',
+          'Terms and conditions',
+          style: Theme.of(context).textTheme.titleMedium,
         ),
-        Text('Template: ${record.template}'),
-        Text('Terms: ${record.terms}'),
+        const SizedBox(height: 6),
+        Text(record.terms.isEmpty ? 'No terms added.' : record.terms),
       ],
     ),
   );
@@ -158,6 +159,16 @@ class _EstimateItemsCard extends StatelessWidget {
           _ItemSummary(label: 'Labor', items: labor.toList()),
           const Divider(height: 20),
           _ItemSummary(label: 'Materials', items: materials.toList()),
+          const Divider(height: 20),
+          Text(
+            'Subtotal: \$${record.items.fold<double>(0, (sum, item) => sum + item.total).toStringAsFixed(2)}',
+          ),
+          Text('Discount: \$${record.discount.toStringAsFixed(2)}'),
+          Text('Tax: \$${record.tax.toStringAsFixed(2)}'),
+          Text(
+            'Estimated total: \$${record.total.toStringAsFixed(2)}',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
         ],
       ),
     );
@@ -180,7 +191,9 @@ class _ItemSummary extends StatelessWidget {
         for (final item in items)
           Padding(
             padding: const EdgeInsets.only(top: 5),
-            child: Text('${item.name} · ${item.quantity} ${item.unit}'),
+            child: Text(
+              '${item.name} · ${item.quantity} ${item.unit} · \$${item.total.toStringAsFixed(2)}',
+            ),
           ),
     ],
   );
@@ -196,7 +209,7 @@ class _EstimateHistoryCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Revision and delivery history',
+          'Changes and sharing history',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),

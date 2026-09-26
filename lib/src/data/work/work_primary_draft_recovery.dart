@@ -89,7 +89,9 @@ class WorkPrimaryDraftRecovery {
       switch (kind) {
         case WorkRecordKind.estimate:
           final input = EstimateDraftInput.fromPayload(raw);
-          title = input.title;
+          title = input.title.trim().isNotEmpty
+              ? input.title
+              : (input.client ?? '');
           creator = input.creatorId;
           recordId = input.estimateId;
           parentId = input.baseRecord?.id;
@@ -102,7 +104,9 @@ class WorkPrimaryDraftRecovery {
           }
         case WorkRecordKind.invoice:
           final input = InvoiceDraftInput.fromPayload(raw);
-          title = input.title;
+          title = input.title.trim().isNotEmpty
+              ? input.title
+              : (input.client ?? '');
           creator = input.creatorId;
           recordId = input.recordId;
           parentId = input.existingRecordId;
@@ -112,7 +116,9 @@ class WorkPrimaryDraftRecovery {
           }
         case WorkRecordKind.job:
           final input = JobDraftInput.fromPayload(raw);
-          title = input.title;
+          title = input.title.trim().isNotEmpty
+              ? input.title
+              : (input.client ?? '');
           creator =
               input.sourceEstimate?.createdByEmployeeId ??
               _work.permissions.actorEmployeeId;

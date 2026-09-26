@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 
 import '../storage/dual_slot_json_store.dart';
 import '../storage/domain_snapshot_store.dart';
+import '../storage/receipt_evidence_relative_path.dart';
 import '../storage/serialized_async_actions.dart';
 import '../storage/sqlite_domain_snapshot_store.dart';
 import '../storage/staged_domain_mutation.dart';
@@ -146,13 +147,8 @@ class LocalReceiptDraftRepository implements ReceiptDraftRepository {
         ),
       ],
     );
-    try {
-      await _persist({..._records, draft.draftId: created});
-      return created;
-    } on Object {
-      await _removeNewFiles(imported.createdFiles);
-      rethrow;
-    }
+    await _persist({..._records, draft.draftId: created});
+    return created;
   });
 
   @override
@@ -205,13 +201,8 @@ class LocalReceiptDraftRepository implements ReceiptDraftRepository {
         ),
       ],
     );
-    try {
-      await _persist({..._records, draft.draftId: updated});
-      return updated;
-    } on Object {
-      await _removeNewFiles(imported.createdFiles);
-      rethrow;
-    }
+    await _persist({..._records, draft.draftId: updated});
+    return updated;
   });
 
   @override
@@ -321,7 +312,6 @@ class LocalReceiptDraftRepository implements ReceiptDraftRepository {
       );
     }
 
-    final createdFiles = <File>[];
     for (var index = 0; index < imports.length; index++) {
       final source = File(imports[index].sourcePath);
       final digest = await _validatedDigest(source);
@@ -344,20 +334,13 @@ class LocalReceiptDraftRepository implements ReceiptDraftRepository {
         );
         continue;
       }
-      final evidenceId = _evidenceId(
-        draftId,
-        digest.sha256,
-        occurredAtUtc,
-        index,
-      );
       final target = await _copyEvidence(
         draftId: draftId,
-        evidenceId: evidenceId,
         kind: imports[index].kind,
         source: source,
         expectedSha256: digest.sha256,
       );
-      createdFiles.add(target);
+      final evidenceId = target.uri.pathSegments.last.split('.').first;
       next.insert(
         order,
         ReceiptDraftEvidence(
@@ -371,7 +354,7 @@ class LocalReceiptDraftRepository implements ReceiptDraftRepository {
         ),
       );
     }
-    return _EvidenceMerge(evidence: next, createdFiles: createdFiles);
+    return _EvidenceMerge(evidence: next);
   }
 
   Future<_FileDigest> _validatedDigest(File source) async {
@@ -392,7 +375,6 @@ class LocalReceiptDraftRepository implements ReceiptDraftRepository {
 
   Future<File> _copyEvidence({
     required String draftId,
-    required String evidenceId,
     required ReceiptDraftEvidenceKind kind,
     required File source,
     required String expectedSha256,
@@ -402,10 +384,17 @@ class LocalReceiptDraftRepository implements ReceiptDraftRepository {
     );
     await folder.create(recursive: true);
     final extension = kind == ReceiptDraftEvidenceKind.pdf ? 'pdf' : 'image';
-    final target = File.fromUri(folder.uri.resolve('$evidenceId.$extension'));
+    // Atomically allocate a fresh directory: neither retries nor clock reuse
+    // may overwrite an existing attachment or interrupted copy.
+    final allocation = await folder.createTemp('receipt-evidence-');
+    final evidenceId = allocation.uri.pathSegments
+        .where((s) => s.isNotEmpty)
+        .last;
+    final target = File.fromUri(
+      allocation.uri.resolve('$evidenceId.$extension'),
+    );
     final temporary = File('${target.path}.tmp');
     try {
-      if (await temporary.exists()) await temporary.delete();
       await source.copy(temporary.path);
       final copied = await _validatedDigest(temporary);
       if (copied.sha256 != expectedSha256) {
@@ -421,13 +410,11 @@ class LocalReceiptDraftRepository implements ReceiptDraftRepository {
       } finally {
         await retained.close();
       }
-      if (await target.exists()) await target.delete();
       return await temporary.rename(target.path);
     } on ReceiptDraftRepositoryException {
-      if (await temporary.exists()) await temporary.delete();
+      // Preserve interrupted copies; automatic cleanup is not authorized.
       rethrow;
     } on Object catch (error) {
-      if (await temporary.exists()) await temporary.delete();
       throw ReceiptDraftStorageException(
         'Receipt evidence was not retained. ($error)',
       );
@@ -446,32 +433,12 @@ class LocalReceiptDraftRepository implements ReceiptDraftRepository {
   }
 }
 
-Future<void> _removeNewFiles(Iterable<File> files) async {
-  for (final file in files) {
-    try {
-      if (await file.exists()) await file.delete();
-    } on Object {
-      // The unreferenced file is retained rather than risking existing evidence.
-    }
-  }
-}
-
 String _safeFolder(String draftId) =>
     sha256.convert(utf8.encode(draftId)).toString().substring(0, 24);
 
-String _evidenceId(
-  String draftId,
-  String digest,
-  DateTime occurredAtUtc,
-  int index,
-) =>
-    '${_safeFolder(draftId)}-'
-    '${occurredAtUtc.microsecondsSinceEpoch}-$index-${digest.substring(0, 12)}';
-
 class _EvidenceMerge {
-  const _EvidenceMerge({required this.evidence, required this.createdFiles});
+  const _EvidenceMerge({required this.evidence});
   final List<ReceiptDraftEvidence> evidence;
-  final List<File> createdFiles;
 }
 
 class _FileDigest {

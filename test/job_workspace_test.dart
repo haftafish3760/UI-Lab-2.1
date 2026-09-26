@@ -232,6 +232,8 @@ void main() {
     await tester.binding.handlePopRoute();
     await _settle(tester);
 
+    await tester.ensureVisible(find.text('Call customer'));
+    await _settle(tester);
     await tester.tap(find.text('Call customer'));
     await _settle(tester);
     expect(find.text('Phone number'), findsOneWidget);

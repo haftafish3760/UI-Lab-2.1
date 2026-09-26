@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/prototype_operations_store.dart';
+import '../../data/work/invoice_payment_balance.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/operations_workspace.dart';
 import '../../shared/operational_scope.dart';
@@ -58,16 +59,7 @@ class AdminDashboardOverview extends StatelessWidget {
     final invoices = records
         .where((r) => r.kind == WorkRecordKind.invoice && r.issuedOn != null)
         .toList();
-    int balance(WorkRecord r) {
-      final paid = store.financialEntries
-          .where(
-            (e) =>
-                e.kind == PrototypeFinancialKind.paymentReceived &&
-                e.sourceId == r.number,
-          )
-          .fold<int>(0, (sum, e) => sum + e.amountCents);
-      return ((r.total * 100).round() - paid).clamp(0, 1 << 62);
-    }
+    int balance(WorkRecord r) => invoiceBalanceCents(r, store.financialEntries);
 
     final unpaid = invoices.where((r) => balance(r) > 0).toList();
     final money = NumberFormat.simpleCurrency(

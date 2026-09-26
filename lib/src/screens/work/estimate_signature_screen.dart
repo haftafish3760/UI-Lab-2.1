@@ -9,7 +9,7 @@ import '../../data/storage/draft_autosave_session.dart';
 import '../../shared/draft_navigation_guard.dart';
 import '../../shared/editor_draft_status.dart';
 import '../../shared/section_card.dart';
-import 'work_detail_header.dart';
+
 import 'work_models.dart';
 
 part 'estimate_signature_draft_recovery.dart';
@@ -38,7 +38,9 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
   );
   final _strokes = <List<Offset>>[];
   var _accepted = false;
+  var _showPad = false;
   final _padKey = GlobalKey();
+  final _padSectionKey = GlobalKey();
   late WorkRecord _base = widget.record;
   WorkPersistenceSession? _work;
   late EstimateSignatureDraftController? _workflow = widget.recoveredWorkflow;
@@ -71,6 +73,10 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
   Widget build(BuildContext context) => guardDraftNavigation(
     Scaffold(
       key: const ValueKey('estimate-signature-screen'),
+      appBar: AppBar(
+        title: Text(_forBusiness ? 'Business signature' : 'Review and sign'),
+        leading: BackButton(onPressed: () => leaveDraftRoute()),
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -90,15 +96,6 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        WorkDetailHeader(
-                          label: _forBusiness
-                              ? 'Business signature'
-                              : 'Customer signature',
-                          selectedDay:
-                              _base.estimateDates?.createdOn ?? DateTime.now(),
-                          onBack: () => leaveDraftRoute(),
-                          showDateContext: true,
-                        ),
                         const SizedBox(height: 16),
                         Text(
                           _forBusiness
@@ -120,6 +117,39 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                               Text(_base.detail),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Work and prices',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              for (final item in _base.items)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 6,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Text(item.name),
+                                      Text(
+                                        '${item.quantity} ${item.unit} · \$${item.total.toStringAsFixed(2)}',
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              const Divider(),
+                              Text(
+                                'Subtotal: \$${_base.items.fold<double>(0, (sum, item) => sum + item.total).toStringAsFixed(2)}',
+                              ),
+                              Text(
+                                'Discount: \$${_base.discount.toStringAsFixed(2)}',
+                              ),
+                              Text('Tax: \$${_base.tax.toStringAsFixed(2)}'),
+                              Text(
+                                'Estimated total: \$${_base.total.toStringAsFixed(2)}',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
                               const SizedBox(height: 8),
                               Text(
                                 'Terms and conditions',
@@ -157,68 +187,99 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'Sign below',
+                                  _ink.hasInk
+                                      ? 'Signature added'
+                                      : 'Customer signature needed',
                                   style: Theme.of(
                                     context,
                                   ).textTheme.titleMedium,
                                 ),
-                                const SizedBox(height: 6),
-                                Container(
-                                  key: _padKey,
-                                  height: 210,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(
+                                const SizedBox(height: 8),
+                                FilledButton(
+                                  key: const ValueKey('tap-to-sign'),
+                                  onPressed: _saving ? null : _openSigningPad,
+                                  child: Text(
+                                    _ink.hasInk
+                                        ? 'Review or change signature'
+                                        : 'Tap to sign',
+                                  ),
+                                ),
+                                if (_showPad) ...[
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Sign here with a finger or stylus',
+                                    key: _padSectionKey,
+                                    style: Theme.of(
                                       context,
-                                    ).colorScheme.surface,
-                                    border: Border.all(
+                                    ).textTheme.titleMedium,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    key: _padKey,
+                                    height: 210,
+                                    decoration: BoxDecoration(
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.outline,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: GestureDetector(
-                                    key: const ValueKey(
-                                      'estimate-signature-pad',
-                                    ),
-                                    behavior: HitTestBehavior.opaque,
-                                    onPanStart: (details) => _addInk(
-                                      details.localPosition,
-                                      newStroke: true,
-                                    ),
-                                    onPanUpdate: (details) =>
-                                        _addInk(details.localPosition),
-                                    child: CustomPaint(
-                                      painter: _SignaturePainter(
-                                        strokes: _strokes,
+                                      ).colorScheme.surface,
+                                      border: Border.all(
                                         color: Theme.of(
                                           context,
-                                        ).colorScheme.onSurface,
+                                        ).colorScheme.outline,
                                       ),
-                                      child: _strokes.isEmpty
-                                          ? Center(
-                                              child: Text(
-                                                'Use a finger or stylus to sign',
-                                                style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurfaceVariant,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: GestureDetector(
+                                      key: const ValueKey(
+                                        'estimate-signature-pad',
+                                      ),
+                                      behavior: HitTestBehavior.opaque,
+                                      onPanStart: (details) => _addInk(
+                                        details.localPosition,
+                                        newStroke: true,
+                                      ),
+                                      onPanUpdate: (details) =>
+                                          _addInk(details.localPosition),
+                                      child: CustomPaint(
+                                        painter: _SignaturePainter(
+                                          strokes: _strokes,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
+                                        ),
+                                        child: _strokes.isEmpty
+                                            ? Center(
+                                                child: Text(
+                                                  'Sign inside this box',
+                                                  style: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
                                                 ),
-                                              ),
-                                            )
-                                          : null,
+                                              )
+                                            : null,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                Align(
-                                  alignment: AlignmentDirectional.centerEnd,
-                                  child: TextButton.icon(
-                                    onPressed: _clearSignature,
-                                    icon: const Icon(Icons.clear_rounded),
-                                    label: const Text('Clear signature'),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton(
+                                        onPressed: _clearSignature,
+                                        child: const Text('Clear'),
+                                      ),
+                                      TextButton(
+                                        onPressed: _ink.hasInk
+                                            ? () => setState(
+                                                () => _showPad = false,
+                                              )
+                                            : null,
+                                        child: const Text('Done signing'),
+                                      ),
+                                    ],
                                   ),
-                                ),
+                                ],
                                 CheckboxListTile(
                                   contentPadding: EdgeInsets.zero,
                                   controlAffinity:
@@ -232,8 +293,10 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
                                   subtitle: const Text(
                                     'This signature applies to this revision. Changes require a fresh review and approval.',
                                   ),
-                                  onChanged: (value) =>
-                                      _changeAcceptance(value ?? false),
+                                  onChanged: _ink.hasInk
+                                      ? (value) =>
+                                            _changeAcceptance(value ?? false)
+                                      : null,
                                 ),
                               ],
                             ),
@@ -263,6 +326,21 @@ class _EstimateSignatureScreenState extends State<EstimateSignatureScreen>
       ),
     ),
   );
+
+  void _openSigningPad() {
+    if (!_ready || _saving) return;
+    setState(() => _showPad = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _padSectionKey.currentContext;
+      if (mounted && target != null) {
+        Scrollable.ensureVisible(
+          target,
+          duration: const Duration(milliseconds: 200),
+          alignment: 0.12,
+        );
+      }
+    });
+  }
 }
 
 class _SignaturePainter extends CustomPainter {

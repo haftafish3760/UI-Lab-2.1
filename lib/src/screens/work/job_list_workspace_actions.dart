@@ -4,7 +4,7 @@ extension _JobListWorkspaceActions on _JobListWorkspaceScreenState {
   Future<void> _createJob() async {
     final job = await Navigator.of(context).push<WorkRecord>(
       MaterialPageRoute(
-        builder: (_) => WorkJobEditor(initialDay: _selectedDay),
+        builder: (_) => JobStartScreen(initialDay: _selectedDay),
       ),
     );
     if (mounted && job != null) _store.addWorkRecord(job);

@@ -97,6 +97,9 @@ void main() {
       isEmpty,
     );
     await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Keep your changes?'), findsOneWidget);
+    await tester.tap(find.text('Save draft'));
     await waitForNativeSave(
       tester,
       () => find.byKey(const ValueKey('job-editor-screen')).evaluate().isEmpty,

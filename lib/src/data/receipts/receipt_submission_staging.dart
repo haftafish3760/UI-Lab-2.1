@@ -22,9 +22,13 @@ extension ReceiptSubmissionStaging on LocalReceiptDraftRepository {
           ? 'pdf'
           : 'image';
       final expected = File.fromUri(
-        Directory(
-          root,
-        ).uri.resolve('${_safeFolder(draftId)}/${item.evidenceId}.$extension'),
+        Directory(root).uri.resolve(
+          receiptEvidenceRelativePath(
+            draftFolder: _safeFolder(draftId),
+            evidenceId: item.evidenceId,
+            extension: extension,
+          ),
+        ),
       ).path;
       final file = File(
         _resolveRetainedPath?.call(item.localPath) ?? item.localPath,

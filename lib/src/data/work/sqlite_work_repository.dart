@@ -38,6 +38,33 @@ class SqliteWorkRepository {
   final LocalDatabase database;
   DraftRepository get drafts => LocalDraftStore(database);
 
+  /// Company-wide booking data for availability checks only. Never return
+  /// these records to a user-facing list: creator visibility is separate.
+  Future<List<WorkRecord>> scheduleBookings(String organizationId) async {
+    final rows =
+        await (database.select(database.localRecords)..where(
+              (row) =>
+                  row.organizationId.equals(organizationId) &
+                  row.domain.equals('work/records'),
+            ))
+            .get();
+    final deleted =
+        await (database.select(database.localRecords)..where(
+              (row) =>
+                  row.organizationId.equals(organizationId) &
+                  row.domain.equals('work/deleted'),
+            ))
+            .get();
+    final deletedIds = deleted.map((row) => row.recordId).toSet();
+    final store = LocalRecordStore(database);
+    return List.unmodifiable(
+      rows
+          .where((row) => !deletedIds.contains(row.recordId))
+          .map((row) => decodeWorkRecord(store.decode(row)))
+          .where((record) => record.kind == WorkRecordKind.job),
+    );
+  }
+
   Future<List<PersistedWorkRecord>> query({
     required String organizationId,
     required Set<String> visibleCreatorIds,

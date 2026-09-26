@@ -41,7 +41,8 @@ the illustrated sequence as a mandatory gate.
 
 1. Create or select a customer and service location.
 2. Create an estimate, or create a direct job when quoting is not required.
-3. Build scope and pricing as flat rate or time and materials.
+3. Build the scope and estimated cost without labeling the Estimate itself a
+   fixed-price commitment; fixed-price proposals belong in Quotes.
 4. Add labor, materials, equipment, procurement, fees, discounts, tax, deposit,
    validity period, terms, exclusions, and customer-facing notes.
 5. Preview and share the proposed estimate through an authorized delivery method.
@@ -59,10 +60,18 @@ the illustrated sequence as a mandatory gate.
 ## Quotes — required capability, independent lifecycle unresolved
 
 Quotes must be represented as a complete Work application, not erased because
-older registers only listed Estimates. Quote versus Estimate pricing commitment,
-expiry, acceptance, revision, conversion and document rules require U04. Do not
-invent legal distinctions or treat them as synonyms. Shared customer, pricing
-and document infrastructure can be evaluated without settling those policies.
+older registers only listed Estimates. The owner describes a Quote as a fixed
+customer price for the agreed scope. It may show itemized work or one total.
+Changing that price by any amount, up or down, makes the previous customer
+signature inapplicable to the new revision and requires fresh approval; the
+signed earlier revision remains in history. Additional work needs an explicit
+customer-visible scope and price review rather than silently changing the
+accepted quote. The owner wants conversion to a Job and a direct path to an
+Invoice when no Job is needed. Exact expiry, a time-and-materials offer that
+does not promise a fixed total, and whether a Job may be planned before Quote
+approval remain U04. Do not invent legal distinctions or treat Quote and
+Estimate as synonyms. Shared customer, pricing and document infrastructure
+can be evaluated without settling those remaining policies.
 
 ## Customer and location record
 
@@ -276,14 +285,32 @@ revision/delivery history, and the actions Preview customer copy, Send or share,
 Sign in person, and—only after approval of the current revision—Create and plan
 job.
 
-On a compact Estimate detail route, one labeled `Estimate actions` FAB opens a
-full-screen, permission-derived action directory. The current next step appears
-before record actions. Wide layouts may show the same actions in a bounded
-inline section. Existing labor, material, equipment, and charge rows reopen in
-the same line-item form and retain their stable IDs and evidence links. Any
-customer-visible change creates a new revision and invalidates approval for the
-superseded revision. All nested Estimate routes use the shared Work header and
-localized record date; generic one-off app bars are prohibited.
+Owner correction, September 25: ordinary estimate actions remain visible and
+labeled rather than hidden in an action directory. The editor keeps Close,
+Preview, and Save estimate in a compact text-only bottom row where the available
+width and text scale permit; accessibility may reflow them without truncation.
+Customer approval is the final tappable section of the scrollable form.
+Preview and approval are child routes of that exact editor. Back/cancel returns
+to the same editor and scroll position, with its input retained; successful
+approval refreshes its status without closing it or detouring through details.
+The approved version must be saved before recording acceptance, with failed
+writes leaving recoverable input. Separate capabilities govern recording an
+approval and collecting a signature.
+
+Approval opens a full screen with an explicit Review and sign in person action.
+The signing screen presents the work, item prices, adjustments, total, terms,
+customer name, a clear Tap to sign action, and an acceptance control. Tap to sign
+reveals a bounded handwriting area with thin strokes, Clear, and Done signing;
+acceptance stays unavailable until handwriting exists. The saved signature
+remains tied to the exact reviewed revision. Remote signing links
+are deferred by the owner; offline in-person signing remains required. Approval
+and its exact document version must survive a local save and restart.
+
+Estimate review separates work and prices, approval and dates, and changes and
+sharing history. Wide layouts use the shared bounded operations lanes, including
+three columns when available width and text scaling permit. History is not the
+Add more work action. Existing line items retain stable IDs and evidence links;
+customer-visible changes invalidate the prior approval for the revised copy.
 
 Labor is not disguised as a generic material line. Labor rows support role or
 service, hours or service quantity, customer rate, private internal rate, and
@@ -792,6 +819,11 @@ text, print, or secure-link delivery. Issued invoices may record payment against
 their exact invoice number; only payments that reduce the balance to zero mark
 the Invoice Paid. Customer-copy preparation remains distinct from delivery
 confirmation.
+Dashboard, Payments, Invoice detail, and reports derive the open amount from
+the invoice total minus recorded payments, including partial payments. Existing
+payments linked by displayed invoice number and payments linked by stable
+invoice ID must resolve to the same invoice; a status label alone cannot stand
+in for the balance. A dated report excludes payments after its as-of day.
 Every payment entry point uses the same full-screen balance-aware form. The
 Payments workspace first selects an authorized open invoice through a searchable
 list, then opens that exact form; drafts and paid invoices are excluded, prior

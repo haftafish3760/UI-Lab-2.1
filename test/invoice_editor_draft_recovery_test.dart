@@ -97,6 +97,13 @@ void main() {
         isEmpty,
       );
       await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Keep your changes?'), findsOneWidget);
+      await tester.tap(find.text('Keep editing'));
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save draft'));
       await waitForNativeSave(
         tester,
         () => find

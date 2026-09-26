@@ -57,37 +57,65 @@ class _WorkDailySection extends StatelessWidget {
           ),
         for (final record in records)
           Padding(
+            key: ValueKey('work-${plan ? 'plan' : 'entry'}-row-${record.id}'),
             padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
             child: Material(
               color: tone.row,
               borderRadius: BorderRadius.circular(4),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                title: Text(
-                  record.client,
-                  style: const TextStyle(
-                    color: OperationalCardTone.darkInk,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                subtitle: Text(
-                  '${record.title}\n${record.number} · ${record.status.label}\n${_time(context, record)}${plan ? ' · ${record.assignee ?? 'Unassigned'}' : ''}',
-                  style: const TextStyle(color: OperationalCardTone.darkInk),
-                ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(4),
                 onTap: () => onOpen(record),
-                trailing: plan && onAssign != null
-                    ? IconButton(
-                        tooltip: 'Assign employees',
-                        icon: const Icon(
-                          Icons.group_add_outlined,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 7,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              record.client,
+                              style: const TextStyle(
+                                color: OperationalCardTone.darkInk,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              record.title,
+                              style: const TextStyle(
+                                color: OperationalCardTone.darkInk,
+                              ),
+                            ),
+                            Text(
+                              '${record.number} · ${record.status.label} · ${_time(context, record)}${plan ? ' · ${record.assignee ?? 'Unassigned'}' : ''}',
+                              style: const TextStyle(
+                                color: OperationalCardTone.darkInk,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (plan && onAssign != null)
+                        IconButton(
+                          tooltip: 'Assign employees',
+                          icon: const Icon(
+                            Icons.group_add_outlined,
+                            color: OperationalCardTone.darkInk,
+                          ),
+                          onPressed: () => onAssign!(record),
+                        )
+                      else
+                        const Icon(
+                          Icons.chevron_right,
                           color: OperationalCardTone.darkInk,
                         ),
-                        onPressed: () => onAssign!(record),
-                      )
-                    : const Icon(
-                        Icons.chevron_right,
-                        color: OperationalCardTone.darkInk,
-                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -96,12 +124,16 @@ class _WorkDailySection extends StatelessWidget {
     );
     return plan
         ? SectionCard(
+            key: const ValueKey('work-plan-section'),
             padding: EdgeInsets.zero,
             backgroundColor: tone.start,
             borderColor: tone.start,
             child: content(context),
           )
-        : RecordedEntriesSection(builder: content);
+        : RecordedEntriesSection(
+            key: const ValueKey('work-entries-section'),
+            builder: content,
+          );
   }
 
   String _time(BuildContext context, WorkRecord record) {

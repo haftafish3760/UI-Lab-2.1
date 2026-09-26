@@ -57,7 +57,10 @@ Future<WorkPersistenceSession> openUiLabWorkSession(
       canRecordPayments: true,
       canDeleteDrafts: true,
       canAssignJobs: true,
+      canScheduleJobs: true,
       canShareDocuments: true,
+      canRecordCustomerApproval: true,
+      canCollectSignature: true,
     ),
   );
 }

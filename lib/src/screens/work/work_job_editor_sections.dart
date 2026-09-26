@@ -225,6 +225,9 @@ class _JobScheduleSection extends StatelessWidget {
   const _JobScheduleSection({
     required this.start,
     required this.end,
+    required this.bufferMinutes,
+    required this.onBufferChanged,
+    this.onFindOpening,
     required this.onStartDay,
     required this.onStartTime,
     required this.onEndDay,
@@ -233,6 +236,9 @@ class _JobScheduleSection extends StatelessWidget {
 
   final DateTime start;
   final DateTime end;
+  final int bufferMinutes;
+  final ValueChanged<int> onBufferChanged;
+  final VoidCallback? onFindOpening;
   final VoidCallback onStartDay;
   final VoidCallback onStartTime;
   final VoidCallback onEndDay;
@@ -284,6 +290,49 @@ class _JobScheduleSection extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<int>(
+            key: const ValueKey('job-schedule-gap'),
+            initialValue: bufferMinutes,
+            decoration: const InputDecoration(
+              labelText: 'Minimum gap between jobs',
+              helperText:
+                  'Leave time for travel, cleanup, or a job running long.',
+            ),
+            items:
+                [
+                      0,
+                      15,
+                      30,
+                      60,
+                      120,
+                      if (!const [0, 15, 30, 60, 120].contains(bufferMinutes))
+                        bufferMinutes,
+                    ]
+                    .map(
+                      (minutes) => DropdownMenuItem(
+                        value: minutes,
+                        child: Text(
+                          minutes == 0 ? 'No gap' : '$minutes minutes',
+                        ),
+                      ),
+                    )
+                    .toList(),
+            onChanged: (value) {
+              if (value != null) onBufferChanged(value);
+            },
+          ),
+          if (onFindOpening != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: OutlinedButton(
+                key: const ValueKey('new-job-find-opening'),
+                onPressed: onFindOpening,
+                child: const Text('Find an opening'),
+              ),
+            ),
+          ],
         ],
       ),
     );

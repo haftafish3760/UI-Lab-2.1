@@ -89,12 +89,14 @@ class EstimatePermissions {
     required this.canViewEstimateTotals,
     required this.canViewInternalCosts,
     this.canApproveCompanyReview = false,
+    this.canRecordCustomerApproval = false,
   }) : assert(
          canView ||
              (!canCreate &&
                  !canEditItems &&
                  !canSend &&
                  !canCollectSignature &&
+                 !canRecordCustomerApproval &&
                  !canConvertToJob &&
                  !canViewEstimateTotals &&
                  !canViewInternalCosts &&
@@ -108,6 +110,7 @@ class EstimatePermissions {
       canEditItems = true,
       canSend = true,
       canCollectSignature = true,
+      canRecordCustomerApproval = true,
       canConvertToJob = true,
       canViewEstimateTotals = true,
       canViewInternalCosts = true,
@@ -119,6 +122,7 @@ class EstimatePermissions {
       canEditItems = true,
       canSend = false,
       canCollectSignature = false,
+      canRecordCustomerApproval = false,
       canConvertToJob = false,
       canViewEstimateTotals = true,
       canViewInternalCosts = false,
@@ -129,6 +133,7 @@ class EstimatePermissions {
   final bool canEditItems;
   final bool canSend;
   final bool canCollectSignature;
+  final bool canRecordCustomerApproval;
   final bool canConvertToJob;
   final bool canViewEstimateTotals;
   final bool canViewInternalCosts;

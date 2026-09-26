@@ -106,6 +106,8 @@ void main() {
         () =>
             find.byKey(const ValueKey('estimate-title')).evaluate().isNotEmpty,
       );
+      expect(find.text('Pricing method'), findsNothing);
+      expect(find.text('Flat rate'), findsNothing);
       await tester.enterText(
         find.byKey(const ValueKey('estimate-title')),
         'Repair completed',

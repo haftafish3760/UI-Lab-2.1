@@ -1,8 +1,7 @@
 import '../../data/receipts/receipt_stitch_draft_workflow.dart';
 import '../../data/receipts/receipt_stitch_draft_state.dart';
-import '../../data/storage/local_draft_store.dart';
+import '../../data/receipts/receipt_combined_preview.dart';
 import '../../data/storage/local_media_picker_request.dart';
-import '../../data/storage/local_attachment_store.dart';
 import '../../shared/local_draft_scope.dart';
 import '../../data/receipts/receipt_evidence_review_input.dart';
 import 'dart:math' as math;

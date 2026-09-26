@@ -35,6 +35,7 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
   void _captureDraft() {
     if (!_draftReady || _submitting) return;
     _workflow?.updateInput(_draftInput());
+    if (mounted) _refresh(() {});
   }
 
   Future<void> _openDraft() async {
@@ -51,11 +52,13 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
         }
         return;
       }
+      _entryInput = canonicalJson(_draftInput().toPayload());
       _refresh(() => _draftReady = true);
       return;
     }
     try {
       _baseStorageRevision = work.storageRevisionFor(_recordId);
+      _entryInput = canonicalJson(_draftInput().toPayload());
       final workflow =
           widget.recoveredWorkflow ??
           await work.openInvoiceDraft(
@@ -117,28 +120,9 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
     _itemDraftInput = input.pendingLineItem;
   }
 
-  Future<void> _leaveEditor() async {
-    if (_submitting) return;
-    _refresh(() => _submitting = true);
-    try {
-      await _draft?.flush();
-      if (mounted) await _popEditor();
-    } on Object {
-      if (mounted) {
-        _refresh(() {
-          _submitting = false;
-          _formError =
-              'Your latest input has not been saved. Retry saving before leaving.';
-        });
-      }
-    }
-  }
+  Future<void> _leaveEditor() => leaveDraftRoute();
 
-  Future<void> _popEditor([WorkRecord? record]) async {
-    _refresh(() => _allowPop = true);
-    await WidgetsBinding.instance.endOfFrame;
-    if (mounted) Navigator.of(context).pop(record);
-  }
+  Future<void> _popEditor([WorkRecord? record]) => finishDraftRoute(record);
 
   Future<void> _discardDraft() async {
     if (_submitting) return;

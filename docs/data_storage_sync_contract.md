@@ -14,6 +14,39 @@ that later checkpoints resolved; they are not a declaration of current completio
 
 ## Active SQLite implementation checkpoint — 2026-09-09
 
+### Business data and example isolation
+
+Owner direction in the September 25 whole-application audit: no hard-coded
+business records or unfinished user work may supply ordinary application
+screens, be recreated when removed, or be packaged as a new customer's data.
+The audit covers every screen, default, startup seed, recovery path and storage
+adapter, not just estimates. Existing development records must remain ordinary
+durable user records; their fictional contents do not authorize resetting or
+deleting them. This direction supersedes historical permission for ordinary
+prototype/demo fallbacks elsewhere in this document and older blueprints.
+
+Every screen must read its authorized records from the shared storage system.
+Empty results stay empty; storage failures stay visible failures. Neither is
+permission to manufacture customers, employees, vehicles, work, stock, receipts,
+financial amounts, activity or drafts. User-entered development records remain
+separate from source code and distributed application assets. Normal edits,
+restart recovery and explicit confirmed deletion must work for them.
+
+Engineering interpretation of the scope: UI labels, genuine reference data,
+validation constants and empty form defaults are not fabricated business
+records. Isolated automated-test fixtures are evidence, not application records;
+they must not be reachable through ordinary startup or shipped-data fallbacks.
+Any retained demonstration/import mechanism requires explicit isolation and
+must never replace the owner's existing records or silently populate a customer
+installation. A build flag defaulting off alone is not proof of that isolation.
+
+This is a required policy, not a completed audit or implementation claim. The
+whole-app audit must distinguish reachable runtime examples, gated seed code,
+test-only content, legitimate reference data and unresolved paths. Removing
+source examples does not authorize deleting existing saved records. Release
+verification must establish that a fresh installation contains no developer
+business records and that deleting a record does not cause an example to return.
+
 ### Cross-platform file preservation — September 19 owner requirement
 
 Owner direction in the device-capability task: the app must never overwrite
@@ -42,6 +75,75 @@ replacement or for overwriting imported originals.
 
 The shared device-capability system has no authority to delete files. Its
 100 MiB reserve is governed by `device_capabilities_blueprint.md`.
+
+September 25 startup-preservation correction: normal application startup no
+longer invokes `loadRequestedWorkExamples`, including in debug builds. That
+historical review helper deletes Work records, drafts and history before
+installing fixtures when its marker is absent; it is not an ordinary startup
+migration. Existing development records must use real persistence and survive
+reopening. Explicit disposable test fixtures may still call the helper. This
+change does not remove existing records or change the separate initial demo
+seeding policies. Production identity and release fixture exclusion remain
+separate unfinished gates; development permissions are not real account grants.
+The regression `startup_preserves_development_records_test.dart` checks full
+retention of pre-existing records, revisions, drafts, commands and outbox rows
+across two normal startup cycles without the review-example marker.
+Verification for this bounded correction: eight focused startup/recovery tests
+passed, focused Flutter analysis reported no issues, and the macOS debug build
+succeeded. No application launch or physical-device verification was performed.
+This does not establish completion of low-storage admission, file-preservation,
+production authorization, schema upgrades or the overall storage migration.
+
+September 25 receipt-file preservation: new imports use random evidence IDs
+and atomically allocated unique directories. Existing saved paths/IDs remain
+readable. Same-time repeated imports must not reuse an acknowledged file's path.
+The repository no longer deletes a destination, stale staging file, or imported
+copy after a rejected database write. SQL failure still leaves the confirmed
+receipt unchanged. Unreferenced/partial copies are deliberately retained under
+the no-automatic-deletion rule; a future explicit, confirmed cleanup workflow
+and accounting for these files remain unfinished. This is not an automatic
+backup, a storage-space reclamation mechanism, or a complete media-pipeline audit.
+The initial repeated-import probe failed before SQL confirmation because the
+old timestamp-derived identity collided; it did not demonstrate loss of the
+previous file. The corrected regression explicitly requires a storage failure,
+retains both copies without changing the saved receipt, reopens the database,
+and retries with distinct attachment identities. An initial broader run exposed
+nine submission/restore failures because those services expected flat paths.
+A shared relative-path resolver now preserves that legacy format and recognizes
+the new allocation format without weakening canonical-path/hash verification.
+The corrected receipt/domain run passed 25 checks and media adoption, evidence
+review and snapshot/restore regression passed 30. Focused analysis was clean.
+These are isolated host checks, not real-account or physical-device acceptance.
+The macOS debug build also succeeded; the app was not launched. The printing
+plugin's existing Swift Package Manager warning remains.
+
+September 25 storage admission work in progress: `StorageWriteAdmission` supplies
+a UI-independent 1 GiB warning state, conservative 100 MiB protected reserve,
+serialized admission and in-memory reservations for concurrent operations. Null,
+negative or failed free-space observations refuse new writes. A failed writer
+releases its reservation, and checkpoints detect external consumption. Eight
+isolated policy/concurrency checks pass. This service is not yet wired into
+production database/media writes. Volume-specific native measurement, bounded
+SQLite WAL/temporary growth, all write-path integration and dashboard alert
+delivery remain open. The reference 5.7 guard was inspected read-only; its
+25/50 MiB reserve policies do not meet this contract and were not imported.
+
+Receipt combined-preview boundary: the screen now asks its owning submission
+session for a verified preview path rather than inspecting LocalDraftStore or
+constructing an attachment store. The service checks session ownership, live
+receipt visibility/revision and attachment integrity, and rejects a changed or
+closed draft. It returns no Drift rows or layout state. The architecture test's
+remaining direct-storage import is the separately owned Inventory catalog;
+this change does not claim that all application boundaries or production account
+authorization are complete.
+Focused verification passed 14 policy, preview-recovery and receipt-screen
+checks, including rejection when another submission session requests the draft's
+preview. Analysis was clean and the macOS debug build succeeded, without launch.
+The broader core/domain run `20260926T022850Z-30b5c842` was interrupted before
+domain completion and is not acceptance evidence; source also changed during
+that run. Its core boundary failure identified the receipt-screen dependency
+corrected here and the remaining Inventory catalog dependency. A stable-source
+broader rerun is still required after production storage admission is connected.
 
 This is progress evidence, not completion or production-security acceptance.
 The owner explicitly authorized the 2.1 SQLite/Drift conversion first. Latest

@@ -104,6 +104,14 @@ void main() {
                 .dy,
           ),
         );
+        final plan = find.byKey(const ValueKey('admin-widget-work'));
+        final entries = find.byKey(const ValueKey('admin-widget-entries'));
+        expect(tester.getTopLeft(entries).dx, tester.getTopLeft(plan).dx);
+        expect(tester.getSize(entries).width, tester.getSize(plan).width);
+        expect(
+          tester.getTopLeft(entries).dy,
+          greaterThan(tester.getTopLeft(plan).dy),
+        );
         expect(find.byType(DashboardCalendar), findsOneWidget);
         expect(
           tester.getSize(find.byType(DashboardCalendar)).width,

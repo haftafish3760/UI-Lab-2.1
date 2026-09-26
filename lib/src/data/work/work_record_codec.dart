@@ -27,6 +27,7 @@ Map<String, Object?> encodeWorkRecord(WorkRecord value) => {
   'dueOn': value.dueOn?.toIso8601String(),
   'scheduledStart': value.scheduledStart?.toIso8601String(),
   'scheduledEnd': value.scheduledEnd?.toIso8601String(),
+  'scheduleBufferMinutes': value.scheduleBufferMinutes,
   'completedOn': value.completedOn?.toIso8601String(),
   'createdByEmployeeId': value.createdByEmployeeId,
   'status': value.status.name,
@@ -103,6 +104,7 @@ WorkRecord decodeWorkRecord(Map<String, Object?> json) => WorkRecord(
   scheduledEnd: json['scheduledEnd'] == null
       ? null
       : DateTime.parse(json['scheduledEnd'] as String),
+  scheduleBufferMinutes: json['scheduleBufferMinutes'] as int? ?? 0,
   completedOn: json['completedOn'] == null
       ? null
       : DateTime.parse(json['completedOn'] as String),

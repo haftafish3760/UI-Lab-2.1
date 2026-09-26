@@ -37,10 +37,8 @@ class _EstimateIdentitySection extends StatelessWidget {
     required this.scope,
     required this.customers,
     required this.selectedClient,
-    required this.pricing,
     required this.onClientChanged,
     required this.onAddClient,
-    required this.onPricingChanged,
   });
 
   final String number;
@@ -50,10 +48,8 @@ class _EstimateIdentitySection extends StatelessWidget {
   final TextEditingController scope;
   final List<WorkCustomerProfile> customers;
   final String? selectedClient;
-  final WorkPricingModel pricing;
   final ValueChanged<String?> onClientChanged;
   final VoidCallback onAddClient;
-  final ValueChanged<WorkPricingModel> onPricingChanged;
 
   @override
   Widget build(BuildContext context) => UtilityFormSection(
@@ -142,19 +138,6 @@ class _EstimateIdentitySection extends StatelessWidget {
               labelText: 'Proposed work',
               helperText: 'State what is included, excluded, and expected.',
               helperMaxLines: 4,
-            ),
-          ),
-          const SizedBox(height: 10),
-          DocumentChoiceField(
-            label: 'Pricing method',
-            value: pricing == WorkPricingModel.flatRate
-                ? 'Flat rate'
-                : 'Time and materials',
-            options: const ['Flat rate', 'Time and materials'],
-            onChanged: (value) => onPricingChanged(
-              value == 'Flat rate'
-                  ? WorkPricingModel.flatRate
-                  : WorkPricingModel.timeAndMaterials,
             ),
           ),
         ],

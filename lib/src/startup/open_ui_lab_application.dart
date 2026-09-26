@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import '../data/work/work_review_examples.dart';
 import 'dart:io';
 import '../data/notifications/native_notification_gateway.dart';
 import 'package:flutter/material.dart';
@@ -31,9 +30,12 @@ Future<Widget> openUiLabApplication({
   final startupTimer = Stopwatch()..start();
   void recordStage(String stage) {
     if (kDebugMode && const bool.fromEnvironment('STARTUP_TIMING')) {
-      debugPrint('Startup timing: $stage ${startupTimer.elapsedMilliseconds} ms');
+      debugPrint(
+        'Startup timing: $stage ${startupTimer.elapsedMilliseconds} ms',
+      );
     }
   }
+
   // Native reminders initialize after mounting, independently of local storage.
   LocalPersistence? persistence;
   WorkPersistenceSession? workSession;
@@ -54,10 +56,6 @@ Future<Widget> openUiLabApplication({
     );
     recordStage('storage opened and verified');
     await persistence.seedDemoIfNew();
-    if (kDebugMode && const bool.fromEnvironment('UI_LAB_REVIEW_EXAMPLES', defaultValue: true)) {
-      await loadRequestedWorkExamples(persistence.database);
-    }
-    recordStage('review examples checked');
     workSession = await openUiLabWorkSession(persistence.database);
     recordStage('work loaded');
     directory = await openUiLabDirectory(persistence.database);
@@ -115,7 +113,8 @@ Future<Widget> openUiLabApplication({
         database: persistence.database,
         gateway: NativeDeviceMediaGateway(
           receiptCameraGuides: ReceiptCameraGuideResolver(
-            persistence.receiptDrafts, receiptDraftUiLabOwnerPermissions(),
+            persistence.receiptDrafts,
+            receiptDraftUiLabOwnerPermissions(),
           ).forAppend,
         ),
         receiptPermissions: receiptDraftUiLabOwnerPermissions(),

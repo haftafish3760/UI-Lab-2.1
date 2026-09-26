@@ -1,3 +1,4 @@
+import 'job_start_screen.dart';
 import '../../shell/employee_directory_screen.dart';
 import '../../theme/operational_card_palette.dart';
 import '../../shared/operational_section_heading.dart';
@@ -151,29 +152,66 @@ class _WorkScreenState extends State<WorkScreen> {
                           showDateDescription: false,
                         ),
                         const SizedBox(height: 14),
-                        OutlinedButton.icon(
-                          key: const ValueKey('open-work-drafts'),
-                          onPressed: () => Navigator.of(context).push<void>(
-                            MaterialPageRoute(
-                              builder: (_) => const WorkDraftsScreen(),
-                            ),
-                          ),
-                          icon: const Icon(Icons.edit_note_outlined),
-                          label: const Text('Drafts'),
-                        ),
-                        if (PrototypeOperationsScope.of(
-                              context,
-                            ).directorySession?.permissions.canViewEmployees ==
-                            true)
-                          OutlinedButton.icon(
-                            onPressed: () => Navigator.of(context).push<void>(
-                              MaterialPageRoute(
-                                builder: (_) => const EmployeeDirectoryScreen(),
+                        Builder(
+                          builder: (context) {
+                            final drafts = OutlinedButton.icon(
+                              key: const ValueKey('open-work-drafts'),
+                              onPressed: () => Navigator.of(context).push<void>(
+                                MaterialPageRoute(
+                                  builder: (_) => const WorkDraftsScreen(),
+                                ),
                               ),
-                            ),
-                            icon: const Icon(Icons.people_outline),
-                            label: const Text('Employees'),
-                          ),
+                              icon: const Icon(Icons.edit_note_outlined),
+                              label: const Text('Drafts'),
+                            );
+                            final canViewEmployees =
+                                PrototypeOperationsScope.of(context)
+                                    .directorySession
+                                    ?.permissions
+                                    .canViewEmployees ==
+                                true;
+                            if (!canViewEmployees) return drafts;
+                            final employees = OutlinedButton.icon(
+                              onPressed: () => Navigator.of(context).push<void>(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const EmployeeDirectoryScreen(),
+                                ),
+                              ),
+                              icon: const Icon(Icons.people_outline),
+                              label: const Text('Employees'),
+                            );
+                            return LayoutBuilder(
+                              builder: (context, constraints) {
+                                final stack =
+                                    AppLayoutEngine.stackWorkHomeUtilityActionsFor(
+                                      constraints.maxWidth,
+                                      textScaler: MediaQuery.textScalerOf(
+                                        context,
+                                      ),
+                                    );
+                                if (stack) {
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      drafts,
+                                      const SizedBox(height: 8),
+                                      employees,
+                                    ],
+                                  );
+                                }
+                                return Row(
+                                  children: [
+                                    Expanded(child: drafts),
+                                    const SizedBox(width: 8),
+                                    Expanded(child: employees),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
                         WorkShortcutGrid(
                           key: const ValueKey('work-primary-destinations'),
                           destinations: const [

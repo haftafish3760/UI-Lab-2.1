@@ -88,6 +88,7 @@ class WorkRecord {
     this.dueOn,
     this.scheduledStart,
     this.scheduledEnd,
+    this.scheduleBufferMinutes = 0,
     this.completedOn,
     this.createdByEmployeeId = 'alex',
     this.status = WorkRecordStatus.draft,
@@ -134,6 +135,9 @@ class WorkRecord {
   final DateTime? dueOn;
   final DateTime? scheduledStart;
   final DateTime? scheduledEnd;
+
+  /// Minimum separation from another booking of the same employee or vehicle.
+  final int scheduleBufferMinutes;
   final DateTime? completedOn;
   final String createdByEmployeeId;
   final WorkRecordStatus status;
@@ -226,6 +230,7 @@ class WorkRecord {
     WorkRecordStatus? status,
     DateTime? scheduledStart,
     DateTime? scheduledEnd,
+    int? scheduleBufferMinutes,
     Object? completedOn = _workRecordValueUnchanged,
     String? serviceLocation,
     String? jobNotes,
@@ -261,6 +266,7 @@ class WorkRecord {
     dueOn: dueOn ?? this.dueOn,
     scheduledStart: scheduledStart ?? this.scheduledStart,
     scheduledEnd: scheduledEnd ?? this.scheduledEnd,
+    scheduleBufferMinutes: scheduleBufferMinutes ?? this.scheduleBufferMinutes,
     completedOn: identical(completedOn, _workRecordValueUnchanged)
         ? this.completedOn
         : completedOn as DateTime?,
@@ -432,6 +438,7 @@ class WorkRecord {
     dueOn: dueOn,
     scheduledStart: scheduledStart,
     scheduledEnd: scheduledEnd,
+    scheduleBufferMinutes: scheduleBufferMinutes,
     completedOn: completedOn,
     createdByEmployeeId: createdByEmployeeId,
     status: status,

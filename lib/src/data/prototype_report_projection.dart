@@ -1,6 +1,7 @@
 import 'expenses/expense_workflow_models.dart';
 import 'work/models/estimate_models.dart';
 import 'work/models/work_models.dart';
+import 'work/invoice_payment_balance.dart';
 import 'prototype_financial_models.dart';
 import 'prototype_report_models.dart';
 
@@ -19,6 +20,8 @@ class PrototypeReportProjection {
     DateTime? asOf,
   }) {
     final today = _dateOnly(asOf ?? DateTime.now());
+    final allFinancialEntries = financialEntries.toList();
+    final paymentCutoff = DateTime(today.year, today.month, today.day + 1);
     final scopedExpenses = expenses.where((record) {
       final date = record.resolvedDate;
       return date != null &&
@@ -32,7 +35,7 @@ class PrototypeReportProjection {
         .where((record) => record.countsAsRecordedBusinessCost)
         .toList();
     final ledger = employeeName == null
-        ? financialEntries.where(
+        ? allFinancialEntries.where(
             (entry) => _inRange(entry.occurredOn, fromInclusive, toExclusive),
           )
         : const <PrototypeFinancialEntry>[];
@@ -47,8 +50,13 @@ class PrototypeReportProjection {
           record.kind == WorkRecordKind.invoice &&
           _inRange(record.issuedOn, fromInclusive, toExclusive),
     );
+    int balance(WorkRecord invoice) => invoiceBalanceCents(
+      invoice,
+      allFinancialEntries,
+      before: paymentCutoff,
+    );
     final outstandingInvoices = issuedInvoices.where(
-      (record) => record.status != WorkRecordStatus.paid,
+      (record) => balance(record) > 0,
     );
     final overdueInvoices = outstandingInvoices.where(
       (record) => record.dueOn != null && record.dueOn!.isBefore(today),
@@ -112,8 +120,12 @@ class PrototypeReportProjection {
       completedJobs: completedJobs.map(_workSource).toList(),
       activeJobs: activeJobs.map(_workSource).toList(),
       draftEstimates: draftEstimates.map(_workSource).toList(),
-      outstandingInvoices: outstandingInvoices.map(_workSource).toList(),
-      overdueInvoices: overdueInvoices.map(_workSource).toList(),
+      outstandingInvoices: outstandingInvoices
+          .map((record) => _workSource(record, amountCents: balance(record)))
+          .toList(),
+      overdueInvoices: overdueInvoices
+          .map((record) => _workSource(record, amountCents: balance(record)))
+          .toList(),
       materialExpenses: recordedExpenses
           .where((record) => record.category == ExpenseCategory.materials)
           .map(expenseSource)
@@ -133,7 +145,9 @@ class PrototypeReportProjection {
       pendingAdminReview: [
         ...pendingEstimateReviews.map(_workSource),
         ...pendingExpenseApprovals.map(expenseSource),
-        ...overdueInvoices.map(_workSource),
+        ...overdueInvoices.map(
+          (record) => _workSource(record, amountCents: balance(record)),
+        ),
       ],
       recordsToFinish: recordsToFinish.map(expenseSource).toList(),
       waitingForApproval: [
@@ -226,15 +240,18 @@ PrototypeReportSource _expenseSource(
       : expenseMinorUnitsById[record.id] ?? (record.amount! * 100).round(),
 );
 
-PrototypeReportSource _workSource(WorkRecord record) => PrototypeReportSource(
-  kind: PrototypeReportSourceKind.workRecord,
-  id: record.id,
-  title: record.title,
-  detail: '${record.number} · ${record.client} · ${record.status.label}',
-  amountCents: record.kind == WorkRecordKind.invoice
-      ? (record.total * 100).round()
-      : null,
-);
+PrototypeReportSource _workSource(WorkRecord record, {int? amountCents}) =>
+    PrototypeReportSource(
+      kind: PrototypeReportSourceKind.workRecord,
+      id: record.id,
+      title: record.title,
+      detail: '${record.number} · ${record.client} · ${record.status.label}',
+      amountCents:
+          amountCents ??
+          (record.kind == WorkRecordKind.invoice
+              ? (record.total * 100).round()
+              : null),
+    );
 
 PrototypeReportSource _paymentSource(PrototypeFinancialEntry entry) =>
     PrototypeReportSource(

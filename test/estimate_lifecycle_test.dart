@@ -130,20 +130,20 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('estimate-actions-fab')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('preview-estimate-copy')));
+    await tester.tap(find.byKey(const ValueKey('estimate-primary-preview')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Draft preview only'), findsOneWidget);
     expect(
-      find.textContaining('before it can be sent, shared, saved, or printed'),
+      find.byKey(const ValueKey('document-preview-estimate-test')),
       findsOneWidget,
     );
-    expect(
-      find.byKey(const ValueKey('document-delivery-action')),
-      findsNothing,
-    );
+    await tester.tap(find.byTooltip('Document actions'));
+    await tester.pumpAndSettle();
+    expect(find.text('PDF delivery options'), findsOneWidget);
+    await tester.tap(find.text('PDF delivery options'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('estimate-delivery-screen')), findsOne);
+    expect(find.text('Continue to sharing'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -177,16 +177,16 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('estimate-actions-fab')));
+    await tester.tap(find.byKey(const ValueKey('estimate-primary-preview')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('preview-estimate-copy')));
+    await tester.tap(find.byTooltip('Document actions'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('document-delivery-action')));
+    await tester.tap(find.text('PDF delivery options'));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('estimate-delivery-screen')), findsOne);
     expect(find.text('Email PDF to customer'), findsOneWidget);
-    expect(find.text('Text secure approval link'), findsOneWidget);
+    expect(find.text('Text message'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -206,14 +206,17 @@ void main() {
     );
 
     await tester.pumpWidget(
-      OperationalScope(
-        controller: scope,
-        child: MaterialApp(
-          theme: AppTheme.light,
-          home: EstimateDetailScreen(
-            initialRecord: pending,
-            onUpdated: store.updateWorkRecord,
-            onCreateJob: (_) {},
+      PrototypeOperationsScope(
+        store: store,
+        child: OperationalScope(
+          controller: scope,
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: EstimateDetailScreen(
+              initialRecord: pending,
+              onUpdated: store.updateWorkRecord,
+              onCreateJob: (_) {},
+            ),
           ),
         ),
       ),
@@ -280,7 +283,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('estimate-selected-date')), findsOne);
       expect(find.byKey(const ValueKey('estimate-date-records')), findsOne);
-      expect(find.byKey(const ValueKey('estimate-drafts')), findsOne);
+      expect(find.byKey(const ValueKey('open-work-drafts')), findsOne);
       expect(find.byKey(const ValueKey('estimate-attention')), findsOne);
       expect(find.byKey(const ValueKey('estimate-search')), findsOneWidget);
       expect(find.byKey(const ValueKey('new-estimate')), findsOneWidget);
@@ -291,21 +294,14 @@ void main() {
       expect(row, findsOneWidget);
       expect(tester.getSize(row).height, lessThanOrEqualTo(70));
 
-      final draftRow = find.byKey(const ValueKey('estimate-row-est-1040'));
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('estimate-drafts')),
-          matching: draftRow,
-        ),
-        findsOneWidget,
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('open-work-drafts')),
       );
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('estimate-date-records')),
-          matching: draftRow,
-        ),
-        findsNothing,
-      );
+      await tester.tap(find.byKey(const ValueKey('open-work-drafts')));
+      await tester.pumpAndSettle();
+      expect(find.text('Drafts'), findsWidgets);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
 
       final attentionRow = find.byKey(
         const ValueKey('estimate-attention-row-est-1039'),
@@ -387,7 +383,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Maya Thompson'));
       await tester.pumpAndSettle();
-      expect(find.text('Active estimates'), findsOneWidget);
+      expect(find.text('Work history'), findsOneWidget);
       expect(find.textContaining('EST-1042'), findsOneWidget);
       expect(find.text('New estimate'), findsOneWidget);
       expect(tester.takeException(), isNull);

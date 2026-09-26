@@ -1,5 +1,4 @@
-import '../../data/work/estimate_customer_approval.dart';
-import 'estimate_customer_approval_dialog.dart';
+import 'estimate_approval_screen.dart';
 import '../../shared/editor_input_lock.dart';
 import '../../data/work/work_persistence_session.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +8,7 @@ import '../../data/work/work_record_codec.dart';
 
 import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
+import '../../shared/operations_workspace.dart';
 import '../../theme/app_semantic_colors.dart';
 import '../../theme/operational_card_palette.dart';
 
@@ -37,12 +37,14 @@ class EstimateDetailScreen extends StatefulWidget {
     required this.onUpdated,
     required this.onCreateJob,
     this.permissions = const EstimatePermissions.development(),
+    this.openApprovalOnEntry = false,
     super.key,
   });
 
   final WorkRecord initialRecord;
   final ValueChanged<WorkRecord> onUpdated, onCreateJob;
   final EstimatePermissions permissions;
+  final bool openApprovalOnEntry;
 
   @override
   State<EstimateDetailScreen> createState() => _EstimateDetailScreenState();
@@ -64,6 +66,11 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
     final current = work?.records
         .where((record) => record.id == _record.id)
         .firstOrNull;
+    if (widget.openApprovalOnEntry) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _recordCustomerApproval();
+      });
+    }
     if (current != null) {
       _record = current;
       _baseStorageRevision = work!.storageRevisionFor(current.id);
@@ -77,7 +84,7 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
-          final layout = AppLayoutEngine.detailWorkspaceFor(
+          final layout = AppLayoutEngine.workFor(
             constraints.maxWidth - insets.horizontal,
             textScaler: MediaQuery.textScalerOf(context),
           );
@@ -85,11 +92,8 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
           final overview = Column(
             children: [
               _EstimateStatusCard(record: _record),
-              WorkActivityButton(record: _record),
-              const SizedBox(height: 12),
+
               _EstimateDatesCard(record: _record),
-              const SizedBox(height: 12),
-              _EstimateHistoryCard(record: _record),
             ],
           );
           final content = Column(
@@ -143,25 +147,20 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
                             ),
                           ],
                           const SizedBox(height: 14),
-                          if (layout.columns == 1) ...[
-                            overview,
-                            const SizedBox(height: 12),
-                            content,
-                          ] else
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: layout.columnWidth,
-                                  child: overview,
-                                ),
-                                SizedBox(width: layout.gap),
-                                SizedBox(
-                                  width: layout.columnWidth,
-                                  child: content,
-                                ),
-                              ],
-                            ),
+                          OperationsLaneGrid(
+                            layout: layout,
+                            children: [
+                              content,
+                              overview,
+                              Column(
+                                children: [
+                                  _EstimateHistoryCard(record: _record),
+                                  const SizedBox(height: 12),
+                                  WorkActivityButton(record: _record),
+                                ],
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -255,40 +254,22 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
   }
 
   Future<void> _recordCustomerApproval({bool createJobAfter = false}) async {
-    if (_saving || !widget.permissions.canCollectSignature) return;
+    if (_saving || !widget.permissions.canRecordCustomerApproval) return;
     if (!_record.companyReviewAllowsCustomerApproval) {
       _showCompanyReviewRequired();
       return;
     }
     final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
-    final actor = work?.permissions.actorEmployeeId;
-    if (actor == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'An active business user is required to record approval.',
-          ),
-        ),
-      );
-      return;
-    }
-    final approval = await showDialog<WorkCustomerApproval>(
-      context: context,
-      builder: (_) =>
-          EstimateCustomerApprovalDialog(record: _record, actorId: actor),
+    if (work != null && !work.permissions.canRecordCustomerApproval) return;
+    final approved = await Navigator.of(context).push<WorkRecord>(
+      MaterialPageRoute(
+        builder: (_) => EstimateApprovalScreen(record: _record),
+      ),
     );
-    if (!mounted || approval == null) return;
-    try {
-      await _update(_record.recordCustomerApproval(approval));
-      if (mounted && createJobAfter && _record.hasCurrentCustomerApproval) {
-        widget.onCreateJob(_record);
-      }
-    } on StateError catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.message.toString())));
-      }
+    if (!mounted || approved == null) return;
+    await _update(approved);
+    if (mounted && createJobAfter && _record.hasCurrentCustomerApproval) {
+      widget.onCreateJob(_record);
     }
   }
 
@@ -302,6 +283,16 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
   }
 
   Future<void> _collectSignature({bool forBusiness = false}) async {
+    final access = PrototypeOperationsScope.maybeOf(
+      context,
+    )?.workSession?.permissions;
+    if (_saving ||
+        (forBusiness
+            ? !widget.permissions.canEditItems
+            : (!widget.permissions.canCollectSignature ||
+                  (access != null && !access.canCollectSignature)))) {
+      return;
+    }
     if (!forBusiness && !_record.companyReviewAllowsCustomerApproval) {
       _showCompanyReviewRequired();
       return;

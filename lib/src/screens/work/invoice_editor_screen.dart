@@ -1,3 +1,5 @@
+import '../../shared/draft_navigation_guard.dart';
+import '../../data/storage/local_record_command.dart';
 import 'documents/customer_pdf_screen.dart';
 import 'documents/document_template.dart';
 import 'document_template_screen.dart';
@@ -55,7 +57,8 @@ class InvoiceEditorScreen extends StatefulWidget {
   State<InvoiceEditorScreen> createState() => _InvoiceEditorScreenState();
 }
 
-class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
+class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
+    with DraftNavigationGuard {
   static const _directInvoice = 'direct-invoice';
 
   late String _number;
@@ -68,7 +71,18 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
   bool _draftStarted = false;
   bool _draftReady = false;
   bool _submitting = false;
-  bool _allowPop = false;
+  String? _entryInput;
+  @override
+  DraftAutosaveSession? get navigationDraft => _draft;
+  @override
+  bool get blockDraftNavigation => _submitting;
+  @override
+  bool get confirmDraftExit =>
+      _draftReady &&
+      _entryInput != null &&
+      canonicalJson(_draftInput().toPayload()) != _entryInput;
+  @override
+  bool get requiresDraftPopGuard => confirmDraftExit || navigationDraft != null;
   int _baseStorageRevision = 0;
   WorkItemsDraftInput? _itemDraftInput;
   late final _purchaseOrder = TextEditingController(
@@ -209,12 +223,8 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => PopScope(
-    canPop: _allowPop || _draft == null,
-    onPopInvokedWithResult: (didPop, result) {
-      if (!didPop) unawaited(_leaveEditor());
-    },
-    child: Scaffold(
+  Widget build(BuildContext context) => guardDraftNavigation(
+    Scaffold(
       key: const ValueKey('invoice-editor-screen'),
       body: SafeArea(
         child: EditorInputLock(

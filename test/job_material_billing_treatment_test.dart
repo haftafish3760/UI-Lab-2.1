@@ -53,7 +53,7 @@ const _approvalRequired = WorkLineItem(
       JobMaterialBillingTreatment.customerApprovalRequired,
 );
 
-WorkRecord _completedJob() => WorkRecord(
+WorkRecord _completedJob({bool approveAddedMaterial = false}) => WorkRecord(
   id: 'job-billing-test',
   kind: WorkRecordKind.job,
   number: 'JOB-9001',
@@ -66,7 +66,32 @@ WorkRecord _completedJob() => WorkRecord(
   scheduledStart: DateTime(2026, 8, 30, 9),
   completedOn: DateTime(2026, 8, 30, 11),
   status: WorkRecordStatus.completed,
-  items: const [_quoted, _notBilled, _invoiceCandidate, _approvalRequired],
+  items: [
+    _quoted,
+    _notBilled,
+    if (approveAddedMaterial)
+      WorkLineItem(
+        id: _invoiceCandidate.id,
+        type: _invoiceCandidate.type,
+        name: _invoiceCandidate.name,
+        quantity: _invoiceCandidate.quantity,
+        unit: _invoiceCandidate.unit,
+        customerPrice: _invoiceCandidate.customerPrice,
+        isJobAddition: true,
+        jobMaterialBillingTreatment:
+            JobMaterialBillingTreatment.invoiceCandidate,
+        changeApproval: WorkCustomerApproval(
+          method: CustomerApprovalMethod.verbal,
+          customerName: 'Maya Thompson',
+          recordedByEmployeeId: 'alex',
+          recordedOn: DateTime(2026, 8, 30),
+          revision: 1,
+        ),
+      )
+    else
+      _invoiceCandidate,
+    _approvalRequired,
+  ],
   total: 175,
 );
 
@@ -116,8 +141,14 @@ void main() {
     );
 
     expect(active.quotedTotal, 100);
-    expect(active.invoiceCandidateTotal, 25);
-    expect(active.approvalRequiredTotal, 50);
+    expect(active.invoiceCandidateTotal, 0);
+    expect(active.approvalRequiredTotal, 75);
+    final approved = activeJobForRecord(
+      _completedJob(approveAddedMaterial: true),
+      scheduledTime: 'August 30, 2026 · 9:00 AM',
+    );
+    expect(approved.invoiceCandidateTotal, 25);
+    expect(approved.approvalRequiredTotal, 50);
   });
 
   test('billing treatment alone creates a meaningful item revision', () {
@@ -149,7 +180,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final source = _completedJob();
+    final source = _completedJob(approveAddedMaterial: true);
     final store = PrototypeOperationsStore(workRecords: [source]);
     final scope = OperationalScopeController();
     addTearDown(store.dispose);
@@ -209,13 +240,17 @@ void main() {
     expect(find.text('Invoice candidate material'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('add-estimate-line-item')));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Labor').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Material').last);
+    await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Item name'),
+      find.widgetWithText(TextField, 'Material name'),
       'Extra fitting used',
     );
-    await tester.tap(find.text('Add material'));
+    await tester.tap(find.text('Save item'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Save materials'));
+    await tester.tap(find.text('Save items'));
     await tester.pumpAndSettle();
 
     final saved = store.workRecords.single;

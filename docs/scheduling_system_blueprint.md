@@ -228,6 +228,16 @@ Use explicit company/job travel allowances initially. Do not require GPS, a paid
 
 Check buffers on both sides of an insertion. Required materials not yet available may flag a warning or block confirmation according to explicit company policy. Stock uncertainty must be labeled unknown, not assumed available or unavailable. Maintenance downtime can reserve a vehicle/equipment interval without exposing unrelated repair/financial details.
 
+Current bounded local Work implementation: each Job stores a selectable minimum
+gap of 0, 15, 30, 60, or 120 minutes (new Job defaults to 30; older saved Jobs
+decode as 0). For two bookings sharing an assigned employee or vehicle, require
+at least the larger of their stored gaps between intervals. Suggestions read all
+locally saved company Jobs; the save transaction rechecks the same rule for
+manual scheduling and rescheduling. This is local conflict prevention, not a
+claim of synchronized multi-device availability, travel-time calculation,
+working-hours policy, or complete schedule optimization. Missing resource
+assignment cannot establish employee availability.
+
 ### Hard requirements and preferences
 
 - Hard: authorization, organization isolation, required eligibility, impossible interval, required minimum simultaneous crew, exclusive resource collision and nonparallel phase constraints.

@@ -12,7 +12,9 @@ void main() {
   ) async {
     await _setPhoneSize(tester);
     final scope = OperationalScopeController();
+    final store = PrototypeOperationsStore(workRecords: const []);
     addTearDown(scope.dispose);
+    addTearDown(store.dispose);
     final record = _jobRecord(
       id: 'job-no-profile',
       client: 'Customer without a saved profile',
@@ -22,11 +24,14 @@ void main() {
     );
 
     await tester.pumpWidget(
-      OperationalScope(
-        controller: scope,
-        child: MaterialApp(
-          theme: AppTheme.light,
-          home: JobWorkspaceScreen(workRecord: record),
+      PrototypeOperationsScope(
+        store: store,
+        child: OperationalScope(
+          controller: scope,
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: JobWorkspaceScreen(workRecord: record),
+          ),
         ),
       ),
     );

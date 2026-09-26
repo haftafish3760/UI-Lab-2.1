@@ -21,6 +21,7 @@ extension _WorkJobDraftRecovery on _WorkJobEditorState {
     sourceStorageRevision: _sourceStorageRevision,
     scheduledStart: _startDateTime,
     scheduledEnd: _endDateTime,
+    scheduleBufferMinutes: _bufferMinutes,
     client: _client,
     location: _location,
     assignee: _assignee,
@@ -36,6 +37,7 @@ extension _WorkJobDraftRecovery on _WorkJobEditorState {
   void _captureJobInput() {
     if (!_draftReady || _saving) return;
     _workflow?.updateInput(_jobInput);
+    if (mounted) _refresh(() {});
   }
 
   Future<void> _openJobDraft() async {
@@ -52,10 +54,12 @@ extension _WorkJobDraftRecovery on _WorkJobEditorState {
         }
         return;
       }
+      _entryInput = canonicalJson(_jobInput.toPayload());
       _refresh(() => _draftReady = true);
       return;
     }
     try {
+      _entryInput = canonicalJson(_jobInput.toPayload());
       final sourceId = widget.sourceEstimate?.id;
       final workflow =
           widget.recoveredWorkflow ??
@@ -112,6 +116,7 @@ extension _WorkJobDraftRecovery on _WorkJobEditorState {
     _startTime = TimeOfDay.fromDateTime(input.scheduledStart);
     _endDay = DateUtils.dateOnly(input.scheduledEnd);
     _endTime = TimeOfDay.fromDateTime(input.scheduledEnd);
+    _bufferMinutes = input.scheduleBufferMinutes;
   }
 
   Future<void> _discardJobDraft() async {

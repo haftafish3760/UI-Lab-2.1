@@ -78,7 +78,8 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
         DocumentFormSection(
           key: const ValueKey('estimate-items'),
           title: 'Items',
-          summary: '${_items.length} items · ${_currency(_subtotal)}',
+          summary:
+              '${_items.length} ${_items.length == 1 ? 'item' : 'items'} · ${_currency(_subtotal)}',
           icon: Icons.list_alt_outlined,
           onTap: () => _editItemCategory(EstimateItemCategory.all, _items),
         ),
@@ -121,12 +122,19 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
           photoCount: _sitePhotos.length,
           onOpen: _editSitePhotos,
         ),
-        const DocumentFormSection(
-          title: 'Customer approval',
-          summary:
-              'Save the draft to review the customer copy and record approval for that revision.',
-          icon: Icons.draw_outlined,
-        ),
+        if (_work?.permissions.canRecordCustomerApproval == true ||
+            _work?.permissions.canCollectSignature == true)
+          DocumentFormSection(
+            key: const ValueKey('estimate-customer-approval'),
+            title: 'Customer approval',
+            summary: _hasCurrentApproval
+                ? 'Approved — View approval'
+                : 'Not approved — Add approval',
+            icon: Icons.check_circle_outline,
+            onTap: _draftReady && !_saving
+                ? () => _confirmEstimate(recordApproval: true)
+                : null,
+          ),
       ],
     ],
   );
@@ -146,7 +154,6 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
         _customerSnapshot!,
     ],
     selectedClient: _customerSnapshot?.id ?? _client,
-    pricing: _pricing,
     onClientChanged: (value) => _changeEstimateInput(() {
       final customer = [
         ...PrototypeOperationsScope.of(context).customers,
@@ -156,7 +163,6 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
       _customerSnapshot = customer;
     }),
     onAddClient: _addClient,
-    onPricingChanged: (value) => _changeEstimateInput(() => _pricing = value),
   );
 
   Widget _section(

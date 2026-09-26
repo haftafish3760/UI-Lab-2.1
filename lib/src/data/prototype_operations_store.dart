@@ -96,18 +96,30 @@ class PrototypeOperationsStore extends ChangeNotifier {
   final List<MaterialCostRecord> _materialCosts;
   final List<InventoryStockRecord> _inventoryStock;
   final List<InventoryCategoryRecord> _inventoryCategories;
-  List<InventoryCategoryRecord> get inventoryCategories => List.unmodifiable(_inventoryCategories);
+  List<InventoryCategoryRecord> get inventoryCategories =>
+      List.unmodifiable(_inventoryCategories);
   void addInventoryCategory(InventoryCategoryRecord category) {
     if (_inventoryCategories.any((c) => c.id == category.id)) return;
-    if (category.parentId != null && !_inventoryCategories.any((c) => c.id == category.parentId && c.ownerEmployeeId == category.ownerEmployeeId)) {
+    if (category.parentId != null &&
+        !_inventoryCategories.any(
+          (c) =>
+              c.id == category.parentId &&
+              c.ownerEmployeeId == category.ownerEmployeeId,
+        )) {
       throw StateError('Parent category is not available.');
     }
-    if (_inventoryCategories.any((c) => c.parentId == category.parentId && c.ownerEmployeeId == category.ownerEmployeeId && c.name.toLowerCase().trim() == category.name.toLowerCase().trim())) {
+    if (_inventoryCategories.any(
+      (c) =>
+          c.parentId == category.parentId &&
+          c.ownerEmployeeId == category.ownerEmployeeId &&
+          c.name.toLowerCase().trim() == category.name.toLowerCase().trim(),
+    )) {
       throw StateError('That category already exists here.');
     }
     _inventoryCategories.add(category);
     notifyListeners();
   }
+
   final Map<String, DashboardDayData> _dashboardDays;
   late final PrototypeAttentionCenter attentionCenter;
   WorkCompanyProfile _companyProfile;
@@ -360,20 +372,32 @@ class PrototypeOperationsStore extends ChangeNotifier {
   ) {
     final session = workSession;
     if (session != null) return session.save(financialEntries: [entry]);
+    if (_financialEntries.any((item) => item.id == entry.id)) {
+      return Future.value(false);
+    }
+    if (invoice.kind != WorkRecordKind.invoice ||
+        invoice.status == WorkRecordStatus.draft ||
+        entry.kind != PrototypeFinancialKind.paymentReceived ||
+        (entry.sourceId != invoice.id && entry.sourceId != invoice.number) ||
+        entry.amountCents <= 0) {
+      return Future.value(false);
+    }
     final paid =
         financialEntries
             .where(
               (item) =>
                   item.kind == PrototypeFinancialKind.paymentReceived &&
-                  item.sourceId == invoice.number &&
+                  (item.sourceId == invoice.id ||
+                      item.sourceId == invoice.number) &&
                   item.id != entry.id,
             )
             .fold(0, (sum, item) => sum + item.amountCents) +
         entry.amountCents;
+    final totalCents = (invoice.total * 100).round();
+    if (paid > totalCents) return Future.value(false);
     return saveWorkAndFinancial(
       records: [
-        if (paid == (invoice.total * 100).round())
-          invoice.copyWith(status: WorkRecordStatus.paid),
+        if (paid == totalCents) invoice.copyWith(status: WorkRecordStatus.paid),
       ],
       entries: [entry],
     );

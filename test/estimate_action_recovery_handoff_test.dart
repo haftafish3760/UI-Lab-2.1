@@ -118,9 +118,12 @@ void main() {
               await finishNativeOperation(tester, draft.flush);
             }
             if (!mismatch) {
-              await tester.ensureVisible(find.byTooltip('Back to Work'));
+              final back = signature
+                  ? find.byType(BackButton).last
+                  : find.byTooltip('Back to Work');
+              await tester.ensureVisible(back);
               await tester.pumpAndSettle();
-              await tester.tap(find.byTooltip('Back to Work'));
+              await tester.tap(back);
               await finishNativeOperation(tester, () => route!);
               expect(find.text('Resume estimate action'), findsOneWidget);
             }

@@ -331,6 +331,7 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
   Future<void> _rescheduleJob() async {
     if (!widget.permissions.canEditJob) return;
     final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
+    if (work != null && !work.permissions.canScheduleJobs) return;
     final record = await showModalBottomSheet<WorkRecord>(
       context: context,
       showDragHandle: true,

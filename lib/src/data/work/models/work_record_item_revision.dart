@@ -34,6 +34,7 @@ extension WorkRecordItemRevision on WorkRecord {
       id: id,
       kind: kind,
       number: number,
+      purchaseOrderNumber: purchaseOrderNumber,
       title: title,
       client: client,
       customerSnapshot: customerSnapshot,
@@ -41,6 +42,7 @@ extension WorkRecordItemRevision on WorkRecord {
       pricing: pricing,
       sourceId: sourceId,
       assignee: assignee,
+      assignedEmployeeIds: assignedEmployeeIds,
       vehicle: vehicle,
       serviceLocation: serviceLocation,
       jobNotes: jobNotes,
@@ -49,6 +51,7 @@ extension WorkRecordItemRevision on WorkRecord {
       dueOn: dueOn,
       scheduledStart: scheduledStart,
       scheduledEnd: scheduledEnd,
+      scheduleBufferMinutes: scheduleBufferMinutes,
       completedOn: completedOn,
       createdByEmployeeId: createdByEmployeeId,
       status: hasCurrentCustomerApproval && kind == WorkRecordKind.estimate

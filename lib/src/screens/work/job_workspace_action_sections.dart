@@ -141,7 +141,11 @@ class _JobActions extends StatelessWidget {
             label: action.label,
             onPressed: () => onStatus(action.targetStatus!),
           ),
-      if (permissions.canChangeStatus)
+      if (permissions.canEditJob &&
+          (PrototypeOperationsScope.maybeOf(
+                context,
+              )?.workSession?.permissions.canScheduleJobs ??
+              true))
         _JobActionButton(
           icon: Icons.event_repeat_outlined,
           label: 'Reschedule job',

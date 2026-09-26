@@ -86,6 +86,7 @@ void main() {
       await tester.enterText(field('Hour'), '10');
       await tester.enterText(field('Minutes'), '');
       await tester.tap(find.text('PM'));
+      await tester.ensureVisible(find.text('Save schedule'));
       await tester.tap(find.text('Save schedule'));
       await waitForNativeSave(
         tester,
@@ -108,6 +109,7 @@ void main() {
       expect(tester.widget<TextField>(field('Hour')).controller!.text, '10');
       expect(tester.widget<TextField>(field('Minutes')).controller!.text, '');
       await tester.enterText(field('Minutes'), '30');
+      await tester.ensureVisible(find.text('Save schedule'));
       await tester.tap(find.text('Save schedule'));
       await waitForNativeSave(tester, () => work.failureMessage != null);
       expect(find.byType(JobScheduleEditorSheet), findsOneWidget);
@@ -120,6 +122,7 @@ void main() {
       await tester.runAsync(
         () => db.customStatement('DROP TRIGGER fail_schedule'),
       );
+      await tester.ensureVisible(find.text('Save schedule'));
       await tester.tap(find.text('Save schedule'));
       await waitForNativeSave(
         tester,

@@ -61,7 +61,7 @@ extension _EstimateCompanyReviewHandlers on _EstimateDetailScreenState {
     if (_record.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Add labor, materials, or a flat-rate item first.'),
+          content: Text('Add the work and its estimated cost first.'),
         ),
       );
       return;

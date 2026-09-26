@@ -140,7 +140,7 @@ void main() {
         expect(find.byType(EstimateDeliveryScreen), findsOneWidget);
         expect(
           find.text(
-            'The sharing app could not open. Your estimate is saved; try again.',
+            'Recipient-aware composition is unavailable on this device. Choose Share PDF to use an installed app.',
           ),
           findsOneWidget,
         );

@@ -148,7 +148,8 @@ extension EstimateSignatureDraftWorkflow on WorkPersistenceSession {
         controller.input.base.id != recordId ||
         current == null ||
         current.kind != WorkRecordKind.estimate ||
-        !permissions.canEdit(current)) {
+        !permissions.canEdit(current) ||
+        (!controller.input.forBusiness && !permissions.canCollectSignature)) {
       throw StateError(
         'Selected estimate signature belongs to another workflow.',
       );
@@ -163,7 +164,8 @@ extension EstimateSignatureDraftWorkflow on WorkPersistenceSession {
     final current = records.where((r) => r.id == recordId).firstOrNull;
     if (current == null ||
         current.kind != WorkRecordKind.estimate ||
-        !permissions.canEdit(current)) {
+        !permissions.canEdit(current) ||
+        (!forBusiness && !permissions.canCollectSignature)) {
       throw StateError('Estimate unavailable.');
     }
     final draft = DraftAutosaveSession(
@@ -181,6 +183,7 @@ extension EstimateSignatureDraftWorkflow on WorkPersistenceSession {
           input.base.createdByEmployeeId != current.createdByEmployeeId ||
           input.baseRevision < 1 ||
           !permissions.canEdit(input.base) ||
+          (!input.forBusiness && !permissions.canCollectSignature) ||
           (input.confirmedAt != null && !input.confirmedAt!.isUtc)) {
         throw StateError('Signature draft belongs to a different estimate.');
       }

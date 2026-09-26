@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ui_lab_2_1/src/screens/work/estimate_detail_screen.dart';
+import 'package:ui_lab_2_1/src/screens/work/estimate_signature_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_models.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
-import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
 
 void main() {
@@ -14,39 +13,52 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final scope = OperationalScopeController();
-    addTearDown(scope.dispose);
     WorkRecord? updated;
 
     await tester.pumpWidget(
-      OperationalScope(
-        controller: scope,
-        child: MaterialApp(
-          theme: AppTheme.light,
-          home: EstimateDetailScreen(
-            initialRecord: _readyEstimate(),
-            onUpdated: (record) => updated = record,
-            onCreateJob: (_) {},
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () async {
+                updated = await Navigator.of(context).push<WorkRecord>(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        EstimateSignatureScreen(record: _readyEstimate()),
+                  ),
+                );
+              },
+              child: const Text('Review and sign'),
+            ),
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('estimate-actions-fab')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('estimate-signature-action')));
+    await tester.tap(find.text('Review and sign'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Customer signature'), findsOneWidget);
-    expect(find.text('Sunday, August 30, 2026'), findsOneWidget);
+    expect(find.text('Approve estimate in person'), findsOneWidget);
     final save = find.byKey(const ValueKey('save-customer-signature'));
     expect(tester.widget<FilledButton>(save).onPressed, isNull);
 
+    await tester.ensureVisible(find.byKey(const ValueKey('tap-to-sign')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('tap-to-sign')));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('estimate-signature-pad')),
+    );
+    await tester.pumpAndSettle();
     await tester.drag(
       find.byKey(const ValueKey('estimate-signature-pad')),
       const Offset(80, 30),
     );
+    await tester.ensureVisible(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
     await tester.tap(find.byType(CheckboxListTile));
     await tester.pumpAndSettle();
     expect(tester.widget<FilledButton>(save).onPressed, isNotNull);

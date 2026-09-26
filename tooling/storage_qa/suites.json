@@ -15,6 +15,8 @@
       "test/local_app_preferences_test.dart",
       "test/application_startup_recovery_test.dart",
       "test/application_startup_storage_test.dart",
+      "test/startup_preserves_development_records_test.dart",
+      "test/storage_write_admission_test.dart",
       "test/local_installation_guard_test.dart",
       "test/local_installation_selection_test.dart",
       "test/local_installation_switch_coordinator_test.dart",
@@ -54,6 +56,7 @@
     "domains": [
       "test/sqlite_domain_repositories_test.dart",
       "test/receipt_evidence_revision_test.dart",
+      "test/receipt_import_file_preservation_test.dart",
       "test/sqlite_work_repository_test.dart",
       "test/work_persistence_session_test.dart",
       "test/directory_persistence_test.dart",

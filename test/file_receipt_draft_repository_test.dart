@@ -229,7 +229,7 @@ void main() {
     });
 
     test(
-      'failed snapshot write retains no claimed record or new evidence',
+      'failed snapshot write claims no record and preserves imported evidence',
       () async {
         final source = await _source(root, 'write-failure.jpg', [7, 8, 9]);
         final repository = await FileReceiptDraftRepository.open(
@@ -260,7 +260,9 @@ void main() {
                   .where((entity) => entity is File)
                   .toList()
             : const <FileSystemEntity>[];
-        expect(retainedFiles, isEmpty);
+        expect(retainedFiles, hasLength(1));
+        expect(await File(retainedFiles.single.path).readAsBytes(), [7, 8, 9]);
+        expect(await source.readAsBytes(), [7, 8, 9]);
       },
     );
 

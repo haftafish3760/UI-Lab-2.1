@@ -32,6 +32,16 @@ void main() {
           client: 'Customer',
           detail: 'Repair completed',
           pricing: WorkPricingModel.flatRate,
+          items: [
+            WorkLineItem(
+              id: 'service',
+              type: WorkLineItemType.labor,
+              name: 'Repair service',
+              quantity: 1,
+              unit: 'job',
+              customerPrice: 125,
+            ),
+          ],
           total: 125,
         );
         expect(

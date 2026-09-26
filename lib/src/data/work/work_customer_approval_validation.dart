@@ -5,6 +5,20 @@ extension _WorkCustomerApprovalValidation on WorkPersistenceSession {
     WorkRecord record,
     WorkRecord? current,
   ) {
+    final signature = record.customerSignature;
+    if (signature != null &&
+        signature.isCurrentFor(record.revision) &&
+        canonicalJson(encodeWorkCustomerSignature(signature)) !=
+            canonicalJson(
+              current?.customerSignature == null
+                  ? null
+                  : encodeWorkCustomerSignature(current!.customerSignature!),
+            ) &&
+        !permissions.canCollectSignature) {
+      throw StateError(
+        'You do not have permission to collect customer signatures.',
+      );
+    }
     final previousApprovals =
         current?.customerApprovals ?? const <WorkCustomerApproval>[];
     if (record.customerApprovals.length < previousApprovals.length ||
@@ -24,6 +38,11 @@ extension _WorkCustomerApprovalValidation on WorkPersistenceSession {
     for (final approval in record.customerApprovals.skip(
       previousApprovals.length,
     )) {
+      if (!permissions.canRecordCustomerApproval) {
+        throw StateError(
+          'You do not have permission to record customer approval.',
+        );
+      }
       if (approval.recordedByEmployeeId != permissions.actorEmployeeId ||
           approval.revision != record.revision ||
           approval.customerName.trim().isEmpty ||
@@ -53,6 +72,11 @@ extension _WorkCustomerApprovalValidation on WorkPersistenceSession {
             previous != null &&
             canonicalJson(encodeWorkLineItem(previous)) ==
                 canonicalJson(encodeWorkLineItem(item));
+        if (!unchanged && !permissions.canRecordCustomerApproval) {
+          throw StateError(
+            'You do not have permission to record approval for additional work.',
+          );
+        }
         if (!unchanged &&
             (item.changeApproval == null ||
                 item.changeApproval!.recordedByEmployeeId !=

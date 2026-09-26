@@ -10,8 +10,9 @@ import 'work_models.dart';
 /// An explicit Save leads to review. Ordinary Work navigation never calls this.
 Future<void> openSavedWorkDocument(
   BuildContext context,
-  WorkRecord record,
-) async {
+  WorkRecord record, {
+  bool recordApproval = false,
+}) async {
   final store = PrototypeOperationsScope.of(context);
   await Navigator.of(context).push<void>(
     MaterialPageRoute(
@@ -24,6 +25,7 @@ Future<void> openSavedWorkDocument(
           ),
           WorkRecordKind.estimate => EstimateDetailScreen(
             initialRecord: record,
+            openApprovalOnEntry: recordApproval,
             onUpdated: store.updateWorkRecord,
             onCreateJob: (estimate) async {
               if (!estimate.hasCurrentCustomerApproval ||

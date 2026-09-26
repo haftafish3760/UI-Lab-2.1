@@ -287,6 +287,9 @@ least one authorized record requires review.
 
 ### Work home
 
+- Drafts and permitted Employees are equal-width, labeled controls in one
+  compact row when local width and text scale allow. They reflow at larger text
+  without truncating either label; Employees stays absent without view permission.
 - The shared charcoal header comes first. It shows `Employee` plus the signed-in
   technician, the selected employee, or `Company Overview`, and the shared View
   selector. Work does not contain Start Workday in this header.
@@ -463,12 +466,9 @@ state and opens the complete estimate, job, invoice, or payment that owns it.
   inspect several sites, then finish pricing later. Camera, library, and file
   sources remain available; customer delivery includes only photos the sender
   explicitly selects.
-- Compact Estimate detail uses a labeled full-screen `Estimate actions` route;
-  wide detail uses the same permission-derived actions inline. Existing line
-  items reopen for editing with their evidence links intact, and all Estimate
-  subroutes retain the shared Work header and record date. Compact versus inline
-  actions use the same local `detailWorkspaceFor` result as the Estimate content
-  lanes, including when the detail is hosted in a narrow desktop pane.
+- Estimate actions and editor navigation follow the September 25 owner correction
+  in `work_lifecycle_blueprint.md`: visible labeled controls, a compact editor
+  footer, direct approval/signing child routes, and bounded multi-column review.
 - Estimate detail groups Labor and Materials separately, binds approval to an
   exact revision, preserves superseded approvals in audit history, and blocks
   conversion after any customer-visible change until the revised copy is

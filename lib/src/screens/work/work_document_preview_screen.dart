@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/prototype_operations_store.dart';
 import 'documents/customer_pdf_screen.dart';
-import 'customer_portal_screen.dart';
 import 'work_customer_document.dart';
 import 'work_pdf_delivery.dart';
 import '../../shared/documents/pdf/pdf_export_feedback.dart';
@@ -59,12 +58,6 @@ class _WorkDocumentPreviewScreenState extends State<WorkDocumentPreviewScreen> {
                 } else {
                   await _showPdfDeliveryOptions(context, _record);
                 }
-              case 'portal':
-                await Navigator.of(context).push<void>(
-                  MaterialPageRoute(
-                    builder: (_) => CustomerPortalScreen(record: _record),
-                  ),
-                );
               case 'job':
                 Navigator.of(context).pop(WorkDocumentPreviewAction.createJob);
             }
@@ -90,11 +83,6 @@ class _WorkDocumentPreviewScreenState extends State<WorkDocumentPreviewScreen> {
               const PopupMenuItem(
                 value: 'send',
                 child: Text('PDF delivery options'),
-              ),
-            if (_canDeliver)
-              const PopupMenuItem(
-                value: 'portal',
-                child: Text('Customer review link or QR code'),
               ),
             if (_record.kind == WorkRecordKind.estimate &&
                 widget.onRecordUpdated != null)

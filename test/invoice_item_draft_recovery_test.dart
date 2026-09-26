@@ -105,18 +105,17 @@ void main() {
       await openItems();
       await tester.tap(find.text('Add line item'));
       await tester.pumpAndSettle();
-      await tester.enterText(field('Item name'), 'Valve replacement');
+      await tester.enterText(field('Labor name'), 'Valve replacement');
       await tester.enterText(field('Quantity'), '2.');
-      await backUntilGone(WorkLineItemEditor);
-      expect(find.text('Continue unfinished item'), findsOneWidget);
-      expect(
-        tester
-            .widget<FilledButton>(
-              find.widgetWithText(FilledButton, 'Save items'),
-            )
-            .onPressed,
-        isNull,
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save unfinished item'));
+      await waitForNativeSave(
+        tester,
+        () => find.byType(WorkLineItemEditor).evaluate().isEmpty,
       );
+      expect(find.textContaining('Unfinished item'), findsWidgets);
+      expect(find.text('Save progress'), findsOneWidget);
       await backUntilGone(WorkItemsEditor);
       await tester.tap(find.byKey(const ValueKey('save-invoice-draft')));
       await tester.pumpAndSettle();
@@ -124,7 +123,13 @@ void main() {
         find.text('Review and save the unfinished invoice items first.'),
         findsOneWidget,
       );
-      await backUntilGone(InvoiceEditorScreen);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save draft'));
+      await waitForNativeSave(
+        tester,
+        () => find.byType(InvoiceEditorScreen).evaluate().isEmpty,
+      );
       await tester.pumpWidget(const SizedBox.shrink());
       store.dispose();
       work.dispose();
@@ -140,10 +145,10 @@ void main() {
         () => find.byKey(const ValueKey('invoice-items')).evaluate().isNotEmpty,
       );
       await openItems();
-      await tester.tap(find.text('Continue unfinished item'));
+      await tester.tap(find.textContaining('Unfinished item'));
       await tester.pumpAndSettle();
       expect(
-        tester.widget<TextField>(field('Item name')).controller!.text,
+        tester.widget<TextField>(field('Labor name')).controller!.text,
         'Valve replacement',
       );
       expect(
@@ -152,9 +157,10 @@ void main() {
       );
       await tester.enterText(field('Price per item'), '25');
       await tester.ensureVisible(
-        find.widgetWithText(FilledButton, 'Add line item'),
+        find.widgetWithText(FilledButton, 'Save item'),
       );
-      await tester.tap(find.widgetWithText(FilledButton, 'Add line item'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Save item'));
       await waitForNativeSave(
         tester,
         () => find.byType(WorkLineItemEditor).evaluate().isEmpty,
@@ -165,7 +171,13 @@ void main() {
         tester,
         () => find.byType(WorkItemsEditor).evaluate().isEmpty,
       );
-      await backUntilGone(InvoiceEditorScreen);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save draft'));
+      await waitForNativeSave(
+        tester,
+        () => find.byType(InvoiceEditorScreen).evaluate().isEmpty,
+      );
       final drafts = LocalDraftStore(database);
       final saved = (await tester.runAsync(
         () => drafts.list(

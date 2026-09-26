@@ -46,6 +46,7 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
   void _captureEstimateInput() {
     if (!_draftReady || _saving) return;
     _workflow?.updateInput(_estimateInput);
+    if (mounted) _refresh(() {});
   }
 
   Future<void> _openEstimateDraft() async {
@@ -68,6 +69,7 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
         }
         return;
       }
+      _entryInput = canonicalJson(_estimateInput.toPayload());
       _refresh(() => _draftReady = true);
       return;
     }
@@ -76,6 +78,7 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
         _applyCurrentEstimate(work.editableEstimate(_estimateId));
       }
       _baseStorageRevision = work.storageRevisionFor(_estimateId);
+      _entryInput = canonicalJson(_estimateInput.toPayload());
       final workflow =
           widget.recoveredWorkflow ??
           await work.openEstimateDraft(
@@ -170,7 +173,10 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
     _sitePhotos = input.sitePhotos;
   }
 
-  Future<void> _confirmEstimate() async {
+  Future<void> _confirmEstimate({bool recordApproval = false}) async {
+    final returnOffset = _scrollController.hasClients
+        ? _scrollController.offset
+        : 0.0;
     _captureEstimateInput();
     _refresh(() => _saving = true);
     try {
@@ -185,7 +191,55 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
         estimate = await workflow.confirm();
       }
       if (estimate == null) throw StateError('Estimate was not saved.');
-      if (mounted) await finishDraftRoute(estimate);
+      if (mounted && recordApproval) {
+        await _draftSubscription?.cancel();
+        await _draft?.close();
+        if (!mounted) return;
+        final approved = await Navigator.of(context).push<WorkRecord>(
+          MaterialPageRoute(
+            builder: (_) => EstimateApprovalScreen(record: estimate!),
+          ),
+        );
+        if (!mounted) return;
+        final latest = _work?.records
+            .where((record) => record.id == estimate!.id)
+            .firstOrNull;
+        final current = latest ?? approved ?? estimate;
+        _applyCurrentEstimate(current);
+        _baseStorageRevision = _work?.storageRevisionFor(current.id) ?? 0;
+        if (_work != null) {
+          _workflow = await _work!.openEstimateDraft(
+            creatorId: _creatorId,
+            existingRecordId: current.id,
+          );
+          if (!mounted) {
+            await _draft?.close();
+            return;
+          }
+          _workflow!.updateInput(_estimateInput);
+          await _draft!.flush();
+          _draftSubscription = _draft!.changes.listen((_) {
+            if (mounted) _refresh(() {});
+          });
+        }
+        _entryInput = canonicalJson(_estimateInput.toPayload());
+        _refresh(() {
+          _saving = false;
+          _saveError = null;
+        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted && _scrollController.hasClients) {
+          _scrollController.jumpTo(
+            returnOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+          );
+        }
+        return;
+      }
+      final savedId = estimate.id;
+      final latest = _work?.records
+          .where((record) => record.id == savedId)
+          .firstOrNull;
+      if (mounted) await finishDraftRoute(latest ?? estimate);
     } on EstimateInputValidation catch (error) {
       if (mounted) {
         _refresh(() => _saving = false);

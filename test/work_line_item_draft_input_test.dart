@@ -25,7 +25,7 @@ void main() {
     () {
       final raw = payload();
       final input = WorkLineItemDraftInput.fromPayload(raw);
-      expect(input.toPayload(), raw);
+      expect(input.toPayload(), {...raw, 'workers': '1'});
       raw['name'] = 'Changed elsewhere';
       final item = input.confirmedItem(
         canSetCustomerPrice: true,
@@ -50,7 +50,7 @@ void main() {
     () {
       final raw = payload()..['quantity'] = '-';
       final input = WorkLineItemDraftInput.fromPayload(raw);
-      expect(input.toPayload(), raw);
+      expect(input.toPayload(), {...raw, 'workers': '1'});
       expect(
         () => input.confirmedItem(
           canSetCustomerPrice: true,

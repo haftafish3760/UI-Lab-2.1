@@ -35,8 +35,9 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        final sign = find.text('Record customer approval');
+        final sign = find.text('Sign in person');
         await tester.ensureVisible(sign);
+        await tester.pumpAndSettle();
         await tester.tap(sign);
         await tester.pumpAndSettle();
         await waitForNativeSave(tester, () => name.evaluate().isNotEmpty);
@@ -52,10 +53,20 @@ void main() {
       try {
         await open();
         await tester.enterText(name, '  Morgan Customer  ');
+        await tester.ensureVisible(find.byKey(const ValueKey('tap-to-sign')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('tap-to-sign')));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('estimate-signature-pad')),
+        );
+        await tester.pumpAndSettle();
         await tester.drag(
           find.byKey(const ValueKey('estimate-signature-pad')),
           const Offset(80, 30),
         );
+        await tester.ensureVisible(find.byType(CheckboxListTile));
+        await tester.pumpAndSettle();
         await tester.tap(find.byType(CheckboxListTile));
         await tester.pump();
         await tester.binding.handlePopRoute();

@@ -19,7 +19,7 @@ class _PaymentRecordRow extends StatelessWidget {
     return Semantics(
       button: invoice != null,
       label:
-          '${entry.sourceId}, $customer, payment ${_moneyCents(entry.amountCents)}',
+          '${invoice?.number ?? entry.sourceId}, $customer, payment ${_moneyCents(entry.amountCents)}',
       child: Material(
         key: ValueKey('payment-entry-${entry.id}'),
         color: colors.surface,
@@ -55,7 +55,7 @@ class _PaymentRecordRow extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          entry.sourceId,
+                          invoice?.number ?? entry.sourceId,
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         Text(

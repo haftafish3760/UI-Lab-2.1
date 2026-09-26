@@ -60,6 +60,7 @@ WorkRecord buildConfirmedJob(
     createdOn: DateTime(now.year, now.month, now.day),
     scheduledStart: input.scheduledStart,
     scheduledEnd: input.scheduledEnd,
+    scheduleBufferMinutes: input.scheduleBufferMinutes,
     status: WorkRecordStatus.scheduled,
     items: List.unmodifiable(input.items),
     total:

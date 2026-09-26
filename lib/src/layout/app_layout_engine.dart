@@ -127,6 +127,12 @@ abstract final class AppLayoutEngine {
     TextScaler textScaler = TextScaler.noScaling,
   }) => width < 280 + _layoutScalePenalty(textScaler) * 180;
 
+  /// Keep the two short Work-home destinations together when their labels fit.
+  static bool stackWorkHomeUtilityActionsFor(
+    double width, {
+    TextScaler textScaler = TextScaler.noScaling,
+  }) => width < 280 + _layoutScalePenalty(textScaler) * 180;
+
   static int templateColumnsFor(
     double width, {
     TextScaler textScaler = TextScaler.noScaling,

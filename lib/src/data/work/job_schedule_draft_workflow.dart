@@ -15,6 +15,7 @@ class JobScheduleInput {
     required this.hour,
     required this.minute,
     required this.period,
+    this.bufferMinutes = 0,
   });
   final WorkRecord base;
   final int baseRevision;
@@ -22,6 +23,7 @@ class JobScheduleInput {
   final String hour;
   final String minute;
   final String period;
+  final int bufferMinutes;
 
   factory JobScheduleInput.initial(
     WorkRecord record, {
@@ -35,6 +37,7 @@ class JobScheduleInput {
       hour: (start.hour % 12 == 0 ? 12 : start.hour % 12).toString(),
       minute: start.minute.toString().padLeft(2, '0'),
       period: start.hour < 12 ? 'AM' : 'PM',
+      bufferMinutes: record.scheduleBufferMinutes,
     );
   }
 
@@ -45,6 +48,7 @@ class JobScheduleInput {
     'hour': hour,
     'minute': minute,
     'period': period,
+    'bufferMinutes': bufferMinutes,
   };
   factory JobScheduleInput.fromPayload(Map<String, Object?> payload) =>
       JobScheduleInput(
@@ -56,6 +60,9 @@ class JobScheduleInput {
         hour: payload['hour'] as String,
         minute: payload['minute'] as String,
         period: payload['period'] as String,
+        bufferMinutes:
+            payload['bufferMinutes'] as int? ??
+            ((payload['base'] as Map)['scheduleBufferMinutes'] as int? ?? 0),
       );
 
   WorkRecord confirmedRecord() {
@@ -95,6 +102,7 @@ class JobScheduleInput {
     return base.copyWith(
       scheduledStart: scheduledStart,
       scheduledEnd: scheduledStart.add(end.difference(start)),
+      scheduleBufferMinutes: bufferMinutes,
       status: base.status == WorkRecordStatus.needsReturnVisit
           ? WorkRecordStatus.scheduled
           : base.status,
@@ -118,6 +126,7 @@ class JobScheduleDraftController
     required String hour,
     required String minute,
     required String period,
+    int? bufferMinutes,
   }) => updateInput(
     JobScheduleInput(
       base: input.base,
@@ -126,6 +135,7 @@ class JobScheduleDraftController
       hour: hour,
       minute: minute,
       period: period,
+      bufferMinutes: bufferMinutes ?? input.bufferMinutes,
     ),
   );
   Future<WorkRecord?> confirm() async {
@@ -152,7 +162,8 @@ extension JobScheduleDraftWorkflow on WorkPersistenceSession {
         controller.input.base.id != recordId ||
         current == null ||
         current.kind != WorkRecordKind.job ||
-        !permissions.canEdit(current)) {
+        !permissions.canEdit(current) ||
+        !permissions.canScheduleJobs) {
       throw StateError('Selected job schedule belong to another workflow.');
     }
   }
@@ -164,7 +175,8 @@ extension JobScheduleDraftWorkflow on WorkPersistenceSession {
     final current = records.where((r) => r.id == recordId).firstOrNull;
     if (current == null ||
         current.kind != WorkRecordKind.job ||
-        !permissions.canEdit(current)) {
+        !permissions.canEdit(current) ||
+        !permissions.canScheduleJobs) {
       throw StateError('Job unavailable.');
     }
     final draft = DraftAutosaveSession(
@@ -182,7 +194,8 @@ extension JobScheduleDraftWorkflow on WorkPersistenceSession {
           input.base.createdByEmployeeId != current.createdByEmployeeId ||
           input.baseRevision < 1 ||
           !const {'AM', 'PM'}.contains(input.period) ||
-          !permissions.canEdit(input.base)) {
+          !permissions.canEdit(input.base) ||
+          !permissions.canScheduleJobs) {
         throw StateError('Saved schedule does not match this job.');
       }
     }

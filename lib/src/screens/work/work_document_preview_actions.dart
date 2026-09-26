@@ -28,7 +28,6 @@ Future<void> _showPdfDeliveryOptions(
             ),
             const SizedBox(height: 10),
             for (final option in const [
-              (Icons.qr_code, 'Customer review link or QR code'),
               (Icons.email_outlined, 'Email PDF to customer'),
               (Icons.ios_share_outlined, 'Share from this device'),
               (Icons.save_alt_outlined, 'Save PDF copy'),
@@ -46,14 +45,6 @@ Future<void> _showPdfDeliveryOptions(
     ),
   );
   if (selected == null || !context.mounted) return;
-  if (selected == 'Customer review link or QR code') {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => CustomerPortalScreen(record: record),
-      ),
-    );
-    return;
-  }
   try {
     await deliverWorkPdf(
       context,

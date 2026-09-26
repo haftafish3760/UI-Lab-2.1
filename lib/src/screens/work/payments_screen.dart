@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../shared/calendar_width_section.dart';
 
 import '../../data/prototype_operations_store.dart';
+import '../../data/work/invoice_payment_balance.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/operations_workspace.dart';
 import '../../shared/section_card.dart';
@@ -205,7 +206,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           (record) =>
               record.kind == WorkRecordKind.invoice &&
               record.status != WorkRecordStatus.draft &&
-              record.status != WorkRecordStatus.paid &&
               _balanceCentsFor(record) > 0,
         )
         .toList();
@@ -248,17 +248,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   }
 
   int _balanceCentsFor(WorkRecord invoice) {
-    final paid = _store.financialEntries
-        .where(
-          (entry) =>
-              entry.kind == PrototypeFinancialKind.paymentReceived &&
-              entry.sourceId == invoice.number,
-        )
-        .fold(0, (sum, entry) => sum + entry.amountCents);
-    return ((invoice.total * 100).round() - paid).clamp(
-      0,
-      (invoice.total * 100).round(),
-    );
+    return invoiceBalanceCents(invoice, _store.financialEntries);
   }
 }
 
@@ -414,12 +404,13 @@ class _PaymentList extends StatelessWidget {
   );
 }
 
-WorkRecord? _invoiceFor(PrototypeOperationsStore store, String number) => store
-    .workRecords
-    .where(
-      (record) =>
-          record.kind == WorkRecordKind.invoice && record.number == number,
-    )
-    .firstOrNull;
+WorkRecord? _invoiceFor(PrototypeOperationsStore store, String reference) =>
+    store.workRecords
+        .where(
+          (record) =>
+              record.kind == WorkRecordKind.invoice &&
+              (record.id == reference || record.number == reference),
+        )
+        .firstOrNull;
 
 String _moneyCents(int cents) => '\$${(cents / 100).toStringAsFixed(2)}';

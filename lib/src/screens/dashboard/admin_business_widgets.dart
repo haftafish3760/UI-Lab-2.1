@@ -56,7 +56,7 @@ class AdminCompanyWork extends StatelessWidget {
     return DashboardReviewSection(
       key: const ValueKey('admin-company-schedule'),
       title: sameDashboardDay(date, DateTime.now())
-          ? 'Company work today'
+          ? "Today’s plan"
           : 'Company work',
       icon: Icons.work_outline,
       tone: OperationalCardPalette.plan,

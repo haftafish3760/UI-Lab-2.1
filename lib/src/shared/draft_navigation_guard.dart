@@ -10,6 +10,7 @@ mixin DraftNavigationGuard<T extends StatefulWidget> on State<T> {
   DraftAutosaveSession? get navigationDraft;
   bool get blockDraftNavigation => false;
   bool get allowCleanDraftPop => false;
+  bool get confirmDraftExit => false;
   bool get requiresDraftPopGuard => navigationDraft != null;
   bool _allowDraftPop = false;
   bool _leavingDraft = false;
@@ -72,6 +73,42 @@ mixin DraftNavigationGuard<T extends StatefulWidget> on State<T> {
     if (_leavingDraft || blockDraftNavigation) return;
     setState(() => _leavingDraft = true);
     try {
+      if (confirmDraftExit) {
+        final choice = await showDialog<String>(
+          context: context,
+          builder: (dialog) => AlertDialog(
+            title: const Text('Keep your changes?'),
+            content: const Text(
+              'Save a draft to finish later, or discard these changes.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialog, 'edit'),
+                child: const Text('Keep editing'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(dialog, 'discard'),
+                child: const Text('Discard changes'),
+              ),
+              if (navigationDraft != null)
+                FilledButton(
+                  onPressed: () => Navigator.pop(dialog, 'save'),
+                  child: const Text('Save draft'),
+                ),
+            ],
+          ),
+        );
+        if (!mounted) return;
+        if (choice == null || choice == 'edit') {
+          setState(() => _leavingDraft = false);
+          return;
+        }
+        if (choice == 'discard') {
+          await navigationDraft?.discard();
+          if (mounted) await finishDraftRoute(result);
+          return;
+        }
+      }
       await navigationDraft?.flush();
       if (!mounted) return;
       await finishDraftRoute(result);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/prototype_operations_store.dart';
+import '../../data/work/invoice_payment_balance.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
 import '../../theme/app_semantic_colors.dart';
@@ -42,11 +43,7 @@ class InvoiceDetailScreen extends StatelessWidget {
         record;
     final payments = permissions.canViewFinancials
         ? (store.financialEntries
-              .where(
-                (entry) =>
-                    entry.kind == PrototypeFinancialKind.paymentReceived &&
-                    entry.sourceId == invoice.number,
-              )
+              .where((entry) => paymentBelongsToInvoice(entry, invoice))
               .toList()
             ..sort((a, b) => b.occurredOn.compareTo(a.occurredOn)))
         : <PrototypeFinancialEntry>[];

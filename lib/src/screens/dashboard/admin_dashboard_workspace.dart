@@ -181,7 +181,12 @@ class _AdminDashboardWorkspaceState extends State<_AdminDashboardWorkspace> {
                 ScreenWidgetBoard(
                   layout: layout,
                   children: [
-                    for (final id in active)
+                    for (final id in active.where(
+                      (id) =>
+                          editing ||
+                          id != 'entries' ||
+                          !active.contains('work'),
+                    ))
                       KeyedSubtree(
                         key: ValueKey('admin-widget-$id'),
                         child: editing
@@ -199,6 +204,18 @@ class _AdminDashboardWorkspaceState extends State<_AdminDashboardWorkspace> {
                                     ? null
                                     : () => setState(() => _draft!.remove(id)),
                                 child: _content(id, layout),
+                              )
+                            : id == 'work' && active.contains('entries')
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _content(id, layout),
+                                  SizedBox(height: layout.gap),
+                                  KeyedSubtree(
+                                    key: const ValueKey('admin-widget-entries'),
+                                    child: _content('entries', layout),
+                                  ),
+                                ],
                               )
                             : _content(id, layout),
                       ),

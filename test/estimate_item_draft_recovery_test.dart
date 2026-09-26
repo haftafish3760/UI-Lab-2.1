@@ -100,6 +100,10 @@ void main() {
 
         Future<void> backUntilGone(Type type) async {
           await tester.binding.handlePopRoute();
+          await tester.pumpAndSettle();
+          if (find.text('Save draft').evaluate().isNotEmpty) {
+            await tester.tap(find.text('Save draft'));
+          }
           await waitForNativeSave(
             tester,
             () => find.byType(type).evaluate().isEmpty,
@@ -146,7 +150,10 @@ void main() {
           isNotNull,
         );
         await tester.tap(find.text('Save progress'));
-        await waitForNativeSave(tester, () => find.byType(EstimateItemsScreen).evaluate().isEmpty);
+        await waitForNativeSave(
+          tester,
+          () => find.byType(EstimateItemsScreen).evaluate().isEmpty,
+        );
         await tester.tap(find.byKey(const ValueKey('save-estimate-draft')));
         await tester.pumpAndSettle();
         expect(

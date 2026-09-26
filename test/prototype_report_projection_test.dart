@@ -64,6 +64,62 @@ void main() {
   });
 
   test(
+    'outstanding and overdue show the unpaid cents after partial payment',
+    () {
+      final invoice = WorkRecord(
+        id: 'invoice-1',
+        kind: WorkRecordKind.invoice,
+        number: 'INV-1',
+        title: 'Repair',
+        client: 'Customer',
+        detail: 'Repair',
+        pricing: WorkPricingModel.flatRate,
+        status: WorkRecordStatus.due,
+        total: 100,
+        issuedOn: DateTime(2026, 1, 2),
+        dueOn: DateTime(2026, 1, 10),
+      );
+      final payments = [
+        PrototypeFinancialEntry(
+          id: 'payment-1',
+          kind: PrototypeFinancialKind.paymentReceived,
+          occurredOn: DateTime(2026, 1, 11),
+          amountCents: 4000,
+          sourceId: invoice.number,
+        ),
+        PrototypeFinancialEntry(
+          id: 'future-payment',
+          kind: PrototypeFinancialKind.paymentReceived,
+          occurredOn: DateTime(2026, 2, 3),
+          amountCents: 6000,
+          sourceId: invoice.id,
+        ),
+      ];
+      final summary = PrototypeReportProjection.build(
+        financialEntries: payments,
+        expenses: const [],
+        workRecords: [invoice],
+        fromInclusive: DateTime(2026, 1),
+        toExclusive: DateTime(2026, 2),
+        asOf: DateTime(2026, 2, 1),
+      );
+      expect(summary.outstandingInvoiceCents, 6000);
+      expect(summary.overdueInvoiceCents, 6000);
+      expect(summary.outstandingInvoices.single.amountCents, 6000);
+      final paidLater = PrototypeReportProjection.build(
+        financialEntries: payments,
+        expenses: const [],
+        workRecords: [invoice],
+        fromInclusive: DateTime(2026, 1),
+        toExclusive: DateTime(2026, 2),
+        asOf: DateTime(2026, 2, 4),
+      );
+      expect(paidLater.outstandingInvoices, isEmpty);
+      expect(paidLater.outstandingInvoiceCents, 0);
+    },
+  );
+
+  test(
     'employee report excludes company money and other employees records',
     () {
       final store = _store();

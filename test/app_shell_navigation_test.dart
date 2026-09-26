@@ -13,6 +13,48 @@ Future<void> _pumpAt(WidgetTester tester, Size size) async {
 }
 
 void main() {
+  testWidgets(
+    'Work routes retain navigation and Android Back returns one screen',
+    (tester) async {
+      await _pumpAt(tester, const Size(390, 844));
+      await tester.tap(find.byKey(const ValueKey('app-destination-work')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Estimates').first);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('work-estimate-workspace')),
+        findsOneWidget,
+      );
+      expect(find.byType(NavigationBar), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('new-estimate')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('estimate-editor-screen')),
+        findsOneWidget,
+      );
+      expect(find.byType(NavigationBar), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('estimate-editor-screen')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('work-estimate-workspace')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('app-destination-dashboard')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('app-destination-work')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('work-estimate-workspace')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('mobile reserves a labeled ad zone above bottom navigation', (
     tester,
   ) async {

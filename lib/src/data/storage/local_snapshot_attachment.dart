@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
+import 'receipt_evidence_relative_path.dart';
 
 /// Private checkpoint metadata. Original device paths are needed for a future
 /// restore mapping and must never be reused as cloud-safe transport metadata.
@@ -87,11 +88,15 @@ List<LocalSnapshotAttachment> readSnapshotAttachments(
               throw StateError('Invalid receipt evidence identity.');
             }
             final extension = kind == 'pdf' ? 'pdf' : 'image';
+            final relative = receiptEvidenceRelativePath(
+              draftFolder: folder,
+              evidenceId: evidenceId,
+              extension: extension,
+            );
             _add(
               files,
               LocalSnapshotAttachment(
-                relativePath:
-                    'receipt_evidence/evidence/$folder/$evidenceId.$extension',
+                relativePath: 'receipt_evidence/evidence/$relative',
                 sourcePath: evidence['localPath'] as String,
                 byteLength: evidence['byteLength'] as int,
                 digest: evidence['sha256'] as String,

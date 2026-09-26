@@ -111,25 +111,19 @@ extension _ReceiptEvidenceStitching on _ReceiptEvidenceReviewScreenState {
 
   Future<String?> _loadCombinedPreview() async {
     final workflow = _workflow;
-    final id = _stitchState?.attachmentId;
-    final store = workflow?.session.store;
-    if (workflow == null || id == null || store is! LocalDraftStore)
-      return null;
-    final files = await LocalAttachmentStore(store.database).verifiedFiles(
-      organizationId: workflow.session.organizationId,
-      ownerIds: {workflow.session.ownerId},
-      attachmentIds: {id},
-    );
-    return files.single.path;
+    final submission = _submission;
+    if (workflow == null || submission == null) return null;
+    return submission.verifiedCombinedPreview(workflow);
   }
 
   Widget _combinedPreview(double height) => FutureBuilder<String?>(
     future: _combinedFile,
     builder: (context, snapshot) {
-      if (snapshot.hasError)
+      if (snapshot.hasError) {
         return const Text(
           'The saved preview is unavailable. Your original photos can still be reviewed.',
         );
+      }
       final path = snapshot.data;
       if (path == null) return const Center(child: CircularProgressIndicator());
       return SizedBox(

@@ -1,4 +1,3 @@
-import 'customer_portal_screen.dart';
 import 'work_pdf_delivery.dart';
 import '../../data/work/models/work_contact_models.dart';
 import 'dart:async';
@@ -187,22 +186,6 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                           ),
                         ),
                         const SizedBox(height: 16),
-                        OutlinedButton.icon(
-                          onPressed: !_ready || _saving
-                              ? null
-                              : () async {
-                                  await _draft?.flush();
-                                  if (!context.mounted) return;
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (_) =>
-                                          CustomerPortalScreen(record: _base),
-                                    ),
-                                  );
-                                },
-                          icon: const Icon(Icons.qr_code),
-                          label: const Text('Customer review link or QR code'),
-                        ),
                         FilledButton.icon(
                           key: const ValueKey('confirm-estimate-delivery'),
                           onPressed: _ready && _reviewed && !_saving

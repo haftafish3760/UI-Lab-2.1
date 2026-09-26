@@ -4,7 +4,7 @@ import '../../shared/operations_workspace.dart';
 import '../../shared/section_card.dart';
 
 const adminWidgetLabels = {
-  'work': 'Company work today',
+  'work': "Today’s plan",
   'billing': 'Billing and collections',
   'calendar': 'Calendar',
   'entries': 'Recorded activity',

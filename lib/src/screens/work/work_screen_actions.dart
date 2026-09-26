@@ -80,7 +80,7 @@ extension _WorkScreenActions on _WorkScreenState {
   Future<void> _createJob() async {
     final job = await Navigator.of(context).push<WorkRecord>(
       MaterialPageRoute(
-        builder: (_) => WorkJobEditor(initialDay: _selectedDay),
+        builder: (_) => JobStartScreen(initialDay: _selectedDay),
       ),
     );
     if (job != null && mounted) {

@@ -56,7 +56,9 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
     final midnight = DateUtils.dateOnly(day);
     return end == null
         ? DateUtils.isSameDay(start, day)
-        : start.isBefore(midnight.add(const Duration(days: 1))) &&
+        : start.isBefore(
+                DateTime(midnight.year, midnight.month, midnight.day + 1),
+              ) &&
               end.isAfter(midnight);
   }
 

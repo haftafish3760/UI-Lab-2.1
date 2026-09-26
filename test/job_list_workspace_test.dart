@@ -213,6 +213,9 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('new-job')));
       await tester.pumpAndSettle();
+      expect(find.text('Start from an estimate'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('job-without-estimate')));
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('job-editor-screen')), findsOneWidget);
       expect(find.byKey(const ValueKey('job-client-field')), findsOneWidget);

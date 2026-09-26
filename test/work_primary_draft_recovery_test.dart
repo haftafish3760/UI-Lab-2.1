@@ -1,3 +1,4 @@
+import 'package:ui_lab_2_1/src/data/work/estimate_draft_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/storage/draft_recovery_catalog.dart';
 import 'package:ui_lab_2_1/src/data/storage/draft_recovery_selection.dart';
@@ -15,6 +16,40 @@ import 'job_draft_workflow_test.dart' as job;
 import 'support/storage/database_harness.dart';
 
 void main() {
+  test(
+    'unnamed estimate and invoice drafts use the selected customer',
+    () async {
+      final harness = await DatabaseHarness.create();
+      addTearDown(harness.dispose);
+      final work = await openUiLabWorkSession(await harness.open());
+      addTearDown(work.dispose);
+      final actor = work.permissions.actorEmployeeId;
+      final e = await work.openEstimateDraft(creatorId: actor);
+      e.updateInput(
+        EstimateDraftInput.fromPayload({
+          ...estimate.inputFor(actor).toPayload(),
+          'title': '  ',
+          'client': 'Estimate customer',
+        }),
+      );
+      await e.session.close();
+      final i = await work.openInvoiceDraft();
+      i.updateInput(
+        InvoiceDraftInput.fromPayload({
+          ...invoice.inputFor(actor).toPayload(),
+          'title': '',
+          'client': 'Invoice customer',
+        }),
+      );
+      await i.session.close();
+      final entries = await WorkPrimaryDraftRecovery(work).list();
+      expect(
+        entries.map((entry) => entry.preview.title),
+        containsAll(['Estimate customer', 'Invoice customer']),
+      );
+    },
+  );
+
   test(
     'primary Work recovery reopens all controllers without changing raw input or records',
     () async {

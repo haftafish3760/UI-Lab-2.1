@@ -8,6 +8,9 @@ import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_items_editor.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
+import 'support/storage/database_harness.dart';
+import 'support/storage/seeded_work_fixture.dart';
+import 'support/storage/native_widget_pump.dart';
 
 Future<void> _pumpJob(
   WidgetTester tester, {
@@ -45,14 +48,24 @@ Future<void> _openJobMaterials(WidgetTester tester) async {
   await tester.tap(find.byKey(const ValueKey('job-actions-fab')));
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const ValueKey('job-action-addMaterials')));
-  await tester.pumpAndSettle();
+  await waitForNativeSave(
+    tester,
+    () => find.byType(WorkItemsEditor).evaluate().isNotEmpty,
+  );
 }
 
 void main() {
   testWidgets('receipt source copies one reviewed line with exact provenance', (
     tester,
   ) async {
-    final store = PrototypeOperationsStore();
+    final harness = (await tester.runAsync(DatabaseHarness.create))!;
+    final database = (await tester.runAsync(harness.open))!;
+    final work = (await tester.runAsync(
+      () => openSeededTestWorkSession(database),
+    ))!;
+    final store = PrototypeOperationsStore(workSession: work);
+    addTearDown(work.dispose);
+    addTearDown(harness.dispose);
     addTearDown(store.dispose);
     final estimateBefore = store.workRecords.firstWhere(
       (record) => record.id == 'est-1042',
@@ -70,7 +83,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.widgetWithText(TextField, 'Internal cost per unit (optional)'),
+      find.widgetWithText(TextField, 'Your cost per each (optional)'),
       findsOneWidget,
     );
     await tester.tap(
@@ -80,13 +93,28 @@ void main() {
     await tester.tap(find.text('Add to invoice later').last);
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Customer price per unit'),
+      find.widgetWithText(TextField, 'Price per each'),
       '25',
     );
-    await tester.tap(find.text('Add material'));
+    await tester.ensureVisible(find.text('Save item'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Save materials'));
+    await tester.tap(find.text('Save item'));
+    await waitForNativeSave(
+      tester,
+      () => find.byType(WorkLineItemEditor).evaluate().isEmpty,
+    );
+    await tester.tap(find.text('Save items'));
     await tester.pumpAndSettle();
+    expect(find.text('Record customer approval'), findsOneWidget);
+    await tester.tap(find.text('Approval method'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Verbal approval').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Record approval'));
+    await waitForNativeSave(
+      tester,
+      () => find.byType(WorkItemsEditor).evaluate().isEmpty,
+    );
 
     expect(find.text('Quoted or planned total'), findsOneWidget);
     expect(find.text('For invoice review'), findsOneWidget);
@@ -179,9 +207,9 @@ void main() {
       find.textContaining('No customer charge will be added'),
       findsOneWidget,
     );
-    await tester.tap(find.text('Add material'));
+    await tester.tap(find.text('Save item'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Save materials'));
+    await tester.tap(find.text('Save items'));
     await tester.pumpAndSettle();
 
     final saved = store.workRecords.firstWhere(
@@ -253,7 +281,7 @@ void main() {
     await _pumpJob(tester, store: store);
     await _openJobMaterials(tester);
 
-    await tester.tap(find.text('Save materials'));
+    await tester.tap(find.text('Save items'));
     await tester.pumpAndSettle();
 
     expect(

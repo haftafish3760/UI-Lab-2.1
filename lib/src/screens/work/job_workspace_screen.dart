@@ -188,7 +188,12 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
                                   icon: const Icon(Icons.group_add_outlined),
                                   label: const Text('Assign employees'),
                                 ),
-                              if (widget.permissions.canChangeStatus)
+                              if (widget.permissions.canEditJob &&
+                                  (PrototypeOperationsScope.maybeOf(context)
+                                          ?.workSession
+                                          ?.permissions
+                                          .canScheduleJobs ??
+                                      true))
                                 OutlinedButton.icon(
                                   onPressed: _rescheduleJob,
                                   icon: const Icon(Icons.event_outlined),
