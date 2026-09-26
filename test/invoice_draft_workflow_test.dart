@@ -4,6 +4,7 @@ import 'package:ui_lab_2_1/src/data/work/invoice_draft_controller.dart';
 import 'package:ui_lab_2_1/src/data/work/invoice_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/models/work_models.dart';
 import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
+import 'package:ui_lab_2_1/src/data/prototype_financial_models.dart';
 
 import 'support/storage/database_harness.dart';
 
@@ -42,6 +43,59 @@ InvoiceDraftInput inputFor(String actor, {bool existing = false}) =>
     );
 
 void main() {
+  test(
+    'creating an invoice posts it once and consumes recovery input atomically',
+    () async {
+      final harness = await DatabaseHarness.create();
+      addTearDown(harness.dispose);
+      final database = await harness.open();
+      final work = await openUiLabWorkSession(database);
+      addTearDown(work.dispose);
+      final controller = await work.openInvoiceDraft();
+      final input = inputFor(work.permissions.actorEmployeeId);
+      controller.updateInput(input);
+      await database.customStatement(
+        "CREATE TRIGGER reject_new_invoice BEFORE INSERT ON local_records WHEN NEW.record_id = 'workflow-invoice' BEGIN SELECT RAISE(ABORT, 'injected failure'); END",
+      );
+      expect(await controller.confirm(issue: true), isNull);
+      expect(controller.recoveredInput, isNotNull);
+      expect(
+        work.records.where((record) => record.id == input.recordId),
+        isEmpty,
+      );
+      expect(
+        work.financialEntries.where((entry) => entry.sourceId == input.number),
+        isEmpty,
+      );
+      await database.customStatement('DROP TRIGGER reject_new_invoice');
+      final issued = await controller.confirm(issue: true);
+      expect(issued?.status, WorkRecordStatus.due);
+      expect(issued?.total, 39);
+      expect(
+        work.financialEntries
+            .where(
+              (entry) =>
+                  entry.kind == PrototypeFinancialKind.invoiceIssued &&
+                  entry.sourceId == input.number,
+            )
+            .single
+            .amountCents,
+        3900,
+      );
+      expect(
+        await work.drafts.find(
+          organizationId: work.permissions.organizationId,
+          domain: 'work/invoice-editor',
+          draftId: controller.session.draftId,
+          ownerId: work.permissions.actorEmployeeId,
+        ),
+        isNull,
+      );
+      await expectLater(controller.confirm(issue: true), throwsStateError);
+      await controller.session.close();
+    },
+  );
+
   test(
     'legacy edit recovery retains metadata and survives failed and stale confirmation',
     () async {

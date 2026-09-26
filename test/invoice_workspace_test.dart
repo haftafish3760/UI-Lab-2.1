@@ -207,7 +207,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('invoice-editor-screen')), findsOneWidget);
     expect(find.text('Direct invoice'), findsOneWidget);
-    expect(find.text('Save invoice draft'), findsOneWidget);
+    expect(find.text('Save draft'), findsOneWidget);
 
     await openDocumentSection(tester, 'invoice-source');
     await tester.tap(find.byKey(const ValueKey('invoice-source-job')));
@@ -333,7 +333,7 @@ void main() {
 
     expect(find.byKey(const ValueKey('invoice-editor-screen')), findsOneWidget);
     expect(find.text('Invoice information'), findsOneWidget);
-    expect(find.text('Save invoice draft'), findsOneWidget);
+    expect(find.text('Save draft'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

@@ -13,6 +13,96 @@ import 'support/storage/database_harness.dart';
 import 'support/storage/native_widget_pump.dart';
 
 void main() {
+  testWidgets('invoice editor offers direct creation beside saving a draft', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final harness = (await tester.runAsync(DatabaseHarness.create))!;
+    final database = (await tester.runAsync(harness.open))!;
+    final work = (await tester.runAsync(() => openUiLabWorkSession(database)))!;
+    final store = PrototypeOperationsStore(workSession: work);
+    final scope = OperationalScopeController();
+    addTearDown(() async {
+      store.dispose();
+      work.dispose();
+      scope.dispose();
+      await harness.dispose();
+    });
+    final draft = WorkRecord(
+      id: 'direct-create-invoice',
+      kind: WorkRecordKind.invoice,
+      number: 'INV-DIRECT',
+      title: 'Repair',
+      client: 'Customer',
+      detail: 'Completed repair',
+      pricing: WorkPricingModel.flatRate,
+      createdByEmployeeId: work.permissions.actorEmployeeId,
+      createdOn: DateTime(2026, 9, 9),
+      total: 50,
+      items: const [
+        WorkLineItem(
+          id: 'repair',
+          type: WorkLineItemType.labor,
+          name: 'Repair',
+          quantity: 1,
+          unit: 'service',
+          customerPrice: 50,
+        ),
+      ],
+    );
+    expect(await tester.runAsync(() => work.create(draft)), isTrue);
+    await tester.pumpWidget(
+      PrototypeOperationsScope(
+        store: store,
+        child: OperationalScope(
+          controller: scope,
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: InvoiceEditorScreen(
+              initialDay: DateTime(2026, 9, 9),
+              initialRecord: draft,
+            ),
+          ),
+        ),
+      ),
+    );
+    await waitForNativeSave(tester, () {
+      final button = find.byKey(const ValueKey('create-issued-invoice'));
+      return button.evaluate().isNotEmpty &&
+          tester.widget<FilledButton>(button).onPressed != null;
+    });
+    final save = find.byKey(const ValueKey('save-invoice-draft'));
+    final create = find.byKey(const ValueKey('create-issued-invoice'));
+    expect(save, findsOneWidget);
+    expect(tester.getTopLeft(create).dy, tester.getTopLeft(save).dy);
+    await tester.tap(create);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('does not send the invoice'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('confirm-create-invoice')));
+    await waitForNativeSave(
+      tester,
+      () => work.records.any(
+        (record) =>
+            record.id == draft.id && record.status == WorkRecordStatus.due,
+      ),
+    );
+    expect(
+      work.financialEntries
+          .where(
+            (entry) =>
+                entry.kind == PrototypeFinancialKind.invoiceIssued &&
+                entry.sourceId == draft.number,
+          )
+          .single
+          .amountCents,
+      5000,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'failed invoice save keeps editor and recovery draft; retry commits both',
     (tester) async {

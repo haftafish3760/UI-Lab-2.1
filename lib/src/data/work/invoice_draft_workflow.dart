@@ -3,6 +3,7 @@ import '../storage/draft_autosave_session.dart';
 import '../storage/draft_recovery_query.dart';
 import '../storage/local_record_identity.dart';
 import 'invoice_confirmation.dart';
+import '../prototype_financial_models.dart';
 import 'invoice_draft_controller.dart';
 import 'models/work_models.dart';
 import 'work_persistence_session.dart';
@@ -103,11 +104,32 @@ extension InvoiceDraftWorkflow on WorkPersistenceSession {
       );
       final controller = InvoiceDraftController(
         draft,
-        confirm: (input, checkpoint) async {
+        confirm: (input, checkpoint, issue) async {
           validateIdentity(input);
-          final record = buildConfirmedInvoice(input, existing: existing);
+          if (issue && !permissions.canIssueInvoices) {
+            throw StateError('You do not have permission to issue invoices.');
+          }
+          final draft = buildConfirmedInvoice(input, existing: existing);
+          if (issue && draft.status != WorkRecordStatus.draft) {
+            throw StateError('This invoice has already been issued.');
+          }
+          final record = issue
+              ? draft.copyWith(status: WorkRecordStatus.due)
+              : draft;
+          final entries = issue
+              ? [
+                  PrototypeFinancialEntry(
+                    id: 'ledger-issued-${record.id}',
+                    kind: PrototypeFinancialKind.invoiceIssued,
+                    occurredOn: record.issuedOn!,
+                    amountCents: (record.total * 100).round(),
+                    sourceId: record.number,
+                  ),
+                ]
+              : <PrototypeFinancialEntry>[];
           final saved = await save(
             records: [record],
+            financialEntries: entries,
             expectedStorageRevisions: {record.id: input.baseStorageRevision},
             draftCheckpoint: checkpoint,
           );

@@ -61,9 +61,9 @@ extension _WorkScreenActions on _WorkScreenState {
           ),
         );
         if (invoice != null && mounted) {
-          final saved = await PrototypeOperationsScope.of(
-            context,
-          ).addWorkRecord(invoice);
+          final store = PrototypeOperationsScope.of(context);
+          final saved =
+              store.workSession != null || await store.addWorkRecord(invoice);
           if (mounted && saved) {
             await openSavedWorkDocument(context, invoice);
           }

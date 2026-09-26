@@ -133,7 +133,7 @@ class InvoiceDraftController
     extends DraftWorkflowController<InvoiceDraftInput> {
   InvoiceDraftController(
     DraftAutosaveSession session, {
-    Future<WorkRecord?> Function(InvoiceDraftInput, LocalDraftCheckpoint)?
+    Future<WorkRecord?> Function(InvoiceDraftInput, LocalDraftCheckpoint, bool)?
     confirm,
     // Keep the callback private so callers use guarded confirmation.
     // ignore: prefer_initializing_formals
@@ -144,10 +144,14 @@ class InvoiceDraftController
          InvoiceDraftInput.fromPayload,
        );
 
-  final Future<WorkRecord?> Function(InvoiceDraftInput, LocalDraftCheckpoint)?
+  final Future<WorkRecord?> Function(
+    InvoiceDraftInput,
+    LocalDraftCheckpoint,
+    bool,
+  )?
   _confirm;
 
-  Future<WorkRecord?> confirm() async {
+  Future<WorkRecord?> confirm({bool issue = false}) async {
     final commit = _confirm;
     if (commit == null) {
       throw StateError('Invoice confirmation is unavailable.');
@@ -156,7 +160,7 @@ class InvoiceDraftController
     await session.confirm((checkpoint) async {
       final input = recoveredInput;
       if (input == null) throw StateError('Invoice input is unavailable.');
-      result = await commit(input, checkpoint);
+      result = await commit(input, checkpoint, issue);
       return result != null;
     });
     return result;

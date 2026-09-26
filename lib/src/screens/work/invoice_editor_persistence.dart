@@ -161,7 +161,7 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
     }
   }
 
-  Future<void> _confirmDraft() async {
+  Future<void> _confirmDraft({bool issue = false}) async {
     _captureDraft();
     _refresh(() => _submitting = true);
     try {
@@ -176,7 +176,7 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
         if (workflow == null) {
           throw StateError('Invoice workflow is unavailable.');
         }
-        record = await workflow.confirm();
+        record = await workflow.confirm(issue: issue);
       }
       if (record == null) throw StateError('The invoice was not saved.');
       if (mounted) await _popEditor(record);

@@ -288,15 +288,41 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
           heightFactor: 1,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 620),
-            child: FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-                foregroundColor: Theme.of(context).colorScheme.onSecondary,
-              ),
-              key: const ValueKey('save-invoice-draft'),
-              onPressed: _draftReady && !_submitting ? _save : null,
-              icon: const Icon(Icons.save_outlined),
-              label: const Text('Save invoice draft'),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final canIssue =
+                    _store.workSession?.permissions.canIssueInvoices == true &&
+                    (widget.initialRecord == null ||
+                        widget.initialRecord!.status == WorkRecordStatus.draft);
+                final save = OutlinedButton(
+                  key: const ValueKey('save-invoice-draft'),
+                  onPressed: _draftReady && !_submitting ? _save : null,
+                  child: const Text('Save draft'),
+                );
+                if (!canIssue) return save;
+                final create = FilledButton(
+                  key: const ValueKey('create-issued-invoice'),
+                  onPressed: _draftReady && !_submitting
+                      ? _createInvoice
+                      : null,
+                  child: const Text('Create invoice'),
+                );
+                final scaler = MediaQuery.textScalerOf(context);
+                if (constraints.maxWidth < 290 || scaler.scale(14) > 19) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [save, const SizedBox(height: 8), create],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: save),
+                    const SizedBox(width: 8),
+                    Expanded(child: create),
+                  ],
+                );
+              },
             ),
           ),
         ),

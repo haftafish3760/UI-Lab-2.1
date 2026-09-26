@@ -793,16 +793,22 @@ service location, completed-work summary, pricing method, and reviewed items
 while preserving the Job ID as the source. The user may then review customer,
 work completed, invoice items, invoice and due dates, discount, tax, template,
 expected payment method, and payment terms. An incomplete form does not create
-a record. Save creates an Unfinished draft; it does not issue or deliver it.
+a record. The editor offers **Save draft** and, with explicit issue authority,
+**Create invoice**. Save draft creates an Unfinished draft. Create invoice
+confirms that the amount will be added to the books, then saves the issued
+Invoice and its single financial entry together. Neither action sends a
+customer copy; delivery is a separate, labeled step.
 Storage integration checkpoint, September 9, 2026: the main Invoice editor now
 keeps raw unfinished input separately from the saved invoice file. It shows local
 write acknowledgment and retry failure, offers owner-scoped unfinished invoices
 when starting another invoice, and restores the specific recovery draft when
 editing an existing invoice. Back retains input; `Discard unfinished input`
 requires an explicit confirmation and does not delete a saved invoice record.
-`Save invoice draft` validates the form and atomically stores the record while
+`Save draft` validates the form and atomically stores the record while
 consuming the exact recovery draft revision. Failed or stale confirmation keeps
-the editor and recovery input. This is an implementation checkpoint, not owner
+the editor and recovery input. Direct Create invoice likewise consumes that
+revision only when both the Invoice and its ledger entry commit. This is an
+implementation checkpoint, not owner
 visual acceptance or complete workflow durability. The invoice item workspace
 and line-item form now share its recovery checkpoint, preserving partial numbers,
 item identity and source links. Back retains their input. A pending item offers

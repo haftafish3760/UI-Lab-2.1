@@ -429,7 +429,8 @@ class _InvoiceWorkspaceScreenState extends State<InvoiceWorkspaceScreen> {
       ),
     );
     if (!mounted || invoice == null) return;
-    final saved = await _store.addWorkRecord(invoice);
+    final saved =
+        _store.workSession != null || await _store.addWorkRecord(invoice);
     if (mounted && saved) {
       await _openInvoice(invoice);
     }

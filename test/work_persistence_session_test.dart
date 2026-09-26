@@ -314,6 +314,45 @@ void main() {
   );
 
   test(
+    'new issued invoice requires a matching ledger entry and issue grant',
+    () async {
+      final fresh = decodeWorkRecord({
+        ...encodeWorkRecord(invoice),
+        'id': 'invoice-new',
+        'number': 'INV-NEW',
+      });
+      expect(
+        await session.save(
+          records: [fresh.copyWith(status: WorkRecordStatus.due)],
+        ),
+        isFalse,
+      );
+      session.dispose();
+      session = await WorkPersistenceSession.open(
+        repository,
+        permissions(financial: false),
+      );
+      expect(
+        await session.save(
+          records: [fresh.copyWith(status: WorkRecordStatus.due)],
+          financialEntries: [
+            PrototypeFinancialEntry(
+              id: 'issued-new',
+              kind: PrototypeFinancialKind.invoiceIssued,
+              occurredOn: DateTime.utc(2026, 9, 9),
+              amountCents: 12550,
+              sourceId: fresh.number,
+            ),
+          ],
+        ),
+        isFalse,
+      );
+      expect(session.records.where((record) => record.id == fresh.id), isEmpty);
+      expect(session.financialEntries, isEmpty);
+    },
+  );
+
+  test(
     'two submitted changes with the same base revision cannot overwrite each other',
     () async {
       final first = decodeWorkRecord({

@@ -393,12 +393,20 @@ class WorkPersistenceSession extends ChangeNotifier {
         throw StateError('A Work record cannot change its record type.');
       }
       if (next.kind != WorkRecordKind.invoice) continue;
-      if (previous == null && next.status != WorkRecordStatus.draft) {
-        throw StateError('A new invoice must begin as a draft.');
-      }
       final related = entries.where(
         (entry) => entry.sourceId == next.id || entry.sourceId == next.number,
       );
+      if (previous == null &&
+          next.status != WorkRecordStatus.draft &&
+          (next.status != WorkRecordStatus.due ||
+              !permissions.canIssueInvoices ||
+              !related.any(
+                (entry) => entry.kind == PrototypeFinancialKind.invoiceIssued,
+              ))) {
+        throw StateError(
+          'Issue the invoice through its authorized financial command.',
+        );
+      }
       if (previous?.status == WorkRecordStatus.draft &&
           next.status != WorkRecordStatus.draft) {
         if (!permissions.canIssueInvoices ||
