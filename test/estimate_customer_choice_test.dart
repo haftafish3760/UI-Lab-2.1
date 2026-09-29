@@ -53,7 +53,7 @@ void main() {
         (w) => w is TextField && w.decoration?.labelText == label,
       );
       await tester.enterText(field('Client name'), 'TEST One-off customer');
-      final phone = field('Phone');
+      final phone = field('Phone (including area code)');
       expect(tester.widget<TextField>(phone).keyboardType, TextInputType.phone);
       await tester.enterText(phone, '2025550101');
       tester.testTextInput.hide();

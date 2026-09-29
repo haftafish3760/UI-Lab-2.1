@@ -1,3 +1,5 @@
+import 'package:ui_lab_2_1/src/data/storage/draft_autosave_session.dart';
+import 'package:ui_lab_2_1/src/shared/editor_draft_status.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_drafts_screen.dart';
 import 'support/document_form_navigation.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +63,10 @@ void main() {
         if (drafts) {
           await waitForNativeSave(
             tester,
-            () => find.text('Interrupted pump repair').evaluate().isNotEmpty,
+            () => find
+                .textContaining('Interrupted pump repair')
+                .evaluate()
+                .isNotEmpty,
           );
         } else {
           await tester.pumpAndSettle();
@@ -84,7 +89,14 @@ void main() {
       await closeDocumentSection(tester);
       await waitForNativeSave(
         tester,
-        () => find.text('Draft saved on this device').evaluate().isNotEmpty,
+        () => find
+            .byWidgetPredicate(
+              (widget) =>
+                  widget is EditorDraftStatus &&
+                  widget.state == DraftSaveState.savedLocally,
+            )
+            .evaluate()
+            .isNotEmpty,
       );
       final permissions = session.permissions;
       final draftStore = LocalDraftStore(database);
@@ -142,14 +154,17 @@ void main() {
       await openEditor(drafts: true);
       await waitForNativeSave(
         tester,
-        () => find.text('Interrupted pump repair').evaluate().isNotEmpty,
+        () => find
+            .textContaining('Interrupted pump repair')
+            .evaluate()
+            .isNotEmpty,
       );
       expect(
-        find.text('Saved input unavailable — kept on this device'),
+        find.textContaining('Saved input unavailable — kept on this device'),
         findsOneWidget,
       );
       expect(find.text('Continue an unfinished estimate?'), findsNothing);
-      await tester.tap(find.text('Interrupted pump repair'));
+      await tester.tap(find.textContaining('Interrupted pump repair'));
       await waitForNativeSave(
         tester,
         () => find

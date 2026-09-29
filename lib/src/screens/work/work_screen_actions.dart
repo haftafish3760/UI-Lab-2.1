@@ -8,6 +8,13 @@ extension _WorkScreenActions on _WorkScreenState {
           day: _selectedDay,
           actions: [
             if (_estimatePermissions.canCreate) _WorkAction.createEstimate,
+            if (PrototypeOperationsScope.of(context)
+                    .workSession
+                    ?.permissions
+                    .editableKinds
+                    .contains(WorkRecordKind.quote) ==
+                true)
+              _WorkAction.createQuote,
             if (_invoicePermissions.canCreate) _WorkAction.createInvoice,
             _WorkAction.createJob,
             if (_invoicePermissions.canRecordPayment) _WorkAction.recordPayment,
@@ -32,6 +39,14 @@ extension _WorkScreenActions on _WorkScreenState {
 
   Future<void> _handleAction(_WorkAction action) async {
     switch (action) {
+      case _WorkAction.createQuote:
+        final quote = await Navigator.of(context).push<WorkRecord>(
+          MaterialPageRoute(
+            builder: (_) => QuoteEditorScreen(initialDay: _selectedDay),
+          ),
+        );
+        if (mounted && quote != null)
+          await openSavedWorkDocument(context, quote);
       case _WorkAction.createEstimate:
         final record = await Navigator.of(context).push<WorkRecord>(
           MaterialPageRoute(
@@ -116,21 +131,7 @@ extension _WorkScreenActions on _WorkScreenState {
           ),
         );
       case WorkDestination.quotes:
-        showDialog<void>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(destination.label),
-            content: const Text(
-              'Quotes are not connected in this build. Estimates remain a separate workspace.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Back to Work'),
-              ),
-            ],
-          ),
-        );
+        _openRecordWorkspace(WorkRecordKind.quote);
     }
   }
 
@@ -183,6 +184,9 @@ extension _WorkScreenActions on _WorkScreenState {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => switch (kind) {
+          WorkRecordKind.quote => QuoteWorkspaceScreen(
+            initialDay: _selectedDay,
+          ),
           WorkRecordKind.job => JobListWorkspaceScreen(
             initialDay: _selectedDay,
           ),
@@ -214,6 +218,12 @@ extension _WorkScreenActions on _WorkScreenState {
 
   void _openRecord(WorkRecord record) {
     switch (record.kind) {
+      case WorkRecordKind.quote:
+        Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => QuoteDetailScreen(recordId: record.id),
+          ),
+        );
       case WorkRecordKind.job:
         _openJob(record);
       case WorkRecordKind.estimate:

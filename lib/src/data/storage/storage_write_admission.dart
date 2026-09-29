@@ -44,11 +44,20 @@ class StorageWriteDeferred implements Exception {
 /// This is admission, not an OS quota. Callers must bound scratch/WAL/output
 /// growth, checkpoint between units, and still handle native write failures.
 class StorageWriteAdmission {
-  StorageWriteAdmission({required this.readFreeBytes});
+  StorageWriteAdmission({
+    required this.readFreeBytes,
+    this.probeTimeout = const Duration(seconds: 2),
+  }) {
+    if (probeTimeout <= Duration.zero) {
+      throw ArgumentError.value(probeTimeout, 'probeTimeout');
+    }
+  }
 
   static const reserveBytes = 100 * 1024 * 1024;
   static const warningBytes = 1024 * 1024 * 1024;
   final StorageFreeBytesReader readFreeBytes;
+  final Duration probeTimeout;
+  Future<int?>? _pendingProbe;
   final _admissions = SerializedAsyncActions();
   final _changes = StreamController<StorageCapacityStatus>.broadcast();
   final _leases = <StorageWriteLease>{};
@@ -66,13 +75,32 @@ class StorageWriteAdmission {
     if (_closed) throw StateError('Storage admission is closed.');
     int? observed;
     try {
-      observed = await readFreeBytes();
+      // A timeout cannot cancel native work. Reuse the outstanding probe so
+      // retries cannot create an unbounded pile of native capacity requests.
+      final probe = _pendingProbe ?? _startProbe();
+      observed = await probe.timeout(probeTimeout);
     } on Object {
       observed = null;
     }
     if (_closed) throw StateError('Storage admission is closed.');
     _freeBytes = observed != null && observed >= 0 ? observed : null;
     _changes.add(status);
+  }
+
+  Future<int?> _startProbe() {
+    final probe = Future<int?>.sync(readFreeBytes);
+    _pendingProbe = probe;
+    unawaited(
+      probe.then<void>(
+        (_) {
+          if (identical(_pendingProbe, probe)) _pendingProbe = null;
+        },
+        onError: (Object _, StackTrace _) {
+          if (identical(_pendingProbe, probe)) _pendingProbe = null;
+        },
+      ),
+    );
+    return probe;
   }
 
   Future<StorageCapacityStatus> refresh() => _admissions.run(() async {

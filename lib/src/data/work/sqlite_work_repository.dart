@@ -115,6 +115,15 @@ class SqliteWorkRepository {
     }
     for (final mutation in mutations) {
       final record = mutation.record;
+      if (record.requiredDepositCents < 0 ||
+          (record.kind == WorkRecordKind.estimate &&
+              (!record.total.isFinite ||
+                  record.requiredDepositCents >
+                      (record.total * 100).round()))) {
+        throw ArgumentError(
+          'The required deposit must not exceed the estimate total.',
+        );
+      }
       if (record.id.trim().isEmpty ||
           record.createdByEmployeeId.trim().isEmpty ||
           record.revision < 1) {
@@ -223,6 +232,30 @@ class SqliteWorkRepository {
         final entry = decodeFinancialEntry(
           LocalRecordStore(database).decode(row),
         );
+        if (entry.id != row.recordId) {
+          throw StateError('Financial identity mismatch.');
+        }
+        return entry;
+      }),
+    );
+  }
+
+  /// Validation-only company ledger read inside the writer transaction.
+  /// Never use this unscoped result to populate a screen or report.
+  Future<List<PrototypeFinancialEntry>> ledgerForAllocationValidation(
+    String organizationId,
+  ) async {
+    final rows =
+        await (database.select(database.localRecords)..where(
+              (row) =>
+                  row.organizationId.equals(organizationId) &
+                  row.domain.equals('work/ledger'),
+            ))
+            .get();
+    final store = LocalRecordStore(database);
+    return List.unmodifiable(
+      rows.map((row) {
+        final entry = decodeFinancialEntry(store.decode(row));
         if (entry.id != row.recordId) {
           throw StateError('Financial identity mismatch.');
         }

@@ -1,3 +1,6 @@
+import 'work_approval_evidence.dart';
+export 'work_approval_evidence.dart';
+
 /// A business user's record of customer consent to one document revision.
 /// This records evidence; it does not determine legal enforceability.
 enum CustomerApprovalMethod {
@@ -20,6 +23,7 @@ class WorkCustomerApproval {
     required this.recordedOn,
     required this.revision,
     this.note = '',
+    this.evidence = const [],
   });
 
   final CustomerApprovalMethod method;
@@ -28,6 +32,7 @@ class WorkCustomerApproval {
   final DateTime recordedOn;
   final int revision;
   final String note;
+  final List<WorkApprovalEvidence> evidence;
 
   Map<String, Object?> toJson() => {
     'method': method.name,
@@ -36,6 +41,8 @@ class WorkCustomerApproval {
     'recordedOn': recordedOn.toIso8601String(),
     'revision': revision,
     'note': note,
+    if (evidence.isNotEmpty)
+      'evidence': evidence.map((item) => item.toJson()).toList(),
   };
 
   factory WorkCustomerApproval.fromJson(Map<String, Object?> json) =>
@@ -46,5 +53,12 @@ class WorkCustomerApproval {
         recordedOn: DateTime.parse(json['recordedOn'] as String),
         revision: json['revision'] as int,
         note: json['note'] as String? ?? '',
+        evidence: List.unmodifiable(
+          ((json['evidence'] as List?) ?? const []).map(
+            (item) => WorkApprovalEvidence.fromJson(
+              (item as Map).cast<String, Object?>(),
+            ),
+          ),
+        ),
       );
 }

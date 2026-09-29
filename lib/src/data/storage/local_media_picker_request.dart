@@ -6,7 +6,13 @@ import 'local_attachment_store.dart';
 import 'local_record_command.dart';
 import 'local_record_identity.dart';
 
-enum MediaPickerDestination { receipt, estimate }
+enum MediaPickerDestination {
+  receipt,
+  estimate,
+  job,
+  estimateApproval,
+  quoteApproval,
+}
 
 enum MediaPickerSource { camera, library, files }
 

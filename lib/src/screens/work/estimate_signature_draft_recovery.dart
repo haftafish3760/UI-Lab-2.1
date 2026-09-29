@@ -2,9 +2,10 @@
 
 part of 'estimate_signature_screen.dart';
 
-extension _SignatureRecovery on _EstimateSignatureScreenState {
+extension _SignatureRecovery on EstimateSignatureScreenState {
   SignatureInk get _ink => SignatureInk(
     _strokes.map((stroke) => stroke.map((point) => (point.dx, point.dy))),
+    strokeWidth: _strokeWidth,
   );
 
   Future<void> _openSignatureDraft() async {
@@ -30,8 +31,16 @@ extension _SignatureRecovery on _EstimateSignatureScreenState {
         }
         _workflow = workflow;
         _base = workflow.input.base;
+        if (widget.embedded && _base.revision != widget.record.revision) {
+          throw StateError(
+            'The document changed. Reopen its approval before signing.',
+          );
+        }
         _name.text = workflow.input.name;
         _accepted = workflow.input.accepted;
+        _strokeWidth =
+            workflow.input.ink.strokeWidth ??
+            (workflow.input.ink.hasInk ? 1.25 : 3);
         _strokes.addAll(
           workflow.input.ink.strokes.map(
             (stroke) =>
@@ -39,7 +48,10 @@ extension _SignatureRecovery on _EstimateSignatureScreenState {
           ),
         );
         _subscription = workflow.session.changes.listen((_) {
-          if (mounted) setState(() {});
+          if (mounted) {
+            setState(() {});
+            widget.onStateChanged?.call();
+          }
         });
       } else {
         _previewInput = EstimateSignatureInput(
@@ -53,6 +65,7 @@ extension _SignatureRecovery on _EstimateSignatureScreenState {
       if (!mounted) return;
       _name.addListener(_nameChanged);
       setState(() => _ready = true);
+      widget.onStateChanged?.call();
     } on Object {
       await _workflow?.session.close().catchError((Object _) {});
       _workflow = null;
@@ -111,12 +124,19 @@ extension _SignatureRecovery on _EstimateSignatureScreenState {
   }
 
   Future<void> _save() async {
-    if (!_ready || _saving || !_accepted || !_ink.hasInk) return;
+    if (!widget.approvalEnabled ||
+        !_ready ||
+        _saving ||
+        !_accepted ||
+        !_ink.hasInk) {
+      return;
+    }
     if (_name.text.trim().isEmpty) {
       setState(() => _error = 'Enter the customer name.');
       return;
     }
     setState(() => _saving = true);
+    widget.onStateChanged?.call();
     try {
       final workflow = _workflow;
       final WorkRecord? record;
@@ -129,7 +149,13 @@ extension _SignatureRecovery on _EstimateSignatureScreenState {
       if (record == null) {
         throw StateError(_work!.failureMessage ?? 'Approval was not saved.');
       }
-      if (mounted) await finishDraftRoute(record);
+      if (mounted) {
+        if (widget.onSaved != null) {
+          await widget.onSaved!(record);
+        } else {
+          await finishDraftRoute(record);
+        }
+      }
     } on Object catch (error) {
       if (mounted) {
         setState(() {
@@ -138,6 +164,7 @@ extension _SignatureRecovery on _EstimateSignatureScreenState {
               ? error.message.toString()
               : 'Approval was not saved. Signature input is retained; retry saving.';
         });
+        widget.onStateChanged?.call();
       }
     }
   }
@@ -148,7 +175,7 @@ extension _SignatureRecovery on _EstimateSignatureScreenState {
       builder: (context) => AlertDialog(
         title: const Text('Discard unfinished signature?'),
         content: const Text(
-          'The saved estimate and any previous approval stay unchanged.',
+          'The saved document and any previous approval stay unchanged.',
         ),
         actions: [
           TextButton(
@@ -164,15 +191,23 @@ extension _SignatureRecovery on _EstimateSignatureScreenState {
     );
     if (!mounted || discard != true) return;
     setState(() => _saving = true);
+    widget.onStateChanged?.call();
     try {
       await _draft?.discard();
-      if (mounted) await finishDraftRoute();
+      if (mounted) {
+        if (widget.onDiscarded != null) {
+          widget.onDiscarded!();
+        } else {
+          await finishDraftRoute();
+        }
+      }
     } on Object {
       if (mounted) {
         setState(() {
           _saving = false;
           _error = 'Signature could not be discarded. It has been preserved.';
         });
+        widget.onStateChanged?.call();
       }
     }
   }

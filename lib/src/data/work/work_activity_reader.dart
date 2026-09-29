@@ -1,3 +1,5 @@
+import 'models/work_models.dart';
+import 'work_record_codec.dart';
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import '../storage/local_record_command.dart';
@@ -9,11 +11,15 @@ class WorkActivityEntry {
     required this.at,
     required this.actorId,
     required this.changes,
+    this.record,
   });
   final int revision;
   final DateTime at;
   final String actorId;
   final List<String> changes;
+
+  /// Verified snapshot for a document save; export-attempt entries have none.
+  final WorkRecord? record;
 }
 
 class WorkActivityPage {
@@ -40,6 +46,14 @@ class WorkActivityReader {
 
   Future<WorkActivityPage> read(String recordId, {int? beforeRevision}) async {
     authorize(recordId);
+    final current = await work.repository.find(
+      organizationId: work.permissions.organizationId,
+      recordId: recordId,
+      visibleCreatorIds: work.permissions.visibleCreatorIds,
+    );
+    if (current == null) {
+      throw StateError('This work record is no longer available.');
+    }
     final db = work.repository.database;
     final rows =
         await (db.select(db.localRecordRevisions)
@@ -57,6 +71,17 @@ class WorkActivityReader {
               ..limit(31))
             .get();
     authorize(recordId);
+    if ((beforeRevision == null &&
+            (rows.isEmpty || rows.first.revision != current.storageRevision)) ||
+        await work.repository.find(
+              organizationId: work.permissions.organizationId,
+              recordId: recordId,
+              visibleCreatorIds: work.permissions.visibleCreatorIds,
+            ) ==
+            null) {
+      throw StateError('The current document history could not be verified.');
+    }
+    work.requireActiveDraftOwner();
     final payloads = <Map<String, Object?>>[];
     for (var i = 0; i < rows.length; i++) {
       final row = rows[i];
@@ -68,6 +93,7 @@ class WorkActivityReader {
       final data = Map<String, Object?>.from(jsonDecode(row.payload) as Map);
       if (data['id'] != recordId ||
           data['createdByEmployeeId'] != row.ownerId ||
+          data['kind'] != current.record.kind.name ||
           data['mutationActor'] is! String ||
           (data['mutationActor'] as String).isEmpty) {
         throw StateError('The saved activity identity could not be verified.');
@@ -83,6 +109,7 @@ class WorkActivityReader {
         for (var i = 0; i < count; i++)
           WorkActivityEntry(
             revision: rows[i].revision,
+            record: decodeWorkRecord(payloads[i]),
             at: DateTime.fromMicrosecondsSinceEpoch(
               rows[i].updatedAtUs,
               isUtc: true,

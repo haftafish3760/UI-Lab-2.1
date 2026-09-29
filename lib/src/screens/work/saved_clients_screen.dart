@@ -1,3 +1,4 @@
+import '../../../l10n/app_localizations_extension.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -5,7 +6,6 @@ import 'package:flutter/material.dart';
 import '../../data/prototype_operations_store.dart';
 
 import '../../layout/app_layout_engine.dart';
-import '../../shared/section_card.dart';
 import 'customer_detail_screen.dart';
 import 'customer_edit_screen.dart';
 import 'work_contact_models.dart';
@@ -16,11 +16,13 @@ class SavedClientsScreen extends StatefulWidget {
     required this.initialClients,
     required this.selectedDay,
     required this.onClientsChanged,
+    this.selectForDocument = false,
     super.key,
   });
 
   final List<WorkCustomerProfile> initialClients;
   final DateTime selectedDay;
+  final bool selectForDocument;
   final ValueChanged<List<WorkCustomerProfile>> onClientsChanged;
 
   @override
@@ -39,13 +41,21 @@ class _SavedClientsScreenState extends State<SavedClientsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final store = PrototypeOperationsScope.maybeOf(context);
+    final directory = store?.directorySession;
+    final canView = directory?.permissions.canViewCustomers ?? true;
+    final canAdd =
+        canView && (directory?.permissions.canManageCustomers ?? true);
+    final clients = directory == null ? _clients : store!.customers;
     final query = _search.text.trim().toLowerCase();
-    final visible = _clients.where((client) {
+    final visible = (canView ? clients : <WorkCustomerProfile>[]).where((
+      client,
+    ) {
       if (query.isEmpty) return true;
       return client.name.toLowerCase().contains(query) ||
           client.companyName.toLowerCase().contains(query) ||
           client.email.toLowerCase().contains(query);
-    }).toList();
+    }).toList()..sort(_compareClients);
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: SafeArea(
@@ -56,47 +66,42 @@ class _SavedClientsScreenState extends State<SavedClientsScreen> {
               0,
               constraints.maxWidth - insets.horizontal,
             );
-            final layout = AppLayoutEngine.operationsFor(
-              available.toDouble(),
-              textScaler: MediaQuery.textScalerOf(context),
-            );
             return ListView(
               padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 28),
               children: [
                 Center(
                   child: SizedBox(
-                    width: layout.workspaceWidth,
+                    width: AppLayoutEngine.formWorkspaceWidthFor(
+                      available.toDouble(),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         WorkDetailHeader(
-                          label: 'Saved Clients',
+                          label: context.l10n.workSavedClients,
                           selectedDay: widget.selectedDay,
                           onBack: () => Navigator.of(context).pop(),
                         ),
                         const SizedBox(height: 18),
                         _DirectoryHeading(
                           count: visible.length,
-                          onAdd: _addClient,
+                          onAdd: canAdd ? _addClient : null,
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           key: const ValueKey('saved-client-search'),
                           controller: _search,
                           onChanged: (_) => setState(() {}),
-                          decoration: const InputDecoration(
-                            labelText: 'Search saved clients',
-                            hintText: 'Name, company, or email',
-                            prefixIcon: Icon(Icons.search_rounded),
+                          decoration: InputDecoration(
+                            labelText: context.l10n.workSearchClients,
+                            prefixIcon: const Icon(Icons.search_rounded),
                           ),
                         ),
                         const SizedBox(height: 14),
-                        if (visible.isEmpty)
-                          const SectionCard(
-                            child: Text(
-                              'No saved clients match this search. Change the search or add a new client.',
-                            ),
-                          )
+                        if (!canView)
+                          Text(context.l10n.workClientsUnavailable)
+                        else if (visible.isEmpty)
+                          Text(context.l10n.workNoMatchingClients)
                         else
                           _ClientGrid(
                             clients: visible,
@@ -120,24 +125,33 @@ class _SavedClientsScreenState extends State<SavedClientsScreen> {
         builder: (_) => CustomerDetailScreen(
           initialCustomer: client,
           selectedDay: widget.selectedDay,
+          selectForDocument: widget.selectForDocument,
         ),
       ),
     );
     if (!mounted || updated == null) return;
-    final index = _clients.indexWhere(
-      (candidate) => candidate.id == updated.id,
-    );
-    if (index < 0) return;
-    setState(() {
-      _clients[index] = updated;
-      _clients.sort(_compareClients);
-    });
     if (PrototypeOperationsScope.maybeOf(context)?.directorySession == null) {
+      final index = _clients.indexWhere(
+        (candidate) => candidate.id == updated.id,
+      );
+      if (index < 0) return;
+      setState(() {
+        _clients[index] = updated;
+        _clients.sort(_compareClients);
+      });
       widget.onClientsChanged(List.unmodifiable(_clients));
     }
+    if (widget.selectForDocument) Navigator.of(context).pop(updated);
   }
 
   Future<void> _addClient() async {
+    final permissions = PrototypeOperationsScope.of(
+      context,
+    ).directorySession?.permissions;
+    if (permissions != null &&
+        (!permissions.canViewCustomers || !permissions.canManageCustomers)) {
+      return;
+    }
     final created = await Navigator.of(context).push<WorkCustomerProfile>(
       MaterialPageRoute(
         builder: (_) => CustomerEditScreen(selectedDay: widget.selectedDay),
@@ -151,6 +165,7 @@ class _SavedClientsScreenState extends State<SavedClientsScreen> {
     if (PrototypeOperationsScope.maybeOf(context)?.directorySession == null) {
       widget.onClientsChanged(List.unmodifiable(_clients));
     }
+    if (widget.selectForDocument) Navigator.of(context).pop(created);
   }
 }
 
@@ -158,7 +173,7 @@ class _DirectoryHeading extends StatelessWidget {
   const _DirectoryHeading({required this.count, required this.onAdd});
 
   final int count;
-  final VoidCallback onAdd;
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) => Wrap(
@@ -171,7 +186,7 @@ class _DirectoryHeading extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Saved Clients',
+            context.l10n.workSavedClients,
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 3),
@@ -182,7 +197,7 @@ class _DirectoryHeading extends StatelessWidget {
         key: const ValueKey('add-saved-client-button'),
         onPressed: onAdd,
         icon: const Icon(Icons.person_add_alt_1_outlined),
-        label: const Text('Add new client'),
+        label: Text(context.l10n.workAddClient),
       ),
     ],
   );
@@ -195,67 +210,21 @@ class _ClientGrid extends StatelessWidget {
   final ValueChanged<WorkCustomerProfile> onSelected;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final layout = AppLayoutEngine.operationsFor(
-        constraints.maxWidth,
-        textScaler: MediaQuery.textScalerOf(context),
-      );
-      return Wrap(
-        spacing: layout.gap,
-        runSpacing: layout.gap,
-        children: [
-          for (final client in clients)
-            SizedBox(
-              width: layout.laneWidth,
-              child: _ClientRow(
-                client: client,
-                onTap: () => onSelected(client),
-              ),
-            ),
-        ],
-      );
-    },
-  );
-}
-
-class _ClientRow extends StatelessWidget {
-  const _ClientRow({required this.client, required this.onTap});
-
-  final WorkCustomerProfile client;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => SectionCard(
-    padding: EdgeInsets.zero,
-    child: ListTile(
-      key: ValueKey('saved-client-${client.id}'),
-      minTileHeight: 78,
-      onTap: onTap,
-      leading: CircleAvatar(child: Text(_initials(client.name))),
-      title: Text(
-        client.name,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-      subtitle: Text(
-        [
-          if (client.companyName.isNotEmpty) client.companyName,
-          client.phone,
-          '${client.locations.length} service location${client.locations.length == 1 ? '' : 's'}',
-        ].join(' · '),
-      ),
-      trailing: const Icon(Icons.chevron_right_rounded),
-    ),
+  Widget build(BuildContext context) => Column(
+    children: [
+      for (final client in clients) ...[
+        ListTile(
+          key: ValueKey('saved-client-${client.id}'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(client.name),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => onSelected(client),
+        ),
+        if (client != clients.last) const Divider(height: 1),
+      ],
+    ],
   );
 }
 
 int _compareClients(WorkCustomerProfile a, WorkCustomerProfile b) =>
     a.name.toLowerCase().compareTo(b.name.toLowerCase());
-
-String _initials(String value) => value
-    .trim()
-    .split(RegExp(r'\s+'))
-    .where((part) => part.isNotEmpty)
-    .take(2)
-    .map((part) => part[0].toUpperCase())
-    .join();

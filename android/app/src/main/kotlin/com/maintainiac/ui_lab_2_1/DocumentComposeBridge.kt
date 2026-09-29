@@ -3,7 +3,8 @@ package com.maintainiac.ui_lab_2_1
 import android.app.Activity
 import android.content.ClipData
 import android.content.Intent
-import android.provider.Telephony
+import android.net.Uri
+import android.content.pm.PackageManager
 import androidx.core.content.FileProvider
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
@@ -45,10 +46,26 @@ class DocumentComposeBridge(private val activity: Activity) {
                     } else {
                         putExtra("address", recipient)
                         putExtra("sms_body", call.argument<String>("text"))
-                        Telephony.Sms.getDefaultSmsPackage(activity)?.let { setPackage(it) }
+
                     }
                 }
-                activity.startActivity(Intent.createChooser(intent, if (method == "email") "Email estimate" else "Text estimate"))
+                // Discover the requested category separately: SENDTO identifies email/
+                // messaging apps, while SEND preserves a real PDF attachment.
+                val category = Intent(Intent.ACTION_SENDTO, Uri.parse(if (method == "email") "mailto:" else "smsto:"))
+                val packages = activity.packageManager.queryIntentActivities(category, PackageManager.MATCH_DEFAULT_ONLY)
+                    .map { it.activityInfo.packageName }.toSet()
+                val targets = activity.packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
+                    .filter { it.activityInfo.packageName in packages }
+                    .map { Intent(intent).setClassName(it.activityInfo.packageName, it.activityInfo.name) }
+                if (targets.isEmpty()) {
+                    result.error("composer_unavailable", if (method == "email")
+                        "No email app that accepts PDFs is available. Install an email app, or use Share from this device."
+                        else "No messaging app that accepts PDFs is available. Use email or Share from this device. Ordinary SMS cannot carry a PDF.", null)
+                    return@setMethodCallHandler
+                }
+                val chooser = Intent.createChooser(targets.first(), if (method == "email") "Email estimate" else "Text estimate")
+                if (targets.size > 1) chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, targets.drop(1).toTypedArray())
+                activity.startActivity(chooser)
                 // The composer owns the next step; launching it does not prove sending.
                 result.success("unconfirmed")
             } catch (error: Exception) {

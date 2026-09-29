@@ -75,8 +75,8 @@ class OperationsLaneGrid extends StatelessWidget {
       spacing: layout.gap,
       runSpacing: layout.gap,
       children: [
-        for (final child in children)
-          SizedBox(width: layout.laneWidth, child: child),
+        for (var index = 0; index < children.length; index++)
+          SizedBox(width: layout.widthForLane(index), child: children[index]),
       ],
     );
   }

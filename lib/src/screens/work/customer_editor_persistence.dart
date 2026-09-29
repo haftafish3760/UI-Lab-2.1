@@ -1,6 +1,6 @@
 part of 'customer_edit_screen.dart';
 
-extension _CustomerEditorPersistence on _CustomerEditScreenState {
+extension _CustomerEditorPersistence on CustomerEditScreenState {
   Map<String, TextEditingController> get _inputControllers => {
     'name': _name,
     'company': _company,
@@ -31,6 +31,14 @@ extension _CustomerEditorPersistence on _CustomerEditScreenState {
 
   void _captureCustomerInput() {
     if (!_draftReady || _saving) return;
+    // Merely opening an empty form is not unfinished customer work. Once a
+    // draft has input, persist subsequent clearing as well; never resurrect it.
+    if (_editingCustomer == null &&
+        (_draft?.input.isEmpty ?? true) &&
+        _inputControllers.values.every((value) => value.text.trim().isEmpty) &&
+        _preferredContact == 'Phone call') {
+      return;
+    }
     _workflow?.updateInput(_customerInput);
   }
 
@@ -90,7 +98,9 @@ extension _CustomerEditorPersistence on _CustomerEditScreenState {
       }
       _baseRevision = directory.customerRevision(_customerId);
       String? recoveryId;
-      if (widget.initialCustomer == null && widget.recoveredWorkflow == null) {
+      if (!widget.embedded &&
+          widget.initialCustomer == null &&
+          widget.recoveredWorkflow == null) {
         final candidates = await directory.customerDraftRecovery.list();
         if (!mounted) return;
         if (candidates.isNotEmpty) {
@@ -114,7 +124,11 @@ extension _CustomerEditorPersistence on _CustomerEditScreenState {
           );
           if (!mounted) return;
           if (chosen == null) {
-            await leaveDraftRoute();
+            if (widget.embedded) {
+              widget.onCancelled?.call();
+            } else {
+              await leaveDraftRoute();
+            }
             return;
           }
           if (chosen != 'new') recoveryId = chosen;
@@ -231,7 +245,13 @@ extension _CustomerEditorPersistence on _CustomerEditScreenState {
         customer = await workflow.confirm();
       }
       if (customer == null) throw StateError('Client save failed.');
-      if (mounted) await finishDraftRoute(customer);
+      if (mounted) {
+        if (widget.embedded) {
+          await widget.onSaved?.call(customer);
+        } else {
+          await finishDraftRoute(customer);
+        }
+      }
     } on CustomerInputValidation catch (error) {
       if (mounted) {
         _refresh(() {

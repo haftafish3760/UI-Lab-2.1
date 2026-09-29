@@ -1,4 +1,4 @@
-import 'work_drafts_screen.dart';
+import 'work_draft_shortcut.dart';
 import 'package:flutter/material.dart';
 import '../../shared/calendar_width_section.dart';
 
@@ -144,19 +144,9 @@ class _EstimateWorkspaceScreenState extends State<EstimateWorkspaceScreen> {
                             ).selectEmployee,
                             onSettings: _openSettings,
                           ),
-                          FilledButton.icon(
-                            key: const ValueKey('open-work-drafts'),
-                            onPressed: () => Navigator.of(context).push<void>(
-                              MaterialPageRoute(
-                                builder: (_) => const WorkDraftsScreen(
-                                  kind: WorkRecordKind.estimate,
-                                ),
-                              ),
-                            ),
-                            icon: const Icon(Icons.edit_note_outlined),
-                            label: const Text(
-                              'Drafts — continue or delete an estimate',
-                            ),
+                          const WorkDraftShortcut(
+                            kind: WorkRecordKind.estimate,
+                            buttonKey: ValueKey('open-work-drafts'),
                           ),
                           if (widget.permissions.canCreate &&
                               !compactActions) ...[

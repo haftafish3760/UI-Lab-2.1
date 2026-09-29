@@ -1,3 +1,4 @@
+import 'support/visible_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -84,7 +85,7 @@ void main() {
         find.byKey(const ValueKey('job-title-field')),
         'Planned repair',
       );
-      await tester.tap(find.byKey(const ValueKey('save-job')));
+      await tapVisibleControl(tester, find.byKey(const ValueKey('save-job')));
       await waitForNativeSave(tester, () => work.failureMessage != null);
       expect(find.byType(WorkJobEditor), findsOneWidget);
       expect(
@@ -104,7 +105,7 @@ void main() {
       await tester.runAsync(
         () => db.customStatement('DROP TRIGGER fail_job_form'),
       );
-      await tester.tap(find.byKey(const ValueKey('save-job')));
+      await tapVisibleControl(tester, find.byKey(const ValueKey('save-job')));
       await waitForNativeSave(
         tester,
         () => find.byType(WorkJobEditor).evaluate().isEmpty,

@@ -68,5 +68,32 @@ void main() {
     );
     expect(status.label, 'No active job recorded');
     expect(status.recordedTime, const Duration(hours: 2));
+    expect(status.includesTimeOutsideToday, isFalse);
   });
+
+  test(
+    'overnight active workday remains visible without mislabeling its hours',
+    () {
+      final started = DateTime(2026, 9, 25, 23);
+      final afterMidnight = DateTime(2026, 9, 26, 1);
+      final workday = StoredWorkdayRecord.start(
+        id: 'overnight-workday',
+        organizationId: 'business',
+        employeeId: 'alex',
+        vehicleId: 'truck',
+        at: started,
+        odometerTenths: 1000,
+      );
+      final status = employeeWorkStatus(
+        employeeId: 'alex',
+        visibleJobs: const [],
+        visibleWorkdays: [workday],
+        now: afterMidnight,
+      );
+      expect(status.label, 'No active job recorded');
+      expect(status.workday?.id, 'overnight-workday');
+      expect(status.recordedTime, const Duration(hours: 2));
+      expect(status.includesTimeOutsideToday, isTrue);
+    },
+  );
 }

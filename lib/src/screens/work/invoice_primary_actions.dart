@@ -5,6 +5,10 @@ extension _InvoicePrimaryActions on InvoiceActionsScreen {
     final store = PrototypeOperationsScope.of(context);
     final work = store.workSession;
     final tone = OperationalCardPalette.plan;
+    final approvalAllowsIssue =
+        !(current.requiresInvoiceApproval ||
+            (work?.permissions.requiresInvoiceApproval ?? false)) ||
+        invoiceHasCurrentApproval(current);
     return SectionCard(
       backgroundColor: tone.start,
       borderColor: tone.start,
@@ -17,6 +21,7 @@ extension _InvoicePrimaryActions on InvoiceActionsScreen {
               context,
             ).textTheme.titleLarge?.copyWith(color: tone.foreground),
           ),
+          InvoiceApprovalActions(record: current),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -38,7 +43,8 @@ extension _InvoicePrimaryActions on InvoiceActionsScreen {
                   label: const Text('Preview PDF'),
                 ),
               if (current.status == WorkRecordStatus.draft &&
-                  permissions.canIssue)
+                  permissions.canIssue &&
+                  approvalAllowsIssue)
                 FilledButton.icon(
                   key: const ValueKey('invoice-primary-finalize'),
                   onPressed: () => _issue(context, current),
@@ -46,6 +52,7 @@ extension _InvoicePrimaryActions on InvoiceActionsScreen {
                   label: const Text('Finalize invoice'),
                 ),
               if (permissions.canIssue &&
+                  approvalAllowsIssue &&
                   (work?.permissions.canShareDocuments ?? false))
                 FilledButton.icon(
                   key: const ValueKey('invoice-primary-send'),
@@ -54,6 +61,7 @@ extension _InvoicePrimaryActions on InvoiceActionsScreen {
                   label: const Text('Send invoice'),
                 ),
               if (permissions.canIssue &&
+                  approvalAllowsIssue &&
                   (work?.permissions.canShareDocuments ?? false))
                 FilledButton.icon(
                   key: const ValueKey('invoice-primary-save-pdf'),

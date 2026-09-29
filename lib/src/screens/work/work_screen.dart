@@ -1,9 +1,13 @@
+import 'quote_workspace_screen.dart';
+import 'quote_detail_screen.dart';
+import 'quote_editor_screen.dart';
+import 'reusable_jobs_panel.dart';
 import 'job_start_screen.dart';
+import '../../data/work/work_record_visibility.dart';
 import 'employee_status_screen.dart';
 import '../../theme/operational_card_palette.dart';
 import '../../shared/operational_section_heading.dart';
 import '../../shared/recorded_entries_section.dart';
-import 'work_drafts_screen.dart';
 import 'work_schedule_screen.dart';
 import 'work_saved_document_route.dart';
 import 'package:flutter/material.dart';
@@ -49,6 +53,7 @@ part 'work_home_widgets.dart';
 part 'work_section_chrome.dart';
 part 'work_home_lanes.dart';
 part 'work_daily_sections.dart';
+part 'work_record_row_details.dart';
 part 'work_actions_screen.dart';
 part 'work_screen_actions.dart';
 part 'work_day_screen.dart';
@@ -118,15 +123,15 @@ class _WorkScreenState extends State<WorkScreen> {
             : null;
         return Scaffold(
           key: const ValueKey('work-module-screen'),
-          floatingActionButton: layout.columns == 1
-              ? FloatingActionButton.extended(
-                  key: const ValueKey('work-actions-fab'),
-                  heroTag: 'work-actions-fab',
-                  onPressed: _showWorkActions,
-                  icon: const Icon(Icons.add_rounded),
-                  label: const Text('Add work'),
-                )
-              : null,
+          floatingActionButton: FloatingActionButton.extended(
+            key: ValueKey(
+              layout.columns == 1 ? 'work-add-button' : 'work-actions-inline',
+            ),
+            heroTag: 'work-add-button',
+            onPressed: _showWorkActions,
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Add work'),
+          ),
           body: SafeArea(
             child: ListView(
               padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
@@ -152,78 +157,6 @@ class _WorkScreenState extends State<WorkScreen> {
                           showDateDescription: false,
                         ),
                         const SizedBox(height: 14),
-                        Builder(
-                          builder: (context) {
-                            final drafts = OutlinedButton.icon(
-                              key: const ValueKey('open-work-drafts'),
-                              onPressed: () => Navigator.of(context).push<void>(
-                                MaterialPageRoute(
-                                  builder: (_) => const WorkDraftsScreen(),
-                                ),
-                              ),
-                              icon: const Icon(Icons.edit_note_outlined),
-                              label: const Text('Drafts'),
-                            );
-                            final canViewEmployees =
-                                PrototypeOperationsScope.of(context)
-                                    .directorySession
-                                    ?.permissions
-                                    .canViewEmployees ==
-                                true;
-                            if (!canViewEmployees) return drafts;
-                            final employees = OutlinedButton.icon(
-                              onPressed: () => Navigator.of(context).push<void>(
-                                MaterialPageRoute(
-                                  builder: (_) => const EmployeeStatusScreen(),
-                                ),
-                              ),
-                              icon: const Icon(Icons.people_outline),
-                              label: const Text('Employee status'),
-                            );
-                            return LayoutBuilder(
-                              builder: (context, constraints) {
-                                final stack =
-                                    AppLayoutEngine.stackWorkHomeUtilityActionsFor(
-                                      constraints.maxWidth,
-                                      textScaler: MediaQuery.textScalerOf(
-                                        context,
-                                      ),
-                                    );
-                                if (stack) {
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      drafts,
-                                      const SizedBox(height: 8),
-                                      employees,
-                                    ],
-                                  );
-                                }
-                                return Row(
-                                  children: [
-                                    Expanded(child: drafts),
-                                    const SizedBox(width: 8),
-                                    Expanded(child: employees),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                        WorkShortcutGrid(
-                          key: const ValueKey('work-primary-destinations'),
-                          destinations: const [
-                            WorkDestination.jobs,
-                            WorkDestination.payments,
-                            WorkDestination.scheduling,
-                            WorkDestination.quotes,
-                            WorkDestination.estimates,
-                            WorkDestination.invoices,
-                          ],
-                          onSelected: _handleDestination,
-                        ),
-                        const SizedBox(height: 18),
                         Wrap(
                           alignment: WrapAlignment.spaceBetween,
                           crossAxisAlignment: WrapCrossAlignment.center,
@@ -237,16 +170,53 @@ class _WorkScreenState extends State<WorkScreen> {
                               key: const ValueKey('work-date-heading'),
                               style: Theme.of(context).textTheme.titleLarge,
                             ),
-                            if (layout.showsInlineModuleActions)
-                              FilledButton.icon(
-                                key: const ValueKey('work-actions-inline'),
-                                onPressed: _showWorkActions,
-                                icon: const Icon(Icons.add_rounded),
-                                label: const Text('Add work'),
-                              ),
                           ],
                         ),
                         const SizedBox(height: 14),
+                        Builder(
+                          builder: (context) {
+                            final canViewEmployees =
+                                PrototypeOperationsScope.of(context)
+                                    .directorySession
+                                    ?.permissions
+                                    .canViewEmployees ==
+                                true;
+                            if (!canViewEmployees) {
+                              return const SizedBox.shrink();
+                            }
+                            final employees = OutlinedButton.icon(
+                              onPressed: () => Navigator.of(context).push<void>(
+                                MaterialPageRoute(
+                                  builder: (_) => const EmployeeStatusScreen(),
+                                ),
+                              ),
+                              icon: const Icon(Icons.people_outline),
+                              label: const Text('Employee status'),
+                            );
+                            return Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: employees,
+                            );
+                          },
+                        ),
+                        WorkShortcutGrid(
+                          key: const ValueKey('work-primary-destinations'),
+                          destinations: [
+                            WorkDestination.jobs,
+                            if (PrototypeOperationsScope.of(context)
+                                    .workSession
+                                    ?.permissions
+                                    .canManageOtherCreators ??
+                                true)
+                              WorkDestination.payments,
+                            WorkDestination.scheduling,
+                            WorkDestination.quotes,
+                            WorkDestination.estimates,
+                            WorkDestination.invoices,
+                          ],
+                          onSelected: _handleDestination,
+                        ),
+                        const SizedBox(height: 18),
                         OperationsLaneGrid(
                           key: const ValueKey('work-landing-lanes'),
                           layout: layout,
@@ -318,7 +288,7 @@ class _WorkScreenState extends State<WorkScreen> {
                               ],
                             ),
                             _WorkCalendarPanel(
-                              maximumWidth: layout.laneWidth,
+                              maximumWidth: layout.supportingLaneWidth ?? 400,
                               selectedDay: _selectedDay,
                               onDaySelected: _openWorkDay,
                               entryCountForDay: (day) => recordsInScope
@@ -343,6 +313,17 @@ class _WorkScreenState extends State<WorkScreen> {
     if (!_preferences.includeCompletedWork &&
         record.status == WorkRecordStatus.completed) {
       return false;
+    }
+    final permissions = PrototypeOperationsScope.of(
+      context,
+    ).workSession?.permissions;
+    if (permissions != null) {
+      return workRecordIsVisible(
+        record,
+        permissions: permissions,
+        technicianView: _view == AppViewMode.technician,
+        selectedEmployeeId: _selectedEmployeeId,
+      );
     }
     final employeeId =
         _selectedEmployeeId ??

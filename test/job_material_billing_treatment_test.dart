@@ -240,7 +240,7 @@ void main() {
     expect(find.text('Invoice candidate material'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('add-estimate-line-item')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Labor').last);
+    await tester.tap(find.byType(DropdownButtonFormField<WorkLineItemType>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Material').last);
     await tester.pumpAndSettle();

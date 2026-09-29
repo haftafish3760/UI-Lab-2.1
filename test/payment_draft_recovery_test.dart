@@ -1,3 +1,4 @@
+import 'support/visible_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -112,7 +113,10 @@ void main() {
             .text,
         '12.',
       );
-      await tester.tap(find.byKey(const ValueKey('save-invoice-payment')));
+      await tapVisibleControl(
+        tester,
+        find.byKey(const ValueKey('save-invoice-payment')),
+      );
       await tester.pumpAndSettle();
       expect(
         find.text('Enter a valid amount with no more than two decimal places.'),
@@ -122,7 +126,10 @@ void main() {
         find.byKey(const ValueKey('invoice-payment-amount')),
         '12.00',
       );
-      await tester.tap(find.byKey(const ValueKey('save-invoice-payment')));
+      await tapVisibleControl(
+        tester,
+        find.byKey(const ValueKey('save-invoice-payment')),
+      );
       await waitForNativeSave(tester, () => work.failureMessage != null);
       expect(find.byType(InvoicePaymentEntryScreen), findsOneWidget);
       expect(work.financialEntries, hasLength(ledgerCount));
@@ -140,7 +147,10 @@ void main() {
       await tester.runAsync(
         () => database.customStatement('DROP TRIGGER fail_recovered_payment'),
       );
-      await tester.tap(find.byKey(const ValueKey('save-invoice-payment')));
+      await tapVisibleControl(
+        tester,
+        find.byKey(const ValueKey('save-invoice-payment')),
+      );
       await waitForNativeSave(
         tester,
         () => find.byType(InvoicePaymentEntryScreen).evaluate().isEmpty,

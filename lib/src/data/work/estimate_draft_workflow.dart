@@ -14,24 +14,30 @@ extension EstimateDraftWorkflow on WorkPersistenceSession {
   /// Validate a selected workflow before a presentation takes ownership.
   void validateEstimateHandoff(
     EstimateDraftController controller, {
+    WorkRecordKind documentKind = WorkRecordKind.estimate,
     required String creatorId,
     String? existingRecordId,
   }) {
     final input = controller.recoveredInput;
     if (controller.session.organizationId != permissions.organizationId ||
         controller.session.ownerId != permissions.actorEmployeeId ||
-        controller.session.domain != 'work/estimate-editor' ||
+        controller.session.domain != 'work/${documentKind.name}-editor' ||
         input == null ||
+        input.documentKind != documentKind ||
         input.creatorId != creatorId ||
         input.baseRecord?.id != existingRecordId) {
       throw StateError('Selected estimate belongs to another workflow.');
     }
-    _requireEstimateCreator(input.creatorId);
-    if (existingRecordId != null) editableEstimate(existingRecordId);
+    _requireEstimateCreator(input.creatorId, documentKind);
+    if (existingRecordId != null) {
+      editableEstimate(existingRecordId, documentKind: documentKind);
+    }
   }
 
-  void _requireEstimateCreator(String creatorId) {
-    if (!permissions.editableKinds.contains(WorkRecordKind.estimate) ||
+  void _requireEstimateCreator(String creatorId, WorkRecordKind documentKind) {
+    if ((documentKind != WorkRecordKind.estimate &&
+            documentKind != WorkRecordKind.quote) ||
+        !permissions.editableKinds.contains(documentKind) ||
         !permissions.visibleCreatorIds.contains(creatorId) ||
         (creatorId != permissions.actorEmployeeId &&
             !permissions.canManageOtherCreators)) {
@@ -39,15 +45,21 @@ extension EstimateDraftWorkflow on WorkPersistenceSession {
     }
   }
 
-  DraftRecoveryQuery estimateDraftRecovery(String creatorId) {
-    _requireEstimateCreator(creatorId);
-    return recoveryFor(WorkRecordKind.estimate);
+  DraftRecoveryQuery estimateDraftRecovery(
+    String creatorId, {
+    WorkRecordKind documentKind = WorkRecordKind.estimate,
+  }) {
+    _requireEstimateCreator(creatorId, documentKind);
+    return recoveryFor(documentKind);
   }
 
-  WorkRecord editableEstimate(String recordId) {
+  WorkRecord editableEstimate(
+    String recordId, {
+    WorkRecordKind documentKind = WorkRecordKind.estimate,
+  }) {
     final record = records.where((r) => r.id == recordId).firstOrNull;
     if (record == null ||
-        record.kind != WorkRecordKind.estimate ||
+        record.kind != documentKind ||
         !permissions.canEdit(record)) {
       throw StateError('Estimate unavailable.');
     }
@@ -55,15 +67,16 @@ extension EstimateDraftWorkflow on WorkPersistenceSession {
   }
 
   Future<EstimateDraftController> openEstimateDraft({
+    WorkRecordKind documentKind = WorkRecordKind.estimate,
     required String creatorId,
     String? existingRecordId,
     String? recoveryDraftId,
     DraftRecoverySelection? recoverySelection,
   }) async {
     if (existingRecordId == null) {
-      _requireEstimateCreator(creatorId);
+      _requireEstimateCreator(creatorId, documentKind);
     } else {
-      editableEstimate(existingRecordId);
+      editableEstimate(existingRecordId, documentKind: documentKind);
       if (recoveryDraftId != null) {
         throw ArgumentError('Estimate edit recovery uses its record identity.');
       }
@@ -72,16 +85,20 @@ extension EstimateDraftWorkflow on WorkPersistenceSession {
       store: drafts,
       organizationId: permissions.organizationId,
       ownerId: permissions.actorEmployeeId,
-      domain: 'work/estimate-editor',
+      domain: 'work/${documentKind.name}-editor',
       draftId:
           recoverySelection?.draftId ??
           (existingRecordId == null
-              ? recoveryDraftId ?? newLocalRecordIdentity('estimate-input')
+              ? recoveryDraftId ??
+                    newLocalRecordIdentity('${documentKind.name}-input')
               : 'edit-${permissions.actorEmployeeId}-$existingRecordId'),
     );
     void validateIdentity(EstimateDraftInput input) {
-      _requireEstimateCreator(input.creatorId);
-      if (input.estimateId.isEmpty ||
+      _requireEstimateCreator(input.creatorId, documentKind);
+      if (input.documentKind != documentKind ||
+          (input.baseRecord != null &&
+              input.baseRecord!.kind != documentKind) ||
+          input.estimateId.isEmpty ||
           input.baseStorageRevision < 0 ||
           input.baseRecord?.id != existingRecordId ||
           (existingRecordId != null && input.estimateId != existingRecordId)) {
@@ -111,10 +128,13 @@ extension EstimateDraftWorkflow on WorkPersistenceSession {
               ownerIds: {permissions.organizationId},
               recordIds: {'company'},
             );
-            if (companies.isNotEmpty &&
-                decodeWorkCompanyProfile(
-                  companyStore.decode(companies.single),
-                ).requireEstimateApproval) {
+            if ((documentKind == WorkRecordKind.quote &&
+                    permissions.requiresQuoteApproval) ||
+                (documentKind == WorkRecordKind.estimate &&
+                    companies.isNotEmpty &&
+                    decodeWorkCompanyProfile(
+                      companyStore.decode(companies.single),
+                    ).requireEstimateApproval)) {
               estimate = estimate.copyWith(
                 requiresCompanyReview: true,
                 estimateCompanyReviewStatus:

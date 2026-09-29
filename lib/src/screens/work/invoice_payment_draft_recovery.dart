@@ -42,6 +42,7 @@ extension _InvoicePaymentDraftRecovery on _InvoicePaymentEntryScreenState {
         balanceCents: widget.balanceCents,
         day: widget.initialDay,
       );
+      _receivedOn = _previewInput!.receivedOn;
       _refresh(() => _draftReady = true);
       return;
     }

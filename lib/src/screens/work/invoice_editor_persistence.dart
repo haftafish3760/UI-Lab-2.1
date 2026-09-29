@@ -13,6 +13,8 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
     baseStorageRevision: _baseStorageRevision,
     title: _title.text,
     discount: _discount.text,
+    servicePrice: _servicePrice.text,
+    itemized: _itemized,
     tax: _tax.text,
     terms: _terms.text,
     client: _client,
@@ -105,6 +107,8 @@ extension _InvoiceEditorPersistence on _InvoiceEditorScreenState {
     _baseStorageRevision = input.baseStorageRevision;
     _title.text = input.title;
     _discount.text = input.discount;
+    _servicePrice.text = input.servicePrice;
+    _itemized = input.itemized;
     _tax.text = input.tax;
     _terms.text = input.terms;
     _client = input.client;

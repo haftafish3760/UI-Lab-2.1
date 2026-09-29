@@ -257,12 +257,18 @@ PrototypeReportSource _paymentSource(PrototypeFinancialEntry entry) =>
     PrototypeReportSource(
       kind: PrototypeReportSourceKind.payment,
       id: entry.id,
-      title: 'Payment for ${entry.sourceId}',
+      title: entry.paymentLinkKind == PaymentLinkKind.none
+          ? entry.description.isEmpty
+                ? 'Payment received'
+                : 'Payment for ${entry.description}'
+          : 'Payment for ${entry.sourceId}',
       detail: entry.paymentMethod.isEmpty
           ? 'Payment received'
           : entry.paymentMethod,
       amountCents: entry.amountCents,
-      linkedWorkNumber: entry.sourceId,
+      linkedWorkNumber: entry.paymentLinkKind == PaymentLinkKind.none
+          ? null
+          : entry.sourceId,
     );
 
 PrototypeReportSource _invoiceEntrySource(PrototypeFinancialEntry entry) =>

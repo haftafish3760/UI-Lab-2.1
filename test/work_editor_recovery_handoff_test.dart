@@ -81,6 +81,14 @@ void main() {
           await tester.ensureVisible(find.byTooltip('Back to Work'));
           await tester.pumpAndSettle();
           await tester.tap(find.byTooltip('Back to Work'));
+          await tester.pumpAndSettle();
+          expect(find.text('Keep your changes?'), findsOneWidget);
+          await tester.tap(
+            find.descendant(
+              of: find.byType(AlertDialog),
+              matching: find.text('Save draft'),
+            ),
+          );
           await finishNativeOperation(tester, () => route!);
           expect(find.text('Resume selected work'), findsOneWidget);
           final saved = await tester.runAsync(

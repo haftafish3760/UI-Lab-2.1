@@ -1,7 +1,11 @@
 import 'estimate_customer_approval_dialog.dart';
+import 'estimate_photo_preview_screen.dart';
+import 'job_photos_editor_route.dart';
+import '../../data/work/work_document_customer.dart';
 import '../../data/work/work_record_detail_codec.dart';
 import 'invoice_editor_screen.dart';
 import 'invoice_detail_screen.dart';
+import 'direct_payment_entry_screen.dart';
 import 'invoice_permissions.dart';
 import 'dart:async';
 import '../../data/work/work_items_draft_input.dart';
@@ -199,6 +203,17 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
                                   icon: const Icon(Icons.event_outlined),
                                   label: const Text('Schedule job'),
                                 ),
+                              if (PrototypeOperationsScope.maybeOf(context)
+                                      ?.workSession
+                                      ?.permissions
+                                      .canRecordPayments ??
+                                  false)
+                                OutlinedButton.icon(
+                                  key: const ValueKey('job-record-payment'),
+                                  onPressed: _recordJobPayment,
+                                  icon: const Icon(Icons.add_card_outlined),
+                                  label: const Text('Record payment'),
+                                ),
                               if (_sourceRecord.status ==
                                       WorkRecordStatus.completed &&
                                   invoicePermissionsForView(
@@ -224,6 +239,17 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _recordJobPayment() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => DirectPaymentEntryScreen(
+          initialDay: _jobDay,
+          related: _sourceRecord,
         ),
       ),
     );
@@ -256,8 +282,16 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
       if (widget.permissions.canViewEstimate) SizedBox(height: gap),
       _ReceiptsSection(
         job: _job,
+        sitePhotos: _sourceRecord.sitePhotos,
+        onViewPhoto: _viewJobPhoto,
         canLinkExpense: widget.permissions.canLinkExpenses,
         canAttach: widget.permissions.canAttachReceipts,
+        canAttachPhotos:
+            widget.permissions.canAttachReceipts &&
+            (PrototypeOperationsScope.maybeOf(
+                  context,
+                )?.workSession?.permissions.canAttachJobPhotos ??
+                false),
         onLinkExpense: _linkExistingExpense,
         onAttachReceipt: _attachReceipt,
         onAttachJobPhoto: _attachJobPhoto,
@@ -306,8 +340,16 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
               SizedBox(height: layout.gap),
             _ReceiptsSection(
               job: _job,
+              sitePhotos: _sourceRecord.sitePhotos,
+              onViewPhoto: _viewJobPhoto,
               canLinkExpense: widget.permissions.canLinkExpenses,
               canAttach: widget.permissions.canAttachReceipts,
+              canAttachPhotos:
+                  widget.permissions.canAttachReceipts &&
+                  (PrototypeOperationsScope.maybeOf(
+                        context,
+                      )?.workSession?.permissions.canAttachJobPhotos ??
+                      false),
               onLinkExpense: _linkExistingExpense,
               onAttachReceipt: _attachReceipt,
               onAttachJobPhoto: _attachJobPhoto,
@@ -394,14 +436,7 @@ class _JobWorkspaceScreenState extends State<JobWorkspaceScreen> {
   }
 
   WorkCustomerProfile? _customerFor(List<WorkCustomerProfile> customers) {
-    if (_sourceRecord.customerSnapshot != null) {
-      return _sourceRecord.customerSnapshot;
-    }
-    final expected = _sourceRecord.client.trim().toLowerCase();
-    for (final customer in customers) {
-      if (customer.name.trim().toLowerCase() == expected) return customer;
-    }
-    return null;
+    return resolveWorkDocumentCustomer(_sourceRecord, customers);
   }
 
   String _scheduledTimeLabel(BuildContext context, WorkRecord record) {

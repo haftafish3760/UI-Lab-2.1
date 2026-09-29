@@ -1,3 +1,9 @@
+import '../../../l10n/app_localizations_extension.dart';
+import '../../data/work/invoice_collection_status.dart';
+import '../../data/work/work_record_visibility.dart';
+import '../../shared/app_view_mode.dart';
+import '../../shared/operational_scope.dart';
+import 'invoice_collection_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/prototype_operations_store.dart';
@@ -6,6 +12,7 @@ import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
 import '../../theme/app_semantic_colors.dart';
 import 'invoice_actions_screen.dart';
+import 'invoice_apply_deposit_button.dart';
 import 'invoice_permissions.dart';
 import 'work_detail_header.dart';
 import 'work_models.dart';
@@ -36,11 +43,36 @@ class InvoiceDetailScreen extends StatelessWidget {
       );
     }
     final store = PrototypeOperationsScope.of(context);
-    final invoice =
-        store.workRecords
-            .where((candidate) => candidate.id == record.id)
-            .firstOrNull ??
-        record;
+    final invoice = store.workRecords
+        .where(
+          (candidate) =>
+              candidate.id == record.id &&
+              candidate.kind == WorkRecordKind.invoice,
+        )
+        .firstOrNull;
+    final grants = store.workSession?.permissions;
+    final scope = OperationalScope.of(context);
+    if (invoice == null ||
+        (grants != null &&
+            !workRecordIsVisible(
+              invoice,
+              permissions: grants,
+              technicianView: scope.view == AppViewMode.technician,
+              selectedEmployeeId: scope.selectedEmployeeId,
+            ))) {
+      return Scaffold(
+        key: ValueKey('invoice-unavailable-${record.id}'),
+        appBar: AppBar(title: Text(context.l10n.workInvoiceHeading)),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(context.l10n.workRecordUnavailable),
+            ),
+          ),
+        ),
+      );
+    }
     final payments = permissions.canViewFinancials
         ? (store.financialEntries
               .where((entry) => paymentBelongsToInvoice(entry, invoice))
@@ -91,6 +123,13 @@ class InvoiceDetailScreen extends StatelessWidget {
                           invoice: invoice,
                           balanceCents: balanceCents,
                           showFinancials: permissions.canViewFinancials,
+                          collectionStatus: permissions.canViewFinancials
+                              ? invoiceCollectionStatus(
+                                  invoice,
+                                  payments,
+                                  now: DateTime.now(),
+                                )
+                              : null,
                         ),
                         const SizedBox(height: 12),
                         InvoiceActionsScreen(
@@ -99,6 +138,13 @@ class InvoiceDetailScreen extends StatelessWidget {
                           permissions: permissions,
                           embedded: true,
                         ),
+                        if (permissions.canViewFinancials) ...[
+                          const SizedBox(height: 8),
+                          InvoiceApplyDepositButton(
+                            invoice: invoice,
+                            balanceCents: balanceCents,
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         WorkActivityButton(record: invoice),
                         const SizedBox(height: 12),

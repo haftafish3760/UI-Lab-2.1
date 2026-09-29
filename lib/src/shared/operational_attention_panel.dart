@@ -283,6 +283,7 @@ AppSemanticColors _attentionColors(BuildContext context) =>
 IconData operationalAttentionIcon(
   OperationalAttentionResourceKind resourceKind,
 ) => switch (resourceKind) {
+  OperationalAttentionResourceKind.quote => Icons.request_quote_outlined,
   OperationalAttentionResourceKind.estimate => Icons.request_quote_outlined,
   OperationalAttentionResourceKind.job => Icons.home_repair_service_outlined,
   OperationalAttentionResourceKind.invoice => Icons.receipt_long_outlined,

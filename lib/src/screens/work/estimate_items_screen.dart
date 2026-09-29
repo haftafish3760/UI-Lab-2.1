@@ -31,6 +31,7 @@ class EstimateItemsScreen extends StatefulWidget {
     this.onDraftChanged,
     this.onSave,
     this.onDiscard,
+    this.editingFromReview = false,
     super.key,
   });
 
@@ -41,6 +42,7 @@ class EstimateItemsScreen extends StatefulWidget {
   final ValueChanged<WorkItemsDraftInput>? onDraftChanged;
   final List<WorkLineItem> initialItems;
   final WorkPricingModel pricing;
+  final bool editingFromReview;
   final EstimateItemCategory category;
   final DateTime? selectedDay;
 
@@ -109,7 +111,7 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
               textScaler: MediaQuery.textScalerOf(context),
             );
             return ListView(
-              padding: EdgeInsets.fromLTRB(insets.left, 12, insets.right, 96),
+              padding: EdgeInsets.fromLTRB(insets.left, 12, insets.right, 28),
               children: [
                 Center(
                   child: SizedBox(
@@ -118,10 +120,12 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         WorkDetailHeader(
-                          label: _editingLabor
+                          label: widget.editingFromReview
+                              ? 'Editing labor and materials'
+                              : _editingLabor
                               ? 'Estimate labor'
                               : _editingAll
-                              ? 'Estimate items'
+                              ? 'Labor and materials'
                               : 'Materials and charges',
                           selectedDay: widget.selectedDay ?? DateTime.now(),
                           onBack: () => leaveDraftRoute(),
@@ -129,6 +133,7 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
                         ),
                         if (widget.draftSession != null)
                           NestedEditorDraftStatus(
+                            showRoutineStatus: false,
                             session: widget.draftSession!,
                           ),
                         const SizedBox(height: 14),
@@ -160,6 +165,7 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
                                 WorkLineItemType.material,
                                 WorkLineItemType.equipment,
                                 WorkLineItemType.procurement,
+                                WorkLineItemType.service,
                                 WorkLineItemType.fee,
                               ]),
                           onOther: () =>
@@ -167,6 +173,7 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
                                 WorkLineItemType.material,
                                 WorkLineItemType.equipment,
                                 WorkLineItemType.procurement,
+                                WorkLineItemType.service,
                                 WorkLineItemType.fee,
                               ]),
                           onHistory: _addFromHistory,
@@ -229,6 +236,24 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
                             onRemove: _remove,
                           ),
                         ],
+                        const SizedBox(height: 20),
+                        FilledButton.icon(
+                          key: const ValueKey('save-estimate-items'),
+                          onPressed:
+                              !_saving &&
+                                  (_pendingItem == null ||
+                                      widget.onDraftChanged != null)
+                              ? _saveItems
+                              : null,
+                          icon: const Icon(Icons.save_outlined),
+                          label: Text(
+                            _pendingItem == null
+                                ? (widget.editingFromReview
+                                      ? 'Save changes'
+                                      : 'Save labor and materials')
+                                : 'Save progress',
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -236,27 +261,6 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
               ],
             );
           },
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(12),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: FilledButton.icon(
-              key: const ValueKey('save-estimate-items'),
-              onPressed:
-                  !_saving &&
-                      (_pendingItem == null || widget.onDraftChanged != null)
-                  ? _saveItems
-                  : null,
-              icon: const Icon(Icons.save_outlined),
-              label: Text(
-                _pendingItem == null ? 'Save items' : 'Save progress',
-              ),
-            ),
-          ),
         ),
       ),
     ),
@@ -370,6 +374,7 @@ class _EstimateItemsScreenState extends State<EstimateItemsScreen>
             WorkLineItemType.material,
             WorkLineItemType.equipment,
             WorkLineItemType.procurement,
+            WorkLineItemType.service,
             WorkLineItemType.fee,
           ]
         : WorkLineItemType.values;

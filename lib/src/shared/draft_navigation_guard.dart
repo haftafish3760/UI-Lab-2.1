@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../data/storage/draft_autosave_session.dart';
 import 'editor_input_lock.dart';
+import 'module_landing_navigation.dart';
 
 /// Shared native/visible Back policy for nested editors sharing one draft.
 mixin DraftNavigationGuard<T extends StatefulWidget> on State<T> {
@@ -16,8 +17,29 @@ mixin DraftNavigationGuard<T extends StatefulWidget> on State<T> {
   bool _leavingDraft = false;
 
   double? _edgeDragDistance;
+  ModuleLandingNavigation? _moduleNavigation;
+  Route<dynamic>? _moduleRoute;
+
+  @override
+  void dispose() {
+    final route = _moduleRoute;
+    if (route != null) _moduleNavigation?.unregisterExit(route);
+    super.dispose();
+  }
 
   Widget guardDraftNavigation(Widget child) {
+    final navigation = ModuleLandingScope.maybeOf(context);
+    final route = ModalRoute.of(context);
+    if (_moduleRoute != route || _moduleNavigation != navigation) {
+      if (_moduleRoute != null) {
+        _moduleNavigation?.unregisterExit(_moduleRoute!);
+      }
+      _moduleRoute = route;
+      _moduleNavigation = navigation;
+    }
+    if (route != null) {
+      navigation?.registerExit(route, () => leaveDraftRoute());
+    }
     final canPop =
         _allowDraftPop ||
         (!blockDraftNavigation &&

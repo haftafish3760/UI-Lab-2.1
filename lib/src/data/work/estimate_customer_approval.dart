@@ -3,7 +3,7 @@ import 'models/work_models.dart';
 
 extension EstimateCustomerApproval on WorkRecord {
   WorkRecord recordCustomerApproval(WorkCustomerApproval approval) {
-    if (kind != WorkRecordKind.estimate ||
+    if (!isProposal ||
         !companyReviewAllowsCustomerApproval ||
         resolvedEstimateStage == EstimateStage.converted ||
         resolvedEstimateStage == EstimateStage.archived ||
@@ -16,12 +16,12 @@ extension EstimateCustomerApproval on WorkRecord {
         detail == 'Proposed work not entered yet.' ||
         (title.trim().isEmpty || title == 'Untitled estimate')) {
       throw StateError(
-        'Complete and review this estimate before recording customer approval.',
+        'Complete and review this document before recording customer approval.',
       );
     }
     if (approval.method == CustomerApprovalMethod.other &&
         approval.note.trim().isEmpty) {
-      throw StateError('Describe how the customer approved the estimate.');
+      throw StateError('Describe how the customer approved the document.');
     }
     return copyWith(
       customerApprovals: [...customerApprovals, approval],

@@ -11,14 +11,15 @@ extension _EstimateDocumentPreview on _EstimateEditorScreenState {
       await _draft?.flush();
       if (!mounted) return;
       final store = PrototypeOperationsScope.of(context);
+      final confirmed = chooseTemplate
+          ? null
+          : buildConfirmedEstimate(_estimateInput, now: DateTime.now());
       final document = chooseTemplate
           ? estimateTemplateDocument(_estimateInput, store.companyProfile)
           : workCustomerDocument(
-              buildConfirmedEstimate(_estimateInput, now: DateTime.now()),
+              confirmed!,
               store.companyProfile,
-              store.customers
-                  .where((c) => c.name == _estimateInput.client)
-                  .firstOrNull,
+              resolveWorkDocumentCustomer(confirmed!, store.customers),
             );
       final selected = await Navigator.of(context).push<String>(
         MaterialPageRoute(

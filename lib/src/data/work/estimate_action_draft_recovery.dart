@@ -1,3 +1,4 @@
+import 'estimate_approval_draft_workflow.dart';
 import '../storage/draft_recovery_catalog.dart';
 import '../storage/draft_recovery_selection.dart';
 import '../storage/local_record_command.dart';
@@ -12,6 +13,11 @@ import 'work_persistence_session.dart';
 
 sealed class ResumedEstimateAction {
   const ResumedEstimateAction();
+}
+
+class ResumedEstimateApproval extends ResumedEstimateAction {
+  const ResumedEstimateApproval(this.controller);
+  final EstimateApprovalDraftController controller;
 }
 
 class ResumedEstimateSignature extends ResumedEstimateAction {
@@ -54,14 +60,24 @@ class EstimateActionDraftRecovery {
   final Iterable<WorkCustomerProfile> Function() customers;
   late final DraftRecoveryCatalog _catalog;
   static const _labels = {
+    'work/quote-approval': 'Quote customer approval',
+    'work/quote-signature': 'Quote signature',
+    'work/estimate-approval': 'Estimate customer approval',
     'work/estimate-signature': 'Estimate signature',
+    'work/quote-delivery': 'Quote delivery preparation',
     'work/estimate-delivery': 'Estimate delivery preparation',
     'work/estimate-items': 'Estimate items',
     'work/estimate-review': 'Estimate company review',
   };
   bool _canList(String domain) {
     final p = _work.permissions;
-    return p.editableKinds.contains(WorkRecordKind.estimate) &&
+    return (!domain.endsWith('-delivery') || p.canShareDocuments) &&
+        (!domain.endsWith('-approval') || p.canRecordCustomerApproval) &&
+        p.editableKinds.contains(
+          domain.startsWith('work/quote-')
+              ? WorkRecordKind.quote
+              : WorkRecordKind.estimate,
+        ) &&
         (p.visibleCreatorIds.contains(p.actorEmployeeId) ||
             (p.canManageOtherCreators && p.visibleCreatorIds.isNotEmpty)) &&
         (domain != 'work/estimate-review' ||
@@ -82,9 +98,15 @@ class EstimateActionDraftRecovery {
 
   (WorkRecord, int) _base(String domain, Map<String, Object?> raw) {
     switch (domain) {
+      case 'work/quote-approval':
+      case 'work/estimate-approval':
+        final input = EstimateApprovalInput.fromPayload(raw);
+        return (input.base, input.baseRevision);
+      case 'work/quote-signature':
       case 'work/estimate-signature':
         final input = EstimateSignatureInput.fromPayload(raw);
         return (input.base, input.baseRevision);
+      case 'work/quote-delivery':
       case 'work/estimate-delivery':
         final input = EstimateDeliveryInput.fromPayload(raw);
         return (input.base, input.baseRevision);
@@ -107,7 +129,11 @@ class EstimateActionDraftRecovery {
     late int revision;
     try {
       (base, revision) = _base(domain, raw);
-      if (base.kind != WorkRecordKind.estimate || revision < 1) {
+      if (base.kind !=
+              (domain.startsWith('work/quote-')
+                  ? WorkRecordKind.quote
+                  : WorkRecordKind.estimate) ||
+          revision < 1) {
         throw StateError('Invalid estimate base.');
       }
     } on Object {
@@ -122,7 +148,7 @@ class EstimateActionDraftRecovery {
       recordId: base.id,
       visibleCreatorIds: _work.permissions.visibleCreatorIds,
     );
-    if (parent == null || parent.record.kind != WorkRecordKind.estimate) {
+    if (parent == null || parent.record.kind != base.kind) {
       return DraftRecoveryPreview(
         title: 'Saved input — original estimate unavailable',
         availability: DraftRecoveryAvailability.parentUnavailable,
@@ -174,6 +200,15 @@ class EstimateActionDraftRecovery {
       revision: current.revision,
     );
     switch (current.domain) {
+      case 'work/quote-approval':
+      case 'work/estimate-approval':
+        return ResumedEstimateApproval(
+          await _work.openEstimateApprovalDraft(
+            base.id,
+            recoverySelection: selection,
+          ),
+        );
+      case 'work/quote-signature':
       case 'work/estimate-signature':
         return ResumedEstimateSignature(
           await _work.openEstimateSignatureDraft(
@@ -181,6 +216,7 @@ class EstimateActionDraftRecovery {
             recoverySelection: selection,
           ),
         );
+      case 'work/quote-delivery':
       case 'work/estimate-delivery':
         return ResumedEstimateDelivery(
           await _work.openEstimateDeliveryDraft(

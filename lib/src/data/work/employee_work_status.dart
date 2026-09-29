@@ -8,6 +8,7 @@ class EmployeeWorkStatus {
     required this.label,
     required this.jobs,
     required this.recordedTime,
+    required this.includesTimeOutsideToday,
     required this.runningLate,
     this.currentJob,
     this.workday,
@@ -16,6 +17,10 @@ class EmployeeWorkStatus {
   final String label;
   final List<WorkRecord> jobs;
   final Duration recordedTime;
+
+  /// A whole workday duration cannot be represented as today's hours when it
+  /// crosses midnight; pause totals are not stored by calendar day.
+  final bool includesTimeOutsideToday;
   final bool runningLate;
   final WorkRecord? currentJob;
   final StoredWorkdayRecord? workday;
@@ -27,7 +32,9 @@ EmployeeWorkStatus employeeWorkStatus({
   required Iterable<StoredWorkdayRecord> visibleWorkdays,
   required DateTime now,
 }) {
-  final day = DateTime(now.year, now.month, now.day);
+  final localNow = now.toLocal();
+  final day = DateTime(localNow.year, localNow.month, localNow.day);
+  final nextDay = DateTime(day.year, day.month, day.day + 1);
   final jobs =
       visibleJobs
           .where(
@@ -46,7 +53,8 @@ EmployeeWorkStatus employeeWorkStatus({
       .where(
         (record) =>
             record.employeeId == employeeId &&
-            _sameDay(record.startedAt.toLocal(), day),
+            record.startedAt.toLocal().isBefore(nextDay) &&
+            (record.endedAt ?? now).toLocal().isAfter(day),
       )
       .toList();
   final current = jobs.where((job) => _activeJob(job.status)).firstOrNull;
@@ -56,6 +64,11 @@ EmployeeWorkStatus employeeWorkStatus({
   final recordedTime = workdays.fold<Duration>(
     Duration.zero,
     (total, record) => total + record.elapsedAt(now),
+  );
+  final includesTimeOutsideToday = workdays.any(
+    (record) =>
+        record.startedAt.toLocal().isBefore(day) ||
+        (record.endedAt?.toLocal().isAfter(nextDay) ?? false),
   );
   final runningLate = jobs.any(
     (job) =>
@@ -85,6 +98,7 @@ EmployeeWorkStatus employeeWorkStatus({
     currentJob: current,
     workday: activeWorkday,
     recordedTime: recordedTime,
+    includesTimeOutsideToday: includesTimeOutsideToday,
     runningLate: runningLate,
   );
 }
@@ -97,8 +111,3 @@ bool _activeJob(WorkRecordStatus status) => switch (status) {
   WorkRecordStatus.needsReturnVisit => true,
   _ => false,
 };
-
-bool _sameDay(DateTime left, DateTime right) =>
-    left.year == right.year &&
-    left.month == right.month &&
-    left.day == right.day;

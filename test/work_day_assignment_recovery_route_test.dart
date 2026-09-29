@@ -1,3 +1,6 @@
+import 'package:ui_lab_2_1/src/data/work/directory_persistence_session.dart';
+import 'support/storage/seeded_directory_fixture.dart';
+import 'support/visible_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -18,10 +21,20 @@ void main() {
     final harness = (await tester.runAsync(DatabaseHarness.create))!;
     final db = (await tester.runAsync(harness.open))!;
     final work = (await tester.runAsync(() => openUiLabWorkSession(db)))!;
-    final store = PrototypeOperationsStore(workSession: work);
+    final directory = (await tester.runAsync(
+      () => openSeededTestDirectory(db),
+    ))!;
+    final employee = directory.employees.singleWhere(
+      (e) => e.name == 'Jordan Lee',
+    );
+    final store = PrototypeOperationsStore(
+      workSession: work,
+      directorySession: directory,
+    );
     final scope = OperationalScopeController(view: AppViewMode.admin);
     addTearDown(() async {
       store.dispose();
+      directory.dispose();
       work.dispose();
       scope.dispose();
       await harness.dispose();
@@ -62,16 +75,21 @@ void main() {
       await tester.pumpAndSettle();
       await waitForNativeSave(
         tester,
-        () => find.byKey(const ValueKey('Technician')).evaluate().isNotEmpty,
+        () => find
+            .widgetWithText(CheckboxListTile, employee.name)
+            .evaluate()
+            .isNotEmpty,
       );
     }
 
     await openAssignment();
-    await tester.tap(find.byKey(const ValueKey('Technician')));
+    await tapVisibleControl(
+      tester,
+      find.widgetWithText(CheckboxListTile, employee.name),
+    );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Jordan Lee').last);
+    await tapVisibleControl(tester, find.text('Keep unfinished assignment'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Keep unfinished assignment'));
     await waitForNativeSave(
       tester,
       () => find.byType(JobAssignmentEditorSheet).evaluate().isEmpty,
@@ -83,13 +101,13 @@ void main() {
     await openAssignment();
     expect(
       tester
-          .widget<DropdownButtonFormField<String>>(
-            find.byKey(const ValueKey('Technician')),
+          .widget<CheckboxListTile>(
+            find.widgetWithText(CheckboxListTile, employee.name),
           )
-          .initialValue,
-      'Jordan Lee',
+          .value,
+      isTrue,
     );
-    await tester.tap(find.text('Save assignment'));
+    await tapVisibleControl(tester, find.text('Save assignment'));
     await waitForNativeSave(
       tester,
       () => find.byType(JobAssignmentEditorSheet).evaluate().isEmpty,
@@ -97,6 +115,12 @@ void main() {
     expect(
       work.records.singleWhere((record) => record.id == job.id).assignee,
       'Jordan Lee',
+    );
+    expect(
+      work.records
+          .singleWhere((record) => record.id == job.id)
+          .assignedEmployeeIds,
+      [employee.id],
     );
     expect(work.storageRevisionFor(job.id), 2);
     expect(tester.takeException(), isNull);

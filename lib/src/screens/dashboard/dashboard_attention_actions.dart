@@ -29,6 +29,12 @@ extension _DashboardAttentionActions on _DashboardScreenState {
     switch (item.resourceKind) {
       case OperationalAttentionResourceKind.expense:
         _openAttentionExpense(item.sourceId);
+      case OperationalAttentionResourceKind.quote:
+        Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => QuoteDetailScreen(recordId: item.sourceId),
+          ),
+        );
       case OperationalAttentionResourceKind.estimate:
         _openAttentionEstimate(item.sourceId);
       case OperationalAttentionResourceKind.job:

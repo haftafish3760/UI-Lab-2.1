@@ -54,6 +54,8 @@ Future<WorkPersistenceSession> openUiLabWorkSession(
       editableKinds: WorkRecordKind.values.toSet(),
       canManageOtherCreators: true,
       canIssueInvoices: true,
+      canApproveInvoices: true,
+      canApproveQuotes: true,
       canRecordPayments: true,
       canDeleteDrafts: true,
       canAssignJobs: true,
@@ -61,6 +63,7 @@ Future<WorkPersistenceSession> openUiLabWorkSession(
       canShareDocuments: true,
       canRecordCustomerApproval: true,
       canCollectSignature: true,
+      canAttachJobPhotos: true,
     ),
   );
 }

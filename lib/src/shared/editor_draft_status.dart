@@ -8,9 +8,11 @@ class EditorDraftStatus extends StatelessWidget {
     required this.state,
     required this.onRetry,
     this.onDiscard,
+    this.showRoutineStatus = true,
     super.key,
   });
   final DraftSaveState state;
+  final bool showRoutineStatus;
   final VoidCallback onRetry;
   final VoidCallback? onDiscard;
 
@@ -21,13 +23,14 @@ class EditorDraftStatus extends StatelessWidget {
       spacing: 12,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Text(switch (state) {
-          DraftSaveState.unchanged => 'Your input will save on this device.',
-          DraftSaveState.saving => 'Saving on this device…',
-          DraftSaveState.savedLocally => 'Draft saved on this device',
-          DraftSaveState.notSaved => 'Latest changes have not been saved.',
-          DraftSaveState.discarded => 'Unfinished input discarded',
-        }),
+        if (showRoutineStatus || state == DraftSaveState.notSaved)
+          Text(switch (state) {
+            DraftSaveState.unchanged => 'Your input will save on this device.',
+            DraftSaveState.saving => 'Saving on this device…',
+            DraftSaveState.savedLocally => 'Draft saved on this device',
+            DraftSaveState.notSaved => 'Latest changes have not been saved.',
+            DraftSaveState.discarded => 'Unfinished input discarded',
+          }),
         if (state == DraftSaveState.notSaved)
           TextButton(onPressed: onRetry, child: const Text('Retry save')),
         if (onDiscard != null)

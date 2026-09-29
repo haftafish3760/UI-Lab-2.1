@@ -1,3 +1,5 @@
+import '../../data/work/estimate_service_price.dart';
+import '../../data/work/models/work_models.dart';
 import '../../data/work/company_document_branding.dart';
 import '../../data/work/estimate_draft_controller.dart';
 import '../../data/work/models/work_contact_models.dart';
@@ -16,8 +18,9 @@ CustomerDocument estimateTemplateDocument(
         : 0;
   }
 
+  final pricedItems = estimatePricedItems(input);
   final items = [
-    for (final item in input.items)
+    for (final item in pricedItems)
       CustomerDocumentItem(
         name: item.name,
         description: item.description,
@@ -48,12 +51,24 @@ CustomerDocument estimateTemplateDocument(
     currency:
         RegExp(r'^[A-Z]{3}').firstMatch(company.defaultCurrency)?.group(0) ??
         'USD',
-    items: items,
+    summarySubtotalCents:
+        input.documentPresentation == WorkDocumentPresentation.summary
+        ? items.fold<int>(0, (sum, item) => sum + item.totalCents)
+        : null,
+    items: input.documentPresentation == WorkDocumentPresentation.summary
+        ? const []
+        : items,
     discountCents: discount,
     taxCents: tax,
     totalCents:
-        (items.fold(0, (sum, item) => sum + item.totalCents) - discount + tax)
+        (items.fold<int>(0, (sum, item) => sum + item.totalCents) -
+                discount +
+                tax)
             .clamp(0, 1 << 53),
-    terms: input.terms,
+    terms: [
+      input.terms,
+      if (input.requiresDeposit && cents(input.depositAmount) > 0)
+        'Required deposit: \$${(cents(input.depositAmount) / 100).toStringAsFixed(2)}',
+    ].where((text) => text.isNotEmpty).join('\n\n'),
   );
 }

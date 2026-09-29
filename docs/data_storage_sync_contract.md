@@ -128,6 +128,39 @@ SQLite WAL/temporary growth, all write-path integration and dashboard alert
 delivery remain open. The reference 5.7 guard was inspected read-only; its
 25/50 MiB reserve policies do not meet this contract and were not imported.
 
+September 28 shared-save correction: `LocalRecordStore.commit` now freezes the
+submitted write list before waiting for SQLite. Previously a caller could clear
+the list during another transaction, leaving a successful command/retry marker
+without its submitted record. `LocalDraftStore.save` now serializes its nested
+raw input before waiting; previously caller mutation could save an empty map
+instead of the submitted form values. Both failures were reproduced with a
+deliberately occupied SQLite transaction before the corrections. The regression
+is `test/local_record_command_input_test.dart`, registered in the shared core
+suite. It verifies submitted content, command retry/history/outbox consistency,
+and nested unfinished input. It uses an isolated in-memory SQLite database, not
+the owner's installation, and is not a physical power-loss test.
+
+The same checkpoint bounds free-space probe waiting to two seconds by default.
+An overdue native probe is retained rather than duplicated on retries; an
+unknown result never authorizes a write. A late result alone does not publish a
+successful save or clear the unknown state. This is still an isolated admission
+component, not full production low-storage enforcement. Native volume reading,
+write-budget integration, dashboard notification delivery, and end-to-end
+low-space acceptance remain open.
+
+Verification: 39 focused Dart storage checks and 24 Python QA-harness checks
+passed; focused analysis of the five changed Dart files reported no issues.
+The shared host runner now holds an OS lock so cooperating copies cannot run
+simultaneously; tests verify competing-process exclusion and release after
+process death. Arbitrary IDE/Flutter commands and device wrappers do not use
+this lock. Windows lock behavior has code but no Windows execution evidence.
+Work screens were not edited. No backup provider or automatic backup was added.
+Logs for this checkpoint: `/tmp/sqlite-input-final.log`,
+`/tmp/sqlite-harness-final.log`, `/tmp/sqlite-input-analysis.log`;
+the reproducing failures are `/tmp/sqlite-command-input-before.log` and
+`/tmp/sqlite-draft-input-before.log`. Temporary logs are not permanent acceptance
+artifacts; preserve the exact tree and logs for independent review.
+
 Receipt combined-preview boundary: the screen now asks its owning submission
 session for a verified preview path rather than inspecting LocalDraftStore or
 constructing an attachment store. The service checks session ownership, live
@@ -1244,6 +1277,21 @@ or owner visual acceptance. Protected 5.7 Git state remains clean and unchanged.
 
 ## Release-one mode and database decision — 2026-09-09
 
+September 28 owner clarification: both additional on-device backup and cloud
+backup are opt-in only. Routine local SQLite saving and unfinished-input recovery
+remain the primary storage behavior; they are not consent to create a second
+backup copy or upload data. The owner's intended provider direction is Firebase
+for structured business data, Google Drive for media, and possibly Apple iCloud.
+The iCloud choice, provider integration, retention, quotas, and consent UI are
+not implemented or settled by this direction. Current work remains the shared
+local storage migration and reusable verification harness; another task owns
+Work screens, including estimates, invoices, quotes and jobs.
+
+Concurrent development must preserve those screen/domain edits. The storage
+owner works in shared repositories/services and tests, and exposes stable
+contracts rather than requiring screens to open databases. On the 8-GB Mac,
+coordinate resource-heavy tests/builds serially; ordinary editing need not stop.
+
 Owner clarification, September 15: offer separate, selectable scopes for backup
 and synchronization. A user may choose receipt backup without backing up other
 modules. Choosing receipt assistance does not grant cloud consent. Explain backup
@@ -1397,9 +1445,23 @@ them; a mutable customer default never rewrites an issued document.
 
 ## Documents, external media and backup
 
-Receipt evidence and job photos remain distinct content classes. Job photos are
-intended to use user-owned storage with durable job links; the final allocation
-between Firebase and external providers is unresolved under D32. Backup must
+Receipt evidence and job photos remain distinct content classes. September 27
+owner direction: estimate/job images use optional user-owned Google Drive backup.
+Local creation, editing and retained photos continue without connecting Drive.
+September 27 owner clarification: backup starts disabled. Guided setup must ask
+the person using this device before enabling uploads, including employees using
+personal phones. Company authorization to access a job does not substitute for
+that person's device/upload consent. Explain the destination account, selected
+content, network use and local-storage consequences before enabling backup.
+After verified backup, keeping the local copy is the default. Removing local
+copies requires a separate explicit choice and confirmation by the device user;
+an employer's backup setting, completed upload or low-space condition is not
+deletion permission. Preserve the record/photo relationship and explain that a
+removed local copy will require network access and valid provider permissions
+to view again. These are required behaviors, not implemented-provider claims.
+Provider consent, durable file/account links, verified upload and restore remain
+required before displaying any backed-up state. This direction does not establish
+an implemented Drive adapter or settle structured-record backup under D32. Backup must
 cover recovery of records and relationships, not just receipt bytes. A locator is not proof bytes
 remain accessible or that Maintainiac backed them up. Save provider/account
 namespace, media/file ID, job ID, local reference and synchronization state;
@@ -1951,6 +2013,17 @@ moves that reviewed list into the parent estimate draft through its existing flo
 Route exit while a native operation runs is guarded; ordinary Back with a pending
 selection keeps input and the request. Receipt and estimate widgets never retrieve
 native lost data independently of the shared coordinator.
+
+Job photo capture extends this same coordinator with destination `job` and
+actor-owned domain `work/job-photos`. Shared WorkPhotoMediaAdoption retains the
+estimate authorization behavior and checks job edit/photo grants, current job
+revision, and the photo draft before adoption. The existing request-consumption
+transaction accepts only each destination's matching domain. Job confirmation
+consumes the draft with the photo-list update; a failed commit leaves both prior
+job data and unfinished photos intact. No camera callback directly updates a
+confirmed job. Saved-work recovery checks access and revision before reopening.
+This connection is covered by simulated native capture/recovery and widget save
+tests; it is not proof of physical camera process-death recovery or cloud backup.
 
 Ten focused tests passed, including real app routes with a fake native gateway,
 reopened SQLite and valid synthetic PNG rendering. The estimate test observes the

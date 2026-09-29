@@ -1,4 +1,8 @@
+import 'proposal_approval_history_screen.dart';
+import 'proposal_invoice_action.dart';
+import 'estimate_review_section.dart';
 import 'estimate_approval_screen.dart';
+import 'direct_payment_entry_screen.dart';
 import '../../shared/editor_input_lock.dart';
 import '../../data/work/work_persistence_session.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +30,7 @@ import 'work_activity_screen.dart';
 
 part 'estimate_detail_widgets.dart';
 part 'estimate_detail_record_cards.dart';
+part 'estimate_detail_commands.dart';
 
 part 'estimate_primary_actions.dart';
 part 'estimate_company_review_card.dart';
@@ -38,13 +43,19 @@ class EstimateDetailScreen extends StatefulWidget {
     required this.onCreateJob,
     this.permissions = const EstimatePermissions.development(),
     this.openApprovalOnEntry = false,
+    this.reviewBeforeSave = false,
+    this.onEditSection,
+    this.onCustomerApproval,
     super.key,
   });
 
   final WorkRecord initialRecord;
   final ValueChanged<WorkRecord> onUpdated, onCreateJob;
   final EstimatePermissions permissions;
+  final Future<WorkRecord?> Function()? onCustomerApproval;
   final bool openApprovalOnEntry;
+  final bool reviewBeforeSave;
+  final Future<WorkRecord?> Function(EstimateReviewSection)? onEditSection;
 
   @override
   State<EstimateDetailScreen> createState() => _EstimateDetailScreenState();
@@ -53,6 +64,7 @@ class EstimateDetailScreen extends StatefulWidget {
 class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
   late var _record = widget.initialRecord;
   var _saving = false;
+  var _editingSection = false;
   var _initializedPersistence = false;
   int _baseStorageRevision = 0;
   void _refreshActions(VoidCallback change) => setState(change);
@@ -62,6 +74,7 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
     super.didChangeDependencies();
     if (_initializedPersistence) return;
     _initializedPersistence = true;
+    if (widget.reviewBeforeSave) return;
     final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
     final current = work?.records
         .where((record) => record.id == _record.id)
@@ -80,7 +93,7 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return EditorInputLock(
-      locked: _saving,
+      locked: _saving || _editingSection,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
@@ -91,19 +104,73 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
 
           final overview = Column(
             children: [
-              _EstimateStatusCard(record: _record),
+              const SizedBox(height: 12),
 
-              _EstimateDatesCard(record: _record),
+              _editableSection(
+                EstimateReviewSection.dates,
+                _EstimateDatesCard(
+                  record: _record,
+                  onEdit: _canEditSections
+                      ? () => _editReviewSection(EstimateReviewSection.dates)
+                      : null,
+                ),
+              ),
+              if (!widget.reviewBeforeSave) ...[
+                _jobActions(),
+                ProposalInvoiceAction(sourceId: _record.id),
+                if (_record.customerSignature != null ||
+                    _record.customerApprovals.isNotEmpty)
+                  TextButton.icon(
+                    icon: const Icon(Icons.history),
+                    label: const Text('Approved versions'),
+                    onPressed: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ProposalApprovalHistoryScreen(recordId: _record.id),
+                      ),
+                    ),
+                  ),
+              ],
             ],
           );
           final content = Column(
             children: [
-              _EstimateScopeCard(record: _record),
-              const SizedBox(height: 12),
-              _EstimateItemsCard(
-                record: _record,
-                onEdit: widget.permissions.canEditItems ? _editItems : null,
+              _editableSection(
+                EstimateReviewSection.work,
+                _EstimateScopeCard(
+                  record: _record,
+                  onEdit: _canEditSections
+                      ? () => _editReviewSection(EstimateReviewSection.work)
+                      : null,
+                ),
               ),
+              const SizedBox(height: 12),
+              _editableSection(
+                EstimateReviewSection.items,
+                _EstimateItemsCard(
+                  record: _record,
+                  onEdit: _canEditSections
+                      ? () => _editReviewSection(EstimateReviewSection.items)
+                      : null,
+                  onEditPricing: _canEditSections
+                      ? () => _editReviewSection(EstimateReviewSection.pricing)
+                      : null,
+                ),
+              ),
+              if (!widget.reviewBeforeSave || layout.columns < 3) ...[
+                const SizedBox(height: 12),
+                _editableSection(
+                  EstimateReviewSection.terms,
+                  _EstimateTermsCard(
+                    record: _record,
+                    onEdit: _canEditSections
+                        ? () => _editReviewSection(EstimateReviewSection.terms)
+                        : null,
+                  ),
+                ),
+              ],
+              if (!widget.reviewBeforeSave && _record.requiredDepositCents > 0)
+                _depositActions(),
             ],
           );
           return Scaffold(
@@ -119,22 +186,53 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           WorkDetailHeader(
-                            label: 'Estimate details',
+                            label: widget.reviewBeforeSave
+                                ? 'Review estimate'
+                                : 'Estimate details',
                             selectedDay:
                                 _record.estimateDates?.createdOn ??
                                 _record.createdOn ??
                                 DateTime.now(),
                             onBack: () => Navigator.of(context).pop(),
-                            showDateContext: true,
+                            showDateContext: false,
                           ),
+                          const SizedBox(height: 14),
+                          _EstimateStatusCard(record: _record),
                           const SizedBox(height: 14),
                           SizedBox(
                             key: ValueKey('document-preview-${_record.id}'),
                           ),
-                          _EstimateDetailHeading(record: _record),
+                          _EstimateDetailHeading(
+                            record: _record,
+                            onContinueEditing: widget.reviewBeforeSave
+                                ? () => Navigator.pop(context, false)
+                                : null,
+                            onEditCustomer: _canEditSections
+                                ? () => _editReviewSection(
+                                    EstimateReviewSection.customer,
+                                  )
+                                : null,
+                            onEditWork: _canEditSections
+                                ? () => _editReviewSection(
+                                    EstimateReviewSection.work,
+                                  )
+                                : null,
+                            onEditDate: _canEditSections
+                                ? () => _editReviewSection(
+                                    EstimateReviewSection.dates,
+                                  )
+                                : null,
+                          ),
                           const SizedBox(height: 12),
-                          _primaryActions(),
-                          if (_record.requiresCompanyReview) ...[
+                          if (widget.reviewBeforeSave)
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 12),
+                              child: Text(
+                                'Review your information before saving. Tap a section to make changes.',
+                              ),
+                            ),
+                          if (!widget.reviewBeforeSave &&
+                              _record.requiresCompanyReview) ...[
                             const SizedBox(height: 14),
                             _EstimateCompanyReviewCard(
                               record: _record,
@@ -152,15 +250,105 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
                             children: [
                               content,
                               overview,
-                              Column(
-                                children: [
-                                  _EstimateHistoryCard(record: _record),
-                                  const SizedBox(height: 12),
-                                  WorkActivityButton(record: _record),
-                                ],
-                              ),
+                              if (!widget.reviewBeforeSave ||
+                                  layout.columns >= 3)
+                                Column(
+                                  children: [
+                                    if (widget.reviewBeforeSave)
+                                      _editableSection(
+                                        EstimateReviewSection.terms,
+                                        _EstimateTermsCard(
+                                          record: _record,
+                                          onEdit: _canEditSections
+                                              ? () => _editReviewSection(
+                                                  EstimateReviewSection.terms,
+                                                )
+                                              : null,
+                                        ),
+                                      ),
+                                    if (!widget.reviewBeforeSave) ...[
+                                      _documentActions(),
+                                      const SizedBox(height: 12),
+                                      _EstimateHistoryCard(record: _record),
+                                    ],
+                                    const SizedBox(height: 12),
+                                    if (!widget.reviewBeforeSave)
+                                      WorkActivityButton(record: _record),
+                                  ],
+                                ),
                             ],
                           ),
+                          if (_canEditSections)
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: TextButton.icon(
+                                key: const ValueKey('review-add-photos'),
+                                onPressed: () => _editReviewSection(
+                                  EstimateReviewSection.photos,
+                                ),
+                                icon: const Icon(Icons.add_a_photo_outlined),
+                                label: Text(
+                                  _record.sitePhotos.isEmpty
+                                      ? 'Add photos'
+                                      : 'Add photos · ${_record.sitePhotos.length} attached',
+                                ),
+                              ),
+                            ),
+                          if (!widget.reviewBeforeSave) _approvalActions(),
+                          if (widget.reviewBeforeSave &&
+                              widget.onCustomerApproval != null)
+                            _actionSection('Customer signature and approval', [
+                              const Text(
+                                'Save this estimate, then let the customer sign in person or record their approval.',
+                              ),
+                              OutlinedButton.icon(
+                                key: const ValueKey('review-customer-approval'),
+                                icon: const Icon(Icons.draw_outlined),
+                                label: const Text(
+                                  'Save and get customer approval',
+                                ),
+                                onPressed: () async {
+                                  if (_saving || _editingSection) return;
+                                  setState(() => _editingSection = true);
+                                  try {
+                                    final updated =
+                                        await widget.onCustomerApproval!();
+                                    if (mounted && updated != null) {
+                                      setState(() => _record = updated);
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _editingSection = false);
+                                    }
+                                  }
+                                },
+                              ),
+                            ]),
+                          if (widget.reviewBeforeSave) ...[
+                            const SizedBox(height: 24),
+                            Wrap(
+                              alignment: WrapAlignment.end,
+                              spacing: 12,
+                              runSpacing: 8,
+                              children: [
+                                FilledButton(
+                                  key: const ValueKey(
+                                    'confirm-estimate-review',
+                                  ),
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Save estimate'),
+                                ),
+                                OutlinedButton(
+                                  key: const ValueKey(
+                                    'continue-editing-bottom',
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Continue editing'),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -174,186 +362,49 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
     );
   }
 
-  Future<void> _editItems() async {
-    final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
-    if (work != null) {
-      final result = await Navigator.of(context).push<List<WorkLineItem>>(
-        MaterialPageRoute(
-          builder: (_) =>
-              StoredEstimateItemsEditor(record: _record, work: work),
-        ),
-      );
-      if (!mounted || result == null) return;
-      final saved = work.records
-          .where((record) => record.id == _record.id)
-          .firstOrNull;
-      if (saved != null) await _update(saved);
-      return;
-    }
+  bool get _canEditSections => widget.reviewBeforeSave
+      ? widget.onEditSection != null
+      : widget.permissions.canEditItems;
 
-    final items = await Navigator.of(context).push<List<WorkLineItem>>(
-      MaterialPageRoute(
-        builder: (_) => EstimateItemsScreen(
-          initialItems: _record.items,
-          pricing: _record.pricing,
-          selectedDay: _record.estimateDates?.createdOn ?? _record.createdOn,
+  Widget _editableSection(EstimateReviewSection section, Widget child) {
+    if (!_canEditSections) return child;
+    return KeyedSubtree(
+      key: ValueKey('review-section-${section.name}'),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _editReviewSection(section),
+          borderRadius: BorderRadius.circular(12),
+          child: child,
         ),
       ),
     );
-    if (!mounted || items == null) return;
-    await _update(_record.reviseItems(items, changedOn: DateTime.now()));
   }
 
-  Future<void> _editEstimate() async {
-    final updated = await Navigator.of(context).push<WorkRecord>(
-      MaterialPageRoute(
-        builder: (_) => EstimateEditorScreen(
-          initialDay:
-              _record.estimateDates?.createdOn ??
-              _record.createdOn ??
-              DateTime.now(),
-          initialRecord: _record,
-        ),
-      ),
-    );
-    if (mounted && updated != null) await _update(updated);
-  }
-
-  Future<void> _preview() async {
-    final action = await Navigator.of(context).push<WorkDocumentPreviewAction>(
-      MaterialPageRoute(
-        builder: (_) => WorkDocumentPreviewScreen(
-          record: _record,
-          canDeliverCustomerCopy:
-              widget.permissions.canSend &&
-              _record.companyReviewAllowsCustomerApproval,
-        ),
-      ),
-    );
-    if (!mounted || action == null) return;
-    switch (action) {
-      case WorkDocumentPreviewAction.createJob:
-        widget.onCreateJob(_record);
-      case WorkDocumentPreviewAction.deliver:
-        await _prepareDelivery();
-    }
-  }
-
-  Future<void> _prepareDelivery() async {
-    if (!_record.companyReviewAllowsCustomerApproval) {
-      _showCompanyReviewRequired();
-      return;
-    }
-    final delivery = await Navigator.of(context).push<WorkRecord>(
-      MaterialPageRoute(
-        builder: (_) => EstimateDeliveryScreen(record: _record),
-      ),
-    );
-    if (!mounted || delivery == null) return;
-    await _update(delivery);
-  }
-
-  Future<void> _recordCustomerApproval({bool createJobAfter = false}) async {
-    if (_saving || !widget.permissions.canRecordCustomerApproval) return;
-    if (!_record.companyReviewAllowsCustomerApproval) {
-      _showCompanyReviewRequired();
-      return;
-    }
-    final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
-    if (work != null && !work.permissions.canRecordCustomerApproval) return;
-    final approved = await Navigator.of(context).push<WorkRecord>(
-      MaterialPageRoute(
-        builder: (_) => EstimateApprovalScreen(record: _record),
-      ),
-    );
-    if (!mounted || approved == null) return;
-    await _update(approved);
-    if (mounted && createJobAfter && _record.hasCurrentCustomerApproval) {
-      widget.onCreateJob(_record);
-    }
-  }
-
-  Future<void> _createApprovedJob() async {
-    if (_record.hasCurrentCustomerApproval &&
-        _record.resolvedEstimateStage == EstimateStage.approved) {
-      widget.onCreateJob(_record);
-    } else {
-      await _recordCustomerApproval(createJobAfter: true);
-    }
-  }
-
-  Future<void> _collectSignature({bool forBusiness = false}) async {
-    final access = PrototypeOperationsScope.maybeOf(
-      context,
-    )?.workSession?.permissions;
-    if (_saving ||
-        (forBusiness
-            ? !widget.permissions.canEditItems
-            : (!widget.permissions.canCollectSignature ||
-                  (access != null && !access.canCollectSignature)))) {
-      return;
-    }
-    if (!forBusiness && !_record.companyReviewAllowsCustomerApproval) {
-      _showCompanyReviewRequired();
-      return;
-    }
-    final signed = await Navigator.of(context).push<WorkRecord>(
-      MaterialPageRoute(
-        builder: (_) =>
-            EstimateSignatureScreen(record: _record, forBusiness: forBusiness),
-      ),
-    );
-    if (!mounted || signed == null) return;
-    await _update(signed);
-  }
-
-  Future<void> _update(WorkRecord record) async {
-    if (_saving || identical(record, _record)) return;
-    final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
-    if (work == null) {
-      setState(() => _record = record);
-      widget.onUpdated(record);
-      return;
-    }
-    setState(() => _saving = true);
-    final current = work.records
-        .where((item) => item.id == record.id)
-        .firstOrNull;
-    if (current == null ||
-        current.kind != WorkRecordKind.estimate ||
-        record.id != _record.id) {
-      setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This estimate is no longer available.')),
-      );
-      return;
-    }
-    final alreadySaved =
-        canonicalJson(encodeWorkRecord(current)) ==
-        canonicalJson(encodeWorkRecord(record));
-    final saved =
-        alreadySaved ||
-        await work.save(
-          records: [record],
-          expectedStorageRevisions: {record.id: _baseStorageRevision},
-        );
-    if (!mounted) return;
-    setState(() {
-      _saving = false;
-      if (saved) {
-        _record = record;
-        _baseStorageRevision = work.storageRevisionFor(record.id);
+  Future<void> _editReviewSection(EstimateReviewSection section) async {
+    if (_saving || _editingSection) return;
+    setState(() => _editingSection = true);
+    try {
+      if (widget.reviewBeforeSave) {
+        final revised = await widget.onEditSection?.call(section);
+        if (mounted && revised != null) setState(() => _record = revised);
+      } else if (section == EstimateReviewSection.items) {
+        await _editItems();
+      } else {
+        await _editEstimate(section: section);
       }
-    });
-    if (!saved) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            work.failureMessage ??
-                'The estimate was not saved. Previous values remain active.',
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Your changes are kept in the form. Return to editing to finish them.',
+            ),
           ),
-        ),
-      );
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _editingSection = false);
     }
   }
 }

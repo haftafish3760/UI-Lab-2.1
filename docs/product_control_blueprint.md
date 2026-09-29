@@ -170,7 +170,7 @@ send, or delete estimates?”
 | Estimate | Work | customer, site, items, template, revisions, attachments | sent/accepted/declined/expired; accepted estimate remains immutable quoted source |
 | Job | Work | optional estimate, schedule, assignment, vehicle, field evidence | direct or estimate-created; scheduled state is not completion |
 | Invoice | Work | optional job/estimate, document version, payments | own delivery/balance/credit history; never overwrites estimate |
-| Payment | Work | invoice, payer, method, reference | partial/refund/write-off retained as history |
+| Payment | Work | amount, date, method, description; invoice/job/estimate link optional | invoice-linked payments affect only that invoice's balance; a prior job/estimate payment needs an explicit application event to affect a later invoice; quote links require saved Quotes |
 | Expense | Expenses | payer, category, vendor, receipt, optional job/customer | confirmation can offer cost history/actuals; never posts automatically |
 | Receipt/document evidence | Document Intake | source image/files, proposals, allocations, confirmation event | source retained; proposals are reversible until confirmed |
 | Material cost history | Inventory | vendor, unit/pack, receipt/expense, confirmer | distinct from markup/customer price/stock certainty |
@@ -200,7 +200,7 @@ behavior exists.
    employee/crew, vehicle, duration, conflict, and material-readiness review.
 5. Field work records status, time, mileage, notes, photos, receipts, actual
    material usage, changes, signatures, incomplete/return-visit state.
-6. An authorized completed/billable job can create an invoice. The invoice has
+6. A completed job may close without an invoice. If the business wants one, an authorized user can create an invoice. The invoice has
    a separate customer-facing version, delivery, terms, balance, payment,
    correction, credit/refund, and collection history.
 7. Dashboard, calendar, reports, customer history, and recap project confirmed

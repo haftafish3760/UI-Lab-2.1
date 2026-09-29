@@ -55,12 +55,15 @@ class WorkPdfDefinition extends PdfDocumentDefinition {
         (!data.draft &&
             (data.customer.trim().isEmpty ||
                 data.title.trim().isEmpty ||
-                data.items.isEmpty))) {
+                (data.isSummary
+                    ? data.description.trim().isEmpty
+                    : data.items.isEmpty)))) {
       throw const FormatException(
         'Company, document number, customer, title and items are required for a final customer document.',
       );
     }
-    if (data.items.length > 2000 ||
+    if ((data.isSummary && (data.items.isNotEmpty || data.subtotalCents < 0)) ||
+        data.items.length > 2000 ||
         data.items.any(
           (i) =>
               !i.quantity.isFinite ||
@@ -71,6 +74,10 @@ class WorkPdfDefinition extends PdfDocumentDefinition {
         data.discountCents < 0 ||
         data.taxCents < 0 ||
         data.totalCents < 0 ||
+        (data.paidCents != null &&
+            (data.kind != 'Invoice' ||
+                data.paidCents! < 0 ||
+                data.paidCents! > data.totalCents)) ||
         (data.subtotalCents - data.discountCents + data.taxCents).clamp(
               0,
               1 << 53,
@@ -123,7 +130,9 @@ class WorkPdfDefinition extends PdfDocumentDefinition {
             ),
           ...PdfPrimitives.paragraph(data.description),
           pw.SizedBox(height: 12),
-          if (layout == DocumentLayout.service ||
+          if (data.isSummary)
+            pw.SizedBox(height: 0)
+          else if (layout == DocumentLayout.service ||
               layout == DocumentLayout.plumbing)
             ...WorkPdfLayouts.serviceItems(c, data, money)
           else
@@ -148,6 +157,10 @@ class WorkPdfDefinition extends PdfDocumentDefinition {
               ('Discount', money(-data.discountCents)),
             if (data.taxCents != 0) ('Tax', money(data.taxCents)),
             ('Total', money(data.totalCents)),
+            if (data.paidCents != null) ...[
+              ('Paid', money(-data.paidCents!)),
+              ('Amount due', money(data.balanceCents!)),
+            ],
           ]),
           if (data.paymentMethod.isNotEmpty &&
               data.paymentMethod != 'Not selected')

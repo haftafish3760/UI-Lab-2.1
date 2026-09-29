@@ -1,6 +1,38 @@
 part of 'work_persistence_session.dart';
 
 extension _WorkCustomerApprovalValidation on WorkPersistenceSession {
+  Future<void> _validateApprovalEvidence(
+    WorkRecord next,
+    WorkRecord? previous,
+  ) async {
+    final added = next.customerApprovals
+        .skip(previous?.customerApprovals.length ?? 0)
+        .toList();
+    for (final item in next.items) {
+      final approval = item.changeApproval;
+      final old = previous?.items
+          .where((value) => value.id == item.id)
+          .firstOrNull
+          ?.changeApproval;
+      if (approval != null &&
+          canonicalJson(approval.toJson()) != canonicalJson(old?.toJson())) {
+        added.add(approval);
+      }
+    }
+    for (final approval in added) {
+      final ids = approval.evidence.map((item) => item.attachmentId).toSet();
+      if (ids.length != approval.evidence.length) {
+        throw StateError('The same approval attachment cannot be added twice.');
+      }
+      if (ids.isEmpty) continue;
+      await LocalAttachmentStore(repository.database).verifiedFiles(
+        organizationId: permissions.organizationId,
+        ownerIds: {permissions.actorEmployeeId},
+        attachmentIds: ids,
+      );
+    }
+  }
+
   void _validateCustomerApprovalChanges(
     WorkRecord record,
     WorkRecord? current,
@@ -49,11 +81,11 @@ extension _WorkCustomerApprovalValidation on WorkPersistenceSession {
           (approval.method == CustomerApprovalMethod.other &&
               approval.note.trim().isEmpty) ||
           !record.companyReviewAllowsCustomerApproval ||
-          record.kind != WorkRecordKind.estimate ||
+          !record.isProposal ||
           record.items.isEmpty ||
           record.resolvedEstimateStage != EstimateStage.approved) {
         throw StateError(
-          'Customer approval must identify the current user and estimate revision.',
+          'Customer approval must identify the current user and document revision.',
         );
       }
     }

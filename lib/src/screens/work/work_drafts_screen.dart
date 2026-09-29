@@ -1,3 +1,4 @@
+import 'quote_editor_screen.dart';
 import '../../data/work/work_persistence_session.dart';
 import 'package:flutter/material.dart';
 import '../../data/prototype_operations_store.dart';
@@ -117,6 +118,10 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
     final saved = await Navigator.of(context).push<WorkRecord>(
       MaterialPageRoute(
         builder: (_) => switch (record.kind) {
+          WorkRecordKind.quote => QuoteEditorScreen(
+            initialDay: record.createdOn ?? DateTime.now(),
+            initialRecord: record,
+          ),
           WorkRecordKind.estimate => EstimateEditorScreen(
             initialDay: record.createdOn ?? DateTime.now(),
             initialRecord: record,
@@ -155,10 +160,12 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final work = PrototypeOperationsScope.of(context).workSession;
+    final store = PrototypeOperationsScope.of(context);
+    final work = store.workSession;
     final records =
-        (work?.records ?? <WorkRecord>[])
+        store.workRecords
             .where((r) => widget.kind == null || r.kind == widget.kind)
+            .where((r) => work?.permissions.canEdit(r) ?? true)
             .where((r) => !_input.any((e) => e.preview.recordId == r.id))
             .where(
               (r) => r.kind == WorkRecordKind.estimate
@@ -172,7 +179,7 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
             ),
           );
     return Scaffold(
-      appBar: AppBar(title: const Text('Drafts')),
+      appBar: AppBar(title: Text(_screenTitle)),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
@@ -186,7 +193,9 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
                 padding: const EdgeInsets.only(top: 12, bottom: 24),
                 children: [
                   Text(
-                    'Continue your saved work',
+                    widget.kind == null
+                        ? 'Continue your saved work'
+                        : 'Continue your ${widget.kind!.name} draft',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const Padding(
@@ -200,8 +209,10 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
                   if (_error != null)
                     TextButton(onPressed: _reload, child: const Text('Retry')),
                   if (!_loading && records.isEmpty && _input.isEmpty)
-                    const Text(
-                      'No drafts yet. Start a new document from Add Work.',
+                    Text(
+                      widget.kind == null
+                          ? 'No drafts yet. Start a new document from Add Work.'
+                          : 'No ${widget.kind!.name} drafts yet.',
                     ),
                   for (final record in records) ...[
                     ListTile(
@@ -211,9 +222,7 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.description_outlined),
                       title: Text(
-                        record.title.isEmpty
-                            ? 'Untitled ${record.kind.name}'
-                            : record.title,
+                        '${_kindLabel(record.kind)} draft · ${record.title.isEmpty ? 'Untitled' : record.title}',
                       ),
                       subtitle: Text(
                         '${record.client} · ${record.number}\nLast edited: ${_dateLabel(record.estimateDates?.lastEditedOn ?? record.createdOn)}',
@@ -221,7 +230,7 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
                       onTap: _busy
                           ? null
                           : () => _run(() => _openRecord(record)),
-                      trailing: work!.canDeleteDraft(record)
+                      trailing: work?.canDeleteDraft(record) == true
                           ? IconButton(
                               tooltip: 'Delete draft',
                               icon: const Icon(Icons.delete_outline),
@@ -230,7 +239,7 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
                                   : () => _run(() async {
                                       if (await _confirmDelete(record.title) &&
                                           mounted &&
-                                          !await work.deleteDraft(record)) {
+                                          !await work!.deleteDraft(record)) {
                                         throw StateError(
                                           'Draft deletion failed.',
                                         );
@@ -247,7 +256,9 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
                         context,
                       ).extension<AppSemanticColors>()!.draftSurface,
                       contentPadding: EdgeInsets.zero,
-                      title: Text(entry.preview.title),
+                      title: Text(
+                        '${entry.workflowLabel} draft · ${entry.preview.title}',
+                      ),
                       subtitle: Text(
                         '${entry.workflowLabel}\nLast edited: ${_dateLabel(entry.updatedAt)}',
                       ),
@@ -262,8 +273,10 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
                                 await openPrimaryWorkRecovery(context, resumed);
                               } else {
                                 await switch (resumed) {
-                                  ResumedEstimateDraft(:final controller) =>
-                                    controller.session.close(),
+                                  ResumedQuoteDraft(:final controller) ||
+                                  ResumedEstimateDraft(
+                                    :final controller,
+                                  ) => controller.session.close(),
                                   ResumedInvoiceDraft(:final controller) =>
                                     controller.session.close(),
                                   ResumedJobDraft(:final controller) =>
@@ -293,4 +306,19 @@ class _WorkDraftsScreenState extends State<WorkDraftsScreen> {
   String _dateLabel(DateTime? value) => value == null
       ? 'Not recorded'
       : '${MaterialLocalizations.of(context).formatMediumDate(value.toLocal())} · ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(value.toLocal()))}';
+
+  String get _screenTitle => switch (widget.kind) {
+    WorkRecordKind.estimate => 'Estimate drafts',
+    WorkRecordKind.quote => 'Quote drafts',
+    WorkRecordKind.invoice => 'Invoice drafts',
+    WorkRecordKind.job => 'Job drafts',
+    null => 'Drafts',
+  };
+
+  String _kindLabel(WorkRecordKind kind) => switch (kind) {
+    WorkRecordKind.estimate => 'Estimate',
+    WorkRecordKind.quote => 'Quote',
+    WorkRecordKind.invoice => 'Invoice',
+    WorkRecordKind.job => 'Job',
+  };
 }

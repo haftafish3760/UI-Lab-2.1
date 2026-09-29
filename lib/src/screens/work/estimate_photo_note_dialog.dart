@@ -24,7 +24,7 @@ class _EstimatePhotoNoteDialogState extends State<EstimatePhotoNoteDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Photo note'),
+    title: const Text('Photo details'),
     content: TextField(
       controller: _controller,
       onChanged: widget.onChanged,
@@ -38,11 +38,11 @@ class _EstimatePhotoNoteDialogState extends State<EstimatePhotoNoteDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Keep unfinished note'),
+        child: const Text('Keep unfinished details'),
       ),
       FilledButton(
         onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
-        child: const Text('Save note'),
+        child: const Text('Save details'),
       ),
     ],
   );

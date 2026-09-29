@@ -67,7 +67,7 @@ class _LocalImagePreview extends StatelessWidget {
         File(path),
         fit: BoxFit.contain,
         errorBuilder: (_, _, _) => const _DocumentUnavailable(
-          message: 'This receipt image could not be opened.',
+          message: 'This image could not be opened.',
         ),
       ),
     ),

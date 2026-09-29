@@ -3,6 +3,7 @@ import '../data/work/work_primary_draft_recovery.dart';
 import '../data/work/estimate_action_draft_recovery.dart';
 import '../data/work/job_action_draft_recovery.dart';
 import '../data/work/invoice_payment_draft_recovery.dart';
+import '../data/work/direct_payment_draft_recovery.dart';
 import '../data/work/directory_draft_recovery.dart';
 import '../data/workday/workday_draft_recovery.dart';
 import '../data/day_notes/day_note_draft_recovery.dart';
@@ -20,6 +21,7 @@ DraftRecoveryHub<Object> createApplicationDraftRecovery({
   required EstimateActionDraftRecovery estimateActions,
   required JobActionDraftRecovery jobActions,
   required InvoicePaymentDraftRecovery invoicePayments,
+  required DirectPaymentDraftRecovery directPayments,
   required DirectoryDraftRecovery directory,
   required WorkdayDraftRecovery workday,
   required DayNoteDraftRecovery dayNotes,
@@ -62,6 +64,13 @@ DraftRecoveryHub<Object> createApplicationDraftRecovery({
     list: invoicePayments.list,
     resume: invoicePayments.resume,
     discard: invoicePayments.discard,
+  ),
+  DraftRecoveryProvider<Object>(
+    id: 'directPayments',
+    label: 'Payments',
+    list: directPayments.list,
+    resume: directPayments.resume,
+    discard: directPayments.discard,
   ),
   DraftRecoveryProvider<Object>(
     id: 'directory',

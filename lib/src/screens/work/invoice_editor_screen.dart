@@ -1,3 +1,5 @@
+import '../../../l10n/app_localizations_extension.dart';
+import '../../data/work/work_service_price.dart';
 import '../../shared/draft_navigation_guard.dart';
 import '../../data/storage/local_record_command.dart';
 import 'documents/customer_pdf_screen.dart';
@@ -23,12 +25,14 @@ import '../../shared/editor_draft_status.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
 import 'customer_edit_screen.dart';
+import 'saved_clients_screen.dart';
 import 'work_contact_models.dart';
 import 'work_detail_header.dart';
 import 'work_items_editor.dart';
 import 'work_models.dart';
 
 part 'invoice_editor_sections.dart';
+part 'invoice_editor_client_selection.dart';
 part 'invoice_editor_overview.dart';
 part 'invoice_editor_document_preview.dart';
 part 'invoice_editor_feedback.dart';
@@ -91,6 +95,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
   late final TextEditingController _title;
   late final TextEditingController _summary;
   late final TextEditingController _discount;
+  late final TextEditingController _servicePrice;
   late final TextEditingController _tax;
   late final TextEditingController _terms;
   late DateTime _issuedOn;
@@ -101,6 +106,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
   String? _location;
   var _pricing = WorkPricingModel.flatRate;
   var _items = <WorkLineItem>[];
+  var _itemized = false;
   var _template = 'Service standard';
   var _paymentMethod = 'Not selected';
   String? _formError;
@@ -112,6 +118,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
     _title,
     _summary,
     _discount,
+    _servicePrice,
     _tax,
     _terms,
   ]);
@@ -122,7 +129,11 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
 
   PrototypeOperationsStore get _store => PrototypeOperationsScope.of(context);
 
-  double get _subtotal => _items.fold(0, (sum, item) => sum + item.total);
+  bool get _usesServicePrice =>
+      !_itemized && canUseWorkServicePrice(_recordId, _items);
+  double get _subtotal => _usesServicePrice
+      ? double.tryParse(_servicePrice.text.trim().replaceAll(',', '.')) ?? 0
+      : _items.fold(0, (sum, item) => sum + item.total);
   double get _total => (_subtotal - _moneyValue(_discount) + _moneyValue(_tax))
       .clamp(0, double.infinity);
 
@@ -183,6 +194,15 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
           source?.items.where((item) => item.includedInInvoiceFromJob) ??
           const <WorkLineItem>[]),
     ];
+    _itemized =
+        _items.isNotEmpty &&
+        (existing?.documentPresentation != WorkDocumentPresentation.summary ||
+            !canUseWorkServicePrice(_recordId, _items));
+    _servicePrice = TextEditingController(
+      text: _usesServicePrice && _items.isNotEmpty
+          ? _items.single.customerPrice.toStringAsFixed(2)
+          : '',
+    );
     _template = existing?.template ?? 'Service standard';
     _paymentMethod = existing?.paymentMethod ?? 'Not selected';
     for (final controller in [
@@ -190,6 +210,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
       _title,
       _summary,
       _discount,
+      _servicePrice,
       _tax,
       _terms,
     ]) {
@@ -215,6 +236,7 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
     _title.dispose();
     _summary.dispose();
     _discount.dispose();
+    _servicePrice.dispose();
     _tax.dispose();
     _terms.dispose();
     super.dispose();
@@ -274,67 +296,100 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
                       ),
                     ),
                   ),
+                  SafeArea(
+                    minimum: const EdgeInsets.all(12),
+                    child: Center(
+                      heightFactor: 1,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 620),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final canIssue =
+                                _store
+                                        .workSession
+                                        ?.permissions
+                                        .canIssueInvoices ==
+                                    true &&
+                                (widget.initialRecord == null ||
+                                    widget.initialRecord!.status ==
+                                        WorkRecordStatus.draft);
+                            const actionStyle = ButtonStyle(
+                              padding: WidgetStatePropertyAll(
+                                EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                              ),
+                              minimumSize: WidgetStatePropertyAll(Size(48, 48)),
+                            );
+                            final save = OutlinedButton(
+                              style: actionStyle,
+                              key: const ValueKey('save-invoice-draft'),
+                              onPressed: _draftReady && !_submitting
+                                  ? _save
+                                  : null,
+                              child: const Text('Save draft'),
+                            );
+                            if (!canIssue) return save;
+                            final create = FilledButton(
+                              style: actionStyle,
+                              key: const ValueKey('create-issued-invoice'),
+                              onPressed: _draftReady && !_submitting
+                                  ? _createInvoice
+                                  : null,
+                              child: const Text('Create invoice'),
+                            );
+                            final scaler = MediaQuery.textScalerOf(context);
+                            double labelWidth(String text) {
+                              final painter = TextPainter(
+                                text: TextSpan(
+                                  text: text,
+                                  style: Theme.of(context).textTheme.labelLarge,
+                                ),
+                                textDirection: Directionality.of(context),
+                                textScaler: scaler,
+                              )..layout();
+                              final width = painter.width;
+                              painter.dispose();
+                              return width;
+                            }
+
+                            final largestLabel = [
+                              labelWidth('Save draft'),
+                              labelWidth('Create invoice'),
+                            ].reduce((a, b) => a > b ? a : b);
+                            if (constraints.maxWidth <
+                                2 * (largestLabel + 24) + 8) {
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  save,
+                                  const SizedBox(height: 8),
+                                  create,
+                                ],
+                              );
+                            }
+                            return Row(
+                              children: [
+                                Expanded(child: save),
+                                const SizedBox(width: 8),
+                                Expanded(child: create),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               );
             },
           ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(12),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final canIssue =
-                    _store.workSession?.permissions.canIssueInvoices == true &&
-                    (widget.initialRecord == null ||
-                        widget.initialRecord!.status == WorkRecordStatus.draft);
-                final save = OutlinedButton(
-                  key: const ValueKey('save-invoice-draft'),
-                  onPressed: _draftReady && !_submitting ? _save : null,
-                  child: const Text('Save draft'),
-                );
-                if (!canIssue) return save;
-                final create = FilledButton(
-                  key: const ValueKey('create-issued-invoice'),
-                  onPressed: _draftReady && !_submitting
-                      ? _createInvoice
-                      : null,
-                  child: const Text('Create invoice'),
-                );
-                final scaler = MediaQuery.textScalerOf(context);
-                if (constraints.maxWidth < 290 || scaler.scale(14) > 19) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [save, const SizedBox(height: 8), create],
-                  );
-                }
-                return Row(
-                  children: [
-                    Expanded(child: save),
-                    const SizedBox(width: 8),
-                    Expanded(child: create),
-                  ],
-                );
-              },
-            ),
-          ),
-        ),
-      ),
     ),
   );
-
-  List<WorkServiceLocation> _locationsFor(String? customerName) {
-    if (customerName == null) return const [];
-    for (final customer in _store.customers) {
-      if (customer.name == customerName) return customer.locations;
-    }
-    return const [];
-  }
 
   void _selectSource(String? value) {
     if (_itemDraftInput != null) {
@@ -362,42 +417,32 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
       _tax.text = source.tax.toStringAsFixed(2);
       _terms.text = source.terms;
       _items = [...source.items.where((item) => item.includedInInvoiceFromJob)];
-    });
-  }
-
-  void _selectClient(String? value) {
-    final locations = _locationsFor(value);
-    _updateInput(() {
-      _client = value;
-      _customerSnapshot = _store.customers
-          .where((customer) => customer.name == value)
-          .firstOrNull;
-      _location = locations.firstOrNull?.address;
-    });
-  }
-
-  Future<void> _addClient() async {
-    final customer = await Navigator.of(context).push<WorkCustomerProfile>(
-      MaterialPageRoute(
-        builder: (_) => CustomerEditScreen(selectedDay: _issuedOn),
-      ),
-    );
-    if (!mounted || customer == null) return;
-    if (_store.directorySession == null) {
-      _store.replaceCustomers([..._store.customers, customer]);
-    }
-    _updateInput(() {
-      _client = customer.name;
-      _customerSnapshot = customer;
-      _location = customer.locations.firstOrNull?.address;
+      _itemized = _items.isNotEmpty;
+      _servicePrice.clear();
     });
   }
 
   Future<void> _editItems() async {
+    List<WorkLineItem> startingItems = _items;
+    if (_servicePrice.text.trim().isNotEmpty && _usesServicePrice) {
+      try {
+        startingItems = workServicePricedItems(
+          recordId: _recordId,
+          title: _title.text,
+          description: _summary.text,
+          priceText: _servicePrice.text,
+          items: _items,
+        );
+      } on FormatException catch (error) {
+        _refresh(() => _formError = error.message);
+        return;
+      }
+    }
+
     final items = await Navigator.of(context).push<List<WorkLineItem>>(
       MaterialPageRoute(
         builder: (_) => WorkItemsEditor(
-          initialItems: _items,
+          initialItems: startingItems,
           draftSession: _draft,
           recoveryInput: _itemDraftInput,
           onDraftChanged: _draft == null
@@ -413,6 +458,8 @@ class _InvoiceEditorScreenState extends State<InvoiceEditorScreen>
     if (mounted && items != null) {
       _updateInput(() {
         _items = items;
+        _itemized = items.isNotEmpty;
+        _servicePrice.clear();
         _itemDraftInput = null;
       });
     }

@@ -1,5 +1,5 @@
 enum EstimateStage {
-  draft('Draft', 'Finish scope and pricing'),
+  draft('Draft', 'Continue adding the work details and prices'),
   readyToSend('Ready to send', 'Preview and send to customer'),
   awaitingCustomer('Awaiting customer', 'Follow up with customer'),
   viewed('Viewed', 'Customer opened the estimate'),
@@ -57,6 +57,7 @@ class EstimateCompanyReviewEvent {
     required this.occurredOn,
     required this.revision,
     required this.note,
+    this.contentFingerprint,
   });
 
   final EstimateCompanyReviewDecision decision;
@@ -64,6 +65,7 @@ class EstimateCompanyReviewEvent {
   final DateTime occurredOn;
   final int revision;
   final String note;
+  final String? contentFingerprint;
 }
 
 enum EstimateDeliveryMethod {

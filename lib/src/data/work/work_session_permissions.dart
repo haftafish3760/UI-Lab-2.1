@@ -10,6 +10,10 @@ class WorkSessionPermissions {
     required Set<WorkRecordKind> editableKinds,
     this.canManageOtherCreators = false,
     this.canIssueInvoices = false,
+    this.canApproveInvoices = false,
+    this.canApproveQuotes = false,
+    this.requiresQuoteApproval = false,
+    this.requiresInvoiceApproval = false,
     this.canRecordPayments = false,
     this.canDeleteDrafts = false,
     this.canAssignJobs = false,
@@ -17,6 +21,7 @@ class WorkSessionPermissions {
     this.canShareDocuments = false,
     this.canRecordCustomerApproval = false,
     this.canCollectSignature = false,
+    this.canAttachJobPhotos = false,
   }) : visibleCreatorIds = Set.unmodifiable(visibleCreatorIds),
        editableKinds = Set.unmodifiable(editableKinds);
 
@@ -27,6 +32,10 @@ class WorkSessionPermissions {
   final Set<WorkRecordKind> editableKinds;
   final bool canManageOtherCreators;
   final bool canIssueInvoices;
+  final bool canApproveInvoices;
+  final bool canApproveQuotes;
+  final bool requiresQuoteApproval;
+  final bool requiresInvoiceApproval;
   final bool canRecordPayments;
   final bool canDeleteDrafts;
   final bool canAssignJobs;
@@ -34,6 +43,7 @@ class WorkSessionPermissions {
   final bool canShareDocuments;
   final bool canRecordCustomerApproval;
   final bool canCollectSignature;
+  final bool canAttachJobPhotos;
 
   bool canEdit(WorkRecord record) =>
       editableKinds.contains(record.kind) &&

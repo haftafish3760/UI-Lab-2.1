@@ -17,7 +17,11 @@ Future<void> openDocumentSection(WidgetTester tester, String key) async {
 }
 
 Future<void> closeDocumentSection(WidgetTester tester) async {
-  await tester.tap(find.byKey(const ValueKey('document-section-done')));
+  await tester.pumpAndSettle();
+  final done = find.byKey(const ValueKey('document-section-done'));
+  await tester.ensureVisible(done);
+  await tester.pumpAndSettle();
+  await tester.tap(done);
   await waitForNativeSave(
     tester,
     () => find.byType(DocumentSectionEditor).evaluate().isEmpty,

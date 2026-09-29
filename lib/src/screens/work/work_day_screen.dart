@@ -132,6 +132,13 @@ class _WorkDayScreenState extends State<WorkDayScreen> {
           actions: [
             _WorkAction.createJob,
             if (estimatePermissions.canCreate) _WorkAction.createEstimate,
+            if (PrototypeOperationsScope.of(context)
+                    .workSession
+                    ?.permissions
+                    .editableKinds
+                    .contains(WorkRecordKind.quote) ==
+                true)
+              _WorkAction.createQuote,
             if (invoicePermissions.canCreate) _WorkAction.createInvoice,
             if (invoicePermissions.canRecordPayment) _WorkAction.recordPayment,
           ],
@@ -146,6 +153,13 @@ class _WorkDayScreenState extends State<WorkDayScreen> {
       if (mounted && job != null) {
         PrototypeOperationsScope.of(context).addWorkRecord(job);
       }
+      return;
+    }
+    if (action == _WorkAction.createQuote) {
+      final quote = await Navigator.of(context).push<WorkRecord>(
+        MaterialPageRoute(builder: (_) => QuoteEditorScreen(initialDay: _day)),
+      );
+      if (mounted && quote != null) await openSavedWorkDocument(context, quote);
       return;
     }
     if (action == _WorkAction.createEstimate) {
@@ -190,9 +204,11 @@ class _WorkDayScreenState extends State<WorkDayScreen> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => switch (kind) {
+          WorkRecordKind.quote => QuoteWorkspaceScreen(initialDay: _day),
           WorkRecordKind.job => JobListWorkspaceScreen(initialDay: _day),
           WorkRecordKind.estimate => EstimateWorkspaceScreen(initialDay: _day),
           WorkRecordKind.invoice => InvoiceWorkspaceScreen(
+            showDateActivity: true,
             initialDay: _day,
             permissions: invoicePermissionsForView(_view),
           ),

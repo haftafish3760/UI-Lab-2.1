@@ -17,6 +17,10 @@ void main() {
     testWidgets(
       'approval cancellation and saving return to the same editable estimate signing=$signInPerson',
       (tester) async {
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
         final harness = (await tester.runAsync(DatabaseHarness.create))!;
         final database = (await tester.runAsync(harness.open))!;
         final work = (await tester.runAsync(
@@ -59,6 +63,12 @@ void main() {
               controller: scope,
               child: MaterialApp(
                 theme: AppTheme.light,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(textScaler: const TextScaler.linear(2)),
+                  child: child!,
+                ),
                 home: EstimateEditorScreen(
                   initialDay: DateTime(2026, 9, 24),
                   initialRecord: estimate,
@@ -77,19 +87,48 @@ void main() {
               tester.widget<DocumentFormSection>(approval).onTap != null,
         );
         expect(find.byKey(const ValueKey('estimate-close')), findsOneWidget);
-        expect(find.text('Not approved — Add approval'), findsOneWidget);
-        await tester.ensureVisible(approval);
-        await tester.pumpAndSettle();
-        await tester.tap(approval);
+        expect(find.text('Sign in person or record approval'), findsOneWidget);
+        if (signInPerson) {
+          final review = find.byKey(const ValueKey('estimate-review'));
+          await tester.ensureVisible(review);
+          await tester.pumpAndSettle();
+          await tester.tap(review);
+          await tester.pumpAndSettle();
+          final reviewApproval = find.byKey(
+            const ValueKey('review-customer-approval'),
+          );
+          await waitForNativeSave(
+            tester,
+            () => reviewApproval.evaluate().isNotEmpty,
+          );
+          await tester.ensureVisible(reviewApproval);
+          await tester.pumpAndSettle();
+          await tester.tap(reviewApproval);
+        } else {
+          await tester.ensureVisible(approval);
+          await tester.pumpAndSettle();
+          await tester.tap(approval);
+        }
         await waitForNativeSave(
           tester,
           () => find.byType(EstimateApprovalScreen).evaluate().isNotEmpty,
         );
         await tester.pageBack();
+        if (signInPerson) {
+          await waitForNativeSave(
+            tester,
+            () => find.byType(EstimateApprovalScreen).evaluate().isEmpty,
+          );
+          final editing = find.byKey(const ValueKey('continue-editing-top'));
+          await tester.ensureVisible(editing);
+          await tester.pumpAndSettle();
+          await tester.tap(editing);
+        }
         await waitForNativeSave(
           tester,
           () =>
               find.byType(EstimateApprovalScreen).evaluate().isEmpty &&
+              approval.evaluate().isNotEmpty &&
               tester.widget<DocumentFormSection>(approval).onTap != null,
         );
         expect(find.byType(EstimateEditorScreen), findsOneWidget);
@@ -108,7 +147,21 @@ void main() {
           tester,
           () => find.byType(EstimateApprovalScreen).evaluate().isNotEmpty,
         );
+        expect(find.text('Terms and conditions'), findsOneWidget);
+        final signAction = find.byKey(
+          const ValueKey('approval-sign-in-person'),
+        );
+        expect(tester.widget<FilledButton>(signAction).onPressed, isNull);
+        final acceptTerms = find.byKey(
+          const ValueKey('approval-terms-accepted'),
+        );
+        await tester.ensureVisible(acceptTerms);
+        await tester.pumpAndSettle();
+        await tester.tap(acceptTerms);
+        await tester.pumpAndSettle();
         if (signInPerson) {
+          await tester.ensureVisible(signAction);
+          await tester.pumpAndSettle();
           await tester.tap(
             find.byKey(const ValueKey('approval-sign-in-person')),
           );
@@ -119,29 +172,104 @@ void main() {
                 .evaluate()
                 .isNotEmpty,
           );
-          await tester.ensureVisible(find.byKey(const ValueKey('tap-to-sign')));
           await tester.pumpAndSettle();
-          await tester.tap(find.byKey(const ValueKey('tap-to-sign')));
           await tester.pumpAndSettle();
+          expect(find.byType(EstimateApprovalScreen), findsOneWidget);
+          expect(
+            find.byKey(const ValueKey('estimate-signature-screen')),
+            findsNothing,
+          );
+          expect(find.text('Terms and conditions'), findsOneWidget);
           final pad = find.byKey(const ValueKey('estimate-signature-pad'));
           await tester.ensureVisible(pad);
           await tester.pumpAndSettle();
           await tester.drag(pad, const Offset(80, 30));
-          await tester.ensureVisible(find.byType(CheckboxListTile));
+          // Native Back flushes the embedded draft before leaving this route.
+          await tester.binding.handlePopRoute();
+          await waitForNativeSave(
+            tester,
+            () =>
+                find.byType(EstimateApprovalScreen).evaluate().isEmpty &&
+                approval.evaluate().isNotEmpty &&
+                tester.widget<DocumentFormSection>(approval).onTap != null,
+          );
+          await tester.ensureVisible(approval);
           await tester.pumpAndSettle();
-          await tester.tap(find.byType(CheckboxListTile));
+          await tester.tap(approval);
+          await waitForNativeSave(
+            tester,
+            () => acceptTerms.evaluate().isNotEmpty,
+          );
+          await tester.ensureVisible(acceptTerms);
+          await tester.pumpAndSettle();
+          await tester.tap(acceptTerms);
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(signAction);
+          await tester.pumpAndSettle();
+          await tester.tap(signAction);
+          await waitForNativeSave(
+            tester,
+            () => find.text('Signature added').evaluate().isNotEmpty,
+          );
+
+          await tester.ensureVisible(
+            find.byKey(const ValueKey('signature-approval-confirmed')),
+          );
+          await tester.pumpAndSettle();
+          await tester.tap(
+            find.byKey(const ValueKey('signature-approval-confirmed')),
+          );
           await tester.pumpAndSettle();
           final save = find.byKey(const ValueKey('save-customer-signature'));
           await tester.ensureVisible(save);
           await tester.pumpAndSettle();
           await tester.tap(save);
         } else {
+          await tester.ensureVisible(
+            find.byType(DropdownButtonFormField<CustomerApprovalMethod>),
+          );
+          await tester.pumpAndSettle();
           await tester.tap(
             find.byType(DropdownButtonFormField<CustomerApprovalMethod>),
           );
           await tester.pumpAndSettle();
           await tester.tap(find.text(CustomerApprovalMethod.verbal.label).last);
           await tester.pumpAndSettle();
+          final details = find.byKey(const ValueKey('approval-details'));
+          await tester.ensureVisible(details);
+          await tester.enterText(details, 'Customer approved during our call.');
+          FocusManager.instance.primaryFocus?.unfocus();
+          await tester.binding.handlePopRoute();
+          await waitForNativeSave(
+            tester,
+            () =>
+                find.byType(EstimateApprovalScreen).evaluate().isEmpty &&
+                approval.evaluate().isNotEmpty &&
+                tester.widget<DocumentFormSection>(approval).onTap != null,
+          );
+          expect(
+            work.records
+                .firstWhere((r) => r.id == estimate.id)
+                .hasCurrentCustomerApproval,
+            isFalse,
+          );
+          await tester.ensureVisible(approval);
+          await tester.pumpAndSettle();
+          await tester.tap(approval);
+          await waitForNativeSave(
+            tester,
+            () =>
+                details.evaluate().isNotEmpty &&
+                tester
+                    .widget<TextFormField>(details)
+                    .controller!
+                    .text
+                    .isNotEmpty,
+          );
+          expect(
+            tester.widget<TextFormField>(details).controller!.text,
+            'Customer approved during our call.',
+          );
           await tester.ensureVisible(find.text('Record approval'));
           await tester.pumpAndSettle();
           await tester.tap(find.text('Record approval'));
@@ -156,6 +284,7 @@ void main() {
           tester,
           () =>
               find.byType(EstimateApprovalScreen).evaluate().isEmpty &&
+              approval.evaluate().isNotEmpty &&
               tester.widget<DocumentFormSection>(approval).onTap != null,
         );
         expect(find.byType(EstimateEditorScreen), findsOneWidget);

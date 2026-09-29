@@ -1,3 +1,4 @@
+import 'quote_detail_screen.dart';
 import 'package:flutter/material.dart';
 import '../../data/prototype_operations_store.dart';
 import 'estimate_detail_screen.dart';
@@ -18,6 +19,7 @@ Future<void> openSavedWorkDocument(
     MaterialPageRoute(
       builder: (routeContext) {
         return switch (record.kind) {
+          WorkRecordKind.quote => QuoteDetailScreen(recordId: record.id),
           WorkRecordKind.invoice => InvoiceDetailScreen(record: record),
           WorkRecordKind.job => JobWorkspaceScreen(
             workRecord: record,

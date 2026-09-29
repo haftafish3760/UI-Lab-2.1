@@ -1,3 +1,6 @@
+import 'documents/customer_pdf_screen.dart';
+import 'work_customer_document.dart';
+import '../../data/work/work_export_audit.dart';
 import 'work_pdf_delivery.dart';
 import '../../data/work/models/work_contact_models.dart';
 import 'dart:async';
@@ -91,7 +94,9 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         WorkDetailHeader(
-                          label: 'Send estimate',
+                          label: _base.kind == WorkRecordKind.quote
+                              ? 'Send quote'
+                              : 'Send estimate',
                           selectedDay:
                               _base.estimateDates?.createdOn ?? DateTime.now(),
                           onBack: () => leaveDraftRoute(),
@@ -116,6 +121,7 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                         const SizedBox(height: 12),
                         if (_draft != null)
                           EditorDraftStatus(
+                            showRoutineStatus: false,
                             state: _draft!.state,
                             onRetry: _draft!.retry,
                             onDiscard: _discardDelivery,
@@ -132,6 +138,10 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                               const SizedBox(height: 8),
+                              const Text(
+                                'Check the recipient before opening the composer.',
+                              ),
+                              const SizedBox(height: 8),
                               TextField(
                                 key: const ValueKey(
                                   'estimate-delivery-recipient',
@@ -143,12 +153,20 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
                                     _preparedRecord == null,
                                 decoration: InputDecoration(
                                   labelText: _recipientLabel,
-                                  helperText:
-                                      'Check the recipient before opening the composer.',
-                                  helperMaxLines: 3,
                                 ),
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 20),
+                              OutlinedButton.icon(
+                                key: const ValueKey(
+                                  'preview-estimate-for-delivery',
+                                ),
+                                onPressed: _ready && !_saving
+                                    ? _previewCustomerCopy
+                                    : null,
+                                icon: const Icon(Icons.picture_as_pdf_outlined),
+                                label: const Text('View customer PDF'),
+                              ),
+                              const SizedBox(height: 12),
                               CheckboxListTile(
                                 value: _reviewed,
                                 contentPadding: EdgeInsets.zero,
@@ -205,6 +223,48 @@ class _EstimateDeliveryScreenState extends State<EstimateDeliveryScreen>
       ),
     ),
   );
+
+  Future<void> _previewCustomerCopy() async {
+    final work = _work;
+    if (!_ready || _saving || work == null) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await _draft?.flush();
+      final record = _preparedRecord ?? _base;
+      final expected = _preparedRecord == null
+          ? _workflow!.input.baseRevision
+          : work.storageRevisionFor(record.id);
+      final saved = await WorkExportAudit(
+        work,
+      ).assertCurrent(record.id, expected, expectedDocument: record);
+      if (!mounted) return;
+      final store = PrototypeOperationsScope.of(context);
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => CustomerPdfScreen(
+            document: workCustomerDocument(
+              saved,
+              store.companyProfile,
+              resolveWorkDocumentCustomer(saved, store.customers),
+            ),
+          ),
+        ),
+      );
+    } on Object catch (error) {
+      if (mounted) {
+        setState(
+          () => _error = error is StateError
+              ? error.message.toString()
+              : 'The customer PDF could not open. Your input is saved; try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
   String get _recipientLabel => switch (_method) {
     EstimateDeliveryMethod.email => 'Customer email address',

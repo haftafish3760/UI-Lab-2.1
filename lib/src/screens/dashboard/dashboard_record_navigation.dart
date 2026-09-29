@@ -1,3 +1,4 @@
+import '../work/quote_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/prototype_operations_store.dart';
@@ -104,6 +105,12 @@ class DashboardRecordNavigation {
       return;
     }
     switch (record.kind) {
+      case WorkRecordKind.quote:
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => QuoteDetailScreen(recordId: record.id),
+          ),
+        );
       case WorkRecordKind.job:
         await Navigator.of(context).push(
           MaterialPageRoute<void>(

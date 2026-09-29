@@ -1,3 +1,4 @@
+import 'quote_editor_screen.dart';
 import 'package:flutter/material.dart';
 import '../../data/prototype_operations_store.dart';
 import '../../data/work/work_primary_draft_recovery.dart';
@@ -15,6 +16,7 @@ Future<void> openPrimaryWorkRecovery(
 ) async {
   final session = switch (workflow) {
     ResumedEstimateDraft(:final controller) => controller.session,
+    ResumedQuoteDraft(:final controller) => controller.session,
     ResumedInvoiceDraft(:final controller) => controller.session,
     ResumedJobDraft(:final controller) => controller.session,
   };
@@ -24,6 +26,14 @@ Future<void> openPrimaryWorkRecovery(
     if (work == null) throw StateError('Work recovery is unavailable.');
     final Widget editor;
     switch (workflow) {
+      case ResumedQuoteDraft(:final controller):
+        final input = controller.recoveredInput;
+        if (input == null) throw StateError('Quote input is unavailable.');
+        editor = QuoteEditorScreen(
+          initialDay: input.createdOn,
+          initialRecord: input.baseRecord,
+          recoveredWorkflow: controller,
+        );
       case ResumedEstimateDraft(:final controller):
         final input = controller.recoveredInput;
         if (input == null) throw StateError('Estimate input is unavailable.');

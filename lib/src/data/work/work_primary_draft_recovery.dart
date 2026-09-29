@@ -20,6 +20,11 @@ class ResumedEstimateDraft extends ResumedWorkDraft {
   final EstimateDraftController controller;
 }
 
+class ResumedQuoteDraft extends ResumedWorkDraft {
+  const ResumedQuoteDraft(this.controller);
+  final EstimateDraftController controller;
+}
+
 class ResumedInvoiceDraft extends ResumedWorkDraft {
   const ResumedInvoiceDraft(this.controller);
   final InvoiceDraftController controller;
@@ -45,6 +50,7 @@ class WorkPrimaryDraftRecovery {
   late final DraftRecoveryCatalog _catalog;
   static const _kinds = {
     'work/estimate-editor': WorkRecordKind.estimate,
+    'work/quote-editor': WorkRecordKind.quote,
     'work/invoice-editor': WorkRecordKind.invoice,
     'work/job-editor': WorkRecordKind.job,
   };
@@ -53,6 +59,7 @@ class WorkPrimaryDraftRecovery {
       domain: entry.key,
       workflowLabel: switch (entry.value) {
         WorkRecordKind.estimate => 'Estimate',
+        WorkRecordKind.quote => 'Quote',
         WorkRecordKind.invoice => 'Invoice',
         WorkRecordKind.job => 'Job',
       },
@@ -87,8 +94,14 @@ class WorkPrimaryDraftRecovery {
     var parentKind = kind;
     try {
       switch (kind) {
+        case WorkRecordKind.quote:
         case WorkRecordKind.estimate:
           final input = EstimateDraftInput.fromPayload(raw);
+          if (input.documentKind != kind) {
+            throw StateError(
+              'Saved document type does not match this workflow.',
+            );
+          }
           title = input.title.trim().isNotEmpty
               ? input.title
               : (input.client ?? '');
@@ -125,9 +138,9 @@ class WorkPrimaryDraftRecovery {
           recordId = input.jobId;
           parentId = input.sourceEstimate?.id;
           revision = input.sourceStorageRevision;
-          parentKind = WorkRecordKind.estimate;
+          parentKind = input.sourceEstimate?.kind ?? WorkRecordKind.estimate;
           if (input.sourceEstimate != null &&
-              input.sourceEstimate!.kind != parentKind) {
+              !input.sourceEstimate!.isProposal) {
             throw StateError('Job source is inconsistent.');
           }
       }
@@ -207,15 +220,18 @@ class WorkPrimaryDraftRecovery {
       revision: current.revision,
     );
     switch (_kinds[current.domain]!) {
+      case WorkRecordKind.quote:
       case WorkRecordKind.estimate:
         final input = EstimateDraftInput.fromPayload(raw);
-        return ResumedEstimateDraft(
-          await _work.openEstimateDraft(
-            creatorId: input.creatorId,
-            existingRecordId: input.baseRecord?.id,
-            recoverySelection: selection,
-          ),
+        final controller = await _work.openEstimateDraft(
+          documentKind: _kinds[current.domain]!,
+          creatorId: input.creatorId,
+          existingRecordId: input.baseRecord?.id,
+          recoverySelection: selection,
         );
+        return _kinds[current.domain] == WorkRecordKind.quote
+            ? ResumedQuoteDraft(controller)
+            : ResumedEstimateDraft(controller);
       case WorkRecordKind.invoice:
         final input = InvoiceDraftInput.fromPayload(raw);
         return ResumedInvoiceDraft(

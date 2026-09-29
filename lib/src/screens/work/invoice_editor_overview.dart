@@ -63,8 +63,21 @@ extension _InvoiceEditorOverview on _InvoiceEditorScreenState {
         ),
       ],
       [
+        if (_usesServicePrice)
+          _section(
+            'invoice-service-price',
+            context.l10n.workOverallPrice,
+            _servicePrice.text.trim().isEmpty
+                ? context.l10n.workOverallPriceHint
+                : _invoiceMoney(_subtotal),
+            Icons.payments_outlined,
+            () => DocumentAmountField(
+              label: context.l10n.workOverallPrice,
+              controller: _servicePrice,
+            ),
+          ),
         _InvoiceItemsSection(
-          itemCount: _items.length,
+          itemCount: _usesServicePrice ? 0 : _items.length,
           subtotal: _subtotal,
           onOpen: _editItems,
         ),
@@ -131,24 +144,18 @@ extension _InvoiceEditorOverview on _InvoiceEditorScreenState {
     ],
   );
 
-  Widget _identity({required bool customerOnly}) => _InvoiceIdentitySection(
-    customerOnly: customerOnly,
-    number: _number,
-    canEditNumber: widget.initialRecord == null,
-    onNumberChanged: (value) => _updateInput(() => _number = value),
-    title: _title,
-    purchaseOrder: _purchaseOrder,
-    summary: _summary,
-    customers: _store.customers,
-    selectedClient: _client,
-    locations: _locationsFor(_client),
-    selectedLocation: _location,
-    pricing: _pricing,
-    onClientChanged: _selectClient,
-    onLocationChanged: (value) => _updateInput(() => _location = value),
-    onAddClient: _addClient,
-    onPricingChanged: (value) => _updateInput(() => _pricing = value),
-  );
+  Widget _identity({required bool customerOnly}) => customerOnly
+      ? _clientSelection()
+      : _InvoiceIdentitySection(
+          number: _number,
+          canEditNumber: widget.initialRecord == null,
+          onNumberChanged: (value) => _updateInput(() => _number = value),
+          title: _title,
+          purchaseOrder: _purchaseOrder,
+          summary: _summary,
+          pricing: _pricing,
+          onPricingChanged: (value) => _updateInput(() => _pricing = value),
+        );
 
   Widget _section(
     String id,

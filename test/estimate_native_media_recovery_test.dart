@@ -1,3 +1,5 @@
+import 'package:ui_lab_2_1/src/data/storage/draft_autosave_session.dart';
+import 'package:ui_lab_2_1/src/shared/editor_draft_status.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_drafts_screen.dart';
 import 'support/document_form_navigation.dart';
 import 'dart:convert';
@@ -131,10 +133,12 @@ void main() {
           if (restoring) {
             await waitForNativeSave(
               tester,
-              () =>
-                  find.text('Interrupted site estimate').evaluate().isNotEmpty,
+              () => find
+                  .textContaining('Interrupted site estimate')
+                  .evaluate()
+                  .isNotEmpty,
             );
-            await tester.tap(find.text('Interrupted site estimate'));
+            await tester.tap(find.textContaining('Interrupted site estimate'));
           }
           await openDocumentSection(tester, 'estimate-information');
           if (!restoring) {
@@ -215,7 +219,14 @@ void main() {
             tester,
             () =>
                 find.byType(EstimateSitePhotosScreen).evaluate().isEmpty &&
-                find.text('Draft saved on this device').evaluate().isNotEmpty,
+                find
+                    .byWidgetPredicate(
+                      (widget) =>
+                          widget is EditorDraftStatus &&
+                          widget.state == DraftSaveState.savedLocally,
+                    )
+                    .evaluate()
+                    .isNotEmpty,
           );
           expect(
             work.records.where(

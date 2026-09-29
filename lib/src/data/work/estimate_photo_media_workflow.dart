@@ -2,6 +2,7 @@ import '../storage/draft_autosave_session.dart';
 import '../storage/local_media_picker_request.dart';
 import '../storage/native_media_picker_coordinator.dart';
 import 'estimate_media_adoption.dart';
+import 'work_photo_media_adoption.dart';
 import 'estimate_photos_draft_input.dart';
 import 'work_persistence_session.dart';
 
@@ -19,7 +20,7 @@ class EstimatePhotoMediaWorkflow {
   EstimatePhotoMediaWorkflow._(this._draft, this._coordinator, this._adoption);
   final DraftAutosaveSession _draft;
   final NativeMediaPickerCoordinator _coordinator;
-  final EstimateMediaAdoption _adoption;
+  final WorkPhotoMediaAdoption _adoption;
 
   Future<EstimatePhotoSelection?> pendingSelection() async {
     final request = await _coordinator.requests.findFor(
@@ -27,7 +28,7 @@ class EstimatePhotoMediaWorkflow {
       ownerId: _draft.ownerId,
     );
     if (request == null ||
-        request.destination != MediaPickerDestination.estimate ||
+        request.destination != _adoption.destination ||
         request.targetId != _draft.draftId) {
       return null;
     }
@@ -39,7 +40,7 @@ class EstimatePhotoMediaWorkflow {
     final request = await _coordinator.start(
       organizationId: _draft.organizationId,
       ownerId: _draft.ownerId,
-      destination: MediaPickerDestination.estimate,
+      destination: _adoption.destination,
       targetId: _draft.draftId,
       targetRevision: _draft.savedRevision,
       source: source,
@@ -87,7 +88,7 @@ class EstimatePhotoMediaWorkflow {
     if (request.organizationId != _draft.organizationId ||
         request.ownerId != _draft.ownerId ||
         request.targetId != _draft.draftId ||
-        request.destination != MediaPickerDestination.estimate) {
+        request.destination != _adoption.destination) {
       throw StateError('Open the original estimate to recover its photos.');
     }
   }
@@ -107,6 +108,25 @@ extension EstimatePhotoMediaWorkflowFactory on WorkPersistenceSession {
       draft,
       coordinator,
       EstimateMediaAdoption(repository, permissions),
+    );
+  }
+}
+
+extension JobPhotoMediaWorkflowFactory on WorkPersistenceSession {
+  EstimatePhotoMediaWorkflow jobPhotoMediaWorkflow({
+    required DraftAutosaveSession draft,
+    required NativeMediaPickerCoordinator coordinator,
+  }) {
+    if (draft.organizationId != permissions.organizationId ||
+        draft.ownerId != permissions.actorEmployeeId ||
+        draft.domain != 'work/job-photos' ||
+        !permissions.canAttachJobPhotos) {
+      throw StateError('Job photo access is unavailable.');
+    }
+    return EstimatePhotoMediaWorkflow._(
+      draft,
+      coordinator,
+      WorkPhotoMediaAdoption.job(repository, permissions),
     );
   }
 }

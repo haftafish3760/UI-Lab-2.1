@@ -195,7 +195,7 @@ class EmployeeWorkStatusDetailScreen extends StatelessWidget {
                                   : status.workday == null &&
                                         status.recordedTime == Duration.zero
                                   ? 'No workday time recorded today'
-                                  : 'Time recorded today: ${_duration(status.recordedTime)}',
+                                  : '${status.includesTimeOutsideToday ? 'Workday time across midnight' : 'Time recorded today'}: ${_duration(status.recordedTime)}',
                             ),
                           ],
                         ),

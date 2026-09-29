@@ -73,30 +73,10 @@ class _WorkDailySection extends StatelessWidget {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              record.client,
-                              style: const TextStyle(
-                                color: OperationalCardTone.darkInk,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              record.title,
-                              style: const TextStyle(
-                                color: OperationalCardTone.darkInk,
-                              ),
-                            ),
-                            Text(
-                              '${record.number} · ${record.status.label} · ${_time(context, record)}${plan ? ' · ${record.assignee ?? 'Unassigned'}' : ''}',
-                              style: const TextStyle(
-                                color: OperationalCardTone.darkInk,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
+                        child: _WorkRowDetails(
+                          record: record,
+                          plan: plan,
+                          time: _time(context, record),
                         ),
                       ),
                       if (plan && onAssign != null)

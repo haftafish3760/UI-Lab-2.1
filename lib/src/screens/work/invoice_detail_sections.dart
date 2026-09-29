@@ -5,20 +5,24 @@ class _InvoiceDetailHeading extends StatelessWidget {
     required this.invoice,
     required this.balanceCents,
     required this.showFinancials,
+    required this.collectionStatus,
   });
 
   final WorkRecord invoice;
   final int balanceCents;
   final bool showFinancials;
+  final InvoiceCollectionStatus? collectionStatus;
 
   @override
   Widget build(BuildContext context) {
     final semantic = Theme.of(context).extension<AppSemanticColors>()!;
-    final color = switch (invoice.status) {
-      WorkRecordStatus.paid => semantic.success,
-      WorkRecordStatus.draft => semantic.draft,
-      _ => semantic.current,
-    };
+    final color = collectionStatus == InvoiceCollectionStatus.paid
+        ? semantic.success
+        : collectionStatus?.isOverdue == true
+        ? semantic.attention
+        : invoice.status == WorkRecordStatus.draft
+        ? semantic.draft
+        : semantic.current;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: color.withValues(alpha: .13),
@@ -46,7 +50,8 @@ class _InvoiceDetailHeading extends StatelessWidget {
                   Text(
                     invoice.status == WorkRecordStatus.draft
                         ? 'Draft · Not issued to the customer'
-                        : invoice.status.label,
+                        : collectionStatus?.localizedLabel(context.l10n) ??
+                              invoice.status.label,
                     style: TextStyle(color: color, fontWeight: FontWeight.w700),
                   ),
                 ],
@@ -335,7 +340,7 @@ class _InvoicePaymentHistory extends StatelessWidget {
                 alignment: WrapAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${_invoiceDetailDate(context, payment.occurredOn)}${payment.paymentMethod.isEmpty ? '' : ' · ${payment.paymentMethod}'}',
+                    '${payment.kind == PrototypeFinancialKind.paymentApplied ? 'Deposit applied · ' : ''}${_invoiceDetailDate(context, payment.occurredOn)}${payment.paymentMethod.isEmpty ? '' : ' · ${payment.paymentMethod}'}',
                   ),
                   Text(
                     _invoiceDetailMoney(payment.amountCents / 100),

@@ -7,7 +7,9 @@ bool paymentBelongsToInvoice(
   PrototypeFinancialEntry entry,
   WorkRecord invoice,
 ) =>
-    entry.kind == PrototypeFinancialKind.paymentReceived &&
+    (entry.kind == PrototypeFinancialKind.paymentReceived ||
+        entry.kind == PrototypeFinancialKind.paymentApplied) &&
+    entry.paymentLinkKind == PaymentLinkKind.invoice &&
     (entry.sourceId == invoice.id || entry.sourceId == invoice.number);
 
 int invoicePaidCents(

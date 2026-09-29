@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 import uuid
+from host_test_lease import HostTestLease
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = Path(__file__).with_name('suites.json')
@@ -121,7 +122,7 @@ def select_paths(root, manifest, suites=None, *, all_tests=False):
     return paths
 
 
-def main():
+def run():
     parser = argparse.ArgumentParser(description=__doc__)
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument('--suite', action='append', choices=['core', 'domains', 'editors'])
@@ -198,6 +199,15 @@ def main():
         write_report()
         print(f'Report: {report_file}', flush=True)
     return 130 if interrupted else (0 if report['passed'] else 1)
+
+
+def main():
+    try:
+        with HostTestLease():
+            return run()
+    except RuntimeError as error:
+        print(str(error), file=sys.stderr)
+        return 1
 
 
 if __name__ == '__main__':

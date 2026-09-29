@@ -236,10 +236,13 @@ class DirectoryPersistenceSession extends ChangeNotifier {
       try {
         // Admission above owns the lifecycle check. Disposal must not cancel
         // an already accepted write while it waits behind another operation.
-        if (proposed.logoReference.isNotEmpty && proposed.logoReference != _company.logoReference) {
+        if (proposed.logoReference.isNotEmpty &&
+            proposed.logoReference != _company.logoReference) {
           await LocalAttachmentStore(database).verifiedFiles(
-            organizationId: permissions.organizationId, ownerIds: {permissions.organizationId},
-            attachmentIds: {proposed.logoReference});
+            organizationId: permissions.organizationId,
+            ownerIds: {permissions.organizationId},
+            attachmentIds: {proposed.logoReference},
+          );
         }
         if (proposed.companyName.trim().isEmpty) {
           throw StateError('Enter the company name.');

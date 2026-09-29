@@ -1,4 +1,7 @@
+import 'support/visible_control.dart';
+import 'support/load_material_test_font.dart';
 import 'support/document_form_navigation.dart';
+import 'package:ui_lab_2_1/src/screens/work/work_month_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -43,6 +46,7 @@ Future<void> _pumpInvoices(
           child: MaterialApp(
             theme: AppTheme.light,
             home: InvoiceWorkspaceScreen(
+              showDateActivity: true,
               initialDay: DateTime.now(),
               permissions: permissions,
             ),
@@ -92,6 +96,7 @@ Future<void> _pumpInvoiceDetail(
 }
 
 void main() {
+  setUpAll(loadMaterialTestFont);
   registerInvoiceAttentionWorkflowTests();
   registerInvoiceCalendarRoutingTests();
   testWidgets('Invoice workspace enforces view permission at the route', (
@@ -164,7 +169,7 @@ void main() {
     expect(find.byKey(const ValueKey('invoice-search')), findsOneWidget);
     expect(find.byKey(const ValueKey('new-invoice')), findsOneWidget);
     expect(find.text('Selected date'), findsNothing);
-    expect(find.text('All invoices'), findsNothing);
+    expect(find.text('All invoices'), findsOneWidget);
 
     final row = find.byKey(const ValueKey('invoice-row-inv-2088'));
     expect(row, findsOneWidget);
@@ -175,7 +180,12 @@ void main() {
       tester.element(row),
     ).formatFullDate(invoice.issuedOn!);
 
-    expect(tester.getSize(row).height, lessThanOrEqualTo(72));
+    // Includes one compact line explaining activity on the selected date.
+    expect(tester.getSize(row).height, lessThanOrEqualTo(96));
+    expect(
+      find.descendant(of: row, matching: find.text('Issued')),
+      findsOneWidget,
+    );
     await tester.tap(
       find.ancestor(of: row, matching: find.byType(InkWell)).first,
     );
@@ -198,6 +208,19 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Invoices do not offer an empty Drafts destination', (
+    tester,
+  ) async {
+    await _pumpInvoices(
+      tester,
+      const Size(390, 844),
+      store: PrototypeOperationsStore(workRecords: const []),
+    );
+    expect(find.byKey(const ValueKey('open-work-drafts')), findsNothing);
+    expect(find.byKey(const ValueKey('invoice-selected-date')), findsOneWidget);
+    expect(find.byKey(const ValueKey('new-invoice')), findsOneWidget);
+  });
+
   testWidgets('New invoice uses a dedicated job-aware draft editor', (
     tester,
   ) async {
@@ -207,6 +230,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('invoice-editor-screen')), findsOneWidget);
     expect(find.text('Direct invoice'), findsOneWidget);
+    await revealControl(
+      tester,
+      find.byKey(const ValueKey('save-invoice-draft')),
+    );
     expect(find.text('Save draft'), findsOneWidget);
 
     await openDocumentSection(tester, 'invoice-source');
@@ -244,12 +271,15 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('new-invoice')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('save-invoice-draft')));
+    await tapVisibleControl(
+      tester,
+      find.byKey(const ValueKey('save-invoice-draft')),
+    );
     await tester.pumpAndSettle();
 
     expect(
       find.text(
-        'Choose a customer and enter the work completed with at least one invoice item.',
+        'Choose a customer, describe the work, and enter a price or add items.',
       ),
       findsOneWidget,
     );
@@ -277,7 +307,10 @@ void main() {
       await tester.tap(find.textContaining('JOB-1026').last);
       await tester.pumpAndSettle();
       await closeDocumentSection(tester);
-      await tester.tap(find.byKey(const ValueKey('save-invoice-draft')));
+      await tapVisibleControl(
+        tester,
+        find.byKey(const ValueKey('save-invoice-draft')),
+      );
       await tester.pumpAndSettle();
 
       final saved = store.workRecords.lastWhere(
@@ -320,7 +353,13 @@ void main() {
   testWidgets('Invoice rows reflow accessibility text', (tester) async {
     await _pumpInvoices(tester, const Size(320, 844), textScale: 2);
     expect(find.text('Maya Thompson'), findsOneWidget);
-    expect(find.text(r'$685.00'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('invoice-row-inv-2088')),
+        matching: find.text(r'$685.00'),
+      ),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -333,6 +372,10 @@ void main() {
 
     expect(find.byKey(const ValueKey('invoice-editor-screen')), findsOneWidget);
     expect(find.text('Invoice information'), findsOneWidget);
+    await revealControl(
+      tester,
+      find.byKey(const ValueKey('save-invoice-draft')),
+    );
     expect(find.text('Save draft'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -433,7 +476,7 @@ void main() {
           .sourceId,
       'INV-2088',
     );
-    expect(find.text('Paid'), findsOneWidget);
+    expect(find.text('Paid in full'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -465,6 +508,26 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('work-5-7-calendar')), findsOneWidget);
+      final action = find.byKey(const ValueKey('new-invoice'));
+      final content = find.byKey(const ValueKey('invoice-activity-content'));
+      expect(action.hitTestable(), findsOneWidget);
+      final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+      expect(scaffold.bottomSheet, isNull);
+      expect(scaffold.bottomNavigationBar, isNull);
+      final fabBounds = tester.getRect(action);
+      final scrolling = tester.state<ScrollableState>(
+        find.descendant(of: content, matching: find.byType(Scrollable)).first,
+      );
+      final previousOffset = scrolling.position.pixels;
+      await tester.dragFrom(
+        tester.getRect(content).bottomLeft + const Offset(8, -160),
+        Offset(0, previousOffset > 0 ? 240 : -240),
+      );
+      await tester.pumpAndSettle();
+      expect(scrolling.position.pixels, isNot(previousOffset));
+      expect(tester.getRect(action), fabBounds);
+      expect(find.byKey(const ValueKey('new-invoice-inline')), findsNothing);
+
       if (width == 1440) {
         expect(
           tester.getSize(find.byKey(const ValueKey('work-5-7-calendar'))).width,

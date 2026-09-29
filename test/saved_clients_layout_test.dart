@@ -48,19 +48,29 @@ Future<void> _pumpDirectory(
 Finder _client(String id) => find.byKey(ValueKey('saved-client-$id'));
 
 void main() {
-  testWidgets('Saved Clients uses three bounded desktop lanes', (tester) async {
+  testWidgets('Saved Clients uses bounded readable rows on desktop', (
+    tester,
+  ) async {
     await _pumpDirectory(tester, const Size(1440, 900));
 
     final garcia = _client('customer-garcia');
     final miller = _client('customer-miller');
     final thompson = _client('customer-thompson');
-    expect(tester.getTopLeft(garcia).dy, tester.getTopLeft(miller).dy);
-    expect(tester.getTopLeft(miller).dy, tester.getTopLeft(thompson).dy);
-    expect(tester.getSize(garcia).width, inInclusiveRange(340, 480));
+    expect(
+      tester.getTopLeft(garcia).dy,
+      lessThan(tester.getTopLeft(miller).dy),
+    );
+    expect(
+      tester.getTopLeft(miller).dy,
+      lessThan(tester.getTopLeft(thompson).dy),
+    );
+    expect(tester.getSize(garcia).width, lessThanOrEqualTo(760));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Saved Clients collapses lanes for large text', (tester) async {
+  testWidgets('Saved Clients keeps readable rows for large text', (
+    tester,
+  ) async {
     await _pumpDirectory(tester, const Size(800, 900), textScale: 2);
 
     final garcia = _client('customer-garcia');
@@ -74,7 +84,7 @@ void main() {
       tester.getTopLeft(miller).dy,
       lessThan(tester.getTopLeft(thompson).dy),
     );
-    expect(tester.getSize(garcia).width, lessThanOrEqualTo(600));
+    expect(tester.getSize(garcia).width, lessThanOrEqualTo(760));
     expect(tester.takeException(), isNull);
   });
 }

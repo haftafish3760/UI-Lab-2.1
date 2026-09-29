@@ -14,9 +14,11 @@ class StoredEstimateItemsEditor extends StatefulWidget {
     required this.record,
     required this.work,
     this.recoveredWorkflow,
+    this.editingFromReview = false,
     super.key,
   });
   final WorkRecord record;
+  final bool editingFromReview;
   final WorkPersistenceSession work;
   final EstimateItemsDraftController? recoveredWorkflow;
   @override
@@ -117,6 +119,7 @@ class _StoredEstimateItemsEditorState extends State<StoredEstimateItemsEditor> {
   @override
   Widget build(BuildContext context) => _ready
       ? EstimateItemsScreen(
+          editingFromReview: widget.editingFromReview,
           initialItems: _base.items,
           pricing: _base.pricing,
           selectedDay: _base.estimateDates?.createdOn ?? _base.createdOn,

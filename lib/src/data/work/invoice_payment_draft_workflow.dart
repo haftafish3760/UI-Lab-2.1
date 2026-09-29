@@ -6,6 +6,7 @@ import '../storage/draft_workflow_controller.dart';
 import '../storage/local_draft_checkpoint.dart';
 import '../storage/local_record_identity.dart';
 import 'models/work_models.dart';
+import 'invoice_payment_balance.dart';
 import 'work_persistence_session.dart';
 
 class InvoicePaymentInputValidation implements Exception {
@@ -33,14 +34,19 @@ class InvoicePaymentInput {
     required String invoiceId,
     required int balanceCents,
     required DateTime day,
-  }) => InvoicePaymentInput(
-    invoiceId: invoiceId,
-    paymentId: newLocalRecordIdentity('payment'),
-    amount: (balanceCents / 100).toStringAsFixed(2),
-    note: '',
-    method: 'Card',
-    receivedOn: DateTime(day.year, day.month, day.day),
-  );
+  }) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selected = DateTime(day.year, day.month, day.day);
+    return InvoicePaymentInput(
+      invoiceId: invoiceId,
+      paymentId: newLocalRecordIdentity('payment'),
+      amount: (balanceCents / 100).toStringAsFixed(2),
+      note: '',
+      method: 'Card',
+      receivedOn: selected.isAfter(today) ? today : selected,
+    );
+  }
 
   InvoicePaymentInput withValues({
     required String amount,
@@ -77,6 +83,16 @@ class InvoicePaymentInput {
     required WorkRecord invoice,
     required int balanceCents,
   }) {
+    final today = DateTime.now();
+    if (DateTime(
+      receivedOn.year,
+      receivedOn.month,
+      receivedOn.day,
+    ).isAfter(DateTime(today.year, today.month, today.day))) {
+      throw const InvoicePaymentInputValidation(
+        'Choose today or an earlier date for money already received.',
+      );
+    }
     if (invoice.id != invoiceId ||
         invoice.kind != WorkRecordKind.invoice ||
         paymentId.isEmpty ||
@@ -205,15 +221,7 @@ extension InvoicePaymentDraftWorkflow on WorkPersistenceSession {
 
     int balance() {
       final current = invoice();
-      final paid = financialEntries
-          .where(
-            (entry) =>
-                entry.kind == PrototypeFinancialKind.paymentReceived &&
-                (entry.sourceId == current.id ||
-                    entry.sourceId == current.number),
-          )
-          .fold(0, (sum, entry) => sum + entry.amountCents);
-      return (current.total * 100).round() - paid;
+      return invoiceBalanceCents(current, financialEntries);
     }
 
     final initialBalance = balance();

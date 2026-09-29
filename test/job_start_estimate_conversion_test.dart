@@ -1,3 +1,4 @@
+import 'support/visible_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -118,8 +119,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(EstimateDetailScreen), findsOneWidget);
       final action = find.byKey(const ValueKey('estimate-primary-job'));
-      await tester.ensureVisible(action);
-      await tester.tap(action);
+      await tapVisibleControl(tester, action);
       await tester.pumpAndSettle();
       expect(find.byType(WorkJobEditor), findsOneWidget);
       expect(

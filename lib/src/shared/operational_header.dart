@@ -195,7 +195,20 @@ class OperationalHeader extends StatelessWidget {
                 controlKey: viewKey,
               ),
             ),
-            const Spacer(),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  headerTitle ?? '',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.onHeader,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
             SizedBox(
               width: layout.vehicleWidth,
               height: layout.controlHeight,

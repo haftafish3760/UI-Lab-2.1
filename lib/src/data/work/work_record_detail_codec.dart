@@ -146,6 +146,8 @@ Map<String, Object?> encodeEstimateCompanyReviewEvent(
   'occurredOn': value.occurredOn.toIso8601String(),
   'revision': value.revision,
   'note': value.note,
+  if (value.contentFingerprint != null)
+    'contentFingerprint': value.contentFingerprint,
 };
 
 EstimateCompanyReviewEvent decodeEstimateCompanyReviewEvent(
@@ -158,6 +160,7 @@ EstimateCompanyReviewEvent decodeEstimateCompanyReviewEvent(
   occurredOn: DateTime.parse(json['occurredOn'] as String),
   revision: json['revision'] as int,
   note: json['note'] as String,
+  contentFingerprint: json['contentFingerprint'] as String?,
 );
 
 Map<String, Object?> encodeWorkSitePhoto(WorkSitePhoto value) => {

@@ -1,3 +1,7 @@
+import 'work_customer_signature.dart';
+export 'work_customer_signature.dart';
+import 'invoice_approval.dart';
+export 'invoice_approval.dart';
 import 'work_contact_models.dart';
 import 'work_customer_approval.dart';
 export 'work_customer_approval.dart';
@@ -14,7 +18,10 @@ export 'work_record_item_revision.dart';
 
 const _workRecordValueUnchanged = Object();
 
-enum WorkRecordKind { estimate, job, invoice }
+enum WorkRecordKind { estimate, job, invoice, quote }
+
+/// Customer-facing detail level; independent of how prices are calculated.
+enum WorkDocumentPresentation { detailed, summary }
 
 enum WorkRecordStatus {
   draft('Draft'),
@@ -35,37 +42,6 @@ enum WorkRecordStatus {
   final String label;
 }
 
-class WorkCustomerSignature {
-  const WorkCustomerSignature({
-    required this.signedBy,
-    required this.signedOn,
-    required this.signedRevision,
-    this.ink,
-    this.invalidatedOn,
-    this.invalidationReason,
-  });
-
-  final SignatureInk? ink;
-  final String signedBy;
-  final DateTime signedOn;
-  final int signedRevision;
-  final DateTime? invalidatedOn;
-  final String? invalidationReason;
-
-  bool isCurrentFor(int revision) =>
-      invalidatedOn == null && signedRevision == revision;
-
-  WorkCustomerSignature invalidate(DateTime changedOn, String reason) =>
-      WorkCustomerSignature(
-        ink: ink,
-        signedBy: signedBy,
-        signedOn: signedOn,
-        signedRevision: signedRevision,
-        invalidatedOn: changedOn,
-        invalidationReason: reason,
-      );
-}
-
 class WorkRecord {
   const WorkRecord({
     required this.id,
@@ -77,6 +53,7 @@ class WorkRecord {
     this.customerSnapshot,
     required this.detail,
     required this.pricing,
+    this.documentPresentation = WorkDocumentPresentation.detailed,
     this.sourceId,
     this.assignee,
     this.assignedEmployeeIds = const [],
@@ -96,6 +73,7 @@ class WorkRecord {
     this.template = 'Service standard',
     this.terms = 'Payment due at time of service.',
     this.paymentMethod = 'Not selected',
+    this.requiredDepositCents = 0,
     this.discount = 0,
     this.tax = 0,
     this.total = 0,
@@ -107,6 +85,8 @@ class WorkRecord {
     this.estimateDates,
     this.estimateDeliveries = const [],
     this.estimateRevisionHistory = const [],
+    this.requiresInvoiceApproval = false,
+    this.invoiceApprovalHistory = const [],
     this.requiresCompanyReview = false,
     this.estimateCompanyReviewStatus = EstimateCompanyReviewStatus.notRequired,
     this.estimateCompanyReviewNote = '',
@@ -124,6 +104,7 @@ class WorkRecord {
   final WorkCustomerProfile? customerSnapshot;
   final String detail;
   final WorkPricingModel pricing;
+  final WorkDocumentPresentation documentPresentation;
   final String? sourceId;
   final String? assignee;
   final List<String> assignedEmployeeIds;
@@ -145,6 +126,7 @@ class WorkRecord {
   final String template;
   final String terms;
   final String paymentMethod;
+  final int requiredDepositCents;
   final double discount;
   final double tax;
   final double total;
@@ -153,6 +135,9 @@ class WorkRecord {
   final WorkCustomerSignature? businessSignature;
   final List<WorkCustomerApproval> customerApprovals;
 
+  bool get isProposal =>
+      kind == WorkRecordKind.estimate || kind == WorkRecordKind.quote;
+
   bool get hasCurrentCustomerApproval =>
       hasCurrentCustomerSignature ||
       customerApprovals.any((approval) => approval.revision == revision);
@@ -160,6 +145,8 @@ class WorkRecord {
   final EstimateDates? estimateDates;
   final List<EstimateDeliveryRecord> estimateDeliveries;
   final List<EstimateRevisionRecord> estimateRevisionHistory;
+  final bool requiresInvoiceApproval;
+  final List<InvoiceApprovalEvent> invoiceApprovalHistory;
   final bool requiresCompanyReview;
   final EstimateCompanyReviewStatus estimateCompanyReviewStatus;
   final String estimateCompanyReviewNote;
@@ -167,7 +154,10 @@ class WorkRecord {
   final List<WorkSitePhoto> sitePhotos;
   final List<String> linkedExpenseIds;
 
-  EstimateStage get resolvedEstimateStage {
+  EstimateStage get resolvedEstimateStage => estimateStageOn(DateTime.now());
+
+  /// Resolves date-dependent state using the caller's reporting date.
+  EstimateStage estimateStageOn(DateTime today) {
     final stage =
         estimateStage ??
         switch (status) {
@@ -178,7 +168,6 @@ class WorkRecord {
           _ => EstimateStage.archived,
         };
     final expiry = estimateDates?.expiresOn;
-    final today = DateTime.now();
     if (stage.isOpen &&
         stage != EstimateStage.approved &&
         expiry != null &&
@@ -200,7 +189,7 @@ class WorkRecord {
       estimateCompanyReviewStatus == EstimateCompanyReviewStatus.approved;
 
   bool occursOn(DateTime day) {
-    if (kind == WorkRecordKind.estimate && estimateDates != null) {
+    if (isProposal && estimateDates != null) {
       return estimateDates!.hasActivityOn(day);
     }
     if (kind == WorkRecordKind.invoice) {
@@ -236,6 +225,8 @@ class WorkRecord {
     String? jobNotes,
     DateTime? issuedOn,
     DateTime? dueOn,
+    bool? requiresInvoiceApproval,
+    List<InvoiceApprovalEvent>? invoiceApprovalHistory,
     bool? requiresCompanyReview,
     EstimateCompanyReviewStatus? estimateCompanyReviewStatus,
     String? estimateCompanyReviewNote,
@@ -253,6 +244,7 @@ class WorkRecord {
     customerSnapshot: customerSnapshot,
     detail: detail,
     pricing: pricing,
+    documentPresentation: documentPresentation,
     sourceId: sourceId,
     assignee: assignee ?? this.assignee,
     assignedEmployeeIds: List.unmodifiable(
@@ -275,6 +267,7 @@ class WorkRecord {
     items: items,
     template: template,
     terms: terms,
+    requiredDepositCents: requiredDepositCents,
     paymentMethod: paymentMethod,
     discount: discount,
     tax: tax,
@@ -289,6 +282,11 @@ class WorkRecord {
     estimateDates: estimateDates,
     estimateDeliveries: estimateDeliveries,
     estimateRevisionHistory: estimateRevisionHistory,
+    requiresInvoiceApproval:
+        requiresInvoiceApproval ?? this.requiresInvoiceApproval,
+    invoiceApprovalHistory: List.unmodifiable(
+      invoiceApprovalHistory ?? this.invoiceApprovalHistory,
+    ),
     requiresCompanyReview: requiresCompanyReview ?? this.requiresCompanyReview,
     estimateCompanyReviewStatus:
         estimateCompanyReviewStatus ?? this.estimateCompanyReviewStatus,
@@ -304,7 +302,7 @@ class WorkRecord {
   );
 
   WorkRecord withEstimateStage(EstimateStage stage, DateTime changedOn) {
-    assert(kind == WorkRecordKind.estimate);
+    if (!isProposal) throw StateError('Only proposals support this action.');
     final mappedStatus = switch (stage) {
       EstimateStage.draft => WorkRecordStatus.draft,
       EstimateStage.readyToSend ||
@@ -338,7 +336,7 @@ class WorkRecord {
     required DateTime occurredOn,
     bool confirmedDelivered = false,
   }) {
-    assert(kind == WorkRecordKind.estimate);
+    if (!isProposal) throw StateError('Only proposals support this action.');
     if (!companyReviewAllowsCustomerApproval) {
       throw StateError(
         'Company approval is required before this estimate can be sent.',
@@ -374,7 +372,7 @@ class WorkRecord {
     SignatureInk? ink,
     String? onlineEvidence,
   }) {
-    assert(kind == WorkRecordKind.estimate);
+    if (!isProposal) throw StateError('Only proposals support this action.');
     if (!companyReviewAllowsCustomerApproval) {
       throw StateError(
         'Company approval is required before customer approval can be recorded.',
@@ -427,6 +425,7 @@ class WorkRecord {
     customerSnapshot: customerSnapshot,
     detail: detail,
     pricing: pricing,
+    documentPresentation: documentPresentation,
     sourceId: sourceId,
     assignee: assignee,
     assignedEmployeeIds: assignedEmployeeIds,
@@ -445,6 +444,7 @@ class WorkRecord {
     items: items,
     template: template,
     terms: terms,
+    requiredDepositCents: requiredDepositCents,
     paymentMethod: paymentMethod,
     discount: discount,
     tax: tax,

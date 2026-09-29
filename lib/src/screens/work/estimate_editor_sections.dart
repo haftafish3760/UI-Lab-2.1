@@ -10,21 +10,15 @@ class _EstimateSitePhotosSection extends StatelessWidget {
   final VoidCallback onOpen;
 
   @override
-  Widget build(BuildContext context) => SectionCard(
-    padding: EdgeInsets.zero,
-    child: ListTile(
-      key: const ValueKey('estimate-site-photos'),
-      minTileHeight: 60,
-      leading: const Icon(Icons.photo_camera_outlined),
-      title: const Text('Job-site photos and notes'),
-      subtitle: Text(
-        photoCount == 0
-            ? 'Add pictures for later pricing and field reference'
-            : '$photoCount ${photoCount == 1 ? 'photo' : 'photos'} saved internally',
-      ),
-      trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: onOpen,
-    ),
+  Widget build(BuildContext context) => DocumentFormSection(
+    borderColor: Theme.of(context).colorScheme.onSurfaceVariant,
+    key: const ValueKey('estimate-site-photos'),
+    title: 'Photos',
+    summary: photoCount == 0
+        ? 'Add photos'
+        : '$photoCount ${photoCount == 1 ? 'photo' : 'photos'} · Add or review',
+    icon: Icons.add_a_photo_outlined,
+    onTap: onOpen,
   );
 }
 
@@ -33,27 +27,17 @@ class _EstimateIdentitySection extends StatelessWidget {
     required this.number,
     required this.canEditNumber,
     required this.onNumberChanged,
-    this.customerOnly = false,
     required this.title,
     required this.purchaseOrder,
     required this.scope,
-    required this.customers,
-    required this.selectedClient,
-    required this.onClientChanged,
-    required this.onAddClient,
   });
 
   final String number;
   final bool canEditNumber;
   final ValueChanged<String> onNumberChanged;
-  final bool customerOnly;
   final TextEditingController title;
   final TextEditingController purchaseOrder;
   final TextEditingController scope;
-  final List<WorkCustomerProfile> customers;
-  final String? selectedClient;
-  final ValueChanged<String?> onClientChanged;
-  final VoidCallback onAddClient;
 
   @override
   Widget build(BuildContext context) => UtilityFormSection(
@@ -61,65 +45,34 @@ class _EstimateIdentitySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          customerOnly ? 'Client information' : 'Estimate information',
+          'Estimate information',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 12),
-        if (customerOnly) ...[
-          KeyedSubtree(
-            key: const ValueKey('estimate-client-field'),
-            child: DropdownButtonFormField<String>(
-              key: ValueKey(
-                'estimate-client-value-${selectedClient ?? 'none'}',
+        ...[
+          _labeledField(
+            context,
+            'Estimate title',
+            TextField(
+              key: const ValueKey('estimate-title'),
+              controller: title,
+              textInputAction: TextInputAction.next,
+              decoration: _lineDecoration(
+                hintText: 'Example: Replace kitchen faucet',
               ),
-              initialValue: selectedClient,
-              isExpanded: true,
-              itemHeight: null,
-              decoration: const InputDecoration(
-                labelText: 'Client',
-                helperText:
-                    'The estimate remains linked to this client history.',
-                helperMaxLines: 4,
-              ),
-              items: [
-                if (selectedClient != null &&
-                    !customers.any((customer) => customer.id == selectedClient))
-                  DropdownMenuItem<String>(
-                    value: selectedClient,
-                    child: Text(selectedClient!),
-                  ),
-                for (final customer in customers)
-                  DropdownMenuItem<String>(
-                    value: customer.id,
-                    child: Text(
-                      '${customer.name}${customer.companyName.isEmpty ? '' : ' · ${customer.companyName}'}${customer.phone.isEmpty ? '' : ' · ${customer.phone}'}',
-                    ),
-                  ),
-              ],
-              onChanged: onClientChanged,
             ),
           ),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: TextButton.icon(
-              key: const ValueKey('estimate-add-client'),
-              onPressed: onAddClient,
-              icon: const Icon(Icons.person_add_alt_1_outlined),
-              label: const Text('Add new client'),
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
-        if (!customerOnly) ...[
+          const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
               final numberField = _labeledField(
                 context,
-                'Document number',
+                'Estimate number',
                 TextFormField(
                   key: const ValueKey('estimate-document-number'),
                   initialValue: number,
                   readOnly: !canEditNumber,
+                  textInputAction: TextInputAction.next,
                   onChanged: canEditNumber ? onNumberChanged : null,
                   decoration: _lineDecoration().copyWith(
                     helperText: canEditNumber
@@ -133,6 +86,7 @@ class _EstimateIdentitySection extends StatelessWidget {
                 'Purchase order number (optional)',
                 TextField(
                   controller: purchaseOrder,
+                  textInputAction: TextInputAction.next,
                   decoration: _lineDecoration(),
                 ),
               );
@@ -160,28 +114,16 @@ class _EstimateIdentitySection extends StatelessWidget {
             },
           ),
           const SizedBox(height: 14),
-          _labeledField(
-            context,
-            'Estimate title',
-            TextField(
-              key: const ValueKey('estimate-title'),
-              controller: title,
-              decoration: _lineDecoration(
-                hintText: 'Example: Replace kitchen faucet',
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          _fieldLabel(context, 'Proposed work'),
+          _fieldLabel(context, 'Description of work'),
           const SizedBox(height: 4),
           TextField(
+            key: const ValueKey('estimate-work-description'),
             controller: scope,
             keyboardType: TextInputType.multiline,
             minLines: 4,
             maxLines: null,
             decoration: _lineDecoration(
-              helperText: 'State what is included, excluded, and expected.',
-              helperMaxLines: 4,
+              hintText: 'Describe the work to be completed.',
             ),
           ),
         ],

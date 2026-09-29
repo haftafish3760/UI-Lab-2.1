@@ -53,15 +53,18 @@ class MasonryPdfLayout {
     ),
   );
   List<String> chunks(String value, [int length = 220]) {
-    if (value.isEmpty) return [''];
+    if (value.isEmpty) {
+      return [''];
+    }
     final result = <String>[];
     var remaining = value;
     while (remaining.length > length) {
       var end = remaining.lastIndexOf(' ', length);
       if (end < 1) end = length;
       if (remaining.codeUnitAt(end - 1) >= 0xd800 &&
-          remaining.codeUnitAt(end - 1) <= 0xdbff)
+          remaining.codeUnitAt(end - 1) <= 0xdbff) {
         end--;
+      }
       result.add(remaining.substring(0, end));
       remaining = remaining.substring(end);
     }
@@ -159,15 +162,16 @@ class MasonryPdfLayout {
           '${date(data.proposedServiceOn!)} — subject to scheduling confirmation',
         ),
       pw.SizedBox(height: 7),
-      pw.Table(
-        columnWidths: const {
-          0: pw.FlexColumnWidth(0.8),
-          1: pw.FlexColumnWidth(3.6),
-          2: pw.FlexColumnWidth(1.35),
-          3: pw.FlexColumnWidth(1.35),
-        },
-        children: rows,
-      ),
+      if (!data.isSummary)
+        pw.Table(
+          columnWidths: const {
+            0: pw.FlexColumnWidth(0.8),
+            1: pw.FlexColumnWidth(3.6),
+            2: pw.FlexColumnWidth(1.35),
+            3: pw.FlexColumnWidth(1.35),
+          },
+          children: rows,
+        ),
       pw.SizedBox(height: 7),
       pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -188,6 +192,10 @@ class MasonryPdfLayout {
                   data.totalCents,
                   bold: true,
                 ),
+                if (data.paidCents != null) ...[
+                  _total('Paid', -data.paidCents!),
+                  _total('AMOUNT DUE', data.balanceCents!, bold: true),
+                ],
               ],
             ),
           ),

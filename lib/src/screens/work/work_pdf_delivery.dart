@@ -7,7 +7,6 @@ import '../../data/prototype_operations_store.dart';
 import 'documents/document_pdf_assets.dart';
 import 'work_customer_document.dart';
 import 'work_models.dart';
-import 'estimate_models.dart';
 import '../../data/work/work_export_audit.dart';
 
 enum WorkPdfAction { share, save, print }
@@ -22,40 +21,29 @@ Future<void> deliverWorkPdf(
 }) async {
   final store = PrototypeOperationsScope.of(context);
   final work = store.workSession;
-  work?.requireActiveDraftOwner();
-  final saved = work?.records.where((r) => r.id == record.id).firstOrNull;
-  if (work != null &&
-      (saved == null ||
-          saved.revision != record.revision ||
-          !work.permissions.canEdit(saved) ||
-          !work.permissions.canShareDocuments)) {
-    throw StateError(
-      'This document changed or is no longer available. Reopen it before sharing.',
-    );
+  if (work == null) {
+    throw StateError('Open a saved document before sharing.');
   }
-  if (record.kind == WorkRecordKind.estimate &&
-      (record.resolvedEstimateStage == EstimateStage.draft ||
-          !record.companyReviewAllowsCustomerApproval)) {
-    throw StateError(
-      'Mark the estimate ready and complete any required company approval before sharing.',
-    );
-  }
-  if (record.kind == WorkRecordKind.invoice &&
-      work != null &&
-      !work.permissions.canIssueInvoices) {
-    throw StateError('You do not have permission to share this invoice.');
-  }
+  final expected = work.storageRevisionFor(record.id);
+  final audit = WorkExportAudit(work);
+  final saved = await audit.assertCurrent(
+    record.id,
+    expected,
+    expectedDocument: record,
+  );
+  if (!context.mounted) return;
   final label = switch (record.kind) {
     WorkRecordKind.estimate => 'Estimate',
+    WorkRecordKind.quote => 'Quote',
     WorkRecordKind.invoice => 'Invoice',
     WorkRecordKind.job => 'Job',
   };
   final document = workCustomerDocument(
-    record,
+    saved,
     store.companyProfile,
-    store.customers.where((c) => c.name == record.client).firstOrNull,
+    resolveWorkDocumentCustomer(saved, store.customers),
+    financialEntries: store.financialEntries,
   );
-  final expected = work?.storageRevisionFor(record.id);
   final directory = store.directorySession;
   final renderObject = context.findRenderObject();
   final box = renderObject is RenderBox && renderObject.hasSize
@@ -68,9 +56,6 @@ Future<void> deliverWorkPdf(
       if (!context.mounted) {
         throw StateError('The document screen is no longer open.');
       }
-      if (work == null) {
-        throw StateError('Open a saved document before sharing.');
-      }
       work.requireActiveDraftOwner();
       if (work.storageRevisionFor(record.id) != expected ||
           !work.permissions.canShareDocuments) {
@@ -78,7 +63,7 @@ Future<void> deliverWorkPdf(
           'The document changed. Review the latest copy before sharing.',
         );
       }
-      await WorkExportAudit(work).assertCurrent(record.id, expected!);
+      await audit.assertCurrent(record.id, expected, expectedDocument: saved);
     },
     readBytes: () => generateCustomerPdf(
       document,
@@ -87,11 +72,12 @@ Future<void> deliverWorkPdf(
           : CompanyDocumentBrandingService(directory).readLogo,
     ),
   );
-  if (work == null || expected == null) {
-    throw StateError('Open a saved document before sharing.');
-  }
-  final audit = WorkExportAudit(work);
-  final attempt = await audit.begin(record.id, expected, action.name);
+  final attempt = await audit.begin(
+    record.id,
+    expected,
+    action.name,
+    expectedDocument: saved,
+  );
   final PdfExportOutcome outcome;
   try {
     outcome = await const PdfExportService().export(

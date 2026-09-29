@@ -1,3 +1,5 @@
+import 'work/work_session_permissions.dart';
+import 'work/quote_status.dart';
 import '../screens/dashboard/dashboard_models.dart';
 import 'expenses/expense_workflow_models.dart';
 import '../screens/inventory/inventory_models.dart';
@@ -5,10 +7,13 @@ import 'work/models/estimate_models.dart';
 import 'work/models/work_models.dart';
 import '../shared/app_view_mode.dart';
 
+part 'quote_attention_projection.dart';
+
 enum OperationalAttentionModule { dashboard, work, expenses, inventory }
 
 enum OperationalAttentionResourceKind {
   estimate,
+  quote,
   job,
   invoice,
   expense,
@@ -134,8 +139,10 @@ class PrototypeAttentionCenter {
     required this._expenses,
     required this._inventoryStock,
     required this._onChanged,
+    this._workPermissions,
   });
 
+  final WorkSessionPermissions? Function()? _workPermissions;
   final List<WorkRecord> Function() _workRecords;
   final List<ExpenseRecord> Function() _expenses;
   final List<InventoryStockRecord> Function() _inventoryStock;
@@ -194,6 +201,10 @@ class PrototypeAttentionCenter {
         continue;
       }
       switch (record.kind) {
+        case WorkRecordKind.quote:
+          final item = _quoteAttention(record, query);
+          if (item != null) results.add(item);
+          continue;
         case WorkRecordKind.estimate:
           if (!query.includes(OperationalAttentionResourceKind.estimate)) {
             continue;
@@ -407,14 +418,29 @@ class PrototypeAttentionCenter {
     WorkRecord record,
     OperationalAttentionQuery query,
   ) {
+    if (record.kind == WorkRecordKind.quote) {
+      final authority = _workPermissions?.call();
+      if (authority == null ||
+          !authority.visibleCreatorIds.contains(record.createdByEmployeeId)) {
+        return false;
+      }
+      final employee = query.selectedEmployeeId;
+      return employee == null ||
+          record.createdByEmployeeId == employee ||
+          record.assignedEmployeeIds.contains(employee);
+    }
     if (query.view == AppViewMode.admin && query.selectedEmployeeId == null) {
       return true;
     }
     final employeeId = query.selectedEmployeeId ?? demoEmployees.first.id;
-    final employee = dashboardEmployeeById(employeeId);
-    return record.createdByEmployeeId == employee.id ||
-        (record.assignedEmployeeIds.contains(employee.id) ||
-            record.assignee == employee.name);
+    if (record.createdByEmployeeId == employeeId ||
+        record.assignedEmployeeIds.contains(employeeId)) {
+      return true;
+    }
+    // Legacy display-name matching is only meaningful for a known fixture;
+    // an unfamiliar real employee ID must not silently become the first one.
+    final employee = demoEmployees.where((e) => e.id == employeeId).firstOrNull;
+    return employee != null && record.assignee == employee.name;
   }
 
   String _fingerprint(List<OperationalAttentionItem> items) {

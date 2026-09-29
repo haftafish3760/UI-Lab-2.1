@@ -1,0 +1,162 @@
+{
+  "purpose": "Isolated editable demonstration. Not production or customer data.",
+  "workspaceId": "work-workspace-3qrfh3",
+  "createdAt": "2026-09-29T11:11:03.250002Z",
+  "clients": 3,
+  "reusableJobs": 2,
+  "payments": [
+    {
+      "invoice": "Invoice 6102",
+      "amountCents": 10000,
+      "method": "Cash"
+    },
+    {
+      "invoice": "Invoice 6103",
+      "amountCents": 32000,
+      "method": "Cash"
+    }
+  ],
+  "records": [
+    {
+      "id": "demo-estimate-4",
+      "kind": "estimate",
+      "status": "ready",
+      "title": "[Demo] Product photography session",
+      "creator": "alex",
+      "total": 360.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-quote-1",
+      "kind": "quote",
+      "status": "ready",
+      "title": "[Demo] Quarterly window cleaning",
+      "creator": "alex",
+      "total": 180.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-estimate-1",
+      "kind": "estimate",
+      "status": "accepted",
+      "title": "[Demo] Replace kitchen faucet",
+      "creator": "alex",
+      "total": 285.0,
+      "approved": true,
+      "signed": false
+    },
+    {
+      "id": "demo-job-1",
+      "kind": "job",
+      "status": "scheduled",
+      "scheduledStart": "2026-09-29T09:00:00.000",
+      "title": "[Demo] Replace kitchen faucet",
+      "creator": "alex",
+      "total": 285.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-quote-2",
+      "kind": "quote",
+      "status": "accepted",
+      "title": "[Demo] Office network setup",
+      "creator": "alex",
+      "total": 525.0,
+      "approved": true,
+      "signed": false
+    },
+    {
+      "id": "demo-job-2",
+      "kind": "job",
+      "status": "scheduled",
+      "scheduledStart": "2026-09-30T09:00:00.000",
+      "title": "[Demo] Office network setup",
+      "creator": "alex",
+      "total": 525.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-estimate-3",
+      "kind": "estimate",
+      "status": "accepted",
+      "title": "[Demo] Garden gravel delivery",
+      "creator": "alex",
+      "total": 420.0,
+      "approved": true,
+      "signed": true
+    },
+    {
+      "id": "invoice-b4927d4ed753e1f0e2307f3011463722",
+      "kind": "invoice",
+      "status": "draft",
+      "collectionStatus": "draft",
+      "title": "[Demo] Garden gravel delivery",
+      "creator": "alex",
+      "total": 420.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-invoice-1",
+      "kind": "invoice",
+      "status": "due",
+      "collectionStatus": "overdue",
+      "title": "[Demo] Equipment inspection",
+      "creator": "alex",
+      "total": 150.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-invoice-2",
+      "kind": "invoice",
+      "status": "due",
+      "collectionStatus": "partiallyPaid",
+      "title": "[Demo] Office cleaning visit",
+      "creator": "alex",
+      "total": 240.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-invoice-3",
+      "kind": "invoice",
+      "status": "paid",
+      "collectionStatus": "paid",
+      "title": "[Demo] Garden waste collection",
+      "creator": "alex",
+      "total": 320.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-estimate-2",
+      "kind": "estimate",
+      "status": "ready",
+      "title": "[Demo] Monthly office cleaning",
+      "creator": "jordan",
+      "total": 640.0,
+      "approved": false,
+      "signed": false
+    }
+  ],
+  "verified": [
+    "durable reopen",
+    "employee cannot approve or sign",
+    "approval without signature",
+    "fictional signature",
+    "quote and estimate conversion to scheduled jobs",
+    "direct estimate to invoice draft",
+    "overdue, partially paid and paid invoice projections",
+    "two reusable jobs survive reopening"
+  ],
+  "notVerified": [
+    "device rendering",
+    "phone installation",
+    "production account permissions"
+  ]
+}

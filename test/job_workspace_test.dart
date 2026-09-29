@@ -105,6 +105,9 @@ Future<void> _waitFor(WidgetTester tester, bool Function() ready) async {
 }
 
 Future<void> _saveApprovedItems(WidgetTester tester) async {
+  await _waitFor(tester, () => find.text('Save items').evaluate().isNotEmpty);
+  await tester.ensureVisible(find.text('Save items'));
+  await tester.pumpAndSettle();
   await tester.tap(find.text('Save items'));
   await tester.pumpAndSettle();
   await _waitFor(
@@ -209,7 +212,8 @@ void main() {
     expect(find.text('Job photos and receipts'), findsOneWidget);
     expect(find.byKey(const ValueKey('job-actions-fab')), findsOneWidget);
     expect(find.byKey(const ValueKey('job-attach-receipt')), findsOneWidget);
-    expect(find.byKey(const ValueKey('job-attach-photo')), findsOneWidget);
+    // This legacy layout fixture has no durable Work photo authority.
+    expect(find.byKey(const ValueKey('job-attach-photo')), findsNothing);
     expect(find.text('Materials list'), findsOneWidget);
     expect(find.text('Labor included'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('job-actions-fab')));
@@ -275,6 +279,8 @@ void main() {
       ),
       '250',
     );
+    await tester.ensureVisible(find.text('Save item'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Save item'));
     await _settle(tester);
     await _saveApprovedItems(tester);
@@ -519,6 +525,8 @@ void main() {
       ),
       '250',
     );
+    await tester.ensureVisible(find.text('Save item'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Save item'));
     await _settle(tester);
     await _saveApprovedItems(tester);
@@ -535,6 +543,8 @@ void main() {
       find.widgetWithText(TextField, 'Material name'),
       'Central Supply fittings',
     );
+    await tester.ensureVisible(find.text('Save item'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Save item'));
     await _settle(tester);
     await _saveApprovedItems(tester);
@@ -574,6 +584,8 @@ void main() {
         ),
         '25',
       );
+      await tester.ensureVisible(find.text('Save item'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Save item'));
       await _settle(tester);
       await _saveApprovedItems(tester);

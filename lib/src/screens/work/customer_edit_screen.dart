@@ -1,3 +1,4 @@
+import '../../../l10n/app_localizations_extension.dart';
 import '../../shared/us_phone_input_formatter.dart';
 import '../../data/work/directory_draft_handoff.dart';
 import '../../data/work/customer_confirmation.dart';
@@ -25,20 +26,26 @@ class CustomerEditScreen extends StatefulWidget {
     required this.selectedDay,
     this.initialCustomer,
     this.offerEstimateOnly = false,
+    this.embedded = false,
+    this.onSaved,
+    this.onCancelled,
     this.recoveredWorkflow,
     super.key,
   });
 
   final DateTime selectedDay;
   final bool offerEstimateOnly;
+  final bool embedded;
+  final VoidCallback? onCancelled;
+  final Future<void> Function(WorkCustomerProfile)? onSaved;
   final WorkCustomerProfile? initialCustomer;
   final CustomerDraftController? recoveredWorkflow;
 
   @override
-  State<CustomerEditScreen> createState() => _CustomerEditScreenState();
+  State<CustomerEditScreen> createState() => CustomerEditScreenState();
 }
 
-class _CustomerEditScreenState extends State<CustomerEditScreen>
+class CustomerEditScreenState extends State<CustomerEditScreen>
     with DraftNavigationGuard {
   DirectoryPersistenceSession? _directory;
   late CustomerDraftController? _workflow = widget.recoveredWorkflow;
@@ -125,7 +132,36 @@ class _CustomerEditScreenState extends State<CustomerEditScreen>
 
   @override
   Widget build(BuildContext context) {
-    final editing = widget.initialCustomer != null;
+    if (widget.embedded) {
+      final theme = Theme.of(context);
+      final colors = theme.colorScheme;
+      return Theme(
+        data: theme.copyWith(
+          inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+            filled: false,
+            floatingLabelBehavior: FloatingLabelBehavior.always,
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+            border: const UnderlineInputBorder(),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: colors.outline),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: colors.primary, width: 2),
+            ),
+            errorBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: colors.error),
+            ),
+            focusedErrorBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: colors.error, width: 2),
+            ),
+            disabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: colors.outlineVariant),
+            ),
+          ),
+        ),
+        child: AbsorbPointer(absorbing: _saving, child: _buildForm()),
+      );
+    }
     return guardDraftNavigation(
       Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
@@ -145,90 +181,7 @@ class _CustomerEditScreenState extends State<CustomerEditScreen>
                           constraints.maxWidth - insets.horizontal,
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          WorkDetailHeader(
-                            label: editing ? 'Edit Customer' : 'Add Customer',
-                            selectedDay: widget.selectedDay,
-                            onBack: () => leaveDraftRoute(),
-                          ),
-                          if (_draft != null)
-                            EditorDraftStatus(
-                              state: _draft!.state,
-                              onRetry: _draft!.retry,
-                              onDiscard: _discardCustomerDraft,
-                            ),
-                          if (_saveError != null) Text(_saveError!),
-                          if (!_draftReady && _saveError == null)
-                            const Text('Opening saved input…'),
-                          if (_draftReady) ...[
-                            const SizedBox(height: 12),
-                            _IdentityForm(
-                              name: _name,
-                              company: _company,
-                              phone: _phone,
-                              email: _email,
-                              preferredContact: _preferredContact,
-                              nameError: _nameError,
-                              onPreferredContactChanged: (value) =>
-                                  _changeCustomerInput(
-                                    () => _preferredContact = value,
-                                  ),
-                            ),
-                            const SizedBox(height: 14),
-                            _AddressForm(
-                              billing: _billing,
-                              locationLabel: _locationLabel,
-                              locationAddress: _locationAddress,
-                              accessNotes: _accessNotes,
-                              additionalLocationCount: mathMax(
-                                0,
-                                (_editingCustomer?.locations.length ?? 0) - 1,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            UtilityFormSection(
-                              child: TextField(
-                                controller: _notes,
-                                minLines: 1,
-                                maxLines: 4,
-                                decoration: const InputDecoration(
-                                  labelText: 'Customer notes (optional)',
-                                  helperText:
-                                      'About the customer, not the service address.',
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            Wrap(
-                              alignment: WrapAlignment.end,
-                              spacing: 10,
-                              runSpacing: 10,
-                              children: [
-                                OutlinedButton(
-                                  onPressed: () => leaveDraftRoute(),
-                                  child: Text(
-                                    _draft == null ? 'Cancel' : 'Back',
-                                  ),
-                                ),
-                                FilledButton.icon(
-                                  key: const ValueKey('save-client-button'),
-                                  onPressed: _saving ? null : _save,
-                                  icon: const Icon(Icons.save_outlined),
-                                  label: Text(
-                                    editing
-                                        ? 'Save client changes'
-                                        : widget.offerEstimateOnly
-                                        ? 'Use customer'
-                                        : 'Save client',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
+                      child: _buildForm(),
                     ),
                   ),
                 ],
@@ -237,6 +190,107 @@ class _CustomerEditScreenState extends State<CustomerEditScreen>
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> flushPendingInput() async {
+    if (_saving) throw StateError('Wait for the client to finish saving.');
+    _captureCustomerInput();
+    await _draft?.flush();
+  }
+
+  Widget _buildForm() {
+    final editing = widget.initialCustomer != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!widget.embedded)
+          WorkDetailHeader(
+            label: editing
+                ? context.l10n.clientEdit
+                : context.l10n.clientAddNew,
+            selectedDay: widget.selectedDay,
+            onBack: () => leaveDraftRoute(),
+          ),
+        if (_draft != null &&
+            (!widget.embedded || _draft!.state == DraftSaveState.notSaved))
+          EditorDraftStatus(
+            state: _draft!.state,
+            onRetry: _draft!.retry,
+            onDiscard: widget.embedded ? null : _discardCustomerDraft,
+          ),
+        if (_saveError != null) Text(_saveError!),
+        if (!_draftReady && _saveError == null) Text('Opening saved input…'),
+        if (_draftReady) ...[
+          const SizedBox(height: 20),
+          _IdentityForm(
+            name: _name,
+            company: _company,
+            phone: _phone,
+            email: _email,
+            preferredContact: _preferredContact,
+            nameError: _nameError,
+            onPreferredContactChanged: (value) =>
+                _changeCustomerInput(() => _preferredContact = value),
+          ),
+          const SizedBox(height: 24),
+          _AddressForm(
+            billing: _billing,
+            locationLabel: _locationLabel,
+            locationAddress: _locationAddress,
+            accessNotes: _accessNotes,
+            additionalLocationCount: mathMax(
+              0,
+              (_editingCustomer?.locations.length ?? 0) - 1,
+            ),
+          ),
+          const SizedBox(height: 24),
+          UtilityFormSection(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(context.l10n.clientNotesHint),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _notes,
+                  minLines: 1,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.clientNotes,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              if (!widget.embedded)
+                OutlinedButton(
+                  onPressed: () => leaveDraftRoute(),
+                  child: Text(_draft == null ? 'Cancel' : 'Back'),
+                ),
+              FilledButton.icon(
+                key: const ValueKey('save-client-button'),
+                onPressed: _saving ? null : _save,
+                icon: const Icon(Icons.save_outlined),
+                label: Text(
+                  editing
+                      ? context.l10n.clientSaveChanges
+                      : widget.embedded
+                      ? context.l10n.clientSaveUse
+                      : widget.offerEstimateOnly
+                      ? 'Use customer'
+                      : context.l10n.clientSave,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 
@@ -271,51 +325,63 @@ class _IdentityForm extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Customer information',
+          context.l10n.clientDetails,
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         _AdaptiveFieldPair(
           first: TextField(
             key: const ValueKey('client-name-field'),
             controller: name,
+            textInputAction: TextInputAction.next,
             decoration: InputDecoration(
-              labelText: 'Client name',
+              labelText: context.l10n.clientName,
+              hintText: context.l10n.clientNameHint,
               errorText: nameError,
             ),
           ),
           second: TextField(
             key: const ValueKey('client-company-field'),
             controller: company,
-            decoration: const InputDecoration(
-              labelText: 'Company name (optional)',
-            ),
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(labelText: context.l10n.clientBusiness),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         _AdaptiveFieldPair(
           first: TextField(
             controller: phone,
+            textInputAction: TextInputAction.next,
             keyboardType: TextInputType.phone,
             autofillHints: const [AutofillHints.telephoneNumberNational],
             inputFormatters: const [UsPhoneInputFormatter()],
-            decoration: const InputDecoration(labelText: 'Phone'),
+            decoration: InputDecoration(labelText: context.l10n.clientPhone),
           ),
           second: TextField(
             controller: email,
+            textInputAction: TextInputAction.next,
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email],
-            decoration: const InputDecoration(labelText: 'Email'),
+            decoration: InputDecoration(labelText: context.l10n.clientEmail),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         DropdownButtonFormField<String>(
           initialValue: preferredContact,
           isExpanded: true,
-          decoration: const InputDecoration(labelText: 'Preferred contact'),
+          decoration: InputDecoration(
+            labelText: context.l10n.clientPreferredContact,
+          ),
           items: const ['Phone call', 'Text message', 'Email']
               .map(
-                (value) => DropdownMenuItem(value: value, child: Text(value)),
+                (value) => DropdownMenuItem(
+                  value: value,
+                  child: Text(switch (value) {
+                    'Phone call' => context.l10n.clientCall,
+                    'Text message' => context.l10n.clientText,
+                    _ => context.l10n.clientEmailMethod,
+                  }),
+                ),
               )
               .toList(),
           onChanged: (value) {
@@ -348,39 +414,42 @@ class _AddressForm extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Billing and service location',
+          context.l10n.clientLocations,
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         TextField(
           controller: billing,
           minLines: 1,
           maxLines: 3,
-          decoration: const InputDecoration(labelText: 'Billing address'),
+          decoration: InputDecoration(labelText: context.l10n.clientBilling),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         TextField(
           controller: locationLabel,
-          decoration: const InputDecoration(
-            labelText: 'Address label (optional)',
-            hintText: 'Home, office, or another name',
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: context.l10n.clientAddressLabel,
+            hintText: context.l10n.clientAddressHint,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         TextField(
           controller: locationAddress,
           minLines: 1,
           maxLines: 3,
-          decoration: const InputDecoration(labelText: 'Service address'),
+          decoration: InputDecoration(
+            labelText: context.l10n.clientServiceAddress,
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         TextField(
           controller: accessNotes,
           minLines: 1,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'Getting into the property (optional)',
-            hintText: 'Gate code, parking, or entry instructions',
+          decoration: InputDecoration(
+            labelText: context.l10n.clientAccess,
+            hintText: context.l10n.clientAccessHint,
           ),
         ),
         if (additionalLocationCount > 0) ...[
@@ -407,7 +476,7 @@ class _AdaptiveFieldPair extends StatelessWidget {
         constraints.maxWidth,
         textScaler: MediaQuery.textScalerOf(context),
       )) {
-        return Column(children: [first, const SizedBox(height: 12), second]);
+        return Column(children: [first, const SizedBox(height: 20), second]);
       }
       return Row(
         children: [

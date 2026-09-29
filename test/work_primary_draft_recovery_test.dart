@@ -104,6 +104,7 @@ void main() {
         await expectLater(attempt, throwsA(isA<LocalRecordConflict>()));
         final resumed = await recovery.resume(entry);
         final session = switch (resumed) {
+          ResumedQuoteDraft(:final controller) ||
           ResumedEstimateDraft(:final controller) => controller.session,
           ResumedInvoiceDraft(:final controller) => controller.session,
           ResumedJobDraft(:final controller) => controller.session,

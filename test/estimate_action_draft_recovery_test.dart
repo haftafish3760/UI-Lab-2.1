@@ -16,6 +16,7 @@ import 'support/storage/database_harness.dart';
 
 DraftAutosaveSession sessionOf(ResumedEstimateAction resumed) =>
     switch (resumed) {
+      ResumedEstimateApproval(:final controller) => controller.session,
       ResumedEstimateSignature(:final controller) => controller.session,
       ResumedEstimateDelivery(:final controller) => controller.session,
       ResumedEstimateItems(:final controller) => controller.session,

@@ -80,12 +80,12 @@ void main() {
       FocusManager.instance.primaryFocus?.unfocus();
       await tester.pumpAndSettle();
       await tester.dragUntilVisible(
-        find.widgetWithText(FilledButton, 'Add line item'),
+        find.widgetWithText(FilledButton, 'Save item'),
         find.byType(ListView).first,
         const Offset(0, -200),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, 'Add line item'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Save item'));
       await tester.pumpAndSettle();
       expect(result!.id, raw['lineId']);
       expect(result!.quantity, 3);

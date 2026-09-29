@@ -16,8 +16,14 @@ extension EstimateDraftMediaCommit on DraftAutosaveSession {
         request.organizationId != organizationId ||
         request.ownerId != ownerId ||
         request.targetId != draftId ||
-        request.destination != MediaPickerDestination.estimate ||
-        domain != 'work/estimate-editor' ||
+        !((request.destination == MediaPickerDestination.estimate &&
+                domain == 'work/estimate-editor') ||
+            (request.destination == MediaPickerDestination.job &&
+                domain == 'work/job-photos') ||
+            (request.destination == MediaPickerDestination.estimateApproval &&
+                domain == 'work/estimate-approval') ||
+            (request.destination == MediaPickerDestination.quoteApproval &&
+                domain == 'work/quote-approval')) ||
         request.retainedAttachmentIds == null) {
       throw const LocalRecordConflict(
         'Media destination does not match this draft.',

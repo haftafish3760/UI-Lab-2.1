@@ -92,42 +92,42 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Work home keeps Drafts and Employee status on one phone row', (
-    tester,
-  ) async {
-    final harness = (await tester.runAsync(DatabaseHarness.create))!;
-    addTearDown(harness.dispose);
-    final directory = (await tester.runAsync(
-      () async => openSeededTestDirectory(await harness.open()),
-    ))!;
-    addTearDown(directory.dispose);
+  testWidgets(
+    'Work home retains permitted Employee status without general Drafts',
+    (tester) async {
+      final harness = (await tester.runAsync(DatabaseHarness.create))!;
+      addTearDown(harness.dispose);
+      final directory = (await tester.runAsync(
+        () async => openSeededTestDirectory(await harness.open()),
+      ))!;
+      addTearDown(directory.dispose);
 
-    await pumpHome(tester, 375, 1, directorySession: directory);
-    final drafts = find.byKey(const ValueKey('open-work-drafts'));
-    final employees = find.widgetWithText(OutlinedButton, 'Employee status');
-    expect(employees, findsOneWidget);
-    expect(tester.getTopLeft(drafts).dy, tester.getTopLeft(employees).dy);
-    expect(
-      tester.getRect(drafts).right,
-      lessThan(tester.getRect(employees).left),
-    );
-    await tester.tap(employees);
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('employee-status-screen')),
-      findsOneWidget,
-    );
-    expect(find.byKey(const ValueKey('employee-status-alex')), findsOneWidget);
-    expect(find.text('On a job'), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('employee-status-alex')));
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('employee-work-status-alex')),
-      findsOneWidget,
-    );
-    expect(find.text('Latest recorded status'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+      await pumpHome(tester, 375, 1, directorySession: directory);
+      final drafts = find.byKey(const ValueKey('open-work-drafts'));
+      final employees = find.widgetWithText(OutlinedButton, 'Employee status');
+      expect(employees, findsOneWidget);
+      expect(drafts, findsNothing);
+      await tester.tap(employees);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('employee-status-screen')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('employee-status-alex')),
+        findsOneWidget,
+      );
+      expect(find.text('On a job'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('employee-status-alex')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('employee-work-status-alex')),
+        findsOneWidget,
+      );
+      expect(find.text('Latest recorded status'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   for (final width in [320.0, 375.0, 600.0, 800.0, 1024.0, 1440.0]) {
     for (final scale in [1.0, 2.0]) {
@@ -150,7 +150,7 @@ void main() {
           expect(find.byKey(const ValueKey('quick-customers')), findsNothing);
           expect(find.byKey(const ValueKey('quick-companyInfo')), findsNothing);
           expect(find.text('Work Calendar'), findsOneWidget);
-          expect(find.text('Not connected'), findsOneWidget);
+          expect(find.text('Not connected'), findsNothing);
           expect(tester.takeException(), isNull);
         },
       );
@@ -189,9 +189,9 @@ void main() {
         AppNavigationMode.bottom,
       );
     }
-    expect(AppLayoutEngine.workLandingFor(723).columns, 1);
-    expect(AppLayoutEngine.workLandingFor(724).columns, 2);
-    expect(AppLayoutEngine.workLandingFor(2000).workspaceWidth, 824);
+    expect(AppLayoutEngine.workLandingFor(883).columns, 1);
+    expect(AppLayoutEngine.workLandingFor(884).columns, 2);
+    expect(AppLayoutEngine.workLandingFor(2000).workspaceWidth, 1184);
   });
 
   testWidgets('Work rail and bounded advertisement survive short window', (

@@ -1,0 +1,51 @@
+{
+  "purpose": "Isolated editable demonstration. Not production or customer data.",
+  "workspaceId": "estimate-workspace-dp2ofb",
+  "createdAt": "2026-09-29T10:18:46.522312Z",
+  "clients": 3,
+  "estimates": [
+    {
+      "id": "demo-estimate-1",
+      "title": "[Demo] Replace kitchen faucet",
+      "creator": "alex",
+      "total": 285.0,
+      "approved": true,
+      "signed": false
+    },
+    {
+      "id": "demo-estimate-3",
+      "title": "[Demo] Garden gravel delivery",
+      "creator": "alex",
+      "total": 420.0,
+      "approved": true,
+      "signed": true
+    },
+    {
+      "id": "demo-estimate-4",
+      "title": "[Demo] Product photography session",
+      "creator": "alex",
+      "total": 360.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-estimate-2",
+      "title": "[Demo] Monthly office cleaning",
+      "creator": "jordan",
+      "total": 640.0,
+      "approved": false,
+      "signed": false
+    }
+  ],
+  "verified": [
+    "durable reopen",
+    "employee cannot approve or sign",
+    "approval without signature",
+    "fictional signature"
+  ],
+  "notVerified": [
+    "device rendering",
+    "phone installation",
+    "production account permissions"
+  ]
+}

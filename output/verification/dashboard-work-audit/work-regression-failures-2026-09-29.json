@@ -1,0 +1,341 @@
+{
+  "run": "/tmp/work-system-regression.log",
+  "status": "completed with failures",
+  "passed": 495,
+  "failed": 51,
+  "files": 176,
+  "failures": [
+    {
+      "file": "test/job_editor_confirmation_test.dart",
+      "test": "failed linked job confirmation retains draft and approval; retry consumes draft atomically",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-controls-verified-tests.log; real scroll/hit-tested interaction, original persistence assertions retained. Invoice actions now measure label widths, with shipped-font normal and 2x text checks."
+    },
+    {
+      "file": "test/job_material_billing_treatment_test.dart",
+      "test": "restricted material editor preserves protected billing items",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-item-recovery-final.log. Tests explicitly select item type, scope Save draft to confirmation dialog, match named draft labels, and scroll to real save controls. Original persisted input, permission and source identity assertions retained."
+    },
+    {
+      "file": "test/invoice_item_draft_recovery_test.dart",
+      "test": "unfinished nested item survives Back and database reopen with its invoice",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-item-recovery-final.log. Tests explicitly select item type, scope Save draft to confirmation dialog, match named draft labels, and scroll to real save controls. Original persisted input, permission and source identity assertions retained."
+    },
+    {
+      "file": "test/job_start_estimate_conversion_test.dart",
+      "test": "new job entry uses the chosen approved estimate for scheduling",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-controls-verified-tests.log; real scroll/hit-tested interaction, original persistence assertions retained. Invoice actions now measure label widths, with shipped-font normal and 2x text checks."
+    },
+    {
+      "file": "test/payment_draft_recovery_test.dart",
+      "test": "payment draft survives reopen; failed ledger write retains input and balance",
+      "classification": "off-screen tap before assertion",
+      "evidence": "Log gives a tap coordinate outside the viewport; scroll the real control into view, retain all persistence/approval assertions, and rerun.",
+      "followup": "Passed in /tmp/work-controls-verified-tests.log; real scroll/hit-tested interaction, original persistence assertions retained. Invoice actions now measure label widths, with shipped-font normal and 2x text checks."
+    },
+    {
+      "file": "test/invoice_editor_confirmation_test.dart",
+      "test": "invoice editor offers direct creation beside saving a draft",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-controls-verified-tests.log; real scroll/hit-tested interaction, original persistence assertions retained. Invoice actions now measure label widths, with shipped-font normal and 2x text checks."
+    },
+    {
+      "file": "test/invoice_editor_confirmation_test.dart",
+      "test": "failed invoice save keeps editor and recovery draft; retry commits both",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-controls-verified-tests.log; real scroll/hit-tested interaction, original persistence assertions retained. Invoice actions now measure label widths, with shipped-font normal and 2x text checks."
+    },
+    {
+      "file": "test/work_screen_test.dart",
+      "test": "Work exposes its six destinations above dated records",
+      "classification": "untriaged",
+      "followup": "All 37 tests pass in /tmp/work-job-layout-verified.log. Scroll to Save controls; Work fixed FAB/no pinned bottom panel verified, scroll movement required only when content exceeds viewport. Linked-job entry test renamed to accurately state it opens creation, not claims completed persistence."
+    },
+    {
+      "file": "test/work_screen_test.dart",
+      "test": "accepted estimate explicitly creates a linked planned job",
+      "classification": "untriaged",
+      "followup": "All 37 tests pass in /tmp/work-job-layout-verified.log. Scroll to Save controls; Work fixed FAB/no pinned bottom panel verified, scroll movement required only when content exceeds viewport. Linked-job entry test renamed to accurately state it opens creation, not claims completed persistence."
+    },
+    {
+      "file": "test/job_item_draft_recovery_test.dart",
+      "test": "unfinished nested item survives Back and database reopen with its job",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-item-recovery-final.log. Tests explicitly select item type, scope Save draft to confirmation dialog, match named draft labels, and scroll to real save controls. Original persisted input, permission and source identity assertions retained."
+    },
+    {
+      "file": "test/work_estimate_revision_test.dart",
+      "test": "editing a signed estimate removes current customer approval",
+      "classification": "off-screen tap before assertion",
+      "evidence": "Log gives a tap coordinate outside the viewport; scroll the real control into view, retain all persistence/approval assertions, and rerun.",
+      "followup": "Passed in /tmp/work-controls-verified-tests.log; real scroll/hit-tested interaction, original persistence assertions retained. Invoice actions now measure label widths, with shipped-font normal and 2x text checks."
+    },
+    {
+      "file": "test/invoice_workspace_test.dart",
+      "test": "New invoice uses a dedicated job-aware draft editor",
+      "classification": "untriaged",
+      "followup": "All 24 tests pass in /tmp/invoice-workspace-refresh.log. Tests scroll to actual save controls, use shipped font and verify content scrolls with fixed FAB and no pinned bottom action panel. Original record linkage, validation, amount and payment assertions retained."
+    },
+    {
+      "file": "test/invoice_workspace_test.dart",
+      "test": "Invoice draft validation keeps incomplete records out of file",
+      "classification": "untriaged",
+      "followup": "All 24 tests pass in /tmp/invoice-workspace-refresh.log. Tests scroll to actual save controls, use shipped font and verify content scrolls with fixed FAB and no pinned bottom action panel. Original record linkage, validation, amount and payment assertions retained."
+    },
+    {
+      "file": "test/invoice_workspace_test.dart",
+      "test": "Linked job becomes a saved invoice draft with stable ownership",
+      "classification": "untriaged",
+      "followup": "All 24 tests pass in /tmp/invoice-workspace-refresh.log. Tests scroll to actual save controls, use shipped font and verify content scrolls with fixed FAB and no pinned bottom action panel. Original record linkage, validation, amount and payment assertions retained."
+    },
+    {
+      "file": "test/invoice_workspace_test.dart",
+      "test": "Invoice editor preserves content at large accessibility text",
+      "classification": "untriaged",
+      "followup": "All 24 tests pass in /tmp/invoice-workspace-refresh.log. Tests scroll to actual save controls, use shipped font and verify content scrolls with fixed FAB and no pinned bottom action panel. Original record linkage, validation, amount and payment assertions retained."
+    },
+    {
+      "file": "test/invoice_workspace_test.dart",
+      "test": "Invoice workspace reflows cleanly at 320 LP",
+      "classification": "untriaged",
+      "followup": "All 24 tests pass in /tmp/invoice-workspace-refresh.log. Tests scroll to actual save controls, use shipped font and verify content scrolls with fixed FAB and no pinned bottom action panel. Original record linkage, validation, amount and payment assertions retained."
+    },
+    {
+      "file": "test/invoice_workspace_test.dart",
+      "test": "Invoice workspace reflows cleanly at 412 LP",
+      "classification": "untriaged",
+      "followup": "All 24 tests pass in /tmp/invoice-workspace-refresh.log. Tests scroll to actual save controls, use shipped font and verify content scrolls with fixed FAB and no pinned bottom action panel. Original record linkage, validation, amount and payment assertions retained."
+    },
+    {
+      "file": "test/invoice_workspace_test.dart",
+      "test": "Invoice workspace reflows cleanly at 800 LP",
+      "classification": "untriaged",
+      "followup": "All 24 tests pass in /tmp/invoice-workspace-refresh.log. Tests scroll to actual save controls, use shipped font and verify content scrolls with fixed FAB and no pinned bottom action panel. Original record linkage, validation, amount and payment assertions retained."
+    },
+    {
+      "file": "test/invoice_workspace_test.dart",
+      "test": "Invoice workspace reflows cleanly at 1440 LP",
+      "classification": "untriaged",
+      "followup": "All 24 tests pass in /tmp/invoice-workspace-refresh.log. Tests scroll to actual save controls, use shipped font and verify content scrolls with fixed FAB and no pinned bottom action panel. Original record linkage, validation, amount and payment assertions retained."
+    },
+    {
+      "file": "test/quote_draft_workflow_test.dart",
+      "test": "existing document kind cannot be rewritten through raw record save",
+      "classification": "outdated quote export blanket denial",
+      "evidence": "Raw kind-change rejection passed; line 156 still expects all quote exports to throw, predating completed delivery preparation.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 320.0 LP and 1.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 320.0 LP and 2.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 375.0 LP and 1.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 375.0 LP and 2.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 600.0 LP and 1.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 600.0 LP and 2.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 800.0 LP and 1.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 800.0 LP and 2.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 1024.0 LP and 1.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 1024.0 LP and 2.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 1440.0 LP and 1.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_landing_responsive_test.dart",
+      "test": "Work 1440.0 LP and 2.0 text preserves destinations and calendar",
+      "classification": "outdated quote placeholder assertion",
+      "evidence": "Line 153 expects Not connected; quotes now have a persisted editor and workspace. Preserve all subsequent responsive checks when updating.",
+      "followup": "Passed in /tmp/work-regression-quote-expectations.log after replacing obsolete quote availability/export expectation; other behavior assertions retained."
+    },
+    {
+      "file": "test/work_editor_recovery_handoff_test.dart",
+      "test": "selected work editor job=false retains edits without confirmation",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-item-recovery-final.log. Tests explicitly select item type, scope Save draft to confirmation dialog, match named draft labels, and scroll to real save controls. Original persisted input, permission and source identity assertions retained."
+    },
+    {
+      "file": "test/work_editor_recovery_handoff_test.dart",
+      "test": "selected work editor job=true retains edits without confirmation",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-item-recovery-final.log. Tests explicitly select item type, scope Save draft to confirmation dialog, match named draft labels, and scroll to real save controls. Original persisted input, permission and source identity assertions retained."
+    },
+    {
+      "file": "test/job_list_workspace_test.dart",
+      "test": "New job uses a real scheduled-job form and validates ownership",
+      "classification": "untriaged",
+      "followup": "All 37 tests pass in /tmp/work-job-layout-verified.log. Scroll to Save controls; Work fixed FAB/no pinned bottom panel verified, scroll movement required only when content exceeds viewport. Linked-job entry test renamed to accurately state it opens creation, not claims completed persistence."
+    },
+    {
+      "file": "test/job_receipt_link_flow_test.dart",
+      "test": "Job receipt intake carries the exact owning Job ID",
+      "classification": "untriaged",
+      "followup": "Five checks pass in /tmp/job-receipt-photo-final.log. Receipt test provides durable receipt/expense submission scopes and retains exact job identity. Photo denial test has no authorized Work session; authorized capture and cancellation covered through persisted Work and fake native gateway in job_photo_capture_screen_test."
+    },
+    {
+      "file": "test/job_receipt_link_flow_test.dart",
+      "test": "Job photo action never creates a placeholder attachment",
+      "classification": "untriaged",
+      "followup": "Five checks pass in /tmp/job-receipt-photo-final.log. Receipt test provides durable receipt/expense submission scopes and retains exact job identity. Photo denial test has no authorized Work session; authorized capture and cancellation covered through persisted Work and fake native gateway in job_photo_capture_screen_test."
+    },
+    {
+      "file": "test/invoice_saved_client_selection_test.dart",
+      "test": "invoice selects by client ID and preserves work at 360.0",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-controls-verified-tests.log; real scroll/hit-tested interaction, original persistence assertions retained. Invoice actions now measure label widths, with shipped-font normal and 2x text checks."
+    },
+    {
+      "file": "test/invoice_date_localization_test.dart",
+      "test": "invoice date activity en_US at 320.0 LP",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/invoice-date-verified.log. Tests use Invoices heading, assert localized status inside exact record, preserve date/search checks, and verify content scrolls while FAB alone stays fixed; no bottom sheet/action bar."
+    },
+    {
+      "file": "test/invoice_date_localization_test.dart",
+      "test": "invoice date activity en_US at 1100.0 LP",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/invoice-date-verified.log. Tests use Invoices heading, assert localized status inside exact record, preserve date/search checks, and verify content scrolls while FAB alone stays fixed; no bottom sheet/action bar."
+    },
+    {
+      "file": "test/invoice_date_localization_test.dart",
+      "test": "invoice date activity es_US at 320.0 LP",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/invoice-date-verified.log. Tests use Invoices heading, assert localized status inside exact record, preserve date/search checks, and verify content scrolls while FAB alone stays fixed; no bottom sheet/action bar."
+    },
+    {
+      "file": "test/invoice_date_localization_test.dart",
+      "test": "invoice date activity es_US at 1100.0 LP",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/invoice-date-verified.log. Tests use Invoices heading, assert localized status inside exact record, preserve date/search checks, and verify content scrolls while FAB alone stays fixed; no bottom sheet/action bar."
+    },
+    {
+      "file": "test/invoice_date_localization_test.dart",
+      "test": "invoice date activity fr_CA at 320.0 LP",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/invoice-date-verified.log. Tests use Invoices heading, assert localized status inside exact record, preserve date/search checks, and verify content scrolls while FAB alone stays fixed; no bottom sheet/action bar."
+    },
+    {
+      "file": "test/invoice_date_localization_test.dart",
+      "test": "invoice date activity fr_CA at 1100.0 LP",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/invoice-date-verified.log. Tests use Invoices heading, assert localized status inside exact record, preserve date/search checks, and verify content scrolls while FAB alone stays fixed; no bottom sheet/action bar."
+    },
+    {
+      "file": "test/reusable_jobs_flow_test.dart",
+      "test": "create edit and reuse common work at 360.0 from Jobs=false",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-item-recovery-final.log. Tests explicitly select item type, scope Save draft to confirmation dialog, match named draft labels, and scroll to real save controls. Original persisted input, permission and source identity assertions retained."
+    },
+    {
+      "file": "test/reusable_jobs_flow_test.dart",
+      "test": "create edit and reuse common work at 1200.0 from Jobs=false",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-item-recovery-final.log. Tests explicitly select item type, scope Save draft to confirmation dialog, match named draft labels, and scroll to real save controls. Original persisted input, permission and source identity assertions retained."
+    },
+    {
+      "file": "test/reusable_jobs_flow_test.dart",
+      "test": "create edit and reuse common work at 360.0 from Jobs=true",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-item-recovery-final.log. Tests explicitly select item type, scope Save draft to confirmation dialog, match named draft labels, and scroll to real save controls. Original persisted input, permission and source identity assertions retained."
+    },
+    {
+      "file": "test/reusable_jobs_flow_test.dart",
+      "test": "create edit and reuse common work at 1200.0 from Jobs=true",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-item-recovery-final.log. Tests explicitly select item type, scope Save draft to confirmation dialog, match named draft labels, and scroll to real save controls. Original persisted input, permission and source identity assertions retained."
+    },
+    {
+      "file": "test/invoice_collection_review_test.dart",
+      "test": "review derives Paid from saved payment projection",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-invoice-price-status-tests.log. Paid in full label matches localized UI; single-price editing scrolls to actual controls and retains saved-price, customer-copy and validation assertions."
+    },
+    {
+      "file": "test/work_day_assignment_recovery_route_test.dart",
+      "test": "Work Day assignment entry resumes the same job recovery sheet",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-day-assignment-verified.log. Uses saved directory employees and checkbox selection; unfinished assignment leaves job untouched, reopen restores employee and save persists stable employee ID. Related five checks pass in /tmp/work-assignment-regression.log."
+    },
+    {
+      "file": "test/invoice_service_price_entry_test.dart",
+      "test": "invoice accepts one price without adding individual items",
+      "classification": "untriaged",
+      "followup": "Passed in /tmp/work-invoice-price-status-tests.log. Paid in full label matches localized UI; single-price editing scrolls to actual controls and retains saved-price, customer-copy and validation assertions."
+    }
+  ],
+  "resolved_by_focused_rerun": 29,
+  "remaining_unresolved": 22,
+  "combinedRerun": {
+    "log": "/tmp/work-system-regression-rerun.log",
+    "files": 176,
+    "passed": 548,
+    "failed": 0,
+    "exitCode": 0,
+    "elapsed": "7m40s",
+    "scope": "Serial manifest regression only; not production readiness or device acceptance."
+  }
+}

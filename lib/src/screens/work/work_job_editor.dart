@@ -4,6 +4,7 @@ import 'add_job_employee_button.dart';
 import '../../shared/utility_form_section.dart';
 import '../../data/work/work_items_draft_input.dart';
 import '../../data/work/job_confirmation.dart';
+import '../../data/work/reusable_job.dart';
 import '../../data/work/job_draft_workflow.dart';
 import '../../data/work/job_draft_controller.dart';
 import 'dart:async';
@@ -32,12 +33,14 @@ part 'work_job_confirmation.dart';
 class WorkJobEditor extends StatefulWidget {
   const WorkJobEditor({
     this.sourceEstimate,
+    this.reusableJob,
     this.initialDay,
     this.recoveredWorkflow,
     super.key,
   });
 
   final WorkRecord? sourceEstimate;
+  final ReusableJob? reusableJob;
 
   /// This editor owns closing the already-selected workflow on exit.
   final JobDraftController? recoveredWorkflow;
@@ -105,12 +108,21 @@ class _WorkJobEditorState extends State<WorkJobEditor>
     _sourceEstimate = source;
     _number =
         'Job ${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
-    _title = TextEditingController(text: source?.title ?? '');
-    _scope = TextEditingController(text: source?.detail ?? '');
+    _title = TextEditingController(
+      text: source?.title ?? widget.reusableJob?.title ?? '',
+    );
+    _scope = TextEditingController(
+      text: source?.detail ?? widget.reusableJob?.description ?? '',
+    );
     _notes = TextEditingController();
     _client = source?.client;
-    _pricing = source?.pricing ?? WorkPricingModel.timeAndMaterials;
-    _items = [...?source?.items];
+    _pricing =
+        source?.pricing ??
+        widget.reusableJob?.pricing ??
+        WorkPricingModel.timeAndMaterials;
+    _items = source != null
+        ? [...source.items]
+        : [...?widget.reusableJob?.itemsForNewJob(_jobId)];
     _startDay = DateUtils.dateOnly(widget.initialDay ?? DateTime.now());
     _endDay = _startDay;
   }
@@ -225,9 +237,13 @@ class _WorkJobEditorState extends State<WorkJobEditor>
                               onBufferChanged: (value) =>
                                   _changeJobInput(() => _bufferMinutes = value),
                               onFindOpening:
-                                  (_store.workSession?.permissions.canScheduleJobs ?? false)
-                                      ? _findOpening
-                                      : null,
+                                  (_store
+                                          .workSession
+                                          ?.permissions
+                                          .canScheduleJobs ??
+                                      false)
+                                  ? _findOpening
+                                  : null,
                               onStartDay: () => _pickDay(start: true),
                               onStartTime: () => _pickTime(start: true),
                               onEndDay: () => _pickDay(start: false),
@@ -283,26 +299,28 @@ class _WorkJobEditorState extends State<WorkJobEditor>
                       ),
                     ),
                   ),
+                  SafeArea(
+                    minimum: const EdgeInsets.all(12),
+                    child: Center(
+                      heightFactor: 1,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 620),
+                        child: FilledButton.icon(
+                          key: const ValueKey('save-job'),
+                          onPressed: _draftReady && !_saving ? _save : null,
+                          icon: const Icon(Icons.save_outlined),
+                          label: Text(
+                            _fromApprovedEstimate
+                                ? 'Create Linked Job'
+                                : 'Save Job',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               );
             },
-          ),
-        ),
-        bottomNavigationBar: SafeArea(
-          minimum: const EdgeInsets.all(12),
-          child: Center(
-            heightFactor: 1,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 620),
-              child: FilledButton.icon(
-                key: const ValueKey('save-job'),
-                onPressed: _draftReady && !_saving ? _save : null,
-                icon: const Icon(Icons.save_outlined),
-                label: Text(
-                  _fromApprovedEstimate ? 'Create Linked Job' : 'Save Job',
-                ),
-              ),
-            ),
           ),
         ),
       ),
@@ -335,11 +353,8 @@ class _WorkJobEditorState extends State<WorkJobEditor>
     );
     final selected = await showDialog<DateTime>(
       context: context,
-      builder: (_) => JobOpeningPicker(
-        job: proposal,
-        work: work,
-        initialDay: _startDay,
-      ),
+      builder: (_) =>
+          JobOpeningPicker(job: proposal, work: work, initialDay: _startDay),
     );
     if (!mounted || selected == null) return;
     final selectedEnd = selected.add(end.difference(start));

@@ -10,13 +10,15 @@ import '../../shared/recorded_entries_section.dart';
 import '../../shared/operational_section_heading.dart';
 import '../../theme/operational_card_palette.dart';
 import '../../theme/app_semantic_colors.dart';
-import 'invoice_detail_screen.dart';
 import 'invoice_payment_entry_screen.dart';
+import 'direct_payment_entry_screen.dart';
 import 'invoice_payment_picker_screen.dart';
+import 'payment_detail_screen.dart';
 import 'invoice_permissions.dart';
 import 'work_detail_header.dart';
 import 'work_models.dart';
 import 'work_month_calendar.dart';
+import 'work_selected_date_bar.dart';
 
 part 'payment_record_row.dart';
 
@@ -50,7 +52,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.permissions.canViewFinancials) {
+    final work = PrototypeOperationsScope.of(context).workSession;
+    if (!widget.permissions.canViewFinancials ||
+        (work != null && !work.permissions.canManageOtherCreators)) {
       return const Scaffold(
         key: ValueKey('payments-screen'),
         body: SafeArea(
@@ -61,6 +65,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       );
     }
     final payments = _paymentsOn(_selectedDay);
+    final canRecordPayment =
+        widget.permissions.canRecordPayment &&
+        work?.permissions.canRecordPayments == true;
     final pageWidth = MediaQuery.sizeOf(context).width;
     final pageInsets = AppLayoutEngine.pageInsetsFor(pageWidth);
     final compactActions =
@@ -71,8 +78,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         1;
     return Scaffold(
       key: const ValueKey('payments-screen'),
-      floatingActionButton:
-          widget.permissions.canRecordPayment && compactActions
+      floatingActionButton: canRecordPayment && compactActions
           ? FloatingActionButton.extended(
               key: const ValueKey('record-payment-fab'),
               onPressed: _recordPayment,
@@ -106,17 +112,23 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                           label: 'Payments',
                           selectedDay: _selectedDay,
                           onBack: () => Navigator.of(context).pop(),
-                          showDateContext: true,
+                          showDateContext: false,
                         ),
                         const SizedBox(height: 14),
+                        WorkSelectedDateBar(
+                          key: const ValueKey('payment-selected-date'),
+                          selectedDay: _selectedDay,
+                          onPrevious: () => _shiftDay(-1),
+                          onNext: () => _shiftDay(1),
+                        ),
+                        const SizedBox(height: 12),
                         _PaymentsHeading(
                           totalCents: payments.fold(
                             0,
                             (sum, entry) => sum + entry.amountCents,
                           ),
                         ),
-                        if (widget.permissions.canRecordPayment &&
-                            !compactActions) ...[
+                        if (canRecordPayment && !compactActions) ...[
                           const SizedBox(height: 10),
                           Align(
                             alignment: AlignmentDirectional.centerStart,
@@ -129,11 +141,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                           ),
                         ],
                         const SizedBox(height: 12),
-                        _PaymentList(
-                          payments: payments,
-                          store: _store,
-                          permissions: widget.permissions,
-                        ),
+                        _PaymentList(payments: payments, store: _store),
                       ],
                     ),
                     followingContent: layout.columns == 1
@@ -208,8 +216,15 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     }
   }
 
+  void _shiftDay(int days) => _openDay(
+    DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day + days),
+  );
+
   Future<void> _recordPayment() async {
-    if (!widget.permissions.canRecordPayment) return;
+    if (!widget.permissions.canRecordPayment ||
+        _store.workSession?.permissions.canRecordPayments != true) {
+      return;
+    }
     final invoices = _store.workRecords
         .where(
           (record) =>
@@ -218,9 +233,35 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               _balanceCentsFor(record) > 0,
         )
         .toList();
-    if (invoices.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No open invoice can receive a payment.')),
+    final useInvoice = invoices.isEmpty
+        ? false
+        : await showModalBottomSheet<bool>(
+            context: context,
+            builder: (sheetContext) => SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    title: const Text('Payment for an invoice'),
+                    subtitle: const Text('Apply it to an open balance'),
+                    onTap: () => Navigator.pop(sheetContext, true),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    title: const Text('Payment without an invoice'),
+                    subtitle: const Text('Link a job or estimate if you want'),
+                    onTap: () => Navigator.pop(sheetContext, false),
+                  ),
+                ],
+              ),
+            ),
+          );
+    if (!mounted || useInvoice == null) return;
+    if (!useInvoice) {
+      await Navigator.of(context).push<PrototypeFinancialEntry>(
+        MaterialPageRoute(
+          builder: (_) => DirectPaymentEntryScreen(initialDay: _selectedDay),
+        ),
       );
       return;
     }
@@ -313,11 +354,7 @@ class PaymentDayScreen extends StatelessWidget {
                           showDateContext: true,
                         ),
                         const SizedBox(height: 12),
-                        _PaymentList(
-                          payments: payments,
-                          store: store,
-                          permissions: permissions,
-                        ),
+                        _PaymentList(payments: payments, store: store),
                       ],
                     ),
                   ),
@@ -362,14 +399,9 @@ class _PaymentsHeading extends StatelessWidget {
 }
 
 class _PaymentList extends StatelessWidget {
-  const _PaymentList({
-    required this.payments,
-    required this.store,
-    required this.permissions,
-  });
+  const _PaymentList({required this.payments, required this.store});
   final List<PrototypeFinancialEntry> payments;
   final PrototypeOperationsStore store;
-  final InvoicePermissions permissions;
 
   @override
   Widget build(BuildContext context) => RecordedEntriesSection(
@@ -400,8 +432,7 @@ class _PaymentList extends StatelessWidget {
                 for (var index = 0; index < payments.length; index++) ...[
                   _PaymentRecordRow(
                     entry: payments[index],
-                    invoice: _invoiceFor(store, payments[index].sourceId),
-                    permissions: permissions,
+                    linkedWork: _linkedWorkFor(store, payments[index]),
                   ),
                   if (index < payments.length - 1) const SizedBox(height: 8),
                 ],
@@ -413,13 +444,22 @@ class _PaymentList extends StatelessWidget {
   );
 }
 
-WorkRecord? _invoiceFor(PrototypeOperationsStore store, String reference) =>
-    store.workRecords
-        .where(
-          (record) =>
-              record.kind == WorkRecordKind.invoice &&
-              (record.id == reference || record.number == reference),
-        )
-        .firstOrNull;
+WorkRecord? _linkedWorkFor(
+  PrototypeOperationsStore store,
+  PrototypeFinancialEntry payment,
+) => store.workRecords
+    .where(
+      (record) =>
+          (switch (payment.paymentLinkKind) {
+            PaymentLinkKind.invoice => record.kind == WorkRecordKind.invoice,
+            PaymentLinkKind.job => record.kind == WorkRecordKind.job,
+            PaymentLinkKind.estimate => record.kind == WorkRecordKind.estimate,
+            _ => false,
+          }) &&
+          (record.id == payment.sourceId ||
+              (payment.paymentLinkKind == PaymentLinkKind.invoice &&
+                  record.number == payment.sourceId)),
+    )
+    .firstOrNull;
 
 String _moneyCents(int cents) => '\$${(cents / 100).toStringAsFixed(2)}';

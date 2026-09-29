@@ -1,3 +1,5 @@
+import 'work_document_customer.dart';
+import 'work_document_export_authorization.dart';
 import '../storage/draft_recovery_selection.dart';
 import '../storage/draft_autosave_session.dart';
 import '../storage/draft_workflow_controller.dart';
@@ -13,10 +15,7 @@ String estimateDeliveryRecipient(
   EstimateDeliveryMethod method,
   Iterable<WorkCustomerProfile> customers,
 ) {
-  WorkCustomerProfile? customer = base.customerSnapshot;
-  for (final candidate in customers) {
-    if (customer == null && candidate.name == base.client) customer = candidate;
-  }
+  final customer = resolveWorkDocumentCustomer(base, customers);
   return switch (method) {
     EstimateDeliveryMethod.email => customer?.email ?? '',
     EstimateDeliveryMethod.textMessage => customer?.phone ?? '',
@@ -119,6 +118,8 @@ class EstimateDeliveryInput {
     if (base.items.isEmpty ||
         base.client.trim().isEmpty ||
         base.client == 'Client not selected' ||
+        base.title.trim().isEmpty ||
+        base.title == 'Untitled quote' ||
         base.title == 'Untitled estimate' ||
         base.detail == 'Proposed work not entered yet.') {
       throw StateError(
@@ -206,14 +207,16 @@ extension EstimateDeliveryDraftWorkflow on WorkPersistenceSession {
         .firstOrNull;
     if (controller.session.organizationId != permissions.organizationId ||
         controller.session.ownerId != permissions.actorEmployeeId ||
-        controller.session.domain != 'work/estimate-delivery' ||
+        controller.session.domain !=
+            (controller.input.base.kind == WorkRecordKind.quote
+                ? 'work/quote-delivery'
+                : 'work/estimate-delivery') ||
         controller.input.base.id != recordId ||
         current == null ||
-        current.kind != WorkRecordKind.estimate ||
-        !permissions.canEdit(current)) {
-      throw StateError(
-        'Selected estimate delivery belongs to another workflow.',
-      );
+        controller.input.base.kind != current.kind ||
+        !current.isProposal ||
+        (!permissions.canEdit(current) || !permissions.canShareDocuments)) {
+      throw StateError('Selected delivery belongs to another workflow.');
     }
   }
 
@@ -224,15 +227,17 @@ extension EstimateDeliveryDraftWorkflow on WorkPersistenceSession {
   }) async {
     final current = records.where((r) => r.id == recordId).firstOrNull;
     if (current == null ||
-        current.kind != WorkRecordKind.estimate ||
-        !permissions.canEdit(current)) {
-      throw StateError('Estimate unavailable.');
+        !current.isProposal ||
+        (!permissions.canEdit(current) || !permissions.canShareDocuments)) {
+      throw StateError('Document unavailable.');
     }
     final people = customers.toList();
     final draft = DraftAutosaveSession(
       store: drafts,
       organizationId: permissions.organizationId,
-      domain: 'work/estimate-delivery',
+      domain: current.kind == WorkRecordKind.quote
+          ? 'work/quote-delivery'
+          : 'work/estimate-delivery',
       draftId:
           recoverySelection?.draftId ??
           'edit-${permissions.actorEmployeeId}-$recordId',
@@ -241,14 +246,14 @@ extension EstimateDeliveryDraftWorkflow on WorkPersistenceSession {
     void validate(EstimateDeliveryInput input) {
       if (input.base.id != recordId ||
           !permissions.canShareDocuments ||
-          input.base.kind != WorkRecordKind.estimate ||
+          input.base.kind != current.kind ||
           input.base.createdByEmployeeId != current.createdByEmployeeId ||
           input.baseRevision < 1 ||
           !permissions.canEdit(input.base) ||
           input.method == EstimateDeliveryMethod.inPerson ||
           !input.recipients.containsKey(input.method.name) ||
           (input.preparedAt != null && !input.preparedAt!.isUtc)) {
-        throw StateError('Delivery draft does not match this estimate.');
+        throw StateError('Delivery draft does not match this document.');
       }
     }
 
@@ -266,6 +271,7 @@ extension EstimateDeliveryDraftWorkflow on WorkPersistenceSession {
         (input, checkpoint) async {
           validate(input);
           final record = input.confirmedRecord();
+          requireWorkDocumentExport(record, permissions);
           final saved = await save(
             records: [record],
             expectedStorageRevisions: {record.id: input.baseRevision},

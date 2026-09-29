@@ -130,7 +130,10 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
                             onBack: () => leaveDraftRoute(),
                           ),
                           if (widget.draftSession case final session?)
-                            NestedEditorDraftStatus(session: session),
+                            NestedEditorDraftStatus(
+                              session: session,
+                              showRoutineStatus: false,
+                            ),
                           for (final pending in _pendingItems.values)
                             ListTile(
                               title: Text(
@@ -204,33 +207,34 @@ class _WorkItemsEditorState extends State<WorkItemsEditor>
                       ),
                     ),
                   ),
+                  SafeArea(
+                    minimum: const EdgeInsets.all(12),
+                    child: Center(
+                      heightFactor: 1,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 620),
+                        child: FilledButton.icon(
+                          onPressed:
+                              !_confirming &&
+                                  (_pendingItem == null ||
+                                      widget.onDraftChanged != null)
+                              ? _confirmItems
+                              : null,
+                          icon: const Icon(Icons.save_outlined),
+                          label: Text(
+                            _pendingItem != null
+                                ? 'Save progress'
+                                : _materialOnly
+                                ? 'Save materials'
+                                : 'Save items',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               );
             },
-          ),
-        ),
-        bottomNavigationBar: SafeArea(
-          minimum: const EdgeInsets.all(12),
-          child: Center(
-            heightFactor: 1,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 620),
-              child: FilledButton.icon(
-                onPressed:
-                    !_confirming &&
-                        (_pendingItem == null || widget.onDraftChanged != null)
-                    ? _confirmItems
-                    : null,
-                icon: const Icon(Icons.save_outlined),
-                label: Text(
-                  _pendingItem != null
-                      ? 'Save progress'
-                      : _materialOnly
-                      ? 'Save materials'
-                      : 'Save items',
-                ),
-              ),
-            ),
           ),
         ),
       ),

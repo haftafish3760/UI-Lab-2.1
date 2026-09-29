@@ -20,6 +20,7 @@ WorkSessionPermissions access({
   editableKinds: WorkRecordKind.values.toSet(),
   canManageOtherCreators: true,
   canShareDocuments: share,
+  canIssueInvoices: true,
 );
 
 const record = WorkRecord(
@@ -34,6 +35,60 @@ const record = WorkRecord(
 );
 
 void main() {
+  test(
+    'activity rejects a missing newest snapshot rather than showing incomplete history',
+    () async {
+      final harness = await DatabaseHarness.create();
+      addTearDown(harness.dispose);
+      final db = await harness.open();
+      final work = await WorkPersistenceSession.open(
+        SqliteWorkRepository(db),
+        access(),
+      );
+      addTearDown(work.dispose);
+      expect(await work.create(record), isTrue);
+      expect(await work.update(record.copyWith(jobNotes: 'Changed')), isTrue);
+      await db.customStatement(
+        "DELETE FROM local_record_revisions WHERE record_id = 'invoice' AND revision = 2",
+      );
+      await expectLater(
+        WorkActivityReader(work).read(record.id),
+        throwsStateError,
+      );
+    },
+  );
+
+  test(
+    'activity rechecks durable deletion even when another session still has the record cached',
+    () async {
+      final harness = await DatabaseHarness.create();
+      addTearDown(harness.dispose);
+      final db = await harness.open();
+      final repository = SqliteWorkRepository(db);
+      final creator = await WorkPersistenceSession.open(repository, access());
+      addTearDown(creator.dispose);
+      expect(await creator.create(record), isTrue);
+      final deleter = await WorkPersistenceSession.open(
+        repository,
+        WorkSessionPermissions(
+          organizationId: 'company',
+          actorEmployeeId: 'creator',
+          permissionRevision: 'delete',
+          visibleCreatorIds: {'creator'},
+          editableKinds: {WorkRecordKind.invoice},
+          canDeleteDrafts: true,
+        ),
+      );
+      addTearDown(deleter.dispose);
+      expect(await deleter.deleteDraft(deleter.records.single), isTrue);
+      expect(creator.records, hasLength(1));
+      await expectLater(
+        WorkActivityReader(creator).read(record.id),
+        throwsStateError,
+      );
+    },
+  );
+
   test(
     'saved history preserves the actual editor independently from creator across restart',
     () async {

@@ -239,7 +239,10 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                           onBack: () => leaveDraftRoute(),
                         ),
                         if (widget.draftSession case final session?)
-                          NestedEditorDraftStatus(session: session),
+                          NestedEditorDraftStatus(
+                            session: session,
+                            showRoutineStatus: false,
+                          ),
                         const SizedBox(height: 14),
                         if (widget.allowedTypes.length > 1) ...[
                           DropdownButtonFormField<WorkLineItemType>(
@@ -257,37 +260,44 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                             onChanged: (value) =>
                                 _changeInput(() => _type = value ?? _type),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 20),
                         ],
                         TextField(
                           controller: _name,
+                          textInputAction: TextInputAction.next,
                           decoration: InputDecoration(
                             labelText: _type == WorkLineItemType.labor
                                 ? 'Labor name'
                                 : '${_type.label} name',
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 20),
                         TextField(
                           controller: _description,
                           maxLines: 3,
-                          decoration: const InputDecoration(
-                            labelText: 'Description for the customer',
+                          decoration: InputDecoration(
+                            labelText: 'Description',
+                            hintText: _type == WorkLineItemType.material
+                                ? 'Example: 2 × 4 × 16 ft lumber or ½-inch elbow'
+                                : null,
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 20),
                         if (_type == WorkLineItemType.labor &&
                             _unit == 'hour') ...[
+                          const Text(
+                            'Use a separate labor entry for different rates or hours.',
+                          ),
+                          const SizedBox(height: 8),
                           TextField(
                             controller: _workers,
+                            textInputAction: TextInputAction.next,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
                               labelText: 'Number of workers',
-                              helperText:
-                                  'Use a separate labor entry for different rates or hours.',
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 20),
                         ],
                         _NumberAndUnitRow(
                           quantity: _quantity,
@@ -302,7 +312,7 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                             }
                           }),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 20),
                         if (_jobMaterialMode) ...[
                           DropdownButtonFormField<JobMaterialBillingTreatment>(
                             key: const ValueKey(
@@ -335,11 +345,12 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                               ).colorScheme.onSurfaceVariant,
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 20),
                         ],
                         if (widget.canSetCustomerPrice && _chargesCustomer)
                           TextField(
                             controller: _price,
+                            textInputAction: TextInputAction.next,
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
@@ -370,7 +381,11 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                             ),
                           ),
                         if (widget.canViewInternalCost) ...[
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'Private cost for estimated gross profit. Never shown on the customer copy.',
+                          ),
+                          const SizedBox(height: 8),
                           TextField(
                             controller: _cost,
                             keyboardType: const TextInputType.numberWithOptions(
@@ -382,9 +397,6 @@ class _WorkLineItemEditorState extends State<WorkLineItemEditor>
                                       _unit == 'hour'
                                   ? 'Your cost per worker-hour (optional)'
                                   : 'Your cost per $_unit (optional)',
-                              helperMaxLines: 3,
-                              helperText:
-                                  'Private cost for estimated gross profit. Never shown on the customer copy.',
                               prefixIcon: const Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 12),
                                 child: Text('\$'),

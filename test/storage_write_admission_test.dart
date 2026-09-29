@@ -6,6 +6,47 @@ import 'package:ui_lab_2_1/src/data/storage/storage_write_admission.dart';
 void main() {
   const reserve = StorageWriteAdmission.reserveBytes;
   test(
+    'hung capacity probe refuses writes without stacking native requests',
+    () async {
+      final pending = Completer<int?>();
+      var reads = 0;
+      var writes = 0;
+      final guard = StorageWriteAdmission(
+        probeTimeout: const Duration(milliseconds: 10),
+        readFreeBytes: () {
+          reads++;
+          return reads == 1 ? pending.future : Future.value(reserve + 100);
+        },
+      );
+      addTearDown(guard.close);
+      for (var attempt = 0; attempt < 2; attempt++) {
+        await expectLater(
+          guard.run(peakBytes: 1, write: (_) async => writes++),
+          throwsA(isA<StorageWriteDeferred>()),
+        );
+      }
+      expect(reads, 1);
+      expect(writes, 0);
+      expect(guard.status.level, StorageCapacityLevel.unknown);
+      pending.complete(reserve + 100);
+      await Future<void>.delayed(Duration.zero);
+      expect(guard.status.level, StorageCapacityLevel.unknown);
+      await guard.run(peakBytes: 1, write: (_) async => writes++);
+      expect(reads, 2);
+      expect(writes, 1);
+    },
+  );
+
+  test('capacity probe requires a positive timeout', () {
+    expect(
+      () => StorageWriteAdmission(
+        readFreeBytes: () async => reserve,
+        probeTimeout: Duration.zero,
+      ),
+      throwsArgumentError,
+    );
+  });
+  test(
     'exact reserve is protected, with warning independent of admission',
     () async {
       var free = StorageWriteAdmission.warningBytes;

@@ -116,13 +116,11 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
         context: context,
         builder: (dialog) => AlertDialog(
           title: const Text('Job completed'),
-          content: const Text(
-            'Create the invoice from the completed work and approved additions?',
-          ),
+          content: const Text('Do you want to create an invoice for this job?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialog, false),
-              child: const Text('Later'),
+              child: const Text('Finish without invoice'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialog, true),
@@ -289,43 +287,65 @@ extension _JobWorkspaceInteractions on _JobWorkspaceScreenState {
     await _linkExpenseRecord(source);
   }
 
+  Future<void> _viewJobPhoto(WorkSitePhoto photo) async {
+    final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
+    if (work == null) return;
+    try {
+      final saved = await work.repository.find(
+        organizationId: work.permissions.organizationId,
+        recordId: _sourceRecord.id,
+        visibleCreatorIds: work.permissions.visibleCreatorIds,
+      );
+      if (!mounted) return;
+      final current = saved?.record.sitePhotos
+          .where((entry) => entry.id == photo.id)
+          .firstOrNull;
+      if (saved?.record.kind != WorkRecordKind.job || current == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This job photo is no longer available.'),
+          ),
+        );
+        return;
+      }
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) =>
+              EstimatePhotoPreviewScreen(photo: current, title: 'Job photo'),
+        ),
+      );
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("The job photo could not be opened. Try again."),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _attachJobPhoto() async {
     if (!widget.permissions.canAttachReceipts) return;
-    final source = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) => SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Capture job photo'),
-              onTap: () => Navigator.pop(context, 'Camera'),
+    try {
+      final saved = await openJobPhotosEditor(
+        context,
+        recordId: _sourceRecord.id,
+      );
+      if (saved != null && mounted) _adoptCommittedJob(saved);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error is StateError
+                  ? error.message.toString()
+                  : 'Job photos could not be opened. Try again.',
             ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Choose existing photo'),
-              onTap: () => Navigator.pop(context, 'Photo library'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.attach_file_outlined),
-              title: const Text('Attach a file'),
-              onTap: () => Navigator.pop(context, 'File picker'),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (!mounted || source == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'No job photo was attached. $source storage is not connected yet.',
-        ),
-      ),
-    );
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _rescheduleJob() async {

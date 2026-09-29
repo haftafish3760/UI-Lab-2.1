@@ -1,9 +1,13 @@
 /// Immutable normalized handwriting; coordinates are fractions of the pad.
 class SignatureInk {
-  SignatureInk(Iterable<Iterable<(double, double)>> strokes)
+  SignatureInk(Iterable<Iterable<(double, double)>> strokes, {this.strokeWidth})
     : strokes = List.unmodifiable(
         strokes.map((stroke) => List<(double, double)>.unmodifiable(stroke)),
       ) {
+    if (strokeWidth != null &&
+        (!strokeWidth!.isFinite || strokeWidth! < 1 || strokeWidth! > 6)) {
+      throw const FormatException('Invalid signature thickness.');
+    }
     for (final stroke in this.strokes) {
       if (stroke.isEmpty) {
         throw const FormatException('Empty signature stroke.');
@@ -20,10 +24,14 @@ class SignatureInk {
       }
     }
   }
+
+  /// Logical pixels on the 210-LP signing pad; null preserves legacy rendering.
+  final double? strokeWidth;
   final List<List<(double, double)>> strokes;
   bool get hasInk => strokes.any((stroke) => stroke.length > 1);
   Map<String, Object?> toJson() => {
     'version': 1,
+    if (strokeWidth != null) 'strokeWidth': strokeWidth,
     'strokes': [
       for (final stroke in strokes)
         [
@@ -50,6 +58,7 @@ class SignatureInk {
           return ((point[0] as num).toDouble(), (point[1] as num).toDouble());
         });
       }),
+      strokeWidth: (json['strokeWidth'] as num?)?.toDouble(),
     );
   }
 }

@@ -13,7 +13,7 @@ void main() {
   testWidgets(
     'handwriting and consent recover; approval and draft consumption are atomic',
     (tester) async {
-      tester.view.physicalSize = const Size(1400, 1200);
+      tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
       final harness = (await tester.runAsync(DatabaseHarness.create))!;
       var db = (await tester.runAsync(harness.open))!;
@@ -53,22 +53,35 @@ void main() {
       try {
         await open();
         await tester.enterText(name, '  Morgan Customer  ');
-        await tester.ensureVisible(find.byKey(const ValueKey('tap-to-sign')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('tap-to-sign')));
+        FocusManager.instance.primaryFocus?.unfocus();
         await tester.pumpAndSettle();
         await tester.ensureVisible(
           find.byKey(const ValueKey('estimate-signature-pad')),
         );
         await tester.pumpAndSettle();
-        await tester.drag(
+        await tester.timedDrag(
           find.byKey(const ValueKey('estimate-signature-pad')),
           const Offset(80, 30),
+          const Duration(milliseconds: 500),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<CheckboxListTile>(find.byType(CheckboxListTile))
+              .onChanged,
+          isNotNull,
+          reason:
+              'Drawing on the pad must produce ink before consent is enabled.',
         );
         await tester.ensureVisible(find.byType(CheckboxListTile));
         await tester.pumpAndSettle();
         await tester.tap(find.byType(CheckboxListTile));
-        await tester.pump();
+        await tester.pumpAndSettle();
+        expect(
+          tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
+          isTrue,
+          reason: 'Consent must be selected before leaving the signing screen.',
+        );
         await tester.binding.handlePopRoute();
         await waitForNativeSave(
           tester,
@@ -104,6 +117,7 @@ void main() {
           ),
         );
         await tester.ensureVisible(save);
+        await tester.pumpAndSettle();
         await tester.tap(save);
         await tester.pump();
         await waitForNativeSave(

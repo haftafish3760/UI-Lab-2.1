@@ -1,3 +1,4 @@
+import 'support/visible_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -5,6 +6,7 @@ import 'package:ui_lab_2_1/src/layout/app_layout_engine.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_list_workspace_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/job_workspace_models.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
+import 'package:ui_lab_2_1/src/screens/work/work_selected_date_bar.dart';
 import 'package:ui_lab_2_1/src/shared/app_view_mode.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
@@ -54,12 +56,29 @@ void main() {
   testWidgets('Jobs workspace is date first with separate compact records', (
     tester,
   ) async {
-    await _pumpJobs(tester, const Size(390, 844));
+    final store = PrototypeOperationsStore();
+    await store.addWorkRecord(
+      WorkRecord(
+        id: 'other-active-job',
+        kind: WorkRecordKind.job,
+        number: 'JOB-ACTIVE',
+        title: 'Return visit',
+        client: 'Test client',
+        detail: 'Finish previously started work',
+        pricing: WorkPricingModel.flatRate,
+        assignee: 'Alex Morgan',
+        createdOn: DateTime.now().subtract(const Duration(days: 3)),
+        scheduledStart: DateTime.now().add(const Duration(days: 1)),
+        scheduledEnd: DateTime.now().add(const Duration(days: 2)),
+        status: WorkRecordStatus.inProgress,
+      ),
+    );
+    await _pumpJobs(tester, const Size(390, 844), store: store);
 
     expect(find.byKey(const ValueKey('job-selected-date')), findsOneWidget);
     expect(find.byKey(const ValueKey('job-date-records')), findsOneWidget);
     expect(find.byKey(const ValueKey('job-active-records')), findsOneWidget);
-    expect(find.byKey(const ValueKey('job-search')), findsOneWidget);
+    expect(find.byKey(const ValueKey('job-search')), findsNothing);
     expect(find.byKey(const ValueKey('new-job')), findsOneWidget);
     expect(find.text('Selected date'), findsNothing);
     expect(find.text('All jobs'), findsNothing);
@@ -78,19 +97,54 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Jobs search covers the authorized job file', (tester) async {
-    await _pumpJobs(tester, const Size(390, 844));
+  testWidgets(
+    'Reusable jobs tab preserves Jobs date and hides booking controls',
+    (tester) async {
+      await _pumpJobs(tester, const Size(320, 844), textScale: 2);
+      final originalDate = tester.widget<WorkSelectedDateBar>(
+        find.byKey(const ValueKey('job-selected-date')),
+      );
+      await tester.ensureVisible(find.text('Reusable jobs'));
+      await tester.tap(find.text('Reusable jobs'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('job-selected-date')), findsNothing);
+      expect(find.byKey(const ValueKey('work-5-7-calendar')), findsNothing);
+      expect(find.byKey(const ValueKey('new-job')), findsNothing);
+      expect(find.text('Reusable jobs'), findsOneWidget);
+      await tester.tap(
+        find.descendant(of: find.byType(Tab), matching: find.text('Jobs')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('job-selected-date')), findsOneWidget);
+      expect(
+        tester
+            .widget<WorkSelectedDateBar>(
+              find.byKey(const ValueKey('job-selected-date')),
+            )
+            .selectedDay,
+        originalDate.selectedDay,
+      );
+      expect(find.byKey(const ValueKey('new-job')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
-    await tester.enterText(
-      find.byKey(const ValueKey('job-search')),
-      'Maya Thompson',
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('job-search-results')), findsOneWidget);
-    expect(find.byKey(const ValueKey('job-row-job-1038')), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'Empty daily Jobs hides search and empty sections but keeps calendar and create',
+    (tester) async {
+      await _pumpJobs(
+        tester,
+        const Size(390, 844),
+        store: PrototypeOperationsStore(workRecords: []),
+      );
+      expect(find.byKey(const ValueKey('job-search')), findsNothing);
+      expect(find.byKey(const ValueKey('job-date-records')), findsNothing);
+      expect(find.byKey(const ValueKey('job-active-records')), findsNothing);
+      expect(find.byKey(const ValueKey('work-5-7-calendar')), findsOneWidget);
+      expect(find.byKey(const ValueKey('new-job')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('Jobs calendar selects the day in place and opens its Job', (
     tester,
@@ -226,7 +280,7 @@ void main() {
       expect(find.byKey(const ValueKey('job-vehicle-field')), findsOneWidget);
       expect(find.byKey(const ValueKey('job-items-section')), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('save-job')));
+      await tapVisibleControl(tester, find.byKey(const ValueKey('save-job')));
       await tester.pumpAndSettle();
       expect(
         find.text(

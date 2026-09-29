@@ -130,6 +130,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('estimate-primary-preview')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('estimate-primary-preview')));
     await tester.pumpAndSettle();
 
@@ -177,6 +181,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('estimate-primary-preview')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('estimate-primary-preview')));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Document actions'));
@@ -279,6 +287,11 @@ void main() {
       await tester.tap(find.text('Admin'));
       await tester.pumpAndSettle();
 
+      await Scrollable.ensureVisible(
+        tester.element(find.byKey(const ValueKey('quick-estimates'))),
+        alignment: .5,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('quick-estimates')));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('estimate-selected-date')), findsOne);
@@ -299,7 +312,7 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('open-work-drafts')));
       await tester.pumpAndSettle();
-      expect(find.text('Drafts'), findsWidgets);
+      expect(find.text('Estimate drafts'), findsWidgets);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
 
@@ -375,6 +388,8 @@ void main() {
         findsOneWidget,
       );
       await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byTooltip('Open navigation'));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Open navigation'));
       await tester.pumpAndSettle();

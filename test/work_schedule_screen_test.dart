@@ -5,11 +5,56 @@ import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_schedule_screen.dart';
 import 'package:ui_lab_2_1/src/shared/app_preferences.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
+import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
+import 'package:ui_lab_2_1/src/screens/work/work_detail_header.dart';
 
 void main() {
-  for (final width in [320.0, 430.0, 1280.0]) {
+  testWidgets(
+    'empty schedule retains navigation without empty record containers',
+    (tester) async {
+      final store = PrototypeOperationsStore(
+        workRecords: [],
+        financialEntries: [],
+      );
+      final scope = OperationalScopeController();
+      addTearDown(store.dispose);
+      addTearDown(scope.dispose);
+      await tester.pumpWidget(
+        PrototypeOperationsScope(
+          store: store,
+          child: OperationalScope(
+            controller: scope,
+            child: MaterialApp(
+              theme: AppTheme.light,
+              home: WorkScheduleScreen(initialDay: DateTime(2026, 9, 28)),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(WorkDetailHeader), findsOneWidget);
+      expect(find.textContaining('No jobs'), findsNothing);
+      expect(find.textContaining('Scheduled jobs ·'), findsNothing);
+      expect(find.textContaining('Needs scheduling ·'), findsNothing);
+      final waiting = find.byKey(
+        const ValueKey('dashboard-summary-schedule-waiting'),
+      );
+      await tester.ensureVisible(waiting);
+      await tester.tap(waiting);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Needs scheduling ·'), findsNothing);
+      expect(find.byKey(const ValueKey('work-5-7-calendar')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  for (final (width, textScale) in [
+    (320.0, 1.5),
+    (320.0, 2.0),
+    (430.0, 1.5),
+    (1280.0, 1.5),
+  ]) {
     testWidgets(
-      'schedule shows only overlapping jobs at $width without overflow',
+      'schedule shows selected/all jobs at $width and ${textScale}x text',
       (tester) async {
         tester.view.physicalSize = Size(width, 1000);
         tester.view.devicePixelRatio = 1;
@@ -46,6 +91,8 @@ void main() {
         addTearDown(store.dispose);
         final preferences = AppPreferencesController();
         addTearDown(preferences.dispose);
+        final scope = OperationalScopeController();
+        addTearDown(scope.dispose);
         await tester.pumpWidget(
           PrototypeOperationsScope(
             store: store,
@@ -56,10 +103,13 @@ void main() {
                 builder: (context, child) => MediaQuery(
                   data: MediaQuery.of(
                     context,
-                  ).copyWith(textScaler: const TextScaler.linear(1.5)),
+                  ).copyWith(textScaler: TextScaler.linear(textScale)),
                   child: child!,
                 ),
-                home: WorkScheduleScreen(initialDay: day),
+                home: OperationalScope(
+                  controller: scope,
+                  child: WorkScheduleScreen(initialDay: day),
+                ),
               ),
             ),
           ),
@@ -67,8 +117,40 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Overnight job'), findsOneWidget);
         expect(find.text('Tomorrow only'), findsNothing);
+        expect(find.text('Needs a date'), findsNothing);
+        final waiting = find.byKey(
+          const ValueKey('dashboard-summary-schedule-waiting'),
+        );
+        await tester.ensureVisible(waiting);
+        await tester.tap(waiting);
+        await tester.pumpAndSettle();
         expect(find.text('Needs a date'), findsOneWidget);
+        expect(find.text('Overnight job'), findsNothing);
+        final scheduled = find.byKey(
+          const ValueKey('dashboard-summary-schedule-scheduled'),
+        );
+        await tester.ensureVisible(scheduled);
+        await tester.tap(scheduled);
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('schedule-all-jobs')),
+        );
+        await tester.tap(find.byKey(const ValueKey('schedule-all-jobs')));
+        await tester.pumpAndSettle();
+        expect(find.text('Tomorrow only'), findsOneWidget);
+        expect(find.text('Scheduled jobs · all dates (2)'), findsOneWidget);
+        final tomorrowLabel = MaterialLocalizations.of(
+          tester.element(find.byType(WorkScheduleScreen)),
+        ).formatMediumDate(day.add(const Duration(days: 1)));
+        expect(find.textContaining(tomorrowLabel), findsWidgets);
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('schedule-selected-day')),
+        );
+        await tester.tap(find.byKey(const ValueKey('schedule-selected-day')));
+        await tester.pumpAndSettle();
+        expect(find.text('Tomorrow only'), findsNothing);
         expect(find.byTooltip('Scheduling settings'), findsOneWidget);
+        expect(find.byType(WorkDetailHeader), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );

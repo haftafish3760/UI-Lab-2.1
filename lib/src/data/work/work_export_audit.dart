@@ -4,6 +4,9 @@ import '../storage/local_record_store.dart';
 import '../storage/local_record_command.dart';
 import 'work_activity_reader.dart';
 import 'work_persistence_session.dart';
+import 'models/work_models.dart';
+import 'work_record_codec.dart';
+import 'work_document_export_authorization.dart';
 
 /// Work owns export audit meaning; the shared PDF engine knows nothing about it.
 class WorkExportAudit {
@@ -11,13 +14,14 @@ class WorkExportAudit {
   final WorkPersistenceSession work;
   static const domain = 'work/document-exports';
 
-  Future<void> assertCurrent(String recordId, int revision) async {
+  Future<WorkRecord> assertCurrent(
+    String recordId,
+    int revision, {
+    WorkRecord? expectedDocument,
+  }) async {
     WorkActivityReader(work).authorize(recordId);
     final record = work.records.firstWhere((r) => r.id == recordId);
-    if (!work.permissions.canShareDocuments ||
-        !work.permissions.canEdit(record)) {
-      throw StateError('You do not have permission to export this document.');
-    }
+    requireWorkDocumentExport(record, work.permissions);
     final store = LocalRecordStore(work.repository.database);
     final rows = await store.read(
       organizationId: work.permissions.organizationId,
@@ -30,20 +34,35 @@ class WorkExportAudit {
         'The saved document changed. Review it again before sharing.',
       );
     }
-    store.decode(rows.single);
+    final saved = decodeWorkRecord(store.decode(rows.single));
     WorkActivityReader(work).authorize(recordId);
+    if (saved.id != recordId ||
+        saved.createdByEmployeeId != rows.single.ownerId ||
+        canonicalJson(encodeWorkRecord(saved)) !=
+            canonicalJson(encodeWorkRecord(expectedDocument ?? record))) {
+      throw StateError(
+        'The document contents changed. Review the saved copy before sharing.',
+      );
+    }
+    requireWorkDocumentExport(saved, work.permissions);
+    return saved;
   }
 
   Future<WorkExportAttempt> begin(
     String recordId,
     int expectedRevision,
-    String action,
-  ) async {
+    String action, {
+    WorkRecord? expectedDocument,
+  }) async {
     if (!const {'share', 'save', 'print'}.contains(action)) {
       throw ArgumentError('Unsupported action.');
     }
     return work.repository.database.transaction(() async {
-      await assertCurrent(recordId, expectedRevision);
+      await assertCurrent(
+        recordId,
+        expectedRevision,
+        expectedDocument: expectedDocument,
+      );
       final record = work.records.firstWhere((r) => r.id == recordId);
       final attempt = WorkExportAttempt(
         newLocalRecordIdentity('document-export'),

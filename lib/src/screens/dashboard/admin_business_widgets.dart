@@ -187,21 +187,35 @@ class AdminPaymentsToday extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = PrototypeOperationsScope.of(context);
     final permissions = store.workSession?.permissions;
-    final visibleInvoices = store.workRecords
+    final visibleWork = store.workRecords
         .where(
           (record) =>
-              record.kind == WorkRecordKind.invoice &&
               (permissions == null ||
-                  permissions.visibleCreatorIds.contains(
-                    record.createdByEmployeeId,
-                  )),
+              permissions.visibleCreatorIds.contains(
+                record.createdByEmployeeId,
+              )),
         )
-        .map((record) => record.number)
-        .toSet();
+        .toList();
     final entries = store.financialEntries.where(
       (entry) =>
           entry.kind == PrototypeFinancialKind.paymentReceived &&
-          (permissions == null || visibleInvoices.contains(entry.sourceId)) &&
+          (permissions == null ||
+              entry.paymentLinkKind == PaymentLinkKind.none ||
+              visibleWork.any(
+                (record) => switch (entry.paymentLinkKind) {
+                  PaymentLinkKind.invoice =>
+                    record.kind == WorkRecordKind.invoice &&
+                        (record.id == entry.sourceId ||
+                            record.number == entry.sourceId),
+                  PaymentLinkKind.job =>
+                    record.kind == WorkRecordKind.job &&
+                        record.id == entry.sourceId,
+                  PaymentLinkKind.estimate =>
+                    record.kind == WorkRecordKind.estimate &&
+                        record.id == entry.sourceId,
+                  _ => false,
+                },
+              )) &&
           sameDashboardDay(entry.occurredOn, date),
     );
     final cents = entries.fold<int>(0, (sum, item) => sum + item.amountCents);

@@ -69,6 +69,12 @@ class _WorkLanes extends StatelessWidget {
     entries.sort((a, b) => entryTime(a).compareTo(entryTime(b)));
     void open(WorkRecord record) {
       switch (record.kind) {
+        case WorkRecordKind.quote:
+          Navigator.of(context).push<void>(
+            MaterialPageRoute(
+              builder: (_) => QuoteDetailScreen(recordId: record.id),
+            ),
+          );
         case WorkRecordKind.job:
           onOpenJob(record);
         case WorkRecordKind.estimate:

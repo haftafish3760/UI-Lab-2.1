@@ -1,3 +1,4 @@
+import 'work_service_price.dart';
 import 'invoice_draft_controller.dart';
 import 'models/work_models.dart';
 import 'models/estimate_models.dart';
@@ -21,13 +22,38 @@ WorkRecord buildConfirmedInvoice(
       'Review and save the unfinished invoice items first.',
     );
   }
+  if (!input.itemized &&
+      input.servicePrice.trim().isEmpty &&
+      input.items.isNotEmpty &&
+      canUseWorkServicePrice(input.recordId, input.items)) {
+    throw const InvoiceInputValidation('Enter the price for the work.');
+  }
+  if (input.itemized && input.servicePrice.trim().isNotEmpty) {
+    throw const InvoiceInputValidation(
+      'Use the item prices for an itemized invoice.',
+    );
+  }
+  final List<WorkLineItem> pricedItems;
+  try {
+    pricedItems = input.servicePrice.trim().isEmpty
+        ? input.items
+        : workServicePricedItems(
+            recordId: input.recordId,
+            title: input.title,
+            description: input.summary,
+            priceText: input.servicePrice,
+            items: input.items,
+          );
+  } on FormatException catch (error) {
+    throw InvoiceInputValidation(error.message);
+  }
   if (!previewIncomplete &&
       (input.client == null ||
           input.title.trim().isEmpty ||
           input.summary.trim().isEmpty ||
-          input.items.isEmpty)) {
+          pricedItems.isEmpty)) {
     throw const InvoiceInputValidation(
-      'Choose a customer and enter the work completed with at least one invoice item.',
+      'Choose a customer, describe the work, and enter a price or add items.',
     );
   }
   if (input.dueOn.isBefore(input.issuedOn)) {
@@ -47,7 +73,7 @@ WorkRecord buildConfirmedInvoice(
 
   final discount = money(input.discount);
   final tax = money(input.tax);
-  final subtotal = input.items.fold(0.0, (sum, item) => sum + item.total);
+  final subtotal = pricedItems.fold(0.0, (sum, item) => sum + item.total);
   final total = (subtotal - discount + tax).clamp(0.0, double.infinity);
   return WorkRecord(
     id: input.recordId,
@@ -61,6 +87,11 @@ WorkRecord buildConfirmedInvoice(
         (input.client == existing?.client ? existing?.customerSnapshot : null),
     detail: input.summary.trim(),
     pricing: input.pricing,
+    documentPresentation: input.itemized
+        ? WorkDocumentPresentation.detailed
+        : input.servicePrice.trim().isNotEmpty
+        ? WorkDocumentPresentation.summary
+        : existing?.documentPresentation ?? WorkDocumentPresentation.detailed,
     sourceId: input.sourceJobId,
     serviceLocation: input.location ?? '',
     createdOn: input.createdOn,
@@ -68,7 +99,7 @@ WorkRecord buildConfirmedInvoice(
     dueOn: input.dueOn,
     createdByEmployeeId: input.creatorId,
     status: existing?.status ?? WorkRecordStatus.draft,
-    items: List.unmodifiable(input.items),
+    items: List.unmodifiable(pricedItems),
     template: input.template,
     terms: input.terms.trim(),
     paymentMethod: input.paymentMethod,
@@ -87,6 +118,8 @@ WorkRecord buildConfirmedInvoice(
     estimateDates: existing?.estimateDates,
     estimateDeliveries: existing?.estimateDeliveries ?? const [],
     estimateRevisionHistory: existing?.estimateRevisionHistory ?? const [],
+    requiresInvoiceApproval: existing?.requiresInvoiceApproval ?? false,
+    invoiceApprovalHistory: existing?.invoiceApprovalHistory ?? const [],
     requiresCompanyReview: existing?.requiresCompanyReview ?? false,
     estimateCompanyReviewStatus:
         existing?.estimateCompanyReviewStatus ??

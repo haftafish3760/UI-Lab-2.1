@@ -455,6 +455,491 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get catalogNoMatches =>
       'Aucun article trouvé. Essayez un autre nom ou une autre dimension.';
+
+  @override
+  String get workFilterAwaitingCustomer => 'Estimations en attente du client';
+
+  @override
+  String get workFilterUnscheduledJobs => 'Travaux à planifier';
+
+  @override
+  String get workFilterActiveJobs => 'Travaux en cours';
+
+  @override
+  String get workFilterUnpaidInvoices => 'Factures impayées';
+
+  @override
+  String get workFilterAllEstimates => 'Toutes les estimations';
+
+  @override
+  String get workFilterDraftEstimates => 'Brouillons d’estimations';
+
+  @override
+  String get workFilterCompanyReviewEstimates =>
+      'Estimations en attente d’approbation de l’entreprise';
+
+  @override
+  String get workFilterReadyEstimates => 'Estimations prêtes à envoyer';
+
+  @override
+  String get workFilterChangedEstimates =>
+      'Estimations avec modifications demandées';
+
+  @override
+  String get workFilterApprovedEstimates => 'Estimations approuvées';
+
+  @override
+  String get workFilterDeclinedEstimates => 'Estimations refusées';
+
+  @override
+  String get workFilterExpiredEstimates => 'Estimations expirées';
+
+  @override
+  String get workFilterAllJobs => 'Tous les travaux';
+
+  @override
+  String get workFilterCompletedJobs => 'Travaux terminés';
+
+  @override
+  String get workFilterAllInvoices => 'Toutes les factures';
+
+  @override
+  String get workFilterDraftInvoices => 'Brouillons de factures';
+
+  @override
+  String get workFilterPaidInvoices => 'Factures payées intégralement';
+
+  @override
+  String get workFilterOverdueInvoices => 'Factures en retard';
+
+  @override
+  String get workStatusDraft => 'Brouillon';
+
+  @override
+  String get workStatusReady => 'Prêt';
+
+  @override
+  String get workStatusSent => 'Envoyé';
+
+  @override
+  String get workStatusAccepted => 'Accepté';
+
+  @override
+  String get workStatusScheduled => 'Planifié';
+
+  @override
+  String get workStatusEnRoute => 'En route';
+
+  @override
+  String get workStatusArrived => 'Sur place';
+
+  @override
+  String get workStatusInProgress => 'En cours';
+
+  @override
+  String get workStatusPaused => 'En pause';
+
+  @override
+  String get workStatusNeedsReturnVisit => 'Visite supplémentaire requise';
+
+  @override
+  String get workStatusCompleted => 'Terminé';
+
+  @override
+  String get workStatusDue => 'À payer';
+
+  @override
+  String get workStatusPaid => 'Payé';
+
+  @override
+  String get workStatusReadyToSend => 'Prêt à envoyer';
+
+  @override
+  String get workStatusAwaitingCustomer => 'En attente du client';
+
+  @override
+  String get workStatusViewed => 'Consulté';
+
+  @override
+  String get workStatusChangesRequested => 'Modifications demandées';
+
+  @override
+  String get workStatusApproved => 'Approuvé';
+
+  @override
+  String get workStatusDeclined => 'Refusé';
+
+  @override
+  String get workStatusExpired => 'Expiré';
+
+  @override
+  String get workStatusConverted => 'Converti en travail';
+
+  @override
+  String get workStatusArchived => 'Archivé';
+
+  @override
+  String get workOverviewHeading => 'Aperçu du travail · Toutes les dates';
+
+  @override
+  String get workBrowseRecords => 'Consulter les dossiers';
+
+  @override
+  String get workRecordsHeading => 'Dossiers de travail';
+
+  @override
+  String get workShowRecords => 'Afficher les dossiers';
+
+  @override
+  String get workSearchRecords => 'Rechercher un client, un titre ou un numéro';
+
+  @override
+  String get workNoMatchingRecords =>
+      'Aucun dossier correspondant. Essayez un autre état ou une autre recherche.';
+
+  @override
+  String get workRecordUnavailable => 'Ce dossier n’est plus disponible.';
+
+  @override
+  String get workNotScheduled => 'Non planifié';
+
+  @override
+  String get workCreatedDateMissing => 'Date de création non enregistrée';
+
+  @override
+  String workCreatedDate(String date) {
+    return 'Créé le $date';
+  }
+
+  @override
+  String workCompletedDate(String date) {
+    return 'Terminé le $date';
+  }
+
+  @override
+  String workScheduledDate(String date) {
+    return 'Planifié pour le $date';
+  }
+
+  @override
+  String workDueDate(String date) {
+    return 'Échéance : $date';
+  }
+
+  @override
+  String workRecordCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dossiers',
+      one: '1 dossier',
+      zero: '0 dossier',
+    );
+    return 'Toutes les dates · $_temp0';
+  }
+
+  @override
+  String get workDocumentStyle => 'Document client';
+
+  @override
+  String get workDocumentDetailed => 'Détaillé';
+
+  @override
+  String get workDocumentSummary => 'Sommaire';
+
+  @override
+  String get workDocumentDetailedHelp =>
+      'Afficher chaque article, sa description, sa quantité et son prix.';
+
+  @override
+  String get workDocumentSummaryHelp =>
+      'Afficher la description des travaux et le prix global. Conserver les articles et les coûts individuels dans vos dossiers.';
+
+  @override
+  String get workServicePrice => 'Prix des travaux';
+
+  @override
+  String get workEnterServicePrice => 'Saisir un prix';
+
+  @override
+  String get workPriceBeforeAdjustments => 'Prix avant rabais et taxes';
+
+  @override
+  String get workMoneyPaid => 'Payé intégralement';
+
+  @override
+  String get workMoneyUnpaid => 'Impayé';
+
+  @override
+  String get workMoneyOverdue => 'En retard';
+
+  @override
+  String get workMoneyAllTime => 'Toute la période';
+
+  @override
+  String get workInvoicesWithPayments => 'Factures avec paiements';
+
+  @override
+  String get workPartiallyPaid => 'Partiellement payé';
+
+  @override
+  String get workInvoiceHeading => 'Factures';
+
+  @override
+  String get workFilterAllShort => 'Toutes';
+
+  @override
+  String get workPaymentsReceivedShort => 'Paiements reçus';
+
+  @override
+  String get workDraftsShort => 'Brouillons';
+
+  @override
+  String get workInvoiceTotal => 'Total de la facture';
+
+  @override
+  String get workInvoiceBalance => 'Solde dû';
+
+  @override
+  String get workNewInvoice => 'Nouvelle facture';
+
+  @override
+  String get workInvoiceActivityByDate => 'Activité par date';
+
+  @override
+  String get workInvoiceActivityHeading => 'Activité des factures';
+
+  @override
+  String get workInvoiceAccessDenied =>
+      'Vous n’avez pas l’autorisation de consulter les factures.';
+
+  @override
+  String get workSearchInvoices => 'Rechercher des factures';
+
+  @override
+  String get workSearchInvoicesHint =>
+      'Client, travail, numéro de facture ou titre du travail';
+
+  @override
+  String get workInvoiceMatches => 'Factures trouvées';
+
+  @override
+  String get workInvoiceNoMatches =>
+      'Aucune facture autorisée ne correspond à cette recherche.';
+
+  @override
+  String get workInvoicesForDate => 'Factures à cette date';
+
+  @override
+  String get workInvoiceNoDateActivity =>
+      'Aucune activité de facturation n’est enregistrée à cette date.';
+
+  @override
+  String get workOpenInvoices => 'Autres factures impayées';
+
+  @override
+  String get workInvoiceNoOpenBalance =>
+      'Aucune autre facture n’a de solde impayé.';
+
+  @override
+  String get workShowOnlyThree => 'Afficher seulement 3';
+
+  @override
+  String get workInvoiceUnavailable => 'Cette facture n’est plus disponible.';
+
+  @override
+  String get workInvoiceAttention => 'Factures à vérifier';
+
+  @override
+  String get workInvoiceDrafts => 'Brouillons de factures';
+
+  @override
+  String workInvoiceOverdueReason(String customer) {
+    return 'Facture en retard · $customer';
+  }
+
+  @override
+  String get workInvoiceActivityCreated => 'Création';
+
+  @override
+  String get workInvoiceActivityIssued => 'Émission';
+
+  @override
+  String get workInvoiceActivityDue => 'Échéance';
+
+  @override
+  String get workInvoiceActivityPayment => 'Paiement reçu';
+
+  @override
+  String get workInvoiceActivityApplied => 'Paiement imputé';
+
+  @override
+  String get workSavedClients => 'Clients enregistrés';
+
+  @override
+  String get workAddClient => 'Ajouter';
+
+  @override
+  String get workUseClient => 'Choisir ce client';
+
+  @override
+  String get workSearchClients => 'Rechercher un client enregistré';
+
+  @override
+  String get workClientsUnavailable =>
+      'Vous ne pouvez pas consulter les clients enregistrés.';
+
+  @override
+  String get workNoMatchingClients =>
+      'Aucun client correspondant. Modifiez la recherche ou ajoutez un client.';
+
+  @override
+  String get invoiceRequestApproval => 'Demander une approbation';
+
+  @override
+  String get invoiceApprove => 'Approuver la facture';
+
+  @override
+  String get invoiceRequestChanges => 'Demander des modifications';
+
+  @override
+  String get invoiceChangesReason => 'Que faut-il modifier ?';
+
+  @override
+  String get invoiceChangesReasonRequired =>
+      'Précisez les modifications nécessaires.';
+
+  @override
+  String get invoiceApprovalSaveFailed =>
+      'Impossible d’enregistrer l’approbation. Réessayez.';
+
+  @override
+  String get invoiceNeedsApproval => 'Approbation requise';
+
+  @override
+  String get workOverallPrice => 'Prix des travaux';
+
+  @override
+  String get workOverallPriceHint =>
+      'Saisissez un prix ou ajoutez des éléments ci-dessous';
+
+  @override
+  String get workOptionalItems => 'Ajouter des éléments (facultatif)';
+
+  @override
+  String get clientSaved => 'Clients enregistrés';
+
+  @override
+  String get clientAddNew => 'Ajouter un client';
+
+  @override
+  String get clientNoSaved => 'Aucun client enregistré';
+
+  @override
+  String get clientSearch => 'Rechercher des clients';
+
+  @override
+  String get clientNoMatches => 'Aucun client correspondant';
+
+  @override
+  String get clientForEstimate => 'Client de cette estimation';
+
+  @override
+  String get clientSelectForEstimate =>
+      'Sélectionnez un client pour cette estimation.';
+
+  @override
+  String get clientViewDenied =>
+      'Vous n’avez pas la permission de consulter les clients enregistrés.';
+
+  @override
+  String get clientUnfinished => 'Fiches clients inachevées';
+
+  @override
+  String get clientContinueHint =>
+      'Reprenez les renseignements que vous aviez commencé à saisir.';
+
+  @override
+  String get clientRecoveryRetry =>
+      'Fiches inachevées indisponibles — Réessayer';
+
+  @override
+  String get clientNameMissing => 'Nom du client non saisi';
+
+  @override
+  String get clientRecoveryFailed =>
+      'Impossible d’ouvrir les renseignements inachevés du client. Vos données ont été conservées. Réessayez.';
+
+  @override
+  String get clientDetails => 'Renseignements du client';
+
+  @override
+  String get clientName => 'Nom du client';
+
+  @override
+  String get clientNameHint => 'Prénom et nom, ou nom de l’entreprise';
+
+  @override
+  String get clientBusiness => 'Entreprise du client (facultatif)';
+
+  @override
+  String get clientPhone => 'Téléphone (avec indicatif régional)';
+
+  @override
+  String get clientEmail => 'Courriel (facultatif)';
+
+  @override
+  String get clientPreferredContact => 'Mode de contact préféré';
+
+  @override
+  String get clientCall => 'Appel téléphonique';
+
+  @override
+  String get clientText => 'Message texte';
+
+  @override
+  String get clientEmailMethod => 'Courriel';
+
+  @override
+  String get clientLocations => 'Adresse de facturation et lieu du service';
+
+  @override
+  String get clientBilling => 'Adresse de facturation';
+
+  @override
+  String get clientAddressLabel => 'Libellé de l’adresse (facultatif)';
+
+  @override
+  String get clientAddressHint => 'Maison, bureau ou autre nom';
+
+  @override
+  String get clientServiceAddress => 'Adresse du service';
+
+  @override
+  String get clientAccess => 'Accès à la propriété (facultatif)';
+
+  @override
+  String get clientAccessHint =>
+      'Code d’accès, stationnement ou instructions d’entrée';
+
+  @override
+  String get clientNotes => 'Notes sur le client (facultatif)';
+
+  @override
+  String get clientNotesHint =>
+      'Notes sur le client, distinctes des instructions d’accès à la propriété.';
+
+  @override
+  String get clientSaveUse => 'Enregistrer et sélectionner le client';
+
+  @override
+  String get clientSave => 'Enregistrer le client';
+
+  @override
+  String get clientSaveChanges => 'Enregistrer les modifications du client';
+
+  @override
+  String get clientEdit => 'Modifier le client';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -613,4 +1098,489 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   @override
   String get catalogNoMatches =>
       'Aucun article trouvé. Essayez un autre nom ou une autre dimension.';
+
+  @override
+  String get workFilterAwaitingCustomer => 'Estimations en attente du client';
+
+  @override
+  String get workFilterUnscheduledJobs => 'Travaux à planifier';
+
+  @override
+  String get workFilterActiveJobs => 'Travaux en cours';
+
+  @override
+  String get workFilterUnpaidInvoices => 'Factures impayées';
+
+  @override
+  String get workFilterAllEstimates => 'Toutes les estimations';
+
+  @override
+  String get workFilterDraftEstimates => 'Brouillons d’estimations';
+
+  @override
+  String get workFilterCompanyReviewEstimates =>
+      'Estimations en attente d’approbation de l’entreprise';
+
+  @override
+  String get workFilterReadyEstimates => 'Estimations prêtes à envoyer';
+
+  @override
+  String get workFilterChangedEstimates =>
+      'Estimations avec modifications demandées';
+
+  @override
+  String get workFilterApprovedEstimates => 'Estimations approuvées';
+
+  @override
+  String get workFilterDeclinedEstimates => 'Estimations refusées';
+
+  @override
+  String get workFilterExpiredEstimates => 'Estimations expirées';
+
+  @override
+  String get workFilterAllJobs => 'Tous les travaux';
+
+  @override
+  String get workFilterCompletedJobs => 'Travaux terminés';
+
+  @override
+  String get workFilterAllInvoices => 'Toutes les factures';
+
+  @override
+  String get workFilterDraftInvoices => 'Brouillons de factures';
+
+  @override
+  String get workFilterPaidInvoices => 'Factures payées intégralement';
+
+  @override
+  String get workFilterOverdueInvoices => 'Factures en retard';
+
+  @override
+  String get workStatusDraft => 'Brouillon';
+
+  @override
+  String get workStatusReady => 'Prêt';
+
+  @override
+  String get workStatusSent => 'Envoyé';
+
+  @override
+  String get workStatusAccepted => 'Accepté';
+
+  @override
+  String get workStatusScheduled => 'Planifié';
+
+  @override
+  String get workStatusEnRoute => 'En route';
+
+  @override
+  String get workStatusArrived => 'Sur place';
+
+  @override
+  String get workStatusInProgress => 'En cours';
+
+  @override
+  String get workStatusPaused => 'En pause';
+
+  @override
+  String get workStatusNeedsReturnVisit => 'Visite supplémentaire requise';
+
+  @override
+  String get workStatusCompleted => 'Terminé';
+
+  @override
+  String get workStatusDue => 'À payer';
+
+  @override
+  String get workStatusPaid => 'Payé';
+
+  @override
+  String get workStatusReadyToSend => 'Prêt à envoyer';
+
+  @override
+  String get workStatusAwaitingCustomer => 'En attente du client';
+
+  @override
+  String get workStatusViewed => 'Consulté';
+
+  @override
+  String get workStatusChangesRequested => 'Modifications demandées';
+
+  @override
+  String get workStatusApproved => 'Approuvé';
+
+  @override
+  String get workStatusDeclined => 'Refusé';
+
+  @override
+  String get workStatusExpired => 'Expiré';
+
+  @override
+  String get workStatusConverted => 'Converti en travail';
+
+  @override
+  String get workStatusArchived => 'Archivé';
+
+  @override
+  String get workOverviewHeading => 'Aperçu du travail · Toutes les dates';
+
+  @override
+  String get workBrowseRecords => 'Consulter les dossiers';
+
+  @override
+  String get workRecordsHeading => 'Dossiers de travail';
+
+  @override
+  String get workShowRecords => 'Afficher les dossiers';
+
+  @override
+  String get workSearchRecords => 'Rechercher un client, un titre ou un numéro';
+
+  @override
+  String get workNoMatchingRecords =>
+      'Aucun dossier correspondant. Essayez un autre état ou une autre recherche.';
+
+  @override
+  String get workRecordUnavailable => 'Ce dossier n’est plus disponible.';
+
+  @override
+  String get workNotScheduled => 'Non planifié';
+
+  @override
+  String get workCreatedDateMissing => 'Date de création non enregistrée';
+
+  @override
+  String workCreatedDate(String date) {
+    return 'Créé le $date';
+  }
+
+  @override
+  String workCompletedDate(String date) {
+    return 'Terminé le $date';
+  }
+
+  @override
+  String workScheduledDate(String date) {
+    return 'Planifié pour le $date';
+  }
+
+  @override
+  String workDueDate(String date) {
+    return 'Échéance : $date';
+  }
+
+  @override
+  String workRecordCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dossiers',
+      one: '1 dossier',
+      zero: '0 dossier',
+    );
+    return 'Toutes les dates · $_temp0';
+  }
+
+  @override
+  String get workDocumentStyle => 'Document client';
+
+  @override
+  String get workDocumentDetailed => 'Détaillé';
+
+  @override
+  String get workDocumentSummary => 'Sommaire';
+
+  @override
+  String get workDocumentDetailedHelp =>
+      'Afficher chaque article, sa description, sa quantité et son prix.';
+
+  @override
+  String get workDocumentSummaryHelp =>
+      'Afficher la description des travaux et le prix global. Conserver les articles et les coûts individuels dans vos dossiers.';
+
+  @override
+  String get workServicePrice => 'Prix des travaux';
+
+  @override
+  String get workEnterServicePrice => 'Saisir un prix';
+
+  @override
+  String get workPriceBeforeAdjustments => 'Prix avant rabais et taxes';
+
+  @override
+  String get workMoneyPaid => 'Payé intégralement';
+
+  @override
+  String get workMoneyUnpaid => 'Impayé';
+
+  @override
+  String get workMoneyOverdue => 'En retard';
+
+  @override
+  String get workMoneyAllTime => 'Toute la période';
+
+  @override
+  String get workInvoicesWithPayments => 'Factures avec paiements';
+
+  @override
+  String get workPartiallyPaid => 'Partiellement payé';
+
+  @override
+  String get workInvoiceHeading => 'Factures';
+
+  @override
+  String get workFilterAllShort => 'Toutes';
+
+  @override
+  String get workPaymentsReceivedShort => 'Paiements reçus';
+
+  @override
+  String get workDraftsShort => 'Brouillons';
+
+  @override
+  String get workInvoiceTotal => 'Total de la facture';
+
+  @override
+  String get workInvoiceBalance => 'Solde dû';
+
+  @override
+  String get workNewInvoice => 'Nouvelle facture';
+
+  @override
+  String get workInvoiceActivityByDate => 'Activité par date';
+
+  @override
+  String get workInvoiceActivityHeading => 'Activité des factures';
+
+  @override
+  String get workInvoiceAccessDenied =>
+      'Vous n’avez pas l’autorisation de consulter les factures.';
+
+  @override
+  String get workSearchInvoices => 'Rechercher des factures';
+
+  @override
+  String get workSearchInvoicesHint =>
+      'Client, travail, numéro de facture ou titre du travail';
+
+  @override
+  String get workInvoiceMatches => 'Factures trouvées';
+
+  @override
+  String get workInvoiceNoMatches =>
+      'Aucune facture autorisée ne correspond à cette recherche.';
+
+  @override
+  String get workInvoicesForDate => 'Factures à cette date';
+
+  @override
+  String get workInvoiceNoDateActivity =>
+      'Aucune activité de facturation n’est enregistrée à cette date.';
+
+  @override
+  String get workOpenInvoices => 'Autres factures impayées';
+
+  @override
+  String get workInvoiceNoOpenBalance =>
+      'Aucune autre facture n’a de solde impayé.';
+
+  @override
+  String get workShowOnlyThree => 'Afficher seulement 3';
+
+  @override
+  String get workInvoiceUnavailable => 'Cette facture n’est plus disponible.';
+
+  @override
+  String get workInvoiceAttention => 'Factures à vérifier';
+
+  @override
+  String get workInvoiceDrafts => 'Brouillons de factures';
+
+  @override
+  String workInvoiceOverdueReason(String customer) {
+    return 'Facture en retard · $customer';
+  }
+
+  @override
+  String get workInvoiceActivityCreated => 'Création';
+
+  @override
+  String get workInvoiceActivityIssued => 'Émission';
+
+  @override
+  String get workInvoiceActivityDue => 'Échéance';
+
+  @override
+  String get workInvoiceActivityPayment => 'Paiement reçu';
+
+  @override
+  String get workInvoiceActivityApplied => 'Paiement imputé';
+
+  @override
+  String get workSavedClients => 'Clients enregistrés';
+
+  @override
+  String get workAddClient => 'Ajouter';
+
+  @override
+  String get workUseClient => 'Choisir ce client';
+
+  @override
+  String get workSearchClients => 'Rechercher un client enregistré';
+
+  @override
+  String get workClientsUnavailable =>
+      'Vous ne pouvez pas consulter les clients enregistrés.';
+
+  @override
+  String get workNoMatchingClients =>
+      'Aucun client correspondant. Modifiez la recherche ou ajoutez un client.';
+
+  @override
+  String get invoiceRequestApproval => 'Demander une approbation';
+
+  @override
+  String get invoiceApprove => 'Approuver la facture';
+
+  @override
+  String get invoiceRequestChanges => 'Demander des modifications';
+
+  @override
+  String get invoiceChangesReason => 'Que faut-il modifier ?';
+
+  @override
+  String get invoiceChangesReasonRequired =>
+      'Précisez les modifications nécessaires.';
+
+  @override
+  String get invoiceApprovalSaveFailed =>
+      'Impossible d’enregistrer l’approbation. Réessayez.';
+
+  @override
+  String get invoiceNeedsApproval => 'Approbation requise';
+
+  @override
+  String get workOverallPrice => 'Prix des travaux';
+
+  @override
+  String get workOverallPriceHint =>
+      'Saisissez un prix ou ajoutez des éléments ci-dessous';
+
+  @override
+  String get workOptionalItems => 'Ajouter des éléments (facultatif)';
+
+  @override
+  String get clientSaved => 'Clients enregistrés';
+
+  @override
+  String get clientAddNew => 'Ajouter un client';
+
+  @override
+  String get clientNoSaved => 'Aucun client enregistré';
+
+  @override
+  String get clientSearch => 'Rechercher des clients';
+
+  @override
+  String get clientNoMatches => 'Aucun client correspondant';
+
+  @override
+  String get clientForEstimate => 'Client de cette estimation';
+
+  @override
+  String get clientSelectForEstimate =>
+      'Sélectionnez un client pour cette estimation.';
+
+  @override
+  String get clientViewDenied =>
+      'Vous n’avez pas la permission de consulter les clients enregistrés.';
+
+  @override
+  String get clientUnfinished => 'Fiches clients inachevées';
+
+  @override
+  String get clientContinueHint =>
+      'Reprenez les renseignements que vous aviez commencé à saisir.';
+
+  @override
+  String get clientRecoveryRetry =>
+      'Fiches inachevées indisponibles — Réessayer';
+
+  @override
+  String get clientNameMissing => 'Nom du client non saisi';
+
+  @override
+  String get clientRecoveryFailed =>
+      'Impossible d’ouvrir les renseignements inachevés du client. Vos données ont été conservées. Réessayez.';
+
+  @override
+  String get clientDetails => 'Renseignements du client';
+
+  @override
+  String get clientName => 'Nom du client';
+
+  @override
+  String get clientNameHint => 'Prénom et nom, ou nom de l’entreprise';
+
+  @override
+  String get clientBusiness => 'Entreprise du client (facultatif)';
+
+  @override
+  String get clientPhone => 'Téléphone (avec indicatif régional)';
+
+  @override
+  String get clientEmail => 'Courriel (facultatif)';
+
+  @override
+  String get clientPreferredContact => 'Mode de contact préféré';
+
+  @override
+  String get clientCall => 'Appel téléphonique';
+
+  @override
+  String get clientText => 'Message texte';
+
+  @override
+  String get clientEmailMethod => 'Courriel';
+
+  @override
+  String get clientLocations => 'Adresse de facturation et lieu du service';
+
+  @override
+  String get clientBilling => 'Adresse de facturation';
+
+  @override
+  String get clientAddressLabel => 'Libellé de l’adresse (facultatif)';
+
+  @override
+  String get clientAddressHint => 'Maison, bureau ou autre nom';
+
+  @override
+  String get clientServiceAddress => 'Adresse du service';
+
+  @override
+  String get clientAccess => 'Accès à la propriété (facultatif)';
+
+  @override
+  String get clientAccessHint =>
+      'Code d’accès, stationnement ou instructions d’entrée';
+
+  @override
+  String get clientNotes => 'Notes sur le client (facultatif)';
+
+  @override
+  String get clientNotesHint =>
+      'Notes sur le client, distinctes des instructions d’accès à la propriété.';
+
+  @override
+  String get clientSaveUse => 'Enregistrer et sélectionner le client';
+
+  @override
+  String get clientSave => 'Enregistrer le client';
+
+  @override
+  String get clientSaveChanges => 'Enregistrer les modifications du client';
+
+  @override
+  String get clientEdit => 'Modifier le client';
 }

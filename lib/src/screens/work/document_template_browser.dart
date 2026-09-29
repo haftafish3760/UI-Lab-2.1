@@ -31,49 +31,62 @@ class _DocumentTemplateBrowserState extends State<DocumentTemplateBrowser> {
     final loader = DocumentImageScope.maybeOf(context);
     return Scaffold(
       appBar: AppBar(title: Text(template.label)),
-      body: PdfDocumentView(
-        key: ValueKey(template.id),
-        open: () async => PdfDocument.openData(
-          await generateCustomerPdf(
-            widget.document,
-            templateId: template.id,
-            logoLoader: loader,
-          ),
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  tooltip: 'Previous template',
-                  onPressed: _index > 0 ? () => setState(() => _index--) : null,
-                  icon: const Icon(Icons.arrow_back),
-                ),
-                Expanded(
-                  child: Text(
-                    'Template ${_index + 1} of ${widget.templates.length}',
-                    textAlign: TextAlign.center,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) => ListView(
+            children: [
+              SizedBox(
+                height: constraints.maxHeight,
+                child: PdfDocumentView(
+                  key: ValueKey(template.id),
+                  open: () async => PdfDocument.openData(
+                    await generateCustomerPdf(
+                      widget.document,
+                      templateId: template.id,
+                      logoLoader: loader,
+                    ),
                   ),
                 ),
-                IconButton(
-                  tooltip: 'Next template',
-                  onPressed: _index + 1 < widget.templates.length
-                      ? () => setState(() => _index++)
-                      : null,
-                  icon: const Icon(Icons.arrow_forward),
+              ),
+              SafeArea(
+                minimum: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          tooltip: 'Previous template',
+                          onPressed: _index > 0
+                              ? () => setState(() => _index--)
+                              : null,
+                          icon: const Icon(Icons.arrow_back),
+                        ),
+                        Expanded(
+                          child: Text(
+                            'Template ${_index + 1} of ${widget.templates.length}',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Next template',
+                          onPressed: _index + 1 < widget.templates.length
+                              ? () => setState(() => _index++)
+                              : null,
+                          icon: const Icon(Icons.arrow_forward),
+                        ),
+                      ],
+                    ),
+                    FilledButton.icon(
+                      onPressed: () => Navigator.pop(context, template.id),
+                      icon: const Icon(Icons.check),
+                      label: const Text('Use template'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            FilledButton.icon(
-              onPressed: () => Navigator.pop(context, template.id),
-              icon: const Icon(Icons.check),
-              label: const Text('Use template'),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -25,9 +25,9 @@ extension JobDraftWorkflow on WorkPersistenceSession {
     if (sourceEstimateId != null) {
       final source = records.where((r) => r.id == sourceEstimateId).firstOrNull;
       if (source == null ||
-          source.kind != WorkRecordKind.estimate ||
+          !source.isProposal ||
           !permissions.canEdit(source)) {
-        throw StateError('Source estimate unavailable.');
+        throw StateError('Source estimate or quote unavailable.');
       }
     }
   }
@@ -52,8 +52,10 @@ extension JobDraftWorkflow on WorkPersistenceSession {
     _requireJobAccess();
     if (sourceEstimateId != null) {
       final source = records.where((r) => r.id == sourceEstimateId).firstOrNull;
-      if (source == null || !permissions.canEdit(source)) {
-        throw StateError('Source estimate unavailable.');
+      if (source == null ||
+          !source.isProposal ||
+          !permissions.canEdit(source)) {
+        throw StateError('Source estimate or quote unavailable.');
       }
       if (recoveryDraftId != null) {
         throw ArgumentError('Linked job recovery uses its source identity.');

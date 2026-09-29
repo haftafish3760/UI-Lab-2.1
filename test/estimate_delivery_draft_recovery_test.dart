@@ -1,3 +1,5 @@
+import 'package:ui_lab_2_1/src/data/storage/draft_autosave_session.dart';
+import 'package:ui_lab_2_1/src/shared/editor_draft_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/app.dart';
@@ -69,6 +71,10 @@ void main() {
 
       try {
         await open();
+        expect(
+          find.byKey(const ValueKey('preview-estimate-for-delivery')),
+          findsOneWidget,
+        );
         await tester.enterText(field, '  customer@  ');
         await choose('textMessage');
         await tester.enterText(field, '555-123');
@@ -98,7 +104,14 @@ void main() {
         // Ensure all queued draft writes precede the injected atomic-consumption failure.
         await waitForNativeSave(
           tester,
-          () => find.text('Draft saved on this device').evaluate().isNotEmpty,
+          () => find
+              .byWidgetPredicate(
+                (widget) =>
+                    widget is EditorDraftStatus &&
+                    widget.state == DraftSaveState.savedLocally,
+              )
+              .evaluate()
+              .isNotEmpty,
         );
         await tester.runAsync(
           () => db.customStatement(

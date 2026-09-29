@@ -1,3 +1,4 @@
+import 'package:ui_lab_2_1/src/data/work/estimate_approval_draft_workflow.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/work/estimate_customer_approval.dart';
 import 'package:ui_lab_2_1/src/data/work/estimate_signature_draft_workflow.dart';
@@ -51,6 +52,15 @@ void main() {
             ],
           );
           expect(await work.create(estimate), isTrue);
+          if (approvalAllowed) {
+            final draft = await work.openEstimateApprovalDraft(estimate.id);
+            await draft.session.close();
+          } else {
+            await expectLater(
+              work.openEstimateApprovalDraft(estimate.id),
+              throwsStateError,
+            );
+          }
           final approved = estimate.recordCustomerApproval(
             WorkCustomerApproval(
               method: CustomerApprovalMethod.verbal,

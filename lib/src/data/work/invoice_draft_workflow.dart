@@ -109,7 +109,12 @@ extension InvoiceDraftWorkflow on WorkPersistenceSession {
           if (issue && !permissions.canIssueInvoices) {
             throw StateError('You do not have permission to issue invoices.');
           }
-          final draft = buildConfirmedInvoice(input, existing: existing);
+          final draft = buildConfirmedInvoice(input, existing: existing)
+              .copyWith(
+                requiresInvoiceApproval:
+                    permissions.requiresInvoiceApproval ||
+                    (existing?.requiresInvoiceApproval ?? false),
+              );
           if (issue && draft.status != WorkRecordStatus.draft) {
             throw StateError('This invoice has already been issued.');
           }

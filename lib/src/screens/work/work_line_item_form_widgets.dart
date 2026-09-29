@@ -32,12 +32,17 @@ class _NumberAndUnitRow extends StatelessWidget {
       'package',
       'case',
       'day',
+      'mile',
+      'kilometer',
+      'trip',
+      'load',
       'square foot',
       'square meter',
     };
     final fields = <Widget>[
       TextField(
         controller: quantity,
+        textInputAction: TextInputAction.next,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         decoration: InputDecoration(
           labelText: unit == 'hour' ? 'Hours per worker' : 'Quantity',
@@ -64,7 +69,7 @@ class _NumberAndUnitRow extends StatelessWidget {
         )) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [fields[1], const SizedBox(height: 10), fields[0]],
+            children: [fields[1], const SizedBox(height: 20), fields[0]],
           );
         }
         return Row(
@@ -80,6 +85,7 @@ class _NumberAndUnitRow extends StatelessWidget {
 }
 
 IconData _lineIcon(WorkLineItemType type) => switch (type) {
+  WorkLineItemType.service => Icons.home_repair_service_outlined,
   WorkLineItemType.labor => Icons.engineering_outlined,
   WorkLineItemType.material => Icons.inventory_2_outlined,
   WorkLineItemType.equipment => Icons.construction_outlined,

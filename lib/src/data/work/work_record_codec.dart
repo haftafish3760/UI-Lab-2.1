@@ -16,6 +16,7 @@ Map<String, Object?> encodeWorkRecord(WorkRecord value) => {
       : encodeWorkCustomerProfile(value.customerSnapshot!),
   'detail': value.detail,
   'pricing': value.pricing.name,
+  'documentPresentation': value.documentPresentation.name,
   'sourceId': value.sourceId,
   'assignee': value.assignee,
   'assignedEmployeeIds': value.assignedEmployeeIds,
@@ -34,6 +35,7 @@ Map<String, Object?> encodeWorkRecord(WorkRecord value) => {
   'items': value.items.map((item) => encodeWorkLineItem(item)).toList(),
   'template': value.template,
   'terms': value.terms,
+  'requiredDepositCents': value.requiredDepositCents,
   'paymentMethod': value.paymentMethod,
   'discount': encodeWorkDecimal(value.discount),
   'tax': encodeWorkDecimal(value.tax),
@@ -57,6 +59,10 @@ Map<String, Object?> encodeWorkRecord(WorkRecord value) => {
       .toList(),
   'estimateRevisionHistory': value.estimateRevisionHistory
       .map((item) => encodeEstimateRevisionRecord(item))
+      .toList(),
+  'requiresInvoiceApproval': value.requiresInvoiceApproval,
+  'invoiceApprovalHistory': value.invoiceApprovalHistory
+      .map((event) => event.toJson())
       .toList(),
   'requiresCompanyReview': value.requiresCompanyReview,
   'estimateCompanyReviewStatus': value.estimateCompanyReviewStatus.name,
@@ -84,6 +90,9 @@ WorkRecord decodeWorkRecord(Map<String, Object?> json) => WorkRecord(
         ),
   detail: json['detail'] as String,
   pricing: WorkPricingModel.values.byName(json['pricing'] as String),
+  documentPresentation: WorkDocumentPresentation.values.byName(
+    json['documentPresentation'] as String? ?? 'detailed',
+  ),
   sourceId: json['sourceId'] == null ? null : json['sourceId'] as String,
   assignee: json['assignee'] == null ? null : json['assignee'] as String,
   assignedEmployeeIds:
@@ -117,6 +126,7 @@ WorkRecord decodeWorkRecord(Map<String, Object?> json) => WorkRecord(
   ),
   template: json['template'] as String,
   terms: json['terms'] as String,
+  requiredDepositCents: json['requiredDepositCents'] as int? ?? 0,
   paymentMethod: json['paymentMethod'] as String,
   discount: decodeWorkDecimal(json['discount']),
   tax: decodeWorkDecimal(json['tax']),
@@ -156,6 +166,13 @@ WorkRecord decodeWorkRecord(Map<String, Object?> json) => WorkRecord(
     (json['estimateRevisionHistory'] as List).map(
       (item) =>
           decodeEstimateRevisionRecord((item as Map).cast<String, Object?>()),
+    ),
+  ),
+  requiresInvoiceApproval: json['requiresInvoiceApproval'] as bool? ?? false,
+  invoiceApprovalHistory: List.unmodifiable(
+    (json['invoiceApprovalHistory'] as List? ?? const []).map(
+      (event) =>
+          InvoiceApprovalEvent.fromJson((event as Map).cast<String, Object?>()),
     ),
   ),
   requiresCompanyReview: json['requiresCompanyReview'] as bool,

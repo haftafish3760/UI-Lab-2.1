@@ -164,6 +164,7 @@ class WorkDocumentNumbering {
 
   String _label(WorkRecordKind kind) => switch (kind) {
     WorkRecordKind.estimate => 'Estimate',
+    WorkRecordKind.quote => 'Quote',
     WorkRecordKind.invoice => 'Invoice',
     WorkRecordKind.job => throw ArgumentError('Jobs use their own numbering.'),
   };

@@ -1,25 +1,24 @@
 part of 'payments_screen.dart';
 
 class _PaymentRecordRow extends StatelessWidget {
-  const _PaymentRecordRow({
-    required this.entry,
-    required this.invoice,
-    required this.permissions,
-  });
+  const _PaymentRecordRow({required this.entry, required this.linkedWork});
 
   final PrototypeFinancialEntry entry;
-  final WorkRecord? invoice;
-  final InvoicePermissions permissions;
+  final WorkRecord? linkedWork;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final accent = Theme.of(context).extension<AppSemanticColors>()!.success;
-    final customer = invoice?.client ?? 'Invoice customer unavailable';
+    final title =
+        linkedWork?.number ??
+        (entry.description.isEmpty ? 'Payment received' : entry.description);
+    final customer = entry.payerName.isNotEmpty
+        ? entry.payerName
+        : linkedWork?.client ?? 'Payer not recorded';
     return Semantics(
-      button: invoice != null,
-      label:
-          '${invoice?.number ?? entry.sourceId}, $customer, payment ${_moneyCents(entry.amountCents)}',
+      button: true,
+      label: '$title, $customer, payment ${_moneyCents(entry.amountCents)}',
       child: Material(
         key: ValueKey('payment-entry-${entry.id}'),
         color: colors.surface,
@@ -29,16 +28,12 @@ class _PaymentRecordRow extends StatelessWidget {
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: invoice == null
-              ? null
-              : () => Navigator.of(context).push<void>(
-                  MaterialPageRoute(
-                    builder: (_) => InvoiceDetailScreen(
-                      record: invoice!,
-                      permissions: permissions,
-                    ),
-                  ),
-                ),
+          onTap: () => Navigator.of(context).push<void>(
+            MaterialPageRoute(
+              builder: (_) =>
+                  PaymentDetailScreen(payment: entry, linkedWork: linkedWork),
+            ),
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 60),
             child: Row(
@@ -55,7 +50,7 @@ class _PaymentRecordRow extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          invoice?.number ?? entry.sourceId,
+                          title,
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         Text(
@@ -70,10 +65,8 @@ class _PaymentRecordRow extends StatelessWidget {
                   _moneyCents(entry.amountCents),
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
-                if (invoice != null) ...[
-                  const SizedBox(width: 4),
-                  const Icon(Icons.chevron_right_rounded, size: 22),
-                ],
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right_rounded, size: 22),
                 const SizedBox(width: 6),
               ],
             ),

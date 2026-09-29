@@ -100,14 +100,23 @@ class NativeDeviceMediaGateway implements JournaledNativeMediaPickerGateway {
     MediaPickerDestination destination,
   ) async {
     if (source == MediaPickerSource.files) {
+      final approval =
+          destination == MediaPickerDestination.estimateApproval ||
+          destination == MediaPickerDestination.quoteApproval;
       final result = await FilePicker.pickFiles(
-        type: destination == MediaPickerDestination.receipt
+        type: approval
+            ? FileType.custom
+            : destination == MediaPickerDestination.receipt
             ? FileType.custom
             : FileType.image,
-        allowedExtensions: destination == MediaPickerDestination.receipt
+        allowedExtensions: approval
+            ? const ['eml', 'msg', 'pdf', 'txt', 'jpg', 'jpeg', 'png', 'heic']
+            : destination == MediaPickerDestination.receipt
             ? const ['pdf', 'jpg', 'jpeg', 'png', 'heic']
             : null,
-        dialogTitle: destination == MediaPickerDestination.receipt
+        dialogTitle: approval
+            ? 'Choose customer approval evidence'
+            : destination == MediaPickerDestination.receipt
             ? 'Choose receipt evidence'
             : 'Choose job-site photos',
       );

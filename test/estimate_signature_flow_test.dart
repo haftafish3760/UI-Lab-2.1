@@ -44,9 +44,16 @@ void main() {
     final save = find.byKey(const ValueKey('save-customer-signature'));
     expect(tester.widget<FilledButton>(save).onPressed, isNull);
 
-    await tester.ensureVisible(find.byKey(const ValueKey('tap-to-sign')));
+    expect(
+      find.byKey(const ValueKey('estimate-signature-pad')),
+      findsOneWidget,
+    );
+    final bold = find.byKey(const ValueKey('signature-thickness-Bold'));
+    await tester.ensureVisible(bold);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('tap-to-sign')));
+    await tester.tap(bold);
+    await tester.pumpAndSettle();
+    await tester.pumpAndSettle();
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(
@@ -69,6 +76,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(updated, isNotNull);
     expect(updated!.hasCurrentCustomerSignature, isTrue);
+    expect(updated!.customerSignature!.ink!.strokeWidth, 4);
     expect(updated!.customerSignature?.signedRevision, 1);
     expect(updated!.resolvedEstimateStage, EstimateStage.approved);
     expect(tester.takeException(), isNull);

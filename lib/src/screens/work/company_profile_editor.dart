@@ -144,69 +144,7 @@ class _CompanyProfileEditScreenState extends State<CompanyProfileEditScreen>
   Widget build(BuildContext context) => guardDraftNavigation(
     Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-      bottomNavigationBar: _draftReady
-          ? SafeArea(
-              top: false,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainer,
-                  border: Border(
-                    top: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Center(
-                  heightFactor: 1,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 720),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (_saveError != null)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Semantics(
-                              liveRegion: true,
-                              child: Text(
-                                _saveError!,
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
-                              ),
-                            ),
-                          ),
-                        Row(
-                          children: [
-                            OutlinedButton(
-                              onPressed: () => leaveDraftRoute(),
-                              child: const Text('Cancel'),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: FilledButton.icon(
-                                key: const ValueKey(
-                                  'save-company-profile-button',
-                                ),
-                                onPressed: _saving || _logoBusy ? null : _save,
-                                icon: const Icon(Icons.save_outlined),
-                                label: Text(_saving ? 'Saving…' : _saveLabel),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            )
-          : null,
+
       body: Form(
         key: _formKey,
         child: SafeArea(
@@ -416,6 +354,90 @@ class _CompanyProfileEditScreenState extends State<CompanyProfileEditScreen>
                       ),
                     ),
                   ),
+                  (_draftReady
+                          ? SafeArea(
+                              top: false,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainer,
+                                  border: Border(
+                                    top: BorderSide(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outlineVariant,
+                                    ),
+                                  ),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                child: Center(
+                                  heightFactor: 1,
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 720,
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        if (_saveError != null)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 8,
+                                            ),
+                                            child: Semantics(
+                                              liveRegion: true,
+                                              child: Text(
+                                                _saveError!,
+                                                style: TextStyle(
+                                                  color: Theme.of(
+                                                    context,
+                                                  ).colorScheme.error,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        Row(
+                                          children: [
+                                            OutlinedButton(
+                                              onPressed: () =>
+                                                  leaveDraftRoute(),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: FilledButton.icon(
+                                                key: const ValueKey(
+                                                  'save-company-profile-button',
+                                                ),
+                                                onPressed: _saving || _logoBusy
+                                                    ? null
+                                                    : _save,
+                                                icon: const Icon(
+                                                  Icons.save_outlined,
+                                                ),
+                                                label: Text(
+                                                  _saving
+                                                      ? 'Saving…'
+                                                      : _saveLabel,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : null) ??
+                      const SizedBox.shrink(),
                 ],
               );
             },

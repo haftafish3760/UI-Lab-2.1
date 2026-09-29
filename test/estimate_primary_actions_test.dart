@@ -56,18 +56,19 @@ void main() {
       }
       expect(
         tester
-            .widget<FilledButton>(
+            .widget<ButtonStyleButton>(
               find.byKey(const ValueKey('estimate-primary-job')),
             )
             .onPressed,
         isNotNull,
       );
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('estimate-primary-edit')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('estimate-primary-edit')));
       await tester.pumpAndSettle();
-      expect(
-        find.byKey(const ValueKey('estimate-editor-screen')),
-        findsOneWidget,
-      );
+      expect(find.text('Editing work details'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }

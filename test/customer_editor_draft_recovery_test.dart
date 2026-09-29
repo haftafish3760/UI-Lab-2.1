@@ -79,7 +79,7 @@ void main() {
         () => field('Client name').evaluate().isNotEmpty,
       );
       await tester.enterText(field('Client name'), 'Recovered client');
-      await tester.enterText(field('Phone'), '555-');
+      await tester.enterText(field('Phone (including area code)'), '555-');
       await tester.binding.handlePopRoute();
       await waitForNativeSave(
         tester,
@@ -110,8 +110,17 @@ void main() {
         tester,
         () => field('Client name').evaluate().isNotEmpty,
       );
-      expect(tester.widget<TextField>(field('Phone')).controller!.text, '(555');
-      await tester.enterText(field('Phone'), '2025550101');
+      expect(
+        tester
+            .widget<TextField>(field('Phone (including area code)'))
+            .controller!
+            .text,
+        '(555',
+      );
+      await tester.enterText(
+        field('Phone (including area code)'),
+        '2025550101',
+      );
       await save();
       await waitForNativeSave(tester, () => directory.failureMessage != null);
       expect(find.byType(CustomerEditScreen), findsOneWidget);

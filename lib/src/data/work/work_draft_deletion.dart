@@ -12,8 +12,18 @@ extension WorkDraftDeletion on WorkPersistenceSession {
       record.estimateDeliveries.isEmpty &&
       !_records.values.any((other) => other.sourceId == record.id) &&
       !_entries.values.any(
-        (entry) =>
-            entry.sourceId == record.id || entry.sourceId == record.number,
+        (entry) => switch (entry.paymentLinkKind) {
+          PaymentLinkKind.invoice =>
+            record.kind == WorkRecordKind.invoice &&
+                (entry.sourceId == record.id ||
+                    entry.sourceId == record.number),
+          PaymentLinkKind.job =>
+            record.kind == WorkRecordKind.job && entry.sourceId == record.id,
+          PaymentLinkKind.estimate =>
+            record.kind == WorkRecordKind.estimate &&
+                entry.sourceId == record.id,
+          _ => false,
+        },
       );
 
   Future<bool> deleteDraft(WorkRecord record) {

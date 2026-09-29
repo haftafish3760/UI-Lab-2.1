@@ -5,11 +5,13 @@ import '../../data/work/job_notes_draft_workflow.dart';
 import '../../data/work/job_schedule_draft_workflow.dart';
 import '../../data/work/job_assignment_draft_workflow.dart';
 import 'job_notes_editor_dialog.dart';
+import 'job_photos_editor_route.dart';
 import 'job_schedule_editor_sheet.dart';
 import 'job_assignment_editor_sheet.dart';
 
 /// Material editing has its own item-workspace route and is not handled here.
 bool supportsJobDetailsRecovery(ResumedJobAction workflow) =>
+    workflow is ResumedJobPhotos ||
     workflow is ResumedJobNotes ||
     workflow is ResumedJobSchedule ||
     workflow is ResumedJobAssignment;
@@ -20,6 +22,7 @@ Future<void> openJobDetailsRecovery(
   ResumedJobAction workflow,
 ) async {
   final session = switch (workflow) {
+    ResumedJobPhotos(:final controller) => controller.session,
     ResumedJobNotes(:final controller) => controller.session,
     ResumedJobSchedule(:final controller) => controller.session,
     ResumedJobAssignment(:final controller) => controller.session,
@@ -30,6 +33,12 @@ Future<void> openJobDetailsRecovery(
     final work = PrototypeOperationsScope.of(context).workSession;
     if (work == null) throw StateError('Job recovery is unavailable.');
     switch (workflow) {
+      case ResumedJobPhotos(:final controller):
+        await openJobPhotosEditor(
+          context,
+          recordId: controller.input.base.id,
+          selected: controller,
+        );
       case ResumedJobNotes(:final controller):
         work.validateJobNotesHandoff(controller, controller.input.base.id);
         await showDialog<void>(

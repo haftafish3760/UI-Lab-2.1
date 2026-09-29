@@ -1,0 +1,13 @@
+{
+  "clients": [
+    {"name":"Demo — Morgan Ellis","company":"","phone":"2025550101","email":"morgan@example.test","address":"14 Sample Lane","access":"Use the side entrance."},
+    {"name":"Demo — Cedar Studio","company":"Cedar Studio","phone":"2025550102","email":"office@example.test","address":"28 Example Avenue, Suite 2","access":"Arrange access with the office manager."},
+    {"name":"Demo — Avery Chen","company":"","phone":"2025550103","email":"avery@example.test","address":"63 Example Road","access":"Call on arrival."}
+  ],
+  "estimates": [
+    {"title":"[Demo] Replace kitchen faucet","client":0,"actor":"alex","description":"Remove the leaking kitchen faucet, install the customer-selected replacement, reconnect supplies and check for leaks. Dispose of the old faucet.","price":"285.00","approval":"verbal"},
+    {"title":"[Demo] Monthly office cleaning","client":1,"actor":"jordan","description":"Four evening visits: clean reception and work areas, vacuum floors, sanitize the kitchenette and restroom, and empty waste bins. Cleaning supplies included.","price":"640.00","approval":"none"},
+    {"title":"[Demo] Garden gravel delivery","client":2,"actor":"alex","description":"Deliver two loads of washed gravel to the marked driveway area. Spreading and excavation are excluded. Confirm access before delivery.","price":"420.00","approval":"signed"},
+    {"title":"[Demo] Product photography session","client":1,"actor":"alex","description":"Photograph twelve products on a neutral background. Include basic color correction and twelve finished digital images. Additional retouching requires approval.","price":"360.00","approval":"none"}
+  ]
+}

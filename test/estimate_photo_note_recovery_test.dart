@@ -74,10 +74,10 @@ void main() {
       }
 
       await open();
-      await tester.tap(find.text('Add or edit note'));
+      await tester.tap(find.text('Edit photo details'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'Valve behind the ');
-      await tester.tap(find.text('Keep unfinished note'));
+      await tester.tap(find.text('Keep unfinished details'));
       await tester.pumpAndSettle();
       await waitForNativeSave(
         tester,
@@ -103,7 +103,7 @@ void main() {
       draft = makeDraft();
       await tester.runAsync(draft.initialize);
       await open();
-      await tester.tap(find.text('Add or edit note'));
+      await tester.tap(find.text('Edit photo details'));
       await tester.pumpAndSettle();
       expect(
         tester.widget<TextField>(find.byType(TextField)).controller!.text,
@@ -113,7 +113,7 @@ void main() {
         find.byType(TextField),
         'Valve behind the heater.',
       );
-      await tester.tap(find.text('Save note'));
+      await tester.tap(find.text('Save details'));
       await tester.pumpAndSettle();
       await waitForNativeSave(
         tester,

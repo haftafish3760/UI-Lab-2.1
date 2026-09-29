@@ -33,7 +33,7 @@ class EstimateActionsScreen extends StatelessWidget {
               : 'Mark ready to send',
           detail: record.requiresCompanyReview
               ? 'Send this exact revision to an authorized company reviewer.'
-              : 'Confirm the draft has customer-ready scope and pricing.',
+              : 'Check the work details and prices before sending this estimate.',
           accent: semantic.success,
           surface: semantic.successSurface,
           onTap: () => _finish(context, EstimateAction.markReady),

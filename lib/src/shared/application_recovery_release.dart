@@ -10,6 +10,7 @@ import '../data/expenses/recurring_draft_recovery.dart';
 import '../data/receipts/receipt_workflow_draft_recovery.dart';
 import '../data/expenses/expense_draft_workflow.dart';
 import '../data/work/invoice_payment_draft_workflow.dart';
+import '../data/work/direct_payment_draft_workflow.dart';
 import '../data/day_notes/day_note_draft_workflow.dart';
 import 'preference_draft_recovery.dart';
 
@@ -42,6 +43,7 @@ Future<void> releaseApplicationRecovery(Object workflow) => switch (workflow) {
   ResumedReceiptEvidence(:final controller) => controller.session.close(),
   ExpenseDraftController() => workflow.session.close(),
   InvoicePaymentDraftController() => workflow.session.close(),
+  DirectPaymentDraftController() => workflow.session.close(),
   DayNoteDraftController() => workflow.session.close(),
   ResumedPreferenceDraft() => workflow.close(),
   _ => Future<void>.error(ArgumentError('Unsupported recovery workflow.')),

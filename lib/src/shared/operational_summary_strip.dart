@@ -15,6 +15,7 @@ class OperationalSummaryItem {
     required this.icon,
     this.endColor,
     this.foreground = OperationalCardTone.ink,
+    this.selected = false,
   });
   final String id;
   final String label;
@@ -24,6 +25,7 @@ class OperationalSummaryItem {
   final Color foreground;
   final VoidCallback onTap;
   final IconData icon;
+  final bool selected;
 }
 
 /// A single horizontally scrollable strip. All cards share dimensions; text
@@ -88,58 +90,67 @@ class OperationalSummaryStrip extends StatelessWidget {
                         ? 96
                         : AppLayoutEngine.summaryStripCardMinimumHeight,
                   ),
-                  child: Material(
-                    color: items[index].color,
-                    clipBehavior: Clip.antiAlias,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadii.surface),
-                      side: BorderSide(
-                        color: items[index].color.withValues(alpha: .6),
-                      ),
-                    ),
-                    child: Ink(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            items[index].color,
-                            items[index].endColor ?? items[index].color,
-                          ],
+                  child: Semantics(
+                    selected: items[index].selected,
+                    button: true,
+                    child: Material(
+                      color: items[index].color,
+                      clipBehavior: Clip.antiAlias,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadii.surface),
+                        side: BorderSide(
+                          color: items[index].selected
+                              ? items[index].foreground
+                              : items[index].color.withValues(alpha: .6),
+                          width: items[index].selected ? 2 : 1,
                         ),
                       ),
-                      child: InkWell(
-                        onTap: items[index].onTap,
-                        borderRadius: BorderRadius.circular(AppRadii.surface),
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                items[index].icon,
-                                color: items[index].foreground,
-                                size: 20,
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                items[index].label,
-                                style: TextStyle(
-                                  color: items[index].foreground,
-                                  fontSize: 13,
-                                  height: 1.15,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const Spacer(),
-                              const SizedBox(height: 8),
-                              Text(
-                                items[index].value,
-                                style: valueStyle.copyWith(
-                                  color: items[index].foreground,
-                                ),
-                              ),
+                      child: Ink(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              items[index].color,
+                              items[index].endColor ?? items[index].color,
                             ],
+                          ),
+                        ),
+                        child: InkWell(
+                          onTap: items[index].onTap,
+                          borderRadius: BorderRadius.circular(AppRadii.surface),
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  items[index].selected
+                                      ? Icons.check_circle_outline
+                                      : items[index].icon,
+                                  color: items[index].foreground,
+                                  size: 20,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  items[index].label,
+                                  style: TextStyle(
+                                    color: items[index].foreground,
+                                    fontSize: 13,
+                                    height: 1.15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const Spacer(),
+                                const SizedBox(height: 8),
+                                Text(
+                                  items[index].value,
+                                  style: valueStyle.copyWith(
+                                    color: items[index].foreground,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

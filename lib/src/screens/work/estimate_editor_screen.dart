@@ -1,4 +1,10 @@
+import 'estimate_client_information.dart';
+import '../../data/work/estimate_service_price.dart';
+import '../../../l10n/app_localizations_extension.dart';
+import 'estimate_price_summary.dart';
+import 'estimate_review_section.dart';
 import 'estimate_approval_screen.dart';
+import 'estimate_detail_screen.dart';
 import '../../data/storage/local_record_command.dart';
 import 'estimate_template_document.dart';
 import 'estimate_terms_editor.dart';
@@ -27,9 +33,7 @@ import '../../shared/native_media_picker_scope.dart';
 import '../../shared/draft_navigation_guard.dart';
 import '../../shared/editor_draft_status.dart';
 import '../../layout/app_layout_engine.dart';
-import '../../shared/section_card.dart';
 import '../dashboard/dashboard_models.dart';
-import 'customer_edit_screen.dart';
 import 'estimate_items_screen.dart';
 import 'estimate_site_photos_screen.dart';
 import 'work_contact_models.dart';
@@ -37,6 +41,7 @@ import 'work_detail_header.dart';
 import 'work_models.dart';
 
 part 'estimate_editor_sections.dart';
+part 'estimate_editor_actions.dart';
 part 'estimate_editor_overview.dart';
 part 'estimate_editor_document_preview.dart';
 part 'estimate_editor_persistence.dart';
@@ -46,14 +51,18 @@ class EstimateEditorScreen extends StatefulWidget {
   const EstimateEditorScreen({
     required this.initialDay,
     this.initialClient,
+    this.initialCustomer,
     this.createdByEmployeeId,
     this.initialRecord,
     this.recoveredWorkflow,
+    this.initialSection,
     super.key,
   });
 
   final DateTime initialDay;
+  final EstimateReviewSection? initialSection;
   final String? initialClient;
+  final WorkCustomerProfile? initialCustomer;
   final String? createdByEmployeeId;
   final WorkRecord? initialRecord;
 
@@ -91,6 +100,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
   DraftAutosaveSession? get navigationDraft => _draft;
   @override
   bool get blockDraftNavigation => _saving;
+  final _clientInformation = GlobalKey<EstimateClientInformationState>();
   final _sectionChanges = ValueNotifier<int>(0);
   final _scrollController = ScrollController();
   late final Listenable _formChanges = Listenable.merge([
@@ -101,6 +111,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
     _discount,
     _tax,
     _terms,
+    _deposit,
   ]);
   void _refresh(VoidCallback change) {
     setState(change);
@@ -113,7 +124,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
     if (!_initialized) {
       _initialized = true;
       _work = PrototypeOperationsScope.of(context).workSession;
-      unawaited(_openEstimateDraft());
+      unawaited(_openEstimateDraft().then((_) => _openInitialSection()));
     }
   }
 
@@ -126,6 +137,9 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
   late final TextEditingController _discount;
   late final TextEditingController _tax;
   late final TextEditingController _terms;
+  late final TextEditingController _deposit;
+  late final TextEditingController _servicePrice;
+  bool _requiresDeposit = false;
   late DateTime _createdOn;
   late DateTime _expiresOn;
   DateTime? _followUpOn;
@@ -133,13 +147,23 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
   String? _client;
   WorkCustomerProfile? _customerSnapshot;
   var _pricing = WorkPricingModel.timeAndMaterials;
+  var _documentPresentation = WorkDocumentPresentation.detailed;
   var _template = 'Service standard';
   var _items = <WorkLineItem>[];
   var _itemDraftInputs = <String, WorkItemsDraftInput>{};
   var _sitePhotos = <WorkSitePhoto>[];
   EstimatePhotosDraftInput? _photoDraftInput;
 
-  double get _subtotal => _items.fold(0, (sum, item) => sum + item.total);
+  double get _subtotal {
+    if (canUseEstimateServicePrice(_estimateId, _items)) {
+      final amount = double.tryParse(
+        _servicePrice.text.trim().replaceAll(',', '.'),
+      );
+      return amount != null && amount.isFinite && amount >= 0 ? amount : 0;
+    }
+    return _items.fold(0, (sum, item) => sum + item.total);
+  }
+
   double get _total =>
       (_subtotal - _money(_discount) + _money(_tax)).clamp(0, double.infinity);
 
@@ -148,7 +172,21 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
     super.initState();
     final existing = widget.initialRecord;
     _baseRecord = existing;
-    _customerSnapshot = existing?.customerSnapshot;
+    _requiresDeposit = (existing?.requiredDepositCents ?? 0) > 0;
+    _servicePrice = TextEditingController(
+      text:
+          existing != null &&
+              existing.items.isNotEmpty &&
+              canUseEstimateServicePrice(existing.id, existing.items)
+          ? existing.items.single.customerPrice.toStringAsFixed(2)
+          : '',
+    );
+    _deposit = TextEditingController(
+      text: _requiresDeposit
+          ? (existing!.requiredDepositCents / 100).toStringAsFixed(2)
+          : '',
+    );
+    _customerSnapshot = existing?.customerSnapshot ?? widget.initialCustomer;
     _estimateId = existing?.id ?? newLocalRecordIdentity('estimate');
     _creatorId =
         existing?.createdByEmployeeId ??
@@ -174,8 +212,13 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
         _createdOn.add(const Duration(days: 30));
     _followUpOn = existing?.estimateDates?.followUpOn;
     _proposedServiceOn = existing?.estimateDates?.proposedServiceOn;
-    _client = existing?.client ?? widget.initialClient;
+    _client =
+        existing?.client ??
+        widget.initialCustomer?.name ??
+        widget.initialClient;
     _pricing = existing?.pricing ?? WorkPricingModel.timeAndMaterials;
+    _documentPresentation =
+        existing?.documentPresentation ?? WorkDocumentPresentation.detailed;
     _template = existing?.template ?? 'Service standard';
     _items = [...?existing?.items];
     _sitePhotos = [...?existing?.sitePhotos];
@@ -193,6 +236,8 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
     _discount.dispose();
     _tax.dispose();
     _terms.dispose();
+    _deposit.dispose();
+    _servicePrice.dispose();
     super.dispose();
   }
 
@@ -231,6 +276,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
                           ),
                           if (_draft != null)
                             EditorDraftStatus(
+                              showRoutineStatus: false,
                               state: _draft!.state,
                               onRetry: _draft!.retry,
                               onDiscard: _discardEstimateDraft,
@@ -245,6 +291,8 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
                               builder: (context, _) => _buildOverview(),
                             ),
                           ],
+                          const SizedBox(height: 16),
+                          _buildEditorActions(),
                         ],
                       ),
                     ],
@@ -254,62 +302,32 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
             },
           ),
         ),
-        bottomNavigationBar: SafeArea(
-          minimum: const EdgeInsets.all(12),
-          child: Center(
-            heightFactor: 1,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 620),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                    key: const ValueKey('estimate-close'),
-                    onPressed: !_saving ? () => leaveDraftRoute() : null,
-                    child: const Text('Close'),
-                  ),
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                    key: const ValueKey('estimate-live-pdf-preview'),
-                    onPressed: _draftReady && !_saving ? _previewPdf : null,
-                    child: const Text('Preview'),
-                  ),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                    key: ValueKey(
-                      widget.initialRecord == null
-                          ? 'save-estimate-draft'
-                          : 'save-estimate-changes',
-                    ),
-                    onPressed: _draftReady && !_saving ? _save : null,
-                    child: const Text('Save estimate'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
 
-  Future<void> _editItemCategory(
+  Future<bool> _editItemCategory(
     EstimateItemCategory category,
-    List<WorkLineItem> initialItems,
-  ) async {
+    List<WorkLineItem> initialItems, {
+    bool fromReview = false,
+  }) async {
+    var pricedItems = _items;
+    if (_servicePrice.text.trim().isNotEmpty &&
+        canUseEstimateServicePrice(_estimateId, _items)) {
+      try {
+        final priced = estimatePricedItems(_estimateInput);
+        pricedItems = priced;
+        if (category != EstimateItemCategory.labor) initialItems = priced;
+      } on FormatException catch (error) {
+        _message(error.message);
+        return false;
+      }
+    }
     final revised = await Navigator.of(context).push<List<WorkLineItem>>(
       MaterialPageRoute(
         builder: (_) => EstimateItemsScreen(
           initialItems: initialItems,
+          editingFromReview: fromReview,
           pricing: _pricing,
           category: category,
           draftSession: _draft,
@@ -321,22 +339,28 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
         ),
       ),
     );
-    if (!mounted || revised == null) return;
+    if (!mounted || revised == null) return false;
     _changeEstimateInput(() {
+      _servicePrice.clear();
       _itemDraftInputs.remove(category.name);
       if (category == EstimateItemCategory.all) {
         _items = revised;
-        return;
+      } else {
+        final keepLabor = category != EstimateItemCategory.labor;
+        final retained = pricedItems.where(
+          (item) => (item.type == WorkLineItemType.labor) == keepLabor,
+        );
+        _items = [...retained, ...revised];
       }
-      final keepLabor = category != EstimateItemCategory.labor;
-      final retained = _items.where(
-        (item) => (item.type == WorkLineItemType.labor) == keepLabor,
-      );
-      _items = [...retained, ...revised];
+      if (_items.isNotEmpty &&
+          canUseEstimateServicePrice(_estimateId, _items)) {
+        _servicePrice.text = _items.single.customerPrice.toStringAsFixed(2);
+      }
     });
+    return true;
   }
 
-  Future<void> _editSitePhotos() async {
+  Future<bool> _editSitePhotos() async {
     final coordinator = NativeMediaPickerScope.maybeOf(context);
     final media = _work == null || _draft == null || coordinator == null
         ? null
@@ -360,24 +384,9 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
         _sitePhotos = photos;
         _photoDraftInput = null;
       });
+      return true;
     }
-  }
-
-  Future<void> _addClient() async {
-    final customer = await Navigator.of(context).push<WorkCustomerProfile>(
-      MaterialPageRoute(
-        builder: (_) => CustomerEditScreen(
-          selectedDay: _createdOn,
-          offerEstimateOnly: true,
-        ),
-      ),
-    );
-    if (!mounted || customer == null) return;
-    _changeEstimateInput(() {
-      _client = customer.name;
-      _customerSnapshot = customer;
-    });
-    await _draft?.flush();
+    return false;
   }
 
   Future<void> _pickDate(

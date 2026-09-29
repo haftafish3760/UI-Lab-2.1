@@ -11,16 +11,18 @@ extension EstimateRecordEditing on WorkRecord {
     WorkCustomerProfile? customerSnapshot,
     required String scope,
     required WorkPricingModel pricing,
+    WorkDocumentPresentation? documentPresentation,
     required List<WorkLineItem> items,
     List<WorkSitePhoto>? sitePhotos,
     required String template,
     required String terms,
+    int? requiredDepositCents,
     required double discount,
     required double tax,
     required EstimateDates dates,
     required DateTime changedOn,
   }) {
-    assert(kind == WorkRecordKind.estimate);
+    if (!isProposal) throw StateError('Only proposals can be revised here.');
     final customerVisibleChange =
         (purchaseOrderNumber != null &&
             purchaseOrderNumber != this.purchaseOrderNumber) ||
@@ -35,9 +37,13 @@ extension EstimateRecordEditing on WorkRecord {
                       ).toString())) ||
         scope != detail ||
         pricing != this.pricing ||
+        (documentPresentation != null &&
+            documentPresentation != this.documentPresentation) ||
         !_sameLineItems(items, this.items) ||
         template != this.template ||
         terms != this.terms ||
+        (requiredDepositCents != null &&
+            requiredDepositCents != this.requiredDepositCents) ||
         discount != this.discount ||
         tax != this.tax ||
         !_sameDate(dates.expiresOn, estimateDates?.expiresOn) ||
@@ -76,8 +82,10 @@ extension EstimateRecordEditing on WorkRecord {
           (client == this.client ? this.customerSnapshot : null),
       detail: scope,
       pricing: pricing,
+      documentPresentation: documentPresentation ?? this.documentPresentation,
       sourceId: sourceId,
       assignee: assignee,
+      assignedEmployeeIds: assignedEmployeeIds,
       vehicle: vehicle,
       serviceLocation: serviceLocation,
       jobNotes: jobNotes,
@@ -88,12 +96,14 @@ extension EstimateRecordEditing on WorkRecord {
       createdOn: createdOn,
       scheduledStart: scheduledStart,
       scheduledEnd: scheduledEnd,
+      scheduleBufferMinutes: scheduleBufferMinutes,
       createdByEmployeeId: createdByEmployeeId,
       status: requiresResend ? WorkRecordStatus.ready : status,
       items: List.unmodifiable(items),
       sitePhotos: List.unmodifiable(resolvedSitePhotos),
       template: template,
       terms: terms,
+      requiredDepositCents: requiredDepositCents ?? this.requiredDepositCents,
       paymentMethod: paymentMethod,
       discount: discount,
       tax: tax,

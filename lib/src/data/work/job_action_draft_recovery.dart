@@ -2,6 +2,7 @@ import '../storage/draft_recovery_catalog.dart';
 import '../storage/draft_recovery_selection.dart';
 import '../storage/local_record_command.dart';
 import 'job_notes_draft_workflow.dart';
+import 'job_photos_draft_workflow.dart';
 import 'job_material_permissions.dart';
 import 'job_schedule_draft_workflow.dart';
 import 'job_assignment_draft_workflow.dart';
@@ -11,6 +12,11 @@ import 'work_persistence_session.dart';
 
 sealed class ResumedJobAction {
   const ResumedJobAction();
+}
+
+class ResumedJobPhotos extends ResumedJobAction {
+  const ResumedJobPhotos(this.controller);
+  final JobPhotosDraftController controller;
 }
 
 class ResumedJobNotes extends ResumedJobAction {
@@ -50,13 +56,15 @@ class JobActionDraftRecovery {
   late final DraftRecoveryCatalog _catalog;
   static const _labels = {
     'work/job-notes': 'Job notes',
+    'work/job-photos': 'Job photos',
     'work/job-schedule': 'Job schedule',
     'work/job-assignment': 'Job assignment',
     'work/job-materials': 'Job materials',
   };
   bool _canList(String domain) {
     final p = _work.permissions;
-    return p.editableKinds.contains(WorkRecordKind.job) &&
+    return (domain != 'work/job-photos' || p.canAttachJobPhotos) &&
+        p.editableKinds.contains(WorkRecordKind.job) &&
         (p.visibleCreatorIds.contains(p.actorEmployeeId) ||
             (p.canManageOtherCreators && p.visibleCreatorIds.isNotEmpty)) &&
         (domain != 'work/job-materials' ||
@@ -77,6 +85,9 @@ class JobActionDraftRecovery {
 
   (WorkRecord, int) _base(String domain, Map<String, Object?> raw) {
     switch (domain) {
+      case 'work/job-photos':
+        final input = JobPhotosDraftInput.fromPayload(raw);
+        return (input.base, input.baseRevision);
       case 'work/job-notes':
         final input = JobNotesInput.fromPayload(raw);
         return (input.base, input.baseRevision);
@@ -157,6 +168,10 @@ class JobActionDraftRecovery {
       revision: current.revision,
     );
     switch (current.domain) {
+      case 'work/job-photos':
+        return ResumedJobPhotos(
+          await _work.openJobPhotosDraft(base.id, recoverySelection: selection),
+        );
       case 'work/job-notes':
         return ResumedJobNotes(
           await _work.openJobNotesDraft(base.id, recoverySelection: selection),

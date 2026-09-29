@@ -18,6 +18,7 @@ import '../../shared/local_document_path_scope.dart';
 import 'work_detail_header.dart';
 import 'work_models.dart';
 import 'estimate_photo_note_dialog.dart';
+import 'estimate_photo_preview_screen.dart';
 
 part 'estimate_photo_media.dart';
 
@@ -26,6 +27,8 @@ class EstimateSitePhotosScreen extends StatefulWidget {
     required this.initialDay,
     required this.initialPhotos,
     this.retainPhotoFile,
+    this.screenTitle = 'Estimate photos',
+    this.onConfirm,
     this.draftSession,
     this.mediaWorkflow,
     this.recoveryInput,
@@ -33,6 +36,8 @@ class EstimateSitePhotosScreen extends StatefulWidget {
     super.key,
   });
 
+  final String screenTitle;
+  final Future<bool> Function(List<WorkSitePhoto>)? onConfirm;
   final Future<String> Function(String path)? retainPhotoFile;
   final DraftAutosaveSession? draftSession;
   final EstimatePhotoMediaWorkflow? mediaWorkflow;
@@ -51,9 +56,10 @@ class _EstimateSitePhotosScreenState extends State<EstimateSitePhotosScreen>
   @override
   DraftAutosaveSession? get navigationDraft => widget.draftSession;
   bool _importing = false;
+  bool _confirming = false;
   EstimatePhotoSelection? _pendingMedia;
   bool _checkedMedia = false;
-  bool get _mediaLocked => _importing || _pendingMedia != null;
+  bool get _mediaLocked => _importing || _confirming || _pendingMedia != null;
   void _refreshMedia(VoidCallback change) {
     if (mounted) setState(change);
   }
@@ -70,7 +76,7 @@ class _EstimateSitePhotosScreenState extends State<EstimateSitePhotosScreen>
   }
 
   @override
-  bool get blockDraftNavigation => _importing;
+  bool get blockDraftNavigation => _importing || _confirming;
   var _pendingNotes = <String, String>{};
   @override
   void initState() {
@@ -108,7 +114,7 @@ class _EstimateSitePhotosScreenState extends State<EstimateSitePhotosScreen>
               textScaler: MediaQuery.textScalerOf(context),
             );
             return ListView(
-              padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 96),
+              padding: EdgeInsets.fromLTRB(insets.left, 10, insets.right, 28),
               children: [
                 Center(
                   child: SizedBox(
@@ -117,7 +123,7 @@ class _EstimateSitePhotosScreenState extends State<EstimateSitePhotosScreen>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         WorkDetailHeader(
-                          label: 'Job-site photos',
+                          label: widget.screenTitle,
                           selectedDay: widget.initialDay,
                           onBack: () => leaveDraftRoute(),
                           showDateContext: true,
@@ -133,7 +139,7 @@ class _EstimateSitePhotosScreenState extends State<EstimateSitePhotosScreen>
                           ),
                         const SizedBox(height: 14),
                         Text(
-                          'Photos and notes',
+                          'Photos and details',
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 4),
@@ -168,29 +174,33 @@ class _EstimateSitePhotosScreenState extends State<EstimateSitePhotosScreen>
                         if (_photos.isEmpty)
                           const SectionCard(
                             child: Text(
-                              'No job-site photos yet. Add the pictures needed to recognize the work later.',
+                              'No photos added. Take a photo or choose existing photos for this work.',
                             ),
                           )
                         else
                           for (final photo in _photos) ...[
                             _SitePhotoRow(
                               photo: photo,
+                              previewTitle: widget.screenTitle == 'Job photos'
+                                  ? 'Job photo'
+                                  : 'Estimate photo',
                               onNote: () {
                                 if (!_mediaLocked) _editNote(photo);
                               },
-                              onRemove: () {
-                                if (_mediaLocked) return;
-                                _changePhotos(() {
-                                  _photos.removeWhere(
-                                    (candidate) => candidate.id == photo.id,
-                                  );
-                                  _pendingNotes.remove(photo.id);
-                                });
-                              },
+                              onRemove: () => _removePhoto(photo),
                             ),
                             if (photo != _photos.last)
                               const SizedBox(height: 8),
                           ],
+                        const SizedBox(height: 20),
+                        FilledButton.icon(
+                          key: const ValueKey('save-estimate-photos'),
+                          onPressed: _pendingNotes.isEmpty && !_mediaLocked
+                              ? _savePhotos
+                              : null,
+                          icon: const Icon(Icons.save_outlined),
+                          label: const Text('Save photos and details'),
+                        ),
                       ],
                     ),
                   ),
@@ -200,25 +210,25 @@ class _EstimateSitePhotosScreenState extends State<EstimateSitePhotosScreen>
           },
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(12),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: FilledButton.icon(
-              key: const ValueKey('save-estimate-photos'),
-              onPressed: _pendingNotes.isEmpty && !_mediaLocked
-                  ? () => leaveDraftRoute(_photoInput.confirmedPhotos())
-                  : null,
-              icon: const Icon(Icons.save_outlined),
-              label: const Text('Save photos and notes'),
-            ),
-          ),
-        ),
-      ),
     ),
   );
+
+  Future<void> _savePhotos() async {
+    if (_mediaLocked) return;
+    setState(() => _confirming = true);
+    try {
+      final photos = _photoInput.confirmedPhotos();
+      _publishPhotos();
+      final saved = await widget.onConfirm?.call(photos) ?? true;
+      if (!mounted) return;
+      setState(() => _confirming = false);
+      if (saved) await leaveDraftRoute(photos);
+    } catch (error) {
+      if (mounted) _showPickerError(error);
+    } finally {
+      if (mounted) setState(() => _confirming = false);
+    }
+  }
 
   Future<void> _takePhoto() async {
     if (await _pickNativeMedia(MediaPickerSource.camera)) return;
@@ -319,11 +329,46 @@ class _EstimateSitePhotosScreenState extends State<EstimateSitePhotosScreen>
     });
   }
 
+  Future<void> _removePhoto(WorkSitePhoto photo) async {
+    if (_mediaLocked) return;
+    final recordLabel = widget.screenTitle == 'Job photos' ? 'job' : 'estimate';
+    final remove = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Remove photo from this $recordLabel?'),
+        content: Text(
+          '${photo.name}\n\nThe photo and its details will be removed from this $recordLabel. The image file will not be deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep photo'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove photo'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || remove != true || _mediaLocked) return;
+    _changePhotos(() {
+      _photos.removeWhere((candidate) => candidate.id == photo.id);
+      _pendingNotes.remove(photo.id);
+    });
+  }
+
   void _showPickerError(Object error) {
     if (!mounted) return;
-    final permissionDenied = error is PlatformException &&
-        {'camera_access_denied', 'camera_access_denied_without_prompt',
-         'camera_access_restricted', 'photo_access_denied', 'photo_access_restricted'}.contains(error.code);
+    final permissionDenied =
+        error is PlatformException &&
+        {
+          'camera_access_denied',
+          'camera_access_denied_without_prompt',
+          'camera_access_restricted',
+          'photo_access_denied',
+          'photo_access_restricted',
+        }.contains(error.code);
     final message = permissionDenied
         ? 'Access was not allowed. You can allow Camera in your phone Settings, or choose an existing photo. Your saved work is unchanged.'
         : error is PlatformException && error.message?.isNotEmpty == true
@@ -338,11 +383,13 @@ class _EstimateSitePhotosScreenState extends State<EstimateSitePhotosScreen>
 class _SitePhotoRow extends StatelessWidget {
   const _SitePhotoRow({
     required this.photo,
+    required this.previewTitle,
     required this.onNote,
     required this.onRemove,
   });
 
   final WorkSitePhoto photo;
+  final String previewTitle;
   final VoidCallback onNote;
   final VoidCallback onRemove;
 
@@ -372,9 +419,16 @@ class _SitePhotoRow extends StatelessWidget {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: SizedBox(width: 64, height: 64, child: _preview(context)),
+        InkWell(
+          onTap: () => _openPreview(context),
+          child: Semantics(
+            button: true,
+            label: 'View photo ${photo.name}',
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: SizedBox(width: 64, height: 64, child: _preview(context)),
+            ),
+          ),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -385,10 +439,19 @@ class _SitePhotoRow extends StatelessWidget {
                 photo.name,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-              Text(photo.note.isEmpty ? 'No note added' : photo.note),
-              TextButton(
-                onPressed: onNote,
-                child: const Text('Add or edit note'),
+              Text(photo.note.isEmpty ? 'No details added' : photo.note),
+              Wrap(
+                spacing: 8,
+                children: [
+                  TextButton(
+                    onPressed: () => _openPreview(context),
+                    child: const Text('View photo'),
+                  ),
+                  TextButton(
+                    onPressed: onNote,
+                    child: const Text('Edit photo details'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -400,11 +463,18 @@ class _SitePhotoRow extends StatelessWidget {
             if (value == 'remove') onRemove();
           },
           itemBuilder: (_) => const [
-            PopupMenuItem(value: 'note', child: Text('Add or edit note')),
+            PopupMenuItem(value: 'note', child: Text('Edit photo details')),
             PopupMenuItem(value: 'remove', child: Text('Remove photo')),
           ],
         ),
       ],
+    ),
+  );
+
+  void _openPreview(BuildContext context) => Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) =>
+          EstimatePhotoPreviewScreen(photo: photo, title: previewTitle),
     ),
   );
 }

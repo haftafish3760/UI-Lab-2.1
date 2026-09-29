@@ -1,3 +1,5 @@
+import 'invoice_approval_content.dart';
+import 'quote_approval_content.dart';
 import '../storage/draft_recovery_query.dart';
 import 'dart:io';
 import '../storage/local_attachment_store.dart';
@@ -23,10 +25,16 @@ import 'work_status_history.dart';
 import 'work_draft_repository.dart';
 import 'work_assignment_validation.dart';
 import 'work_document_numbering.dart';
+import 'work_payment_allocation.dart';
 
 part 'work_job_conversion.dart';
+part 'work_proposal_invoice_conversion.dart';
 part 'work_customer_approval_validation.dart';
 part 'work_draft_deletion.dart';
+part 'work_financial_validation.dart';
+part 'invoice_approval_validation.dart';
+part 'quote_approval_validation.dart';
+part 'quote_customer_approval_validation.dart';
 
 /// The single Work read-model cache for an app session. SQLite is authoritative;
 /// listeners see committed changes only. Failed commands preserve this cache.
@@ -63,6 +71,23 @@ class WorkPersistenceSession extends ChangeNotifier {
       UnmodifiableListView(_statusEvents);
   final _writes = SerializedAsyncActions();
   Future<AsyncActionPause> pauseOperations() => _writes.pauseAndDrain();
+
+  /// Library records share Work's write queue and backup/switch pause boundary.
+  Future<void> runReusableJobWrite(Future<void> Function() action) {
+    requireActiveDraftOwner();
+    _pendingWrites++;
+    _notify();
+    return _writes
+        .run(() async {
+          requireActiveDraftOwner();
+          await action();
+        })
+        .whenComplete(() {
+          _pendingWrites--;
+          _notify();
+        });
+  }
+
   int _pendingWrites = 0;
   String? _failureMessage;
   bool _disposed = false;
@@ -102,6 +127,11 @@ class WorkPersistenceSession extends ChangeNotifier {
         'Untitled invoice',
       ),
       WorkRecordKind.job => ('work/job-editor', 'source', 'Untitled job'),
+      WorkRecordKind.quote => (
+        'work/quote-editor',
+        'baseRecord',
+        'Untitled quote',
+      ),
     };
     return DraftRecoveryQuery(
       canList: () => !_disposed && permissions.editableKinds.contains(kind),
@@ -203,7 +233,27 @@ class WorkPersistenceSession extends ChangeNotifier {
             );
           }
           final current = _records[record.id];
+          if (current != null && current.kind != record.kind) {
+            throw StateError('The document type cannot be changed.');
+          }
+          if (record.kind == WorkRecordKind.quote) {
+            if ((permissions.requiresQuoteApproval ||
+                    current?.requiresCompanyReview == true) &&
+                !record.requiresCompanyReview) {
+              throw StateError('Required quote approval cannot be bypassed.');
+            }
+            if (record.pricing != WorkPricingModel.flatRate ||
+                !record.total.isFinite ||
+                record.total < 0 ||
+                record.requiredDepositCents < 0 ||
+                record.requiredDepositCents > (record.total * 100).round()) {
+              throw StateError('Enter a valid fixed quote price and deposit.');
+            }
+            _validateQuoteCustomerApproval(record, current);
+          }
           _validateCustomerApprovalChanges(record, current);
+          _validateQuoteApproval(record, current);
+          _validateInvoiceApproval(record, current);
           if (current != null &&
               current.createdByEmployeeId != record.createdByEmployeeId) {
             throw StateError('The record creator cannot be rewritten.');
@@ -223,6 +273,19 @@ class WorkPersistenceSession extends ChangeNotifier {
                   record.revision > current.revision + 1)) {
             throw const LocalRecordConflict(
               'The document revision changed. Review its latest saved version.',
+            );
+          }
+          if (current != null &&
+              record.kind == WorkRecordKind.job &&
+              canonicalJson(
+                    record.sitePhotos.map(encodeWorkSitePhoto).toList(),
+                  ) !=
+                  canonicalJson(
+                    current.sitePhotos.map(encodeWorkSitePhoto).toList(),
+                  ) &&
+              !permissions.canAttachJobPhotos) {
+            throw StateError(
+              'You do not have permission to change job photos.',
             );
           }
           changes.add(
@@ -252,12 +315,14 @@ class WorkPersistenceSession extends ChangeNotifier {
             occurredAt: occurredAt,
             mutations: changes,
             validateBeforeCommit: () async {
+              await _validatePaymentAllocationsBeforeCommit(newEntries);
               for (final change in changes) {
                 final saved = await repository.find(
                   organizationId: permissions.organizationId,
                   recordId: change.record.id,
                   visibleCreatorIds: permissions.visibleCreatorIds,
                 );
+                await _validateApprovalEvidence(change.record, saved?.record);
                 await validateWorkAssignment(
                   repository: repository,
                   permissions: permissions,
@@ -310,190 +375,6 @@ class WorkPersistenceSession extends ChangeNotifier {
         _notify();
       }
     });
-  }
-
-  List<PrototypeFinancialEntry> _validateFinancial(
-    List<PrototypeFinancialEntry> requested,
-    List<WorkRecord> proposed,
-  ) {
-    final available = {
-      ..._records,
-      for (final record in proposed) record.id: record,
-    };
-    final accepted = <PrototypeFinancialEntry>[];
-    final seen = <String>{};
-    for (final entry in requested) {
-      if (!seen.add(entry.id)) {
-        throw StateError(
-          'A financial entry cannot be submitted twice in one command.',
-        );
-      }
-      final existing = _entries[entry.id];
-      if (existing != null) {
-        if (canonicalJson(encodeFinancialEntry(existing)) !=
-            canonicalJson(encodeFinancialEntry(entry))) {
-          throw const LocalRecordConflict(
-            'This financial entry was already saved with different values.',
-          );
-        }
-        continue;
-      }
-      final permitted = entry.kind == PrototypeFinancialKind.invoiceIssued
-          ? permissions.canIssueInvoices
-          : permissions.canRecordPayments;
-      if (!permitted) {
-        throw StateError(
-          'You do not have permission to record this financial action.',
-        );
-      }
-      final invoices = available.values
-          .where(
-            (record) =>
-                record.kind == WorkRecordKind.invoice &&
-                (record.id == entry.sourceId ||
-                    record.number == entry.sourceId),
-          )
-          .toList();
-      if (invoices.length != 1 || entry.amountCents <= 0) {
-        throw StateError(
-          'The financial entry needs one valid invoice and a positive amount.',
-        );
-      }
-      final invoice = invoices.single;
-      if (!permissions.visibleCreatorIds.contains(
-            invoice.createdByEmployeeId,
-          ) ||
-          invoice.status == WorkRecordStatus.draft) {
-        throw StateError('That invoice cannot receive this financial entry.');
-      }
-      final related = [..._entries.values, ...accepted].where(
-        (item) =>
-            item.sourceId == invoice.id || item.sourceId == invoice.number,
-      );
-      final totalCents = (invoice.total * 100).round();
-      if (entry.kind == PrototypeFinancialKind.invoiceIssued) {
-        if (entry.amountCents != totalCents ||
-            related.any(
-              (item) => item.kind == PrototypeFinancialKind.invoiceIssued,
-            )) {
-          throw StateError(
-            'The invoice has already been issued or its amount changed.',
-          );
-        }
-      } else {
-        final paid = related
-            .where(
-              (item) => item.kind == PrototypeFinancialKind.paymentReceived,
-            )
-            .fold(0, (sum, item) => sum + item.amountCents);
-        if (entry.amountCents > totalCents - paid) {
-          throw StateError('The payment exceeds the current invoice balance.');
-        }
-      }
-      accepted.add(entry);
-    }
-    return accepted;
-  }
-
-  void _validateInvoiceTransitions(
-    List<WorkRecord> proposed,
-    List<PrototypeFinancialEntry> entries,
-  ) {
-    for (final next in proposed) {
-      final previous = _records[next.id];
-      if (previous != null && previous.kind != next.kind) {
-        throw StateError('A Work record cannot change its record type.');
-      }
-      if (next.kind != WorkRecordKind.invoice) continue;
-      final related = entries.where(
-        (entry) => entry.sourceId == next.id || entry.sourceId == next.number,
-      );
-      if (previous == null &&
-          next.status != WorkRecordStatus.draft &&
-          (next.status != WorkRecordStatus.due ||
-              !permissions.canIssueInvoices ||
-              !related.any(
-                (entry) => entry.kind == PrototypeFinancialKind.invoiceIssued,
-              ))) {
-        throw StateError(
-          'Issue the invoice through its authorized financial command.',
-        );
-      }
-      if (previous?.status == WorkRecordStatus.draft &&
-          next.status != WorkRecordStatus.draft) {
-        if (!permissions.canIssueInvoices ||
-            next.status != WorkRecordStatus.due ||
-            !related.any(
-              (entry) => entry.kind == PrototypeFinancialKind.invoiceIssued,
-            )) {
-          throw StateError(
-            'Issue the invoice through its authorized financial command.',
-          );
-        }
-      }
-      if (previous != null && previous.status != WorkRecordStatus.draft) {
-        final before = encodeWorkRecord(previous)..remove('status');
-        final after = encodeWorkRecord(next)..remove('status');
-        if (canonicalJson(before) != canonicalJson(after)) {
-          throw StateError('An issued invoice cannot be silently rewritten.');
-        }
-        if (next.status != previous.status &&
-            next.status != WorkRecordStatus.paid) {
-          throw StateError('Use an explicit invoice correction workflow.');
-        }
-      }
-      if (next.status == WorkRecordStatus.paid &&
-          previous?.status != WorkRecordStatus.paid) {
-        final paid = [..._entries.values, ...entries]
-            .where(
-              (entry) =>
-                  entry.kind == PrototypeFinancialKind.paymentReceived &&
-                  (entry.sourceId == next.id || entry.sourceId == next.number),
-            )
-            .fold(0, (sum, entry) => sum + entry.amountCents);
-        if (!permissions.canRecordPayments ||
-            paid != (next.total * 100).round()) {
-          throw StateError(
-            'Only confirmed payments can mark this invoice paid.',
-          );
-        }
-      }
-    }
-  }
-
-  void _appendInvoicePaymentRevisions(
-    List<WorkRecordMutation> changes,
-    List<PrototypeFinancialEntry> entries,
-  ) {
-    for (final entry in entries.where(
-      (entry) => entry.kind == PrototypeFinancialKind.paymentReceived,
-    )) {
-      final invoice = _records.values.singleWhere(
-        (record) =>
-            record.kind == WorkRecordKind.invoice &&
-            (record.id == entry.sourceId || record.number == entry.sourceId),
-      );
-      final paid = [..._entries.values, ...entries]
-          .where(
-            (item) =>
-                item.kind == PrototypeFinancialKind.paymentReceived &&
-                (item.sourceId == invoice.id ||
-                    item.sourceId == invoice.number),
-          )
-          .fold(0, (sum, item) => sum + item.amountCents);
-      // Even a partial payment advances this shared invoice revision. Separate
-      // sessions must not both post against the same stale balance snapshot.
-      if (!changes.any((change) => change.record.id == invoice.id)) {
-        changes.add(
-          WorkRecordMutation(
-            record: paid == (invoice.total * 100).round()
-                ? invoice.copyWith(status: WorkRecordStatus.paid)
-                : invoice,
-            expectedStorageRevision: _versions[invoice.id]!,
-          ),
-        );
-      }
-    }
   }
 
   Future<bool> _reject(String message) {

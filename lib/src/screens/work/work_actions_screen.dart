@@ -2,6 +2,7 @@ part of 'work_screen.dart';
 
 enum _WorkAction {
   createEstimate,
+  createQuote,
   createInvoice,
   createJob,
   recordPayment,
@@ -11,6 +12,7 @@ enum _WorkAction {
 extension on _WorkAction {
   String get label => switch (this) {
     _WorkAction.createEstimate => 'New Estimate',
+    _WorkAction.createQuote => 'New Quote',
     _WorkAction.createInvoice => 'New Invoice',
     _WorkAction.createJob => 'New Job',
     _WorkAction.recordPayment => 'Record Payment',
@@ -19,6 +21,7 @@ extension on _WorkAction {
 
   String get detail => switch (this) {
     _WorkAction.createEstimate => 'Price proposed work',
+    _WorkAction.createQuote => 'Offer a fixed price',
     _WorkAction.createInvoice => 'Bill completed work',
     _WorkAction.createJob => 'Plan service work',
     _WorkAction.recordPayment => 'Record money received',
@@ -28,6 +31,7 @@ extension on _WorkAction {
   IconData get icon => switch (this) {
     _WorkAction.createInvoice => Icons.receipt_long_rounded,
     _WorkAction.createEstimate => Icons.assignment_rounded,
+    _WorkAction.createQuote => Icons.description_outlined,
     _WorkAction.createJob => Icons.handyman_rounded,
     _WorkAction.recordPayment => Icons.payments_rounded,
     _WorkAction.addContact => Icons.person_add_alt_1_rounded,
@@ -84,11 +88,14 @@ class _WorkActionsScreen extends StatelessWidget {
                           onEmployeeChanged: scope.selectEmployee,
                         ),
                         const SizedBox(height: 14),
-                        _WorkActionGrid(
-                          actions: actions,
-                          actionKeyPrefix: actionKeyPrefix,
-                          onSelected: (action) =>
-                              Navigator.of(context).pop(action),
+                        ReusableWorkTabs(
+                          day: day,
+                          newWork: _WorkActionGrid(
+                            actions: actions,
+                            actionKeyPrefix: actionKeyPrefix,
+                            onSelected: (action) =>
+                                Navigator.of(context).pop(action),
+                          ),
                         ),
                       ],
                     ),
@@ -160,7 +167,8 @@ class _WorkActionTile extends StatelessWidget {
     final semantic = Theme.of(context).extension<AppSemanticColors>()!;
     final (accent, surface) = switch (action) {
       _WorkAction.createJob => (semantic.current, semantic.currentSurface),
-      _WorkAction.createEstimate => (semantic.planned, semantic.plannedSurface),
+      _WorkAction.createEstimate ||
+      _WorkAction.createQuote => (semantic.planned, semantic.plannedSurface),
       _WorkAction.createInvoice => (semantic.success, semantic.successSurface),
       _WorkAction.recordPayment => (semantic.success, semantic.successSurface),
       _WorkAction.addContact => (semantic.current, semantic.currentSurface),
@@ -218,4 +226,5 @@ IconData _recordIcon(WorkRecordKind kind) => switch (kind) {
   WorkRecordKind.job => Icons.handyman_outlined,
   WorkRecordKind.invoice => Icons.receipt_long_outlined,
   WorkRecordKind.estimate => Icons.request_quote_outlined,
+  WorkRecordKind.quote => Icons.description_outlined,
 };

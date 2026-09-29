@@ -34,10 +34,13 @@ class _JobActionsScreen extends StatelessWidget {
     final recordActions = <_JobAction>[
       if (permissions.canAddMaterials) _JobAction.addMaterials,
       if (permissions.canLinkExpenses) _JobAction.linkExpense,
-      if (permissions.canAttachReceipts) ...[
-        _JobAction.addReceipt,
+      if (permissions.canAttachReceipts) _JobAction.addReceipt,
+      if (permissions.canAttachReceipts &&
+          (PrototypeOperationsScope.maybeOf(
+                context,
+              )?.workSession?.permissions.canAttachJobPhotos ??
+              false))
         _JobAction.addPhoto,
-      ],
       if (permissions.canEditJob) _JobAction.editNotes,
     ];
     final operationActions = <_JobAction>[

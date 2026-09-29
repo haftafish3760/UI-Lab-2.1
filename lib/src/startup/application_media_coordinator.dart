@@ -1,3 +1,4 @@
+import '../data/work/work_approval_media_adoption.dart';
 import '../data/storage/local_database.dart';
 import '../data/storage/local_attachment_store.dart';
 import '../data/storage/local_media_picker_request.dart';
@@ -7,6 +8,7 @@ import '../data/receipts/authorized_receipt_draft_service.dart';
 import '../data/receipts/local_receipt_draft_repository.dart';
 import '../data/receipts/receipt_draft_repository.dart';
 import '../data/work/estimate_media_adoption.dart';
+import '../data/work/work_photo_media_adoption.dart';
 import '../data/work/work_persistence_session.dart';
 
 /// One native cache owner. Domain authorization remains in its owning service.
@@ -33,15 +35,31 @@ NativeMediaPickerCoordinator createApplicationMediaCoordinator({
           required targetId,
           required targetRevision,
         }) async {
-          if (destination == MediaPickerDestination.estimate) {
+          if (destination == MediaPickerDestination.estimateApproval ||
+              destination == MediaPickerDestination.quoteApproval) {
+            if (work == null ||
+                !identical(work.repository.database, database)) {
+              throw StateError('Approval attachment storage is unavailable.');
+            }
+            return WorkApprovalMediaAdoption(work, destination).authorize(
+              organizationId: organizationId,
+              ownerId: ownerId,
+              destination: destination,
+              targetId: targetId,
+              targetRevision: targetRevision,
+            );
+          }
+          if (destination == MediaPickerDestination.estimate ||
+              destination == MediaPickerDestination.job) {
             if (work == null ||
                 !identical(work.repository.database, database)) {
               throw StateError('Estimate photo access is unavailable.');
             }
-            return EstimateMediaAdoption(
-              work.repository,
-              work.permissions,
-            ).authorize(
+            work.requireActiveDraftOwner();
+            final adoption = destination == MediaPickerDestination.job
+                ? WorkPhotoMediaAdoption.job(work.repository, work.permissions)
+                : EstimateMediaAdoption(work.repository, work.permissions);
+            return adoption.authorize(
               organizationId: organizationId,
               ownerId: ownerId,
               destination: destination,

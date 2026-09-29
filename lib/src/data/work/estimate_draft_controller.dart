@@ -13,6 +13,7 @@ import 'work_record_codec.dart';
 /// Legacy payload names below remain stable regardless of screen composition.
 class EstimateDraftInput {
   const EstimateDraftInput({
+    this.documentKind = WorkRecordKind.estimate,
     required this.creatorId,
     required this.number,
     this.purchaseOrderNumber = '',
@@ -21,12 +22,16 @@ class EstimateDraftInput {
     required this.discount,
     required this.tax,
     required this.terms,
+    this.requiresDeposit = false,
+    this.depositAmount = '',
     required this.client,
     this.customerSnapshot,
     required this.pricing,
+    this.documentPresentation = WorkDocumentPresentation.detailed,
     required this.template,
     required this.createdOn,
     required this.items,
+    this.servicePrice = '',
     required this.baseRecord,
     required this.estimateId,
     required this.scope,
@@ -38,6 +43,7 @@ class EstimateDraftInput {
     required this.sitePhotos,
   });
 
+  final WorkRecordKind documentKind;
   final String creatorId;
   final String number;
   final String purchaseOrderNumber;
@@ -46,16 +52,20 @@ class EstimateDraftInput {
   final String discount;
   final String tax;
   final String terms;
+  final bool requiresDeposit;
+  final String depositAmount;
   final String? client;
   final WorkCustomerProfile? customerSnapshot;
   final WorkPricingModel pricing;
+  final WorkDocumentPresentation documentPresentation;
   final String template;
   final DateTime createdOn;
   final List<WorkLineItem> items;
+  final String servicePrice;
   final WorkRecord? baseRecord;
   final String estimateId;
   final String scope;
-  final DateTime expiresOn;
+  final DateTime? expiresOn;
   final DateTime? followUpOn;
   final DateTime? proposedServiceOn;
   final Map<String, WorkItemsDraftInput> pendingLineItems;
@@ -63,6 +73,7 @@ class EstimateDraftInput {
   final List<WorkSitePhoto> sitePhotos;
 
   Map<String, Object?> toPayload() => {
+    'documentKind': documentKind.name,
     'creatorId': creatorId,
     'number': number,
     'purchaseOrderNumber': purchaseOrderNumber,
@@ -71,18 +82,22 @@ class EstimateDraftInput {
     'discount': discount,
     'tax': tax,
     'terms': terms,
+    'requiresDeposit': requiresDeposit,
+    'depositAmount': depositAmount,
     'client': client,
     'customerSnapshot': customerSnapshot == null
         ? null
         : encodeWorkCustomerProfile(customerSnapshot!),
     'pricing': pricing.name,
+    'documentPresentation': documentPresentation.name,
     'template': template,
     'createdOn': createdOn.toIso8601String(),
     'items': items.map(encodeWorkLineItem).toList(),
+    'servicePrice': servicePrice,
     'baseRecord': baseRecord == null ? null : encodeWorkRecord(baseRecord!),
     'estimateId': estimateId,
     'scope': scope,
-    'expiresOn': expiresOn.toIso8601String(),
+    'expiresOn': expiresOn?.toIso8601String(),
     'followUpOn': followUpOn?.toIso8601String(),
     'proposedServiceOn': proposedServiceOn?.toIso8601String(),
     'itemEditors': pendingLineItems.map(
@@ -94,6 +109,9 @@ class EstimateDraftInput {
 
   factory EstimateDraftInput.fromPayload(Map<String, Object?> input) =>
       EstimateDraftInput(
+        documentKind: WorkRecordKind.values.byName(
+          input['documentKind'] as String? ?? 'estimate',
+        ),
         creatorId: input['creatorId'] as String,
         number: input['number'] as String,
         purchaseOrderNumber: input['purchaseOrderNumber'] as String? ?? '',
@@ -102,6 +120,8 @@ class EstimateDraftInput {
         discount: input['discount'] as String,
         tax: input['tax'] as String,
         terms: input['terms'] as String,
+        requiresDeposit: input['requiresDeposit'] as bool? ?? false,
+        depositAmount: input['depositAmount'] as String? ?? '',
         client: input['client'] as String?,
         customerSnapshot: input['customerSnapshot'] == null
             ? null
@@ -109,8 +129,12 @@ class EstimateDraftInput {
                 (input['customerSnapshot'] as Map).cast<String, Object?>(),
               ),
         pricing: WorkPricingModel.values.byName(input['pricing'] as String),
+        documentPresentation: WorkDocumentPresentation.values.byName(
+          input['documentPresentation'] as String? ?? 'detailed',
+        ),
         template: input['template'] as String,
         createdOn: DateTime.parse(input['createdOn'] as String),
+        servicePrice: input['servicePrice'] as String? ?? '',
         items: (input['items'] as List)
             .map(
               (item) =>
@@ -124,7 +148,7 @@ class EstimateDraftInput {
               ),
         estimateId: input['estimateId'] as String,
         scope: input['scope'] as String,
-        expiresOn: DateTime.parse(input['expiresOn'] as String),
+        expiresOn: DateTime.tryParse(input['expiresOn'] as String? ?? ''),
         followUpOn: DateTime.tryParse(input['followUpOn'] as String? ?? ''),
         proposedServiceOn: DateTime.tryParse(
           input['proposedServiceOn'] as String? ?? '',

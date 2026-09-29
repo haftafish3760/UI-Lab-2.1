@@ -113,7 +113,19 @@ void main() {
         'Repair completed',
       );
       await closeDocumentSection(tester);
-      await tester.tap(find.byKey(const ValueKey('save-estimate-changes')));
+      await tester.ensureVisible(find.byKey(const ValueKey('estimate-review')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('estimate-review')));
+      await waitForNativeSave(
+        tester,
+        () => find.text('Continue editing').evaluate().isNotEmpty,
+      );
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('confirm-estimate-review')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('confirm-estimate-review')));
+
       await waitForNativeSave(tester, () => work.failureMessage != null);
       expect(
         find.byKey(const ValueKey('estimate-editor-screen')),

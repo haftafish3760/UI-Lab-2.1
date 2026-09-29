@@ -42,12 +42,14 @@ class DocumentFormSection extends StatelessWidget {
     required this.summary,
     required this.icon,
     this.onTap,
+    this.borderColor,
     super.key,
   });
   final String title;
   final String summary;
   final IconData icon;
   final VoidCallback? onTap;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +58,7 @@ class DocumentFormSection extends StatelessWidget {
       color: colors.surfaceContainer,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: colors.outline),
+        side: BorderSide(color: borderColor ?? colors.outline),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -103,12 +105,22 @@ class DocumentSectionEditor extends StatefulWidget {
     required this.changes,
     required this.builder,
     required this.beforeClose,
+    this.saveLabel = 'Done',
+    this.onSave,
+    this.errorMessage,
+    this.onBackStep,
     super.key,
   });
   final String title;
+  final String saveLabel;
+  final Future<void> Function()? onSave;
+  final String Function(Object)? errorMessage;
   final Listenable changes;
   final WidgetBuilder builder;
   final Future<void> Function() beforeClose;
+
+  /// Returns true when an inline workflow handled Back without leaving the route.
+  final Future<bool> Function()? onBackStep;
 
   @override
   State<DocumentSectionEditor> createState() => _DocumentSectionEditorState();
@@ -118,21 +130,27 @@ class _DocumentSectionEditorState extends State<DocumentSectionEditor> {
   bool _closing = false;
   bool _allowPop = false;
 
-  Future<void> _close() async {
+  Future<void> _close({bool save = false}) async {
     if (_closing) return;
     setState(() => _closing = true);
     try {
+      if (!save && await widget.onBackStep?.call() == true) {
+        if (mounted) setState(() => _closing = false);
+        return;
+      }
       await widget.beforeClose();
+      if (save) await widget.onSave?.call();
       if (!mounted) return;
       setState(() => _allowPop = true);
       Navigator.of(context).pop();
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       setState(() => _closing = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Your latest changes could not be saved. Keep this form open and retry saving.',
+            widget.errorMessage?.call(error) ??
+                'Your latest changes could not be saved. Keep this form open and retry saving.',
           ),
         ),
       );
@@ -159,30 +177,40 @@ class _DocumentSectionEditorState extends State<DocumentSectionEditor> {
               child: Center(
                 child: SizedBox(
                   width: width,
-                  child: AnimatedBuilder(
-                    animation: widget.changes,
-                    builder: (context, _) => AbsorbPointer(
-                      absorbing: _closing,
-                      child: widget.builder(context),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AnimatedBuilder(
+                        animation: widget.changes,
+                        builder: (context, _) => AbsorbPointer(
+                          absorbing: _closing,
+                          child: widget.builder(context),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: FilledButton.icon(
+                          key: const ValueKey('document-section-done'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.secondary,
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.onSecondary,
+                          ),
+                          onPressed: _closing ? null : () => _close(save: true),
+                          icon: const Icon(Icons.check_rounded),
+                          label: Text(widget.saveLabel),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             );
           },
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(12),
-        child: FilledButton.icon(
-          key: const ValueKey('document-section-done'),
-          style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.secondary,
-            foregroundColor: Theme.of(context).colorScheme.onSecondary,
-          ),
-          onPressed: _closing ? null : _close,
-          icon: const Icon(Icons.check_rounded),
-          label: const Text('Done'),
         ),
       ),
     ),

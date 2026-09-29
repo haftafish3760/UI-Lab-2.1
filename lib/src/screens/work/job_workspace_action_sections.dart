@@ -3,16 +3,22 @@ part of 'job_workspace_screen.dart';
 class _ReceiptsSection extends StatelessWidget {
   const _ReceiptsSection({
     required this.job,
+    required this.sitePhotos,
+    required this.onViewPhoto,
     required this.canLinkExpense,
     required this.canAttach,
+    required this.canAttachPhotos,
     required this.onLinkExpense,
     required this.onAttachReceipt,
     required this.onAttachJobPhoto,
   });
 
   final ActiveJobRecord job;
+  final List<WorkSitePhoto> sitePhotos;
+  final ValueChanged<WorkSitePhoto> onViewPhoto;
   final bool canLinkExpense;
   final bool canAttach;
+  final bool canAttachPhotos;
   final VoidCallback onLinkExpense;
   final VoidCallback onAttachReceipt;
   final VoidCallback onAttachJobPhoto;
@@ -40,7 +46,7 @@ class _ReceiptsSection extends StatelessWidget {
               'Extracted receipt details never change another record until you review and confirm them.',
             ),
           ),
-          if (canLinkExpense || canAttach) ...[
+          if (canLinkExpense || canAttach || canAttachPhotos) ...[
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
@@ -60,6 +66,8 @@ class _ReceiptsSection extends StatelessWidget {
                     icon: const Icon(Icons.receipt_long_outlined),
                     label: const Text('Add receipt'),
                   ),
+                ],
+                if (canAttachPhotos) ...[
                   OutlinedButton.icon(
                     key: const ValueKey('job-attach-photo'),
                     onPressed: onAttachJobPhoto,
@@ -95,12 +103,22 @@ class _ReceiptsSection extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 6),
-          if (photos.isEmpty)
+          if (photos.isEmpty && sitePhotos.isEmpty)
             Text(
               'No job photos attached.',
               style: TextStyle(color: colors.onSurfaceVariant),
-            )
-          else
+            ),
+          for (final photo in sitePhotos)
+            ListTile(
+              key: ValueKey('job-photo-${photo.id}'),
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.photo_outlined),
+              title: Text(photo.name),
+              subtitle: photo.note.isEmpty ? null : Text(photo.note),
+              trailing: const Icon(Icons.open_in_new_outlined),
+              onTap: () => onViewPhoto(photo),
+            ),
+          if (photos.isNotEmpty)
             for (final photo in photos)
               ListTile(
                 contentPadding: EdgeInsets.zero,

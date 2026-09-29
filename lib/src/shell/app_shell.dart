@@ -7,6 +7,7 @@ import '../screens/expenses/expense_welcome_screen.dart';
 import '../screens/expenses/expense_permissions.dart';
 import '../shared/app_preferences.dart';
 import '../shared/operational_scope.dart';
+import '../shared/module_landing_navigation.dart';
 import '../screens/inventory/inventory_screen.dart';
 import '../screens/modules/module_home_screen.dart';
 import '../screens/work/work_screen.dart';
@@ -26,21 +27,19 @@ class _AppShellState extends State<AppShell> {
   var _selectedIndex = 0;
   bool _openingExpenses = false;
   bool _dashboardHandlesBack = false;
-  final _dashboardNavigator = GlobalKey<NavigatorState>();
-  final _workNavigator = GlobalKey<NavigatorState>();
+  bool _selectingModule = false;
+  final _navigation = List.generate(5, (_) => ModuleLandingNavigation());
+  ModuleLandingNavigation get _dashboardNavigation => _navigation[0];
 
-  NavigatorState? get _activeNavigator => switch (_selectedIndex) {
-    0 => _dashboardNavigator.currentState,
-    1 => _workNavigator.currentState,
-    _ => null,
-  };
+  NavigatorState? get _activeNavigator =>
+      _navigation[_selectedIndex].key.currentState;
 
   Widget _moduleNavigator(
-    GlobalKey<NavigatorState> key,
+    ModuleLandingNavigation navigation,
     Widget home,
   ) => NotificationListener<NavigationNotification>(
     onNotification: (notification) {
-      if (key == _dashboardNavigator &&
+      if (navigation == _dashboardNavigation &&
           _dashboardHandlesBack != notification.canHandlePop) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _dashboardHandlesBack != notification.canHandlePop) {
@@ -50,9 +49,13 @@ class _AppShellState extends State<AppShell> {
       }
       return false;
     },
-    child: Navigator(
-      key: key,
-      onGenerateRoute: (_) => MaterialPageRoute<void>(builder: (_) => home),
+    child: ModuleLandingScope(
+      navigation: navigation,
+      child: Navigator(
+        key: navigation.key,
+        observers: [navigation],
+        onGenerateRoute: (_) => MaterialPageRoute<void>(builder: (_) => home),
+      ),
     ),
   );
 
@@ -115,9 +118,15 @@ class _AppShellState extends State<AppShell> {
                         child: IndexedStack(
                           index: _selectedIndex,
                           children: [
-                            _moduleNavigator(_dashboardNavigator, _modules[0]),
-                            _moduleNavigator(_workNavigator, _modules[1]),
-                            ..._modules.skip(2),
+                            for (
+                              var index = 0;
+                              index < _modules.length;
+                              index++
+                            )
+                              _moduleNavigator(
+                                _navigation[index],
+                                _modules[index],
+                              ),
                           ],
                         ),
                       ),
@@ -159,7 +168,18 @@ class _AppShellState extends State<AppShell> {
   }
 
   Future<void> _selectModule(int index) async {
-    if (index == _selectedIndex || _openingExpenses) return;
+    if (_selectingModule || _openingExpenses) return;
+    _selectingModule = true;
+    try {
+      if (!await _navigation[_selectedIndex].returnToLanding()) return;
+      if (!mounted) return;
+      await _openModule(index);
+    } finally {
+      _selectingModule = false;
+    }
+  }
+
+  Future<void> _openModule(int index) async {
     final preferences = AppPreferencesScope.maybeOf(context);
     final permissions = expensePermissionsForView(
       OperationalScope.of(context).view,

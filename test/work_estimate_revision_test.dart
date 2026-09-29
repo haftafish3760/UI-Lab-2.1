@@ -1,3 +1,4 @@
+import 'support/visible_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -95,7 +96,10 @@ void main() {
     );
     await tester.tap(find.text('Save item'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('save-estimate-items')));
+    await tapVisibleControl(
+      tester,
+      find.byKey(const ValueKey('save-estimate-items')),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Customer approval required again'), findsOneWidget);
@@ -137,7 +141,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Customer-selected kitchen faucet'), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('save-estimate-items')));
+    await tapVisibleControl(
+      tester,
+      find.byKey(const ValueKey('save-estimate-items')),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Customer approval required again'), findsOneWidget);
     expect(tester.takeException(), isNull);

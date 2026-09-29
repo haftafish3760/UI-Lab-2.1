@@ -129,7 +129,7 @@ extension _DeliveryRecovery on _EstimateDeliveryScreenState {
           _error = error is StateError
               ? error.message.toString()
               : _preparedRecord != null
-              ? 'The sharing app could not open. Your estimate is saved; try again.'
+              ? 'The sharing app could not open. Your document is saved; try again.'
               : 'Delivery preparation was not saved. Your input is retained.';
         });
       }
@@ -142,7 +142,7 @@ extension _DeliveryRecovery on _EstimateDeliveryScreenState {
       builder: (context) => AlertDialog(
         title: const Text('Discard unfinished delivery?'),
         content: const Text(
-          'The saved estimate and delivery history stay unchanged.',
+          'The saved document and delivery history stay unchanged.',
         ),
         actions: [
           TextButton(

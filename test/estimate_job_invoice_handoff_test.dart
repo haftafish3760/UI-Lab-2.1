@@ -3,7 +3,6 @@ import 'package:ui_lab_2_1/src/data/work/estimate_customer_approval.dart';
 import 'package:ui_lab_2_1/src/data/work/job_confirmation.dart';
 import 'package:ui_lab_2_1/src/data/work/job_draft_controller.dart';
 import 'package:ui_lab_2_1/src/data/work/job_materials_draft_workflow.dart';
-import 'package:ui_lab_2_1/src/data/work/job_material_permissions.dart';
 import 'package:ui_lab_2_1/src/data/work/invoice_draft_controller.dart';
 import 'package:ui_lab_2_1/src/data/work/invoice_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/work_items_draft_input.dart';
@@ -11,6 +10,10 @@ import 'package:ui_lab_2_1/src/data/work/work_persistence_session.dart';
 import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
 import 'package:ui_lab_2_1/src/data/work/models/work_models.dart';
 import 'support/storage/database_harness.dart';
+import 'package:ui_lab_2_1/src/data/work/work_record_codec.dart';
+import 'package:ui_lab_2_1/src/data/work/work_contact_codec.dart';
+import 'package:ui_lab_2_1/src/data/work/models/work_contact_models.dart';
+import 'package:ui_lab_2_1/src/screens/work/job_workspace_models.dart';
 
 void main() {
   test(
@@ -22,12 +25,35 @@ void main() {
       addTearDown(work.dispose);
       final actor = work.permissions.actorEmployeeId;
       final day = DateTime(2026, 9, 24);
+      const client = WorkCustomerProfile(
+        id: 'client-original',
+        name: 'Test Customer',
+        companyName: '',
+        phone: '2025550101',
+        email: 'original@example.test',
+        preferredContact: 'Email',
+        billingAddress: 'Test billing address',
+        locations: [],
+        notes: '',
+        linkedRecordCount: 0,
+      );
       final estimate = WorkRecord(
         id: 'flow-estimate',
         kind: WorkRecordKind.estimate,
         number: 'EST-FLOW',
         title: 'Shelf',
         client: 'Test Customer',
+        customerSnapshot: client,
+        sitePhotos: [
+          WorkSitePhoto(
+            id: 'before',
+            path: '/retained/before.png',
+            name: 'Before work',
+            source: WorkSitePhotoSource.camera,
+            addedOn: day,
+            note: 'Existing condition',
+          ),
+        ],
         detail: 'Build a shelf',
         pricing: WorkPricingModel.flatRate,
         terms: 'Obtain approval for additional work.',
@@ -80,6 +106,44 @@ void main() {
       );
       expect(
         await work.createJobFromApprovedEstimate(
+          job: decodeWorkRecord({
+            ...encodeWorkRecord(job),
+            'customerSnapshot': encodeWorkCustomerProfile(
+              client.copyWith(email: 'wrong@example.test'),
+            ),
+          }),
+          expectedSourceStorageRevision: work.storageRevisionFor(approved.id),
+          expectedSourceDocumentRevision: approved.revision,
+        ),
+        isFalse,
+      );
+      expect(work.records.where((r) => r.id == job.id), isEmpty);
+      expect(
+        work.records
+            .singleWhere((r) => r.id == approved.id)
+            .resolvedEstimateStage,
+        approved.resolvedEstimateStage,
+      );
+      expect(
+        await work.createJobFromApprovedEstimate(
+          job: decodeWorkRecord({...encodeWorkRecord(job), 'sitePhotos': []}),
+          expectedSourceStorageRevision: work.storageRevisionFor(approved.id),
+          expectedSourceDocumentRevision: approved.revision,
+        ),
+        isFalse,
+      );
+      final displayed = activeJobForRecord(
+        job,
+        scheduledTime: 'Today',
+        customer: client.copyWith(
+          email: 'changed@example.test',
+          phone: '2025550199',
+        ),
+      );
+      expect(displayed.customerEmail, client.email);
+      expect(displayed.customerPhone, client.phone);
+      expect(
+        await work.createJobFromApprovedEstimate(
           job: job,
           expectedSourceStorageRevision: work.storageRevisionFor(approved.id),
           expectedSourceDocumentRevision: approved.revision,
@@ -87,6 +151,8 @@ void main() {
         isTrue,
         reason: work.failureMessage,
       );
+      expect(job.sitePhotos.single.path, estimate.sitePhotos.single.path);
+      expect(job.sitePhotos.single.note, 'Existing condition');
       expect(job.terms, estimate.terms);
       expect(job.discount, 10);
       final addition = await work.openJobMaterialsDraft(
@@ -160,13 +226,30 @@ void main() {
       expect(saved!.total, 145);
       expect(saved.items.map((item) => item.id), ['wood', 'extra']);
       expect(saved.sourceId, job.id);
+      expect(saved.customerSnapshot?.id, client.id);
+      expect(saved.customerSnapshot?.email, client.email);
       expect(saved.terms, estimate.terms);
       await invoice.session.close();
       final reopened = await openUiLabWorkSession(await harness.open());
       addTearDown(reopened.dispose);
       expect(
+        reopened.records
+            .singleWhere((record) => record.id == saved.id)
+            .customerSnapshot
+            ?.email,
+        client.email,
+      );
+      expect(
         reopened.records.singleWhere((record) => record.id == saved.id).total,
         145,
+      );
+      expect(
+        reopened.records
+            .singleWhere((record) => record.id == job.id)
+            .sitePhotos
+            .single
+            .id,
+        'before',
       );
       expect(
         reopened.records.singleWhere((record) => record.id == job.id).status,

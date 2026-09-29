@@ -44,7 +44,7 @@ class _SourceEstimateBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Approved estimate ${record.number}',
+                  'Approved ${record.kind == WorkRecordKind.quote ? 'quote' : 'estimate'} ${record.number}',
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 Text(
@@ -104,6 +104,7 @@ class _JobIdentitySection extends StatelessWidget {
         const SizedBox(height: 12),
         TextField(
           controller: purchaseOrder,
+          textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
             labelText: 'Purchase order number (optional)',
           ),
@@ -179,6 +180,7 @@ class _JobIdentitySection extends StatelessWidget {
         TextField(
           key: const ValueKey('job-title-field'),
           controller: title,
+          textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
             labelText: 'Job title',
             hintText: 'Example: Replace kitchen faucet',
@@ -451,7 +453,7 @@ class _JobItemsSection extends StatelessWidget {
       key: const ValueKey('job-items-section'),
       minTileHeight: 60,
       leading: const Icon(Icons.inventory_2_outlined),
-      title: Text(lockedToEstimate ? 'Approved estimate items' : 'Job items'),
+      title: Text(lockedToEstimate ? 'Approved work items' : 'Job items'),
       subtitle: Text(
         itemCount == 0
             ? 'Add labor, materials, or other charges'

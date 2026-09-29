@@ -14,6 +14,8 @@ class CustomerDocument {
     required this.items,
     required this.totalCents,
     required this.terms,
+    this.paidCents,
+    this.summarySubtotalCents,
     this.branding,
     this.dueOn,
     this.paymentMethod = '',
@@ -44,6 +46,15 @@ class CustomerDocument {
   final DateTime date;
   final List<CustomerDocumentItem> items;
   final int totalCents, discountCents, taxCents, revision;
+
+  /// Invoice payments already received or applied from a prior deposit.
+  /// Null means no payment ledger was supplied to this document.
+  final int? paidCents;
+
+  /// Summary documents carry no individual items across the public boundary.
+  final int? summarySubtotalCents;
+  bool get isSummary => summarySubtotalCents != null;
+  int? get balanceCents => paidCents == null ? null : totalCents - paidCents!;
   final bool draft;
   final String? signatureSvg, signedBy;
   final String? businessSignatureSvg, businessSignedBy;
@@ -69,8 +80,12 @@ class CustomerDocument {
     'templateId': templateId,
     'revision': revision,
     'totalCents': totalCents,
+    if (paidCents != null) 'paidCents': paidCents,
+    if (balanceCents != null) 'balanceCents': balanceCents,
     'discountCents': discountCents,
     'taxCents': taxCents,
+    'presentation': isSummary ? 'summary' : 'detailed',
+    if (isSummary) 'subtotalCents': summarySubtotalCents,
     'items': [
       for (final item in items)
         {
@@ -83,7 +98,9 @@ class CustomerDocument {
         },
     ],
   };
-  int get subtotalCents => items.fold(0, (sum, item) => sum + item.totalCents);
+  int get subtotalCents =>
+      summarySubtotalCents ??
+      items.fold(0, (sum, item) => sum + item.totalCents);
 }
 
 class CustomerDocumentItem {

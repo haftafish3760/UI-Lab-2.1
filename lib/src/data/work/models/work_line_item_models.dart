@@ -3,6 +3,7 @@ import 'work_customer_approval.dart';
 enum WorkPricingModel { flatRate, timeAndMaterials }
 
 enum WorkLineItemType {
+  service('Service'),
   labor('Labor'),
   material('Material'),
   equipment('Equipment'),

@@ -1,3 +1,5 @@
+import '../../data/work/estimate_approval_draft_workflow.dart';
+import 'estimate_approval_screen.dart';
 import 'package:flutter/material.dart';
 import '../../data/prototype_operations_store.dart';
 import '../../data/work/estimate_action_draft_recovery.dart';
@@ -18,6 +20,7 @@ Future<void> openEstimateActionRecovery(
   required EstimatePermissions reviewPermissions,
 }) async {
   final draft = switch (workflow) {
+    ResumedEstimateApproval(:final controller) => controller.session,
     ResumedEstimateSignature(:final controller) => controller.session,
     ResumedEstimateDelivery(:final controller) => controller.session,
     ResumedEstimateReview(:final controller) => controller.session,
@@ -29,6 +32,15 @@ Future<void> openEstimateActionRecovery(
     if (work == null) throw StateError('Estimate recovery is unavailable.');
     final Widget editor;
     switch (workflow) {
+      case ResumedEstimateApproval(:final controller):
+        work.validateEstimateApprovalHandoff(
+          controller,
+          controller.input.base.id,
+        );
+        editor = EstimateApprovalScreen(
+          record: controller.input.base,
+          recoveredWorkflow: controller,
+        );
       case ResumedEstimateSignature(:final controller):
         work.validateEstimateSignatureHandoff(
           controller,

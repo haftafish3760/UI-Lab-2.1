@@ -11,6 +11,14 @@ Each Flutter invocation uses one test worker. No emulator is started, no cloud
 project is accessed, and no tests run in Maintainiac 5.7 Active. Tests use their
 own synthetic temporary databases; never adapt a fixture to use app-support data.
 
+The host runner now takes a nonblocking OS file lock before invoking Flutter.
+A second cooperating storage QA runner on the same host refuses to start until
+the first exits. Process exit releases the lock; the lock file is not deleted.
+This does not coordinate arbitrary Flutter commands, IDE builds, or the separate
+device runners. On the 8-GB Mac, coordinate those with other tasks and keep only
+one test/build job active. Reading and editing source can continue, but changing
+covered source during a run invalidates its final evidence fingerprint.
+
 For a narrower checkpoint:
 
 ```sh

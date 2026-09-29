@@ -49,7 +49,7 @@ class EstimateSignatureInput {
   EstimateSignatureInput prepare() {
     if (name.trim().isEmpty) throw StateError('Enter the customer name.');
     if (!accepted || !ink.hasInk) {
-      throw StateError('Sign and accept the estimate before saving approval.');
+      throw StateError('Sign and accept the document before saving approval.');
     }
     return EstimateSignatureInput(
       base: base,
@@ -144,10 +144,12 @@ extension EstimateSignatureDraftWorkflow on WorkPersistenceSession {
         .firstOrNull;
     if (controller.session.organizationId != permissions.organizationId ||
         controller.session.ownerId != permissions.actorEmployeeId ||
-        controller.session.domain != 'work/estimate-signature' ||
+        controller.session.domain !=
+            'work/${controller.input.base.kind.name}-signature' ||
         controller.input.base.id != recordId ||
         current == null ||
-        current.kind != WorkRecordKind.estimate ||
+        !current.isProposal ||
+        current.kind != controller.input.base.kind ||
         !permissions.canEdit(current) ||
         (!controller.input.forBusiness && !permissions.canCollectSignature)) {
       throw StateError(
@@ -163,15 +165,15 @@ extension EstimateSignatureDraftWorkflow on WorkPersistenceSession {
   }) async {
     final current = records.where((r) => r.id == recordId).firstOrNull;
     if (current == null ||
-        current.kind != WorkRecordKind.estimate ||
+        !current.isProposal ||
         !permissions.canEdit(current) ||
         (!forBusiness && !permissions.canCollectSignature)) {
-      throw StateError('Estimate unavailable.');
+      throw StateError('Document unavailable.');
     }
     final draft = DraftAutosaveSession(
       store: drafts,
       organizationId: permissions.organizationId,
-      domain: 'work/estimate-signature',
+      domain: 'work/${current.kind.name}-signature',
       draftId:
           recoverySelection?.draftId ??
           '${forBusiness ? 'business' : 'edit'}-${permissions.actorEmployeeId}-$recordId',
@@ -179,13 +181,13 @@ extension EstimateSignatureDraftWorkflow on WorkPersistenceSession {
     );
     void validate(EstimateSignatureInput input) {
       if (input.base.id != recordId ||
-          input.base.kind != WorkRecordKind.estimate ||
+          input.base.kind != current.kind ||
           input.base.createdByEmployeeId != current.createdByEmployeeId ||
           input.baseRevision < 1 ||
           !permissions.canEdit(input.base) ||
           (!input.forBusiness && !permissions.canCollectSignature) ||
           (input.confirmedAt != null && !input.confirmedAt!.isUtc)) {
-        throw StateError('Signature draft belongs to a different estimate.');
+        throw StateError('Signature draft belongs to a different document.');
       }
     }
 

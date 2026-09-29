@@ -3,6 +3,7 @@
   "suites": {
     "core": [
       "test/local_database_durability_test.dart",
+      "test/local_record_command_input_test.dart",
       "test/local_database_interruption_test.dart",
       "test/draft_autosave_session_test.dart",
       "test/draft_session_registry_test.dart",

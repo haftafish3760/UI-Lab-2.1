@@ -87,12 +87,20 @@ class OperationsWorkspaceLayout {
     required this.laneWidth,
     required this.gap,
     required this.workspaceWidth,
+    this.supportingLaneWidth,
   });
 
   final int columns;
   final double laneWidth;
   final double gap;
   final double workspaceWidth;
+
+  /// Optional bounded supporting lane for a two-pane working surface.
+  final double? supportingLaneWidth;
+
+  double widthForLane(int index) => columns == 2 && index.isOdd
+      ? supportingLaneWidth ?? laneWidth
+      : laneWidth;
 
   /// Shared compact-FAB versus inline-action presentation for module homes.
   ///

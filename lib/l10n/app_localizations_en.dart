@@ -448,6 +448,488 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get catalogNoMatches => 'No matching items. Try another name or size.';
+
+  @override
+  String get workFilterAwaitingCustomer => 'Estimates awaiting customer';
+
+  @override
+  String get workFilterUnscheduledJobs => 'Jobs needing scheduling';
+
+  @override
+  String get workFilterActiveJobs => 'Active jobs';
+
+  @override
+  String get workFilterUnpaidInvoices => 'Outstanding invoices';
+
+  @override
+  String get workFilterAllEstimates => 'All estimates';
+
+  @override
+  String get workFilterDraftEstimates => 'Draft estimates';
+
+  @override
+  String get workFilterCompanyReviewEstimates =>
+      'Estimates awaiting company approval';
+
+  @override
+  String get workFilterReadyEstimates => 'Estimates ready to send';
+
+  @override
+  String get workFilterChangedEstimates => 'Estimates with changes requested';
+
+  @override
+  String get workFilterApprovedEstimates => 'Approved estimates';
+
+  @override
+  String get workFilterDeclinedEstimates => 'Declined estimates';
+
+  @override
+  String get workFilterExpiredEstimates => 'Expired estimates';
+
+  @override
+  String get workFilterAllJobs => 'All jobs';
+
+  @override
+  String get workFilterCompletedJobs => 'Completed jobs';
+
+  @override
+  String get workFilterAllInvoices => 'All invoices';
+
+  @override
+  String get workFilterDraftInvoices => 'Draft invoices';
+
+  @override
+  String get workFilterPaidInvoices => 'Invoices paid in full';
+
+  @override
+  String get workFilterOverdueInvoices => 'Overdue invoices';
+
+  @override
+  String get workStatusDraft => 'Draft';
+
+  @override
+  String get workStatusReady => 'Ready';
+
+  @override
+  String get workStatusSent => 'Sent';
+
+  @override
+  String get workStatusAccepted => 'Accepted';
+
+  @override
+  String get workStatusScheduled => 'Scheduled';
+
+  @override
+  String get workStatusEnRoute => 'En route';
+
+  @override
+  String get workStatusArrived => 'Arrived';
+
+  @override
+  String get workStatusInProgress => 'In progress';
+
+  @override
+  String get workStatusPaused => 'Paused';
+
+  @override
+  String get workStatusNeedsReturnVisit => 'Needs return visit';
+
+  @override
+  String get workStatusCompleted => 'Completed';
+
+  @override
+  String get workStatusDue => 'Due';
+
+  @override
+  String get workStatusPaid => 'Paid';
+
+  @override
+  String get workStatusReadyToSend => 'Ready to send';
+
+  @override
+  String get workStatusAwaitingCustomer => 'Awaiting customer';
+
+  @override
+  String get workStatusViewed => 'Viewed';
+
+  @override
+  String get workStatusChangesRequested => 'Changes requested';
+
+  @override
+  String get workStatusApproved => 'Approved';
+
+  @override
+  String get workStatusDeclined => 'Declined';
+
+  @override
+  String get workStatusExpired => 'Expired';
+
+  @override
+  String get workStatusConverted => 'Converted to job';
+
+  @override
+  String get workStatusArchived => 'Archived';
+
+  @override
+  String get workOverviewHeading => 'Work overview · All dates';
+
+  @override
+  String get workBrowseRecords => 'Browse records';
+
+  @override
+  String get workRecordsHeading => 'Work records';
+
+  @override
+  String get workShowRecords => 'Show records';
+
+  @override
+  String get workSearchRecords => 'Search customer, title or number';
+
+  @override
+  String get workNoMatchingRecords =>
+      'No matching records. Try another status or search.';
+
+  @override
+  String get workRecordUnavailable => 'This record is no longer available.';
+
+  @override
+  String get workNotScheduled => 'Not scheduled';
+
+  @override
+  String get workCreatedDateMissing => 'Created date not recorded';
+
+  @override
+  String workCreatedDate(String date) {
+    return 'Created $date';
+  }
+
+  @override
+  String workCompletedDate(String date) {
+    return 'Completed $date';
+  }
+
+  @override
+  String workScheduledDate(String date) {
+    return 'Scheduled $date';
+  }
+
+  @override
+  String workDueDate(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String workRecordCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count records',
+      one: '1 record',
+      zero: '0 records',
+    );
+    return 'All dates · $_temp0';
+  }
+
+  @override
+  String get workDocumentStyle => 'Customer document';
+
+  @override
+  String get workDocumentDetailed => 'Detailed';
+
+  @override
+  String get workDocumentSummary => 'Summary';
+
+  @override
+  String get workDocumentDetailedHelp =>
+      'Show each item, description, quantity and price.';
+
+  @override
+  String get workDocumentSummaryHelp =>
+      'Show the work description and overall price. Keep individual items and costs in your records.';
+
+  @override
+  String get workServicePrice => 'Price for the work';
+
+  @override
+  String get workEnterServicePrice => 'Enter one price';
+
+  @override
+  String get workPriceBeforeAdjustments => 'Price before discount and tax';
+
+  @override
+  String get workMoneyPaid => 'Paid in full';
+
+  @override
+  String get workMoneyUnpaid => 'Unpaid';
+
+  @override
+  String get workMoneyOverdue => 'Overdue';
+
+  @override
+  String get workMoneyAllTime => 'All time';
+
+  @override
+  String get workInvoicesWithPayments => 'Invoices with payments';
+
+  @override
+  String get workPartiallyPaid => 'Partially paid';
+
+  @override
+  String get workInvoiceHeading => 'Invoices';
+
+  @override
+  String get workFilterAllShort => 'All';
+
+  @override
+  String get workPaymentsReceivedShort => 'Payments received';
+
+  @override
+  String get workDraftsShort => 'Drafts';
+
+  @override
+  String get workInvoiceTotal => 'Invoice total';
+
+  @override
+  String get workInvoiceBalance => 'Balance due';
+
+  @override
+  String get workNewInvoice => 'New invoice';
+
+  @override
+  String get workInvoiceActivityByDate => 'Date activity';
+
+  @override
+  String get workInvoiceActivityHeading => 'Invoice activity';
+
+  @override
+  String get workInvoiceAccessDenied =>
+      'You do not have permission to view invoices.';
+
+  @override
+  String get workSearchInvoices => 'Search invoices';
+
+  @override
+  String get workSearchInvoicesHint =>
+      'Customer, job, invoice number, or work title';
+
+  @override
+  String get workInvoiceMatches => 'Invoice matches';
+
+  @override
+  String get workInvoiceNoMatches =>
+      'No authorized invoices match that search.';
+
+  @override
+  String get workInvoicesForDate => 'Invoices for this date';
+
+  @override
+  String get workInvoiceNoDateActivity =>
+      'No invoice activity is recorded for this date.';
+
+  @override
+  String get workOpenInvoices => 'Other unpaid invoices';
+
+  @override
+  String get workInvoiceNoOpenBalance =>
+      'No other invoices have an open balance.';
+
+  @override
+  String get workShowOnlyThree => 'Show only 3';
+
+  @override
+  String get workInvoiceUnavailable => 'This invoice is no longer available.';
+
+  @override
+  String get workInvoiceAttention => 'Invoice attention';
+
+  @override
+  String get workInvoiceDrafts => 'Invoice drafts';
+
+  @override
+  String workInvoiceOverdueReason(String customer) {
+    return 'Invoice is overdue · $customer';
+  }
+
+  @override
+  String get workInvoiceActivityCreated => 'Created';
+
+  @override
+  String get workInvoiceActivityIssued => 'Issued';
+
+  @override
+  String get workInvoiceActivityDue => 'Due';
+
+  @override
+  String get workInvoiceActivityPayment => 'Payment received';
+
+  @override
+  String get workInvoiceActivityApplied => 'Payment applied';
+
+  @override
+  String get workSavedClients => 'Saved clients';
+
+  @override
+  String get workAddClient => 'Add new';
+
+  @override
+  String get workUseClient => 'Use this client';
+
+  @override
+  String get workSearchClients => 'Search saved clients';
+
+  @override
+  String get workClientsUnavailable =>
+      'You do not have permission to view saved clients.';
+
+  @override
+  String get workNoMatchingClients =>
+      'No matching clients. Try another search or add a new client.';
+
+  @override
+  String get invoiceRequestApproval => 'Request approval';
+
+  @override
+  String get invoiceApprove => 'Approve invoice';
+
+  @override
+  String get invoiceRequestChanges => 'Request changes';
+
+  @override
+  String get invoiceChangesReason => 'What needs to change?';
+
+  @override
+  String get invoiceChangesReasonRequired =>
+      'Explain which changes are needed.';
+
+  @override
+  String get invoiceApprovalSaveFailed =>
+      'Approval could not be saved. Try again.';
+
+  @override
+  String get invoiceNeedsApproval => 'Needs approval';
+
+  @override
+  String get workOverallPrice => 'Price for the work';
+
+  @override
+  String get workOverallPriceHint =>
+      'Enter one price, or add individual items below';
+
+  @override
+  String get workOptionalItems => 'Add items (optional)';
+
+  @override
+  String get clientSaved => 'Saved clients';
+
+  @override
+  String get clientAddNew => 'Add new client';
+
+  @override
+  String get clientNoSaved => 'No saved clients';
+
+  @override
+  String get clientSearch => 'Search clients';
+
+  @override
+  String get clientNoMatches => 'No matching clients';
+
+  @override
+  String get clientForEstimate => 'Client for this estimate';
+
+  @override
+  String get clientSelectForEstimate => 'Select a client for this estimate.';
+
+  @override
+  String get clientViewDenied =>
+      'You do not have permission to view saved clients.';
+
+  @override
+  String get clientUnfinished => 'Unfinished client forms';
+
+  @override
+  String get clientContinueHint =>
+      'Continue information you previously started.';
+
+  @override
+  String get clientRecoveryRetry =>
+      'Unfinished client forms unavailable — Retry';
+
+  @override
+  String get clientNameMissing => 'Client name not entered';
+
+  @override
+  String get clientRecoveryFailed =>
+      'Could not open unfinished client information. Your input has been kept. Try again.';
+
+  @override
+  String get clientDetails => 'Client details';
+
+  @override
+  String get clientName => 'Client name';
+
+  @override
+  String get clientNameHint => 'First and last name, or business name';
+
+  @override
+  String get clientBusiness => 'Client’s business (optional)';
+
+  @override
+  String get clientPhone => 'Phone (including area code)';
+
+  @override
+  String get clientEmail => 'Email (optional)';
+
+  @override
+  String get clientPreferredContact => 'Preferred contact';
+
+  @override
+  String get clientCall => 'Phone call';
+
+  @override
+  String get clientText => 'Text message';
+
+  @override
+  String get clientEmailMethod => 'Email';
+
+  @override
+  String get clientLocations => 'Billing and service location';
+
+  @override
+  String get clientBilling => 'Billing address';
+
+  @override
+  String get clientAddressLabel => 'Address label (optional)';
+
+  @override
+  String get clientAddressHint => 'Home, office, or another name';
+
+  @override
+  String get clientServiceAddress => 'Service address';
+
+  @override
+  String get clientAccess => 'Getting into the property (optional)';
+
+  @override
+  String get clientAccessHint => 'Gate code, parking, or entry instructions';
+
+  @override
+  String get clientNotes => 'Client notes (optional)';
+
+  @override
+  String get clientNotesHint =>
+      'Notes about the client, separate from property access instructions.';
+
+  @override
+  String get clientSaveUse => 'Save and use client';
+
+  @override
+  String get clientSave => 'Save client';
+
+  @override
+  String get clientSaveChanges => 'Save client changes';
+
+  @override
+  String get clientEdit => 'Edit client';
 }
 
 /// The translations for English, as used in the United States (`en_US`).
@@ -604,4 +1086,486 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
 
   @override
   String get catalogNoMatches => 'No matching items. Try another name or size.';
+
+  @override
+  String get workFilterAwaitingCustomer => 'Estimates awaiting customer';
+
+  @override
+  String get workFilterUnscheduledJobs => 'Jobs needing scheduling';
+
+  @override
+  String get workFilterActiveJobs => 'Active jobs';
+
+  @override
+  String get workFilterUnpaidInvoices => 'Outstanding invoices';
+
+  @override
+  String get workFilterAllEstimates => 'All estimates';
+
+  @override
+  String get workFilterDraftEstimates => 'Draft estimates';
+
+  @override
+  String get workFilterCompanyReviewEstimates =>
+      'Estimates awaiting company approval';
+
+  @override
+  String get workFilterReadyEstimates => 'Estimates ready to send';
+
+  @override
+  String get workFilterChangedEstimates => 'Estimates with changes requested';
+
+  @override
+  String get workFilterApprovedEstimates => 'Approved estimates';
+
+  @override
+  String get workFilterDeclinedEstimates => 'Declined estimates';
+
+  @override
+  String get workFilterExpiredEstimates => 'Expired estimates';
+
+  @override
+  String get workFilterAllJobs => 'All jobs';
+
+  @override
+  String get workFilterCompletedJobs => 'Completed jobs';
+
+  @override
+  String get workFilterAllInvoices => 'All invoices';
+
+  @override
+  String get workFilterDraftInvoices => 'Draft invoices';
+
+  @override
+  String get workFilterPaidInvoices => 'Invoices paid in full';
+
+  @override
+  String get workFilterOverdueInvoices => 'Overdue invoices';
+
+  @override
+  String get workStatusDraft => 'Draft';
+
+  @override
+  String get workStatusReady => 'Ready';
+
+  @override
+  String get workStatusSent => 'Sent';
+
+  @override
+  String get workStatusAccepted => 'Accepted';
+
+  @override
+  String get workStatusScheduled => 'Scheduled';
+
+  @override
+  String get workStatusEnRoute => 'En route';
+
+  @override
+  String get workStatusArrived => 'Arrived';
+
+  @override
+  String get workStatusInProgress => 'In progress';
+
+  @override
+  String get workStatusPaused => 'Paused';
+
+  @override
+  String get workStatusNeedsReturnVisit => 'Needs return visit';
+
+  @override
+  String get workStatusCompleted => 'Completed';
+
+  @override
+  String get workStatusDue => 'Due';
+
+  @override
+  String get workStatusPaid => 'Paid';
+
+  @override
+  String get workStatusReadyToSend => 'Ready to send';
+
+  @override
+  String get workStatusAwaitingCustomer => 'Awaiting customer';
+
+  @override
+  String get workStatusViewed => 'Viewed';
+
+  @override
+  String get workStatusChangesRequested => 'Changes requested';
+
+  @override
+  String get workStatusApproved => 'Approved';
+
+  @override
+  String get workStatusDeclined => 'Declined';
+
+  @override
+  String get workStatusExpired => 'Expired';
+
+  @override
+  String get workStatusConverted => 'Converted to job';
+
+  @override
+  String get workStatusArchived => 'Archived';
+
+  @override
+  String get workOverviewHeading => 'Work overview · All dates';
+
+  @override
+  String get workBrowseRecords => 'Browse records';
+
+  @override
+  String get workRecordsHeading => 'Work records';
+
+  @override
+  String get workShowRecords => 'Show records';
+
+  @override
+  String get workSearchRecords => 'Search customer, title or number';
+
+  @override
+  String get workNoMatchingRecords =>
+      'No matching records. Try another status or search.';
+
+  @override
+  String get workRecordUnavailable => 'This record is no longer available.';
+
+  @override
+  String get workNotScheduled => 'Not scheduled';
+
+  @override
+  String get workCreatedDateMissing => 'Created date not recorded';
+
+  @override
+  String workCreatedDate(String date) {
+    return 'Created $date';
+  }
+
+  @override
+  String workCompletedDate(String date) {
+    return 'Completed $date';
+  }
+
+  @override
+  String workScheduledDate(String date) {
+    return 'Scheduled $date';
+  }
+
+  @override
+  String workDueDate(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String workRecordCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count records',
+      one: '1 record',
+      zero: '0 records',
+    );
+    return 'All dates · $_temp0';
+  }
+
+  @override
+  String get workDocumentStyle => 'Customer document';
+
+  @override
+  String get workDocumentDetailed => 'Detailed';
+
+  @override
+  String get workDocumentSummary => 'Summary';
+
+  @override
+  String get workDocumentDetailedHelp =>
+      'Show each item, description, quantity and price.';
+
+  @override
+  String get workDocumentSummaryHelp =>
+      'Show the work description and overall price. Keep individual items and costs in your records.';
+
+  @override
+  String get workServicePrice => 'Price for the work';
+
+  @override
+  String get workEnterServicePrice => 'Enter one price';
+
+  @override
+  String get workPriceBeforeAdjustments => 'Price before discount and tax';
+
+  @override
+  String get workMoneyPaid => 'Paid in full';
+
+  @override
+  String get workMoneyUnpaid => 'Unpaid';
+
+  @override
+  String get workMoneyOverdue => 'Overdue';
+
+  @override
+  String get workMoneyAllTime => 'All time';
+
+  @override
+  String get workInvoicesWithPayments => 'Invoices with payments';
+
+  @override
+  String get workPartiallyPaid => 'Partially paid';
+
+  @override
+  String get workInvoiceHeading => 'Invoices';
+
+  @override
+  String get workFilterAllShort => 'All';
+
+  @override
+  String get workPaymentsReceivedShort => 'Payments received';
+
+  @override
+  String get workDraftsShort => 'Drafts';
+
+  @override
+  String get workInvoiceTotal => 'Invoice total';
+
+  @override
+  String get workInvoiceBalance => 'Balance due';
+
+  @override
+  String get workNewInvoice => 'New invoice';
+
+  @override
+  String get workInvoiceActivityByDate => 'Date activity';
+
+  @override
+  String get workInvoiceActivityHeading => 'Invoice activity';
+
+  @override
+  String get workInvoiceAccessDenied =>
+      'You do not have permission to view invoices.';
+
+  @override
+  String get workSearchInvoices => 'Search invoices';
+
+  @override
+  String get workSearchInvoicesHint =>
+      'Customer, job, invoice number, or work title';
+
+  @override
+  String get workInvoiceMatches => 'Invoice matches';
+
+  @override
+  String get workInvoiceNoMatches =>
+      'No authorized invoices match that search.';
+
+  @override
+  String get workInvoicesForDate => 'Invoices for this date';
+
+  @override
+  String get workInvoiceNoDateActivity =>
+      'No invoice activity is recorded for this date.';
+
+  @override
+  String get workOpenInvoices => 'Other unpaid invoices';
+
+  @override
+  String get workInvoiceNoOpenBalance =>
+      'No other invoices have an open balance.';
+
+  @override
+  String get workShowOnlyThree => 'Show only 3';
+
+  @override
+  String get workInvoiceUnavailable => 'This invoice is no longer available.';
+
+  @override
+  String get workInvoiceAttention => 'Invoice attention';
+
+  @override
+  String get workInvoiceDrafts => 'Invoice drafts';
+
+  @override
+  String workInvoiceOverdueReason(String customer) {
+    return 'Invoice is overdue · $customer';
+  }
+
+  @override
+  String get workInvoiceActivityCreated => 'Created';
+
+  @override
+  String get workInvoiceActivityIssued => 'Issued';
+
+  @override
+  String get workInvoiceActivityDue => 'Due';
+
+  @override
+  String get workInvoiceActivityPayment => 'Payment received';
+
+  @override
+  String get workInvoiceActivityApplied => 'Payment applied';
+
+  @override
+  String get workSavedClients => 'Saved clients';
+
+  @override
+  String get workAddClient => 'Add new';
+
+  @override
+  String get workUseClient => 'Use this client';
+
+  @override
+  String get workSearchClients => 'Search saved clients';
+
+  @override
+  String get workClientsUnavailable =>
+      'You do not have permission to view saved clients.';
+
+  @override
+  String get workNoMatchingClients =>
+      'No matching clients. Try another search or add a new client.';
+
+  @override
+  String get invoiceRequestApproval => 'Request approval';
+
+  @override
+  String get invoiceApprove => 'Approve invoice';
+
+  @override
+  String get invoiceRequestChanges => 'Request changes';
+
+  @override
+  String get invoiceChangesReason => 'What needs to change?';
+
+  @override
+  String get invoiceChangesReasonRequired =>
+      'Explain which changes are needed.';
+
+  @override
+  String get invoiceApprovalSaveFailed =>
+      'Approval could not be saved. Try again.';
+
+  @override
+  String get invoiceNeedsApproval => 'Needs approval';
+
+  @override
+  String get workOverallPrice => 'Price for the work';
+
+  @override
+  String get workOverallPriceHint =>
+      'Enter one price, or add individual items below';
+
+  @override
+  String get workOptionalItems => 'Add items (optional)';
+
+  @override
+  String get clientSaved => 'Saved clients';
+
+  @override
+  String get clientAddNew => 'Add new client';
+
+  @override
+  String get clientNoSaved => 'No saved clients';
+
+  @override
+  String get clientSearch => 'Search clients';
+
+  @override
+  String get clientNoMatches => 'No matching clients';
+
+  @override
+  String get clientForEstimate => 'Client for this estimate';
+
+  @override
+  String get clientSelectForEstimate => 'Select a client for this estimate.';
+
+  @override
+  String get clientViewDenied =>
+      'You do not have permission to view saved clients.';
+
+  @override
+  String get clientUnfinished => 'Unfinished client forms';
+
+  @override
+  String get clientContinueHint =>
+      'Continue information you previously started.';
+
+  @override
+  String get clientRecoveryRetry =>
+      'Unfinished client forms unavailable — Retry';
+
+  @override
+  String get clientNameMissing => 'Client name not entered';
+
+  @override
+  String get clientRecoveryFailed =>
+      'Could not open unfinished client information. Your input has been kept. Try again.';
+
+  @override
+  String get clientDetails => 'Client details';
+
+  @override
+  String get clientName => 'Client name';
+
+  @override
+  String get clientNameHint => 'First and last name, or business name';
+
+  @override
+  String get clientBusiness => 'Client’s business (optional)';
+
+  @override
+  String get clientPhone => 'Phone (including area code)';
+
+  @override
+  String get clientEmail => 'Email (optional)';
+
+  @override
+  String get clientPreferredContact => 'Preferred contact';
+
+  @override
+  String get clientCall => 'Phone call';
+
+  @override
+  String get clientText => 'Text message';
+
+  @override
+  String get clientEmailMethod => 'Email';
+
+  @override
+  String get clientLocations => 'Billing and service location';
+
+  @override
+  String get clientBilling => 'Billing address';
+
+  @override
+  String get clientAddressLabel => 'Address label (optional)';
+
+  @override
+  String get clientAddressHint => 'Home, office, or another name';
+
+  @override
+  String get clientServiceAddress => 'Service address';
+
+  @override
+  String get clientAccess => 'Getting into the property (optional)';
+
+  @override
+  String get clientAccessHint => 'Gate code, parking, or entry instructions';
+
+  @override
+  String get clientNotes => 'Client notes (optional)';
+
+  @override
+  String get clientNotesHint =>
+      'Notes about the client, separate from property access instructions.';
+
+  @override
+  String get clientSaveUse => 'Save and use client';
+
+  @override
+  String get clientSave => 'Save client';
+
+  @override
+  String get clientSaveChanges => 'Save client changes';
+
+  @override
+  String get clientEdit => 'Edit client';
 }

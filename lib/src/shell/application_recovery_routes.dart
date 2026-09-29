@@ -11,6 +11,7 @@ import '../data/work/estimate_action_draft_recovery.dart';
 import '../data/work/job_action_draft_recovery.dart';
 import '../data/work/directory_draft_recovery.dart';
 import '../data/work/invoice_payment_draft_workflow.dart';
+import '../data/work/direct_payment_draft_workflow.dart';
 import '../data/work/job_material_permissions.dart';
 import '../data/work/models/estimate_models.dart';
 import '../data/workday/workday_draft_recovery.dart';
@@ -21,6 +22,7 @@ import '../screens/work/estimate_action_recovery_routes.dart';
 import '../screens/work/job_details_recovery_routes.dart';
 import '../screens/work/job_materials_recovery_route.dart';
 import '../screens/work/invoice_payment_recovery_route.dart';
+import '../screens/work/direct_payment_entry_screen.dart';
 import '../screens/dashboard/workday_recovery_routes.dart';
 import '../screens/dashboard/day_note_recovery_route.dart';
 import '../screens/expenses/expense_permissions.dart';
@@ -69,6 +71,15 @@ Future<void> openApplicationRecovery(
         await openJobDetailsRecovery(context, workflow);
       case InvoicePaymentDraftController():
         await openInvoicePaymentRecovery(context, workflow);
+      case DirectPaymentDraftController():
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => DirectPaymentEntryScreen(
+              initialDay: workflow.input.receivedOn,
+              recoveredWorkflow: workflow,
+            ),
+          ),
+        );
       case ResumedDirectoryDraft():
         await openDirectoryRecovery(
           context,

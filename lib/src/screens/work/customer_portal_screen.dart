@@ -32,9 +32,8 @@ class _CustomerPortalScreenState extends State<CustomerPortalScreen> {
       document: workCustomerDocument(
         widget.record,
         store.companyProfile,
-        store.customers
-            .where((c) => c.name == widget.record.client)
-            .firstOrNull,
+        resolveWorkDocumentCustomer(widget.record, store.customers),
+        financialEntries: store.financialEntries,
       ),
     );
   }
@@ -113,7 +112,8 @@ class _CustomerPortalScreenState extends State<CustomerPortalScreen> {
     final document = workCustomerDocument(
       widget.record,
       store.companyProfile,
-      store.customers.where((c) => c.name == widget.record.client).firstOrNull,
+      resolveWorkDocumentCustomer(widget.record, store.customers),
+      financialEntries: store.financialEntries,
     );
     final link = await gateway.create(widget.record.id, document);
     if (!mounted) return;

@@ -33,18 +33,17 @@ void registerEstimateDetailLayoutTests() {
     await tester.pumpAndSettle();
 
     expect(find.text('Estimate details'), findsOneWidget);
-    expect(find.text('Sunday, August 30, 2026'), findsOneWidget);
-    final detailDate = find.byKey(const ValueKey('work-date-heading'));
+    final created = find.textContaining('Created ');
+    expect(created, findsOneWidget);
+    expect(find.textContaining('12:00 AM'), findsNothing);
     expect(
-      tester.getTopLeft(detailDate).dy,
-      lessThan(tester.getTopLeft(find.text('Test estimate')).dy),
+      tester.getTopLeft(created).dy,
+      greaterThan(tester.getTopLeft(find.text('Test estimate')).dy),
     );
-
     final actions = find.byKey(const ValueKey('estimate-action-controls'));
     expect(actions, findsOneWidget);
-    final actionsDate = find.byKey(const ValueKey('work-date-heading'));
     expect(
-      tester.getTopLeft(actionsDate).dy,
+      tester.getTopLeft(created).dy,
       lessThan(tester.getTopLeft(actions).dy),
     );
     expect(tester.takeException(), isNull);

@@ -222,7 +222,8 @@ class _EstimateSection extends StatelessWidget {
     final other = job.lineItems
         .where(
           (item) =>
-              (item.kind == JobLineKind.equipment ||
+              (item.kind == JobLineKind.service ||
+                  item.kind == JobLineKind.equipment ||
                   item.kind == JobLineKind.fee) &&
               !item.isJobAddition,
         )

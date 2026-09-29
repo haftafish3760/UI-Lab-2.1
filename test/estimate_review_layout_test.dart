@@ -69,17 +69,14 @@ void main() {
         final close = find.byKey(const ValueKey('estimate-close'));
         final preview = find.byKey(const ValueKey('estimate-live-pdf-preview'));
         final save = find.byKey(const ValueKey('save-estimate-draft'));
-        for (final button in [close, preview, save]) {
+        final review = find.byKey(const ValueKey('estimate-review'));
+        for (final button in [close, preview, review, save]) {
           expect(button, findsOneWidget);
           expect(
-            find.descendant(of: button, matching: find.byType(Icon)),
-            findsNothing,
+            find.descendant(of: button, matching: find.byType(Text)),
+            findsWidgets,
           );
           expect(tester.getSize(button).height, greaterThanOrEqualTo(48));
-        }
-        if (scale == 1) {
-          expect(tester.getTopLeft(close).dy, tester.getTopLeft(preview).dy);
-          expect(tester.getTopLeft(preview).dy, tester.getTopLeft(save).dy);
         }
         if (width == 1440 && scale == 1) {
           expect(

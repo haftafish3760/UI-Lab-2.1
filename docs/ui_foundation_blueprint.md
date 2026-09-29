@@ -56,6 +56,12 @@ simple because labels, hierarchy, ownership, and next actions are explicit.
 9. Before a UI slice enters approved production integration, its blueprint, tests, semantics, permission
    behavior, and visual acceptance must agree.
 
+For scoped operational headers with a supplied screen title, retain that title
+in both compact and wide layouts. The wide row uses its flexible middle region
+for the title, between view and employee/context controls; widening the window
+must not remove page identity. Do not apply this to the separate workday-action
+header composition.
+
 ## 3. Semantic Color Contract
 
 ### Owner correction — September 8, 2026: meaning-based whole-card color
@@ -250,6 +256,24 @@ preserving contrast. Avoid weight 800/900 for routine page, row, and button text
 
 ## 6. Navigation Contract
 
+Owner correction, September 28: selecting a bottom-navigation destination or
+desktop rail destination returns to that module's landing screen, including
+reselecting the active module. It must not reopen a previously visited detail
+screen. Preserve the module's date/scope preferences, but unwind detail routes
+through their normal unfinished-input decisions. Keep editing, blocked writes,
+and failed draft saves prevent departure; never use a forced stack clear to
+bypass an editor. Back remains a one-screen return, distinct from module-home
+navigation. Work's general Drafts shortcut is removed; type-specific conditional
+draft access remains on Estimates and Invoices.
+
+Implementation checkpoint: the shell now gives all five modules their own
+navigator and uses a shared landing-return coordinator. Editors using
+DraftNavigationGuard register their asynchronous save/leave operation; other
+PopScope-protected routes are respected and never force-popped. Work reselect,
+switch-away/return, successful and failed draft save, Keep editing, native Back,
+expense setup and recovery have focused widget evidence. Physical-device
+acceptance and exhaustive checks of editors with bespoke exit guards remain open.
+
 ### Owner requirement: secondary-screen return navigation
 
 Added September 5, 2026. This is a required implementation and acceptance
@@ -355,6 +379,18 @@ Other module calendar composition requires an explicit shared-engine contract,
 not a blanket full-width exception. At increased
 text scale the engine raises the two- and three-lane requirements so record
 columns collapse before content crowds.
+
+Work landing override, September 28 owner wide-screen feedback: use
+`AppLayoutEngine.workLandingFor` for a primary record area (up to 760 LP) and
+supporting calendar (up to 400 LP), separated by 24 LP. The shared
+`OperationsWorkspaceLayout.supportingLaneWidth` is opt-in; ordinary module grids
+retain equal lanes. Work needs 520 LP for records and 340 LP for supporting
+context before splitting, with the shared text-scale penalty raising that
+requirement. Wide record rows place customer/work identity beside operational
+metadata; narrow or enlarged-text rows preserve the stacked reading order.
+This supersedes equal 400-LP Work landing lanes, not other module contracts.
+Work's Add work placement follows the owner-corrected bottom-action contract
+in operations_screen_blueprint.md; no separate top action row.
 
 Ordinary two-field form rows use `AppLayoutEngine.stackFormFieldsFor`. The
 calculation receives the local width inside the form plus Flutter's active
@@ -654,6 +690,10 @@ Historical composition (superseded where it conflicts with the direction above):
   platform review must verify 44/48-LP guidance where applicable.
 - Keyboard focus order follows visual order. Every icon-only action has a
   tooltip and semantic label.
+- In a data-entry form, a single-line field with another field after it uses
+  the keyboard's Next action and moves focus to that next field. The final
+  field uses Done. Multiline work notes keep a way to enter line breaks; do not
+  trade away usable long-form writing just to show Next.
 - When visual space hides secondary vehicle metadata at very large text scales,
   its full value remains in the selector and accessibility semantics.
 - Do not encode U.S. date, currency, distance, or unit assumptions into layout.

@@ -24,6 +24,12 @@ remain dependable enough for a growing service company.
    accepted estimate into a job or a completed job into an invoice.
 3. Every read, count, route, edit, attachment, export, share, and sync action is
    capability- and scope-checked. Hiding a control is not authorization.
+   Work landing's persisted-record projection uses the session actor's stable
+   employee ID for technician view, and intersects company/employee selection
+   with the session's visible creator IDs. A presentation role or assignment
+   does not grant access to an otherwise unauthorized record. This local
+   projection guard does not establish connected Firebase enforcement or
+   complete module/action permissions.
 4. Accepted documents remain historically reproducible. Later corrections or
    change orders retain their actor, time, reason, prior value, and linkage.
 5. OCR, AI, GPS, and schedule correlation create proposals only. A user confirms
@@ -73,10 +79,262 @@ approval remain U04. Do not invent legal distinctions or treat Quote and
 Estimate as synonyms. Shared customer, pricing and document infrastructure
 can be evaluated without settling those remaining policies.
 
+September 28 implementation checkpoint: Quotes now have a distinct persisted
+`WorkRecordKind.quote`, separate immutable number claims, and a
+`work/quote-editor` recovery domain. The existing proposal draft controller and
+pricing/revision machinery are shared; legacy estimate-named payload fields
+remain compatible. Draft input carries its document kind, and a record cannot
+change kinds through a save. Fixed-price validation and a separate
+`requiresQuoteApproval` permission apply; an Estimate approval setting is not
+silently treated as a Quote policy. Restart, wrong-kind input, numbering and
+permission-bypass tests cover this foundation.
+
+The Quote create/save/reopen/edit flow is now connected from Work, Add Work,
+dated Work entries and document recovery. Its landing screen uses the shared
+header, conditional Drafts below the header, compact status filters that update
+the list in place, and a supporting calendar at the bottom. One form supports a
+fixed service price or optional itemized work. Customer selection retains the
+saved customer's identity, and incomplete input resumes in the Quote editor,
+not the Estimate editor. Returning from an unfinished edit refreshes Drafts.
+Explicit Quote status filters include matching closed records even when the
+general list setting hides closed records. Date and search constraints still
+apply; the closed-record setting governs the unfiltered list only, matching the
+Invoice workspace's explicit-filter behavior.
+
+Supervisor/admin Quote approval is now a separate persisted decision: Request
+approval, Approve for sending, or Request changes with a reason. The session
+requires `canApproveQuotes` for a decision, retains immutable history, records
+the acting employee ID, and binds the decision to a fingerprint of saved quote
+content and revision. A changed quote needs fresh approval. This never records
+customer acceptance. The detail screen exposes these actions only for a quote
+requiring this approval; the permission configuration and Firebase enforcement
+are not yet delivered. The UI-Lab owner grant is development authority only.
+
+September 29 customer-approval checkpoint: saved Quotes now use the shared
+terms-first approval screen, with explicit acceptance followed by an in-person
+signature or recorded approval without a signature. Unfinished inputs use
+separate `work/quote-approval` and `work/quote-signature` recovery domains.
+Persistence enforces the respective customer-approval/signature grants and any
+required company approval. A customer approval cannot be combined with changed
+quote contents in one save. Price revisions invalidate current approval and
+retain prior approval entries and the invalidated signature. Tests cover failed
+atomic consumption, restart, denied access, revision changes, and the rendered
+manual-approval path. This is automated evidence, not physical-device acceptance.
+
+Accepted Quotes now expose Add to jobs using the shared job editor and atomic
+source-to-job command. Recovery recognizes a Quote parent; the saved job retains
+its source, client snapshot, photos, items, terms and agreed total. A failed
+commit preserves both the accepted quote and unfinished job input. Duplicate
+linked jobs are refused, and a converted Quote cannot be reopened or rewritten
+as newly accepted work. Additional work belongs on the linked job. Existing
+estimate-named draft keys remain compatible; they now identify either proposal
+kind. Tentative planning before acceptance remains unresolved under U04.
+
+Approved Estimates and Quotes also expose Create invoice when no separate Job
+is needed. The shared action creates an unissued invoice draft and marks the
+source converted in the same durable commit. Client snapshot, work, prices,
+terms, photos, tax and discount carry over; proposal approval does not become an
+invoice signature or payment. Invoice approval requirements still apply before
+issue. Source-version checks and exactly-one-target validation prevent stale or
+duplicate conversion. Returning to the source exposes Open invoice. Automated
+checks cover failure/retry, restart, denied permissions and the Quote screen
+route; physical-device acceptance remains outstanding.
+
+Approved versions is now available on saved Estimates and Quotes with approval
+evidence. It reads retained database snapshots, validates payload hashes and
+record/company/creator identity, and displays the original work, price, terms,
+manual approval or normalized signature ink. Bounded 30-save pages keep long
+histories manageable; the screen groups approved snapshots by document version.
+Approved versions and People and activity share `WorkActivityReader` for durable
+availability, permissions, payload integrity and missing-revision checks. A
+missing latest snapshot or a record deleted by another session fails closed.
+It is read-only and does not offer editing, sharing or issuing historical copies.
+Tests cover repeated signing and price changes, reopening, paged history,
+unauthorized creator/company access, corrupted payload hashes and the rendered
+manual-approval history route. Physical-device review remains outstanding.
+
+Quotes now reuse the estimate customer-PDF preview and delivery preparation
+screen. Their unfinished recipient/method/review input uses the distinct
+`work/quote-delivery` recovery domain. Preparation and draft consumption commit
+together against the saved document revision. Export checks sharing permission
+and any required, content-bound supervisor/admin approval. A native composer or
+share-sheet handoff is not delivery evidence and does not mark the quote sent or
+approved. Cancellation is retained in the existing export audit. Automated
+checks cover failed save/reopen/retry, stale edits, denied sharing, draft export,
+required approval, and the quote delivery route. Physical-device composer/PDF
+acceptance remains outstanding; nothing has been sent from a user device.
+
+Shared Work/Dashboard Needs attention now includes quotes needing authorized
+supervisor/admin approval, changes, or expiry follow-up. Quote entries use the
+active Work permission snapshot and visible creator scope, not the selected
+Admin/Technician presentation label. Resource/date/employee filters remain in
+force; exact-record navigation opens Quote detail. Approval removes its pending
+attention entry; no separate attention record is saved.
+
+This is still not a complete Quote product flow. Confirmed delivery remains
+unfinished; historical export is not implemented. Unsupported
+status transitions continue to fail closed.
+These controls must be replaced with audited transitions before claiming the
+full workflow delivered.
+The owner moved Quotes ahead of the remaining unrelated Work/header cleanup;
+this supersedes the earlier Quotes-last sequence.
+
+## Internal invoice approval
+
+Owner direction, September 28: classify invoices requiring supervisor/admin
+permission as **Needs approval**, with **Approved** as the completed decision.
+Do not duplicate this with an Awaiting review filter. These decisions authorize
+issue/delivery; they do not mean the customer paid or accepted an estimate.
+
+Current local implementation: invoice records retain append-only approval events
+(actor, time, decision, content fingerprint and optional reason). A submission
+must refer to saved invoice content; approving requires the explicit session
+`canApproveInvoices` grant. The session's `requiresInvoiceApproval` policy or a
+record's retained requirement blocks issuing an unapproved invoice. Approval is
+bound to exact content, not only a revision counter: client, prices, items,
+terms, due date and other content changes require submission and approval again.
+Ordinary saves cannot erase history, remove a recorded requirement, forge an
+approver, combine edits with approval, or issue without satisfying this check.
+The invoice financial command and shared PDF export authorization enforce the
+requirement. Export authorization reads and verifies the current durable record,
+checks issue/share authority and approval, and compares the complete submitted
+document with saved content. Matching an ID and revision number alone is not
+sufficient. Share, save and print use this same check before creating an export
+attempt and again through the PDF service authorization callbacks. Legitimate
+partial/final payments preserve approval of unchanged invoice content.
+
+The invoice action area exposes Request approval and, for permitted approvers,
+Approve invoice. Conditional Needs approval / Approved filters update the same
+landing list. This is source implementation with focused local persistence
+verification, not proof of full role administration or cloud authorization.
+Request changes requires an explanation, preserves the decision in history,
+and returns the invoice to submission. Approval controls have English, Spanish
+and French labels. A SQLite-backed widget test exercises request, correction,
+resubmission and approval. Export regressions exercise unapproved records,
+missing authority, altered contents, stale sessions and legitimate payments.
+Owner configuration of employee policy, real-device acceptance and Firebase
+enforcement remain unfinished. The existing development
+owner bootstrap has approval authority; this must not be mistaken for production
+membership or a complete owner-settings workflow.
+
+## Reusable jobs
+
+Owner direction, September 28: provide **Reusable jobs**, not a customer-facing
+"Job templates" label. Users must be able to save work they perform repeatedly
+and start a new job for another client without re-entering that work. This
+carries forward the September 19 handoff requirement; it is separate from
+recurring scheduled visits. A labeled tab must make the saved jobs discoverable.
+
+Implementation contract: persist ordinary editable reusable-job records through
+the shared durable storage and permission boundaries. Copy work title,
+description, optional items and prices into new editable work; choose the new
+client and location. Do not copy customer identity, appointments, completion,
+approvals, signatures, invoice/payment links or payment history. Editing a new
+job must not mutate its reusable source or previous jobs. Reusable jobs must
+survive restart and must never be automatically seeded as customer data.
+
+September 28 implementation checkpoint: Add work now contains New work and
+Reusable jobs tabs; Jobs exposes the same library in Jobs / Reusable jobs tabs.
+Switching back preserves the selected Jobs date; the reusable library hides
+the unrelated booking controls and calendar while selected.
+The reusable library creates common work from scratch or
+copies a saved job, supports editing and unfinished-input recovery, and opens
+the existing new-job editor with a fresh client/location selection. Placement
+is an implementation choice awaiting rendered owner acceptance, not a claim of
+an owner-approved exact layout. Use from estimate, quote and invoice creation
+is unfinished. Those destinations should reuse this library rather than create
+separate copies.
+
+The library uses the shared SQLite record/revision store, actor-scoped drafts,
+Work permissions and serialized write/pause boundary. Saves use revision checks
+and consume the matching confirmed draft transactionally. A read-only search
+and inspection of the 5.7 job store/actions found whole job records with customer,
+assignment and document links, not a suitable reusable-job implementation; no
+donor source was copied. New work is copied by an explicit field allowlist.
+SQLite and widget tests cover persistence, stale edits, permission scope,
+draft recovery, excluded customer metadata, and create/edit/reuse/save for a
+new client through both Add work and Jobs at 360 and 1200 logical pixels.
+Jobs tab switching is also checked at 320 logical pixels with enlarged text.
+The new job retains the common price
+and work while selecting a fresh customer/location; saving it leaves the
+reusable source revision unchanged. Android debug build passed. Physical-device
+acceptance and translation coverage remain unfinished.
+
+## Customer document detail level
+
+Latest owner clarification, September 28: Estimates, Invoices and Quotes use
+one form with optional individual items. Users can describe the work and enter
+one overall price, or add item descriptions, quantities and prices. Do not force
+users to choose between two document types before entering work. This supersedes
+the earlier requirement for a mandatory Detailed/Summary choice. Existing saved
+presentation choices and underlying materials/labor must remain intact; do not
+silently erase an itemized breakdown when offering a simple price. Quotes remain
+the last implementation flow. Customer-visible changes still require the existing
+revision and reapproval safeguards.
+
+Invoice implementation now offers Price for the work when there is no itemized
+breakdown. Its raw input survives draft recovery, uses the shared validated
+service-price calculation, and confirms as one internal service amount with a
+summary customer projection (no individual-item table). An existing detailed
+breakdown cannot be overwritten using that price field. The estimate editor now exposes the price directly in the form, with optional
+items below it, without a Detailed/Summary selector. The hint sits above the
+price field. Adding items carries a directly entered amount into the item editor
+instead of silently losing it; canceling leaves the original input unchanged.
+
+Presentation remains persisted for compatibility and exact historical document
+reproduction. A directly priced estimate uses the summary customer projection;
+existing itemized records keep their presentation and underlying prices. The
+single-price field cannot overwrite an existing itemized breakdown. Raw price
+input remains recoverable, and clearing a saved service price requires entering
+a replacement rather than silently restoring the previous amount. These source
+changes and focused tests are not physical-device or full workflow acceptance.
+
 ## Customer and location record
 
 Customer identity and service location are related but separate. One customer
 may have multiple service locations and contacts.
+
+Estimate Client information opens one section screen. Its bordered Saved clients
+and Add new client controls stay at the top. Both change content within that same
+screen: the initial view offers those choices without opening the saved list.
+Saved clients displays a searchable alphabetical list, and Add new client
+displays the directory form inline. Only the selected saved-list view of empty
+storage says No saved clients, retains
+the Add new client action, and never redirects. Tapping a saved name selects its
+stable identity for this estimate without pushing a detail route. Save and use
+client commits a new directory record and selects it for the estimate. Switching
+between the two choices retains unfinished input; leaving flushes client and
+estimate drafts before returning. Native Back and visible Back first return
+through the inline client choices in visited order; they do not skip directly
+from the new-client form to the estimate. Done explicitly finishes the section.
+The form reuses directory persistence,
+permissions, recovery, and validation, with no second client store. These controls
+retain their labels with accessibility scaling. This September 28 owner correction
+supersedes the prior text-only actions and nested client routes for Estimates.
+It does not change the separate estimate review composition or document templates.
+The inline new-client editor is a conventional form: persistent labels above
+unfilled, underlined inputs, grouped by client/contact and billing/service details.
+Do not turn each input into a filled container. Retain the bordered choice buttons
+above the form and normal accessible spacing between fields.
+
+September 29 correction: inline Add new client opens a fresh form without an
+automatic recovery dialog. The initial choices expose existing input separately
+as Unfinished client forms; selecting one resumes it in place. Merely opening an
+empty form must not persist an unnamed draft. Existing unfinished input remains
+recoverable and is never deleted by this presentation change. Native Back and
+visible Back preserve entered input. Single-line fields use keyboard Next to
+advance focus, following UI foundation section 11. The optional business field
+identifies the client's business, not the account owner's company.
+
+Invoice Client information uses the same Saved clients / Add new row and
+searchable client-detail selection as Estimates. Opening or backing out of a
+client detail does not select that client. Use this client selects its stable
+saved ID and snapshot, updates the service location for a different client, and
+preserves invoice work, prices and dates. Selection checks directory access
+before navigation and after returning; Add new also requires client-management
+permission. Existing authorized invoice snapshots remain historical document
+information rather than granting access to the live customer directory.
+
 
 Required capabilities include:
 
@@ -145,11 +403,18 @@ That section is the shared operational attention panel: at most three compact
 rows, a real `Show all N` route, an X dismiss control, and exact Estimate opening.
 It does not use private Estimate warning chrome or merge attention records into
 the normal dated list after dismissal.
-Drafts have a clearly labeled route reachable from Work and the document
-workspaces. New Estimate and New Invoice open fresh forms immediately; existing
+Drafts have a clearly labeled route reachable from their document workspaces.
+Owner correction, September 28 removes the general Work landing Drafts shortcut;
+this does not delete any draft records or unfinished input.
+New Estimate and New Invoice open fresh forms immediately; existing
 unfinished input never interrupts that action. The Drafts route presents saved
 draft records and unfinished input in one destination, associates recovered edits
 with their existing record, and shows customer/work identity and last-edited dates.
+The Estimate or Invoice workspace shows its type-specific drafts shortcut only
+when an authorized saved draft or unfinished input exists. The destination title
+and every draft row identify the document type; an empty workspace does not offer
+a shortcut to a no-drafts page. A draft-load failure remains discoverable for
+retry instead of being treated as proof that no drafts exist.
 The Drafts list uses visible dividers between both saved records and recoverable
 input, and stays at a readable width on larger screens.
 Returning to Work never automatically opens a draft. Resume is an explicit choice.
@@ -195,7 +460,28 @@ remains a link on a converted job/invoice; the invoice uses its own number.
   unless the sender explicitly selects them for the customer-facing copy.
 - Items: labor, materials, equipment, procurement, fees, discount, tax, deposit.
 - Totals: subtotal, adjustments, tax, total, required deposit, and balance basis.
+  September 27: Service terms includes Require a deposit and an explicit amount.
+  The requirement is stored with the estimate and its recovery input; it does not
+  record money received or change the estimate total. A changed requirement is
+  customer-visible and invalidates approval of the prior revision. The amount
+  appears in native review, signing, and the generated customer copy. Existing
+  records without this field have no structured requirement. Record deposit
+  received belongs beside those terms and uses the existing payment workflow.
 - Terms and delivery: payment terms, acceptance method, signature, delivery history.
+
+Estimate information uses persistent labels above line-style fields. The estimate
+title comes first, followed by Estimate number and optional purchase order number.
+Description of work uses the in-field hint "Describe the work to be completed."
+that disappears when typing; there is no included/excluded/expected helper below.
+The New/Edit estimate form groups subtotal, editable discount and tax, and total
+in one Price summary. Photos uses the same bordered section grammar as other
+entries. Preview PDF, Review estimate, Save estimate and Close sit after the form
+in its scrollable content, never in a fixed footer. The shared estimate/invoice
+section editor likewise places Done or Save changes after its fields, inside the
+same scroll and bounded form width; closing still flushes the existing draft and
+preserves failed input. The Photos and Labor/materials Save actions and Customer approval Close action likewise follow their content inside the same scroll, preserving existing save, approval, and draft guards. Secondary actions use consistent
+tinted buttons; Save estimate is the primary action. Existing review composition
+and durable draft/photo/signature commands are preserved.
 
 Estimate information uses persistent labels above line-style fields. The two
 short number fields may share a row when local width and text scale allow; the
@@ -233,6 +519,23 @@ conversion together, checks the captured source revision/current signature, and
 rejects competing conversions. The editor stays open if confirmation fails; raw
 job main-form and nested item input now autosave separately, retain on Back,
 and are consumed only with successful confirmation.
+
+The linked job must retain the approved estimate's saved customer snapshot;
+conversion rejects a substituted or missing snapshot. Job contact display uses
+that recorded snapshot before a current-directory fallback, so later directory
+edits do not silently change the contact details carried into the job or invoice.
+The conversion also retains the estimate's photo references and notes, without
+copying or deleting original media. Dropping those references blocks conversion.
+The job's photo section opens a read-only preview after checking current job
+visibility and saved membership. Missing files show an unavailable image state.
+New job camera/library/file imports use the shared native coordinator and a
+separate actor-owned `work/job-photos` draft. Photo notes and selections survive
+Back and reopen; unfinished input is also reachable from saved-work recovery.
+Save confirms the reviewed photo list atomically against the original job
+revision. Failed or stale saves retain unfinished photos and original files.
+The `canAttachJobPhotos` grant is checked on opening, native adoption and record
+mutation; a visible button is not authority. Production account provisioning,
+Google Drive backup and physical-device interruption testing remain unfinished.
 
 New Job presents a prominent direct-job action before the optional estimate
 chooser. Choosing an estimate opens that exact document for approval review;
@@ -276,10 +579,20 @@ Drafts are reached through one dedicated destination filtered by document type,
 with last-edited dates and saved/recoverable versions grouped by record identity.
 The initial client section precedes document details, template and PDF preview.
 
+
 Scheduling now projects existing authorized Jobs, including overnight windows,
 with employee filtering and screen-specific display settings. It links to the
 existing persisted job schedule and assignment editors. It does not assert that
 employees are available or that a crew has sufficient skills/capacity.
+September 28 UI checkpoint: Scheduling reuses WorkDetailHeader with Back and
+its own settings. Scheduled jobs and Needs scheduling use the shared compact
+horizontal summary strip and switch the record list in place. Empty record
+sections are absent; there are no zero-count section containers or repeated
+no-jobs paragraphs. New job uses the lower-right action with reserved scroll
+space. Calendar and both counts derive from the same authorized, person-scoped
+job projection, with an additional assigned-employee filter. Returning from a
+durably confirmed new job does not attempt a second create. Focused widget and
+schedule persistence/conflict tests pass; real-device acceptance remains open.
 New owner-requested debug Work examples use distinct customers for draft, ready,
 approved, scheduled, completed and invoiced examples. Replacement is once-only,
 company-scoped, and preserves other modules. Plan is scheduled work; Entries
@@ -317,17 +630,75 @@ The client detail page is another legitimate route into the same estimate. It
 shows Active estimates before the complete authorized work history for that
 customer—estimates, jobs, invoices, payments, and attachments—and offers New
 estimate with that stable client preselected. This is a filtered view of the
-same records, not a second copy. The estimate detail screen owns status, exact revision,
+same records, not a second copy. Customer history uses the same authorized Work
+projection as other Work lists. A saved customer snapshot ID takes precedence
+over names, preserving identity after renaming and separating identical names.
+For legacy records without an ID, a name matches only when exactly one saved
+client has that name; ambiguous legacy records remain in their Work lists and
+are not silently assigned. The same identity rule applies to PDF previews,
+exports, customer-review copies, and default email/text recipients: never choose
+the first of several clients with the same name. A saved document snapshot remains
+authoritative even if the live directory changes. Visible history counts are derived from those rows,
+not a cached customer count. New estimate from client details carries the stable
+customer snapshot into the existing draft workflow. This checkpoint does not
+complete payment/attachment history or granular financial permissions.
+The estimate detail screen owns status, exact revision,
 meaningful dates, scope, separately grouped Labor and Materials, internal
 revision/delivery history, and the actions Preview customer copy, Send or share,
 Sign in person, and—only after approval of the current revision—Create and plan
 job.
 
 Owner correction, September 25: ordinary estimate actions remain visible and
-labeled rather than hidden in an action directory. The editor keeps Close,
-Preview, and Save estimate in a compact text-only bottom row where the available
-width and text scale permit; accessibility may reflow them without truncation.
-Customer approval is the final tappable section of the scrollable form.
+labeled rather than hidden in an action directory. September 27 owner correction: the editor exposes a distinct **Review estimate**
+route into the native estimate details, separate from **Preview PDF**. Review
+shows the current form information without committing it. Continue editing/back
+returns to the same input; Save estimate explicitly confirms through the existing
+atomic save/recovery path. Continue editing appears as an unboxed text button beside the estimate title,
+aligned to its first text baseline.
+Save estimate and a second Continue editing appear after the review content,
+inside the page scroll, never in a pinned footer. Save appears only at the bottom;
+no additional Cancel or Close action is introduced. Controls may reflow without truncation.
+September 27 direct-edit correction: tapping a review section opens its own
+editor titled **Editing [section]**, with **Save changes** returning to the same
+review route and scroll position. Customer information, work details, labor and
+materials, discount and tax, dates, and service terms use the existing draft
+controls and recovery paths. Saved records commit explicitly; pre-save review
+retains changes in its existing draft until Save estimate. The proposed service
+date remains visible near the customer, including **Not set** when empty. Use
+**Continue adding the work details and prices** instead of developer-oriented wording.
+The estimate status card sits directly below the header. Its label and value
+share the existing heading size and weight. Work details, labor and materials,
+service terms/deposit, and date edit controls are inside their respective cards
+at the top right; the dates action sits above the date-value column. The whole
+editable card still opens its existing section editor.
+Saved details put proposed work, Labor and materials, and Service terms and deposit
+before approval, scheduling, and sharing actions. Actions sit with the section
+they affect; no large action wall precedes the record. Tinted surfaces and readable
+labels provide grouping without depending on color alone.
+Customer signature and approval is the final tappable section of the scrollable
+form. Photos has its own compact bordered summary card with Add photos inside
+it, opening camera/library/file choices and per-photo details. View photo opens
+a read-only, zoomable image inside the app. Removing an attachment requires
+confirmation naming the photo; cancel preserves its note and attachment, and
+confirmed removal does not delete the retained image file. Remaining attachments
+stay linked to this estimate through existing recovery and media retention.
+Review also exposes Add photos and Save and get customer
+approval at its end. Approval saves the current estimate before opening the
+customer approval route; its primary action is Add customer signature. The
+signing pad is visible on entry and provides Fine (2), Medium (3, default), and
+Bold (4 logical pixels) thickness choices. Thickness is retained with normalized
+ink through recovery, saved records and proportionally rendered customer PDFs;
+legacy ink retains its previous rendering. Changing ink thickness resets consent.
+Signed estimates remain shareable as a signed copy. Android email/text composition
+filters installed apps by their email/messaging category and PDF attachment
+support; the generic device share option remains separate. Recipient, PDF bytes,
+read permission and filename pass to the external composer. Opening a composer
+never records confirmed delivery. A customer must still send from that app.
+Device verification on September 27: Gmail attached the generated PDF; Messages
+opened a composer addressed to a synthetic test number with the PDF, and tapping
+it opened the one-page estimate in a device PDF viewer. No message was sent. Remote portal approval and
+optional Google Drive photo backup are separate, not prerequisites for local signing
+or email/device sharing. These changes do not publish or activate cloud services.
 Preview and approval are child routes of that exact editor. Back/cancel returns
 to the same editor and scroll position, with its input retained; successful
 approval refreshes its status without closing it or detouring through details.
@@ -352,7 +723,13 @@ customer-visible changes invalidate the prior approval for the revised copy.
 
 Labor is not disguised as a generic material line. Labor rows support role or
 service, hours or service quantity, customer rate, private internal rate, and
-customer-facing description. Material rows may begin manually, from confirmed
+customer-facing description. The line-entry form separates fields by at least
+20 logical pixels; explanations about worker rates and private costs appear above
+the relevant field with an 8-LP gap. Narrow layouts reflow quantity/unit controls
+with accessibility text scaling. Routine local-save messages stay hidden in the
+estimate and item editors; write failures remain visible with a retry action.
+Units also support miles, kilometers, trips, and loads for travel and delivery
+charges in the same item workflow. Material rows may begin manually, from confirmed
 material cost history, or from a recorded expense/receipt. Linking evidence
 never silently turns the full receipt total into a customer charge; the human
 reviews and edits quantity, description, cost, markup, and price.
@@ -384,6 +761,10 @@ optional trade-filtered decorative templates such as plumbing, HVAC, lawn care,
 or masonry. Company identity, logo, customer, job location, item table, totals,
 terms, signatures, and payment details come from confirmed records; the visual
 template never owns or rewrites that data.
+For an invoice customer copy, retain the original total and show paid and amount
+due from the current invoice ledger, including any prior job or estimate payment
+explicitly applied to that invoice. Applying a deposit is not a second receipt
+of money. Generated PDFs and customer review copies use the same calculation.
 
 Owner requirement, September 14, 2026: build the shared PDF generator and reader
 as application-wide infrastructure, reusable for these documents and Expenses.
@@ -418,6 +799,22 @@ customer portal presents those terms with the exact scope, items, total, and
 revision before **Approve and sign**. The acceptance evidence identifies that
 terms snapshot. Any customer-visible terms edit creates a new Estimate revision
 and invalidates the superseded customer signature and company approval to send.
+
+The in-app customer approval form also displays the work, customer prices, total,
+and terms before the acknowledgment and approval actions. Adding a customer
+signature reveals the signing area in that same form; it does not navigate to
+another review screen or require another "Tap to sign" button. Approval without
+a signature remains a separate explicit action. Unfinished ink uses the existing
+durable signature draft and Back must flush it before leaving. These UI checks
+do not substitute for permission enforcement, revision checks, or external
+approval evidence.
+
+Unfinished approval entered without a signature follows the same durable draft
+contract. Opening the form alone creates no unfinished business input. Entered
+method, customer name, notes, and acknowledgment recover without granting
+approval. Confirmation checks the saved estimate revision and consumes the input
+atomically with approval; failed confirmation preserves it. Recovery entries are
+scoped to the current organization, employee, and approval permissions.
 
 An Invoice has a separate **Payment terms** section covering the exact due date,
 accepted payment methods, installment schedule when offered, correction/dispute
@@ -829,6 +1226,11 @@ a record. The editor offers **Save draft** and, with explicit issue authority,
 confirms that the amount will be added to the books, then saves the issued
 Invoice and its single financial entry together. Neither action sends a
 customer copy; delivery is a separate, labeled step.
+The two editor actions remain in scrolling content. Their row uses measured
+label widths and the current TextScaler against local available width; normal
+320-LP phone text fits side by side, and enlarged text stacks when needed.
+Both retain at least 48-LP touch height. Tests load the shipped Material font
+and exercise direct creation at normal and doubled text, plus failed-save retry.
 Storage integration checkpoint, September 9, 2026: the main Invoice editor now
 keeps raw unfinished input separately from the saved invoice file. It shows local
 write acknowledgment and retry failure, offers owner-scoped unfinished invoices
@@ -875,11 +1277,38 @@ the invoice total minus recorded payments, including partial payments. Existing
 payments linked by displayed invoice number and payments linked by stable
 invoice ID must resolve to the same invoice; a status label alone cannot stand
 in for the balance. A dated report excludes payments after its as-of day.
-Every payment entry point uses the same full-screen balance-aware form. The
-Payments workspace first selects an authorized open invoice through a searchable
-list, then opens that exact form; drafts and paid invoices are excluded, prior
-payments reduce the offered balance, and overpayment is rejected. Selecting a
-saved payment opens its owning Invoice record. Saved payments use the same
+An invoice payment uses the full-screen balance-aware form. Payments also has a
+direct path for money received without an invoice, with amount, date, method,
+description, optional payer, and an optional link to a saved Job or Estimate.
+The received date defaults to today when recording from a future calendar day.
+It can be today or earlier, but a future date cannot be recorded as money
+already received. A promised or expected payment needs its own distinct state.
+When open invoices exist, Record payment offers those two paths plainly; when
+none exist, it opens the direct form. The invoice path selects an authorized
+open invoice; drafts and paid invoices are excluded, prior payments reduce the
+offered balance, and overpayment is rejected. A direct payment does not change
+an invoice balance. Quote links wait until Quotes are stored as real records.
+An Estimate or Job may offer a contextual Record deposit/payment action; that
+link alone does not apply money to a later Invoice. On an issued Invoice, Apply
+a recorded deposit offers only prior payments tied to its source Job or
+Estimate. Confirmation writes a separate durable application event for the
+lesser of the available deposit and invoice balance. It never records money
+received again. The source payment cannot be applied twice, including across
+different invoices or concurrent sessions; an invoice revision advances with
+each application. Unlinked payments still need an explicit customer-safe
+allocation path rather than a name-based automatic match.
+Selecting a saved payment opens its payment details and any linked Work record.
+An authorized owner can preview a customer payment receipt generated from the
+saved money-received entry, including a standalone payment with no invoice or
+job. The receipt shows company identity, received date, amount, method, optional
+payer and work description, plus a stable public reference derived from the
+private payment ID. Internal payment notes and the raw storage ID stay off the
+customer copy. A saved, viewable company identity is required; the UI Lab demo
+company fallback cannot be used to prepare a customer receipt. Save PDF and
+Share PDF are separate explicit actions; opening
+the sharing app is not proof of customer delivery. Applying an existing deposit
+to an invoice never produces a second receipt for money received.
+Saved payments use the same
 compact record grammar as the rest of Work: each payment is a separate bordered
 60-LP-class container rather than a merged list inside one undifferentiated panel.
 Payment storage checkpoint, September 9, 2026: raw amount, method, date and note
@@ -904,6 +1333,21 @@ non-billable, already invoiced, credited, and disputed items.
 The invoice owns its number, issue/due dates, terms, delivery, balance, payments,
 credits, refunds, and collection state. Creating it does not close the job unless
 the user or company workflow explicitly performs a permitted status transition.
+
+Invoice collection presentation uses one read-only projection for all-date list
+filters, list labels and the review heading: confirmed invoice payments and
+allocations determine paid/partial balance, and the local due date determines
+overdue after that date ends. Drafts remain drafts. Existing explicit Paid
+records remain recognized for compatibility; the projection does not rewrite
+historical status or ledger entries. Review access without financial permission
+must not infer a new payment status from a ledger it cannot display. This shared
+presentation rule does not establish complete account or Firebase enforcement.
+
+Opening invoice review resolves the stable invoice ID against the current Work
+store and current employee scope before rendering. A passed route snapshot is
+not a fallback source when that invoice is absent or inaccessible. Scope changes
+while review is open must replace its contents with an unavailable state and
+remove its financial/actions content; an available back route remains usable.
 
 Invoice filing cannot depend on issue date alone. The Invoice workspace must
 support customer, invoice number, linked job, issue date, due date, delivery
@@ -953,9 +1397,10 @@ such as location or odometer sharing remain separate from role grants.
   Its wide composition groups dated records beside a readable calendar in two
   bounded 400-LP-maximum lanes. Its directory uses six labeled 62-LP icon
   surfaces governed by `AppLayoutEngine.workShortcutsFor` with measured labels.
-- Work home order is shared header, six labeled destinations, localized date,
-  genuine Needs Attention, optional Admin employee strip, compact daily record
-  summaries, then the calendar on narrow screens (alongside records on wide).
+- Work home order and compact money overview follow the owning Work home
+  section of operations_screen_blueprint.md. The selected date remains near
+  the header; the calendar follows records on narrow screens and sits alongside
+  them when the shared layout has room.
   Destination ownership and the remaining unconnected Quotes state are specified
   in the Work home section of `operations_screen_blueprint.md`. Redundant date and employee
   helper paragraphs are omitted. `Add work` pushes a full-screen labeled action

@@ -42,6 +42,34 @@ void main() {
     await t.pumpAndSettle();
   }
 
+  testWidgets('labor save follows the items instead of covering them', (
+    t,
+  ) async {
+    await open(
+      t,
+      items: [
+        for (var i = 0; i < 12; i++)
+          WorkLineItem(
+            id: 'labor-$i',
+            type: WorkLineItemType.labor,
+            name: 'Inspection stage $i',
+            quantity: 1,
+            unit: 'hour',
+            customerPrice: 75,
+          ),
+      ],
+    );
+    final save = find.byKey(const ValueKey('save-estimate-items'));
+    expect(save.hitTestable(), findsNothing);
+    await t.ensureVisible(save);
+    await t.pumpAndSettle();
+    expect(save.hitTestable(), findsOneWidget);
+    await t.drag(find.byType(ListView).first, const Offset(0, 3000));
+    await t.pumpAndSettle();
+    expect(save.hitTestable(), findsNothing);
+    expect(t.takeException(), isNull);
+  });
+
   testWidgets(
     'untouched new form leaves no unfinished input and another item opens',
     (t) async {

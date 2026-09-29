@@ -287,16 +287,35 @@ least one authorized record requires review.
 
 ### Work home
 
-- Drafts and permitted Employees are equal-width, labeled controls in one
-  compact row when local width and text scale allow. They reflow at larger text
-  without truncating either label; Employees stays absent without view permission.
+- Work landing uses the shared engine's primary/supporting composition: a
+  wider record workspace beside a bounded calendar when local width and text
+  size allow; otherwise they stack. See the Work landing override in UI
+  foundation. This replaces equal-width Work columns and does not turn the
+  page into three independent copies of a phone stack.
+
+- Owner correction, September 28: remove the general Drafts shortcut from Work.
+  Conditional document drafts remain on Estimates and Invoices (see Work lifecycle).
+  Employee status remains a compact labeled control when view permission allows;
+  it does not stretch to fill the former two-button row.
 - The shared charcoal header comes first. It shows `Employee` plus the signed-in
   technician, the selected employee, or `Company Overview`, and the shared View
   selector. Work does not contain Start Workday in this header.
-- The six destination icons sit immediately below the shared header. The complete
-  localized selected date follows the directory as the first records heading. The selected
-  employee is not repeated as a large body heading. A person must never infer
-  the active date or employee scope from the calendar alone.
+- Owner correction, September 28: Work landing shows the selected date near the
+  shared header, followed by compact Paid, Unpaid and Overdue money cards.
+  Reuse Dashboard's OperationalSummaryStrip without changing Dashboard: normal
+  text targets 96-LP width and 120-LP height; long currency values and accessibility
+  text may expand to remain readable. Cards must not stretch across desktop.
+  These invoice totals cover all dates, explicitly labeled All time. Paid sums
+  payments applied to visible issued invoices, including partial payments;
+  Unpaid sums remaining outstanding balances; Overdue is the overdue subset of
+  Unpaid, not an additional amount. Each opens its matching all-date invoice list.
+  The landing screen does not show the vague Browse records action or the prior
+  estimate/job-count cards. Its named module destinations remain available.
+  Use the shared English, Spanish and French catalog; preserve customer text.
+  Queries remain restricted to visible records and the current employee scope.
+  These local checks do not establish complete permissions or Firebase enforcement.
+- The six destination icons and utility controls follow the compact money overview.
+  A person must never infer the active date or employee scope from the calendar alone.
 - Authorized records that genuinely require action appear directly below the
   header/date in a distinct `Needs attention` section. Examples are requested
   estimate changes, an expired estimate, an unassigned job visible to dispatch,
@@ -327,15 +346,17 @@ least one authorized record requires review.
   than cutting words. Customers and Company Profile are in the Business menu,
   backed by the same existing company/customer records used by documents.
   Quotes remain explicitly marked Not connected. Scheduling now opens its own
-  authorized Job calendar, date/employee filters, scheduled and unscheduled job
-  groups, and job details for assignment and schedule editing. This is not yet
+  authorized Job calendar, date/employee filters, a selected-day or all-dates
+  view of scheduled jobs with dates shown in the latter, an all-dates unscheduled
+  backlog, and job details for assignment and schedule editing. This is not yet
   the availability/capacity engine required by `scheduling_system_blueprint.md`.
 - Jobs, Estimates, and Invoices are distinct destinations and record lists.
   Tapping one opens that workspace, never a create form. Each workspace offers
   a separate labeled New action.
-- The `Add work` FAB opens a full-screen, labeled action grid using the same
-  shared header, date, scope, and compact tile grammar. It does not open a tall
-  bottom sheet of full-width rows over the Work directory.
+- Owner correction, September 28: Add work belongs at the bottom right on
+  phones, in reserved bottom space so it never overlaps scrollable controls. Wide Work landing uses
+  a compact bottom action bar, not a floating button or a separate top row.
+  The existing full-screen labeled action directory remains its destination.
 - Daily summaries use the same operational card grammar as Dashboard entries:
   every record has its own bordered container, normal-scale phone rows target
   56-60 LP, and accessibility or long primary text may reflow instead of being
@@ -353,8 +374,9 @@ least one authorized record requires review.
 - My Info opens the retained company profile in read mode before Edit. Saved
   Clients opens the retained customer directory and then a customer detail;
   adding or editing is an explicit action rather than an always-live form.
-- Payments is a distinct ledger tied to invoice IDs. Recording a full payment
-  updates that invoice's payment state in the shared prototype store; its own
+- Payments is a distinct ledger. A payment can be recorded without an invoice
+  and may link to a saved Job or Estimate. An invoice-linked payment reduces
+  that invoice's balance; an unrelated payment never changes it. Its own
   calendar counts Payment records and selects the date in the same workspace.
   `Record payment` from Work Calendar Day opens that Payments workspace already
   scoped to the selected date; it never ends in a message telling the user to
@@ -414,6 +436,62 @@ state and opens the complete estimate, job, invoice, or payment that owns it.
 
 ### Jobs, Estimates, and Invoices workspaces
 
+- September 28 owner correction: the invoice status list reached from Work money
+  cards uses compact invoice-only status buttons across the top, a search field,
+  and tappable rows separated by dividers. It does not mix job and estimate
+  filters in a dropdown. Each row identifies customer, work title, invoice
+  number, payment-derived status, due/created date, total and remaining balance.
+  Clearing invoice search restores results within the selected status; it does
+  not reset that filter or change records.
+  Owner correction superseding the separate home/date routing: **Invoices** has
+  one landing screen, with the calendar at the bottom. The selected status stays
+  visible and changes results in place; rows open the exact authorized record.
+  Selected money cards use an outline and check marker as well as accessibility
+  selected state; changing back to dated activity clears that selection.
+  There is no intermediate invoice home or separate Date activity navigation hop.
+  Conditional Drafts access belongs immediately below the header, and disappears
+  when no saved or recovery draft exists. It is not the last scrolling filter.
+  Compact money cards move from Work to this screen in this order: Unpaid,
+  Partially paid, Overdue, Paid in full. Paid in full summarizes settled invoice
+  face values, not payment-receipt transactions. Overdue can also be partially
+  paid; these are overlapping views, not amounts to add together. The shared
+  outstanding query includes partial balances for existing outstanding views;
+  the Unpaid card uses a separate no-payments query so partial invoices appear
+  under Partially paid instead. Neither query alters balances or saved records.
+  Search and all-date/date selection operate within this same screen. Hide
+  genuinely empty record sections, but preserve truthful read/recovery errors.
+  New invoice remains lower right and must not obscure records at any width.
+  Dated activity derives row status, Open invoices membership, and closed-record
+  filtering from the same authorized payment ledger as the all-date list and
+  review. It must not flag a fully paid balance as overdue or open, even when
+  the stored record status still says Due. This projection never alters records.
+  The selected-date list remains complete even when one of its invoices also
+  appears in Needs attention; calendar counts use the same non-draft membership.
+  Invoice date membership includes creation, issue, due and authorized linked
+  payment receipt/application dates. The date row explains the matching events;
+  multiple events show one invoice, and payment applications do not represent
+  a second receipt. Financial-read restrictions exclude payment-only dates and
+  their calendar counts. Drafts remain in their separate unfinished-work flow.
+  The supporting Other unpaid invoices group excludes records already shown
+  for the date or in attention, so its count is not the total unpaid file.
+  Invoice settings continue to control status/assignment details and whether
+  the All view includes closed records; choosing Paid explicitly overrides that
+  general closed-record preference. Financial-read restrictions hide money and
+  invoice status labels, and neutralize payment-status filtering/counts even
+  when financial access is removed while the list is already open. The dated
+  activity route also suppresses overdue attention/calendar warning markers,
+  the payment-based Open invoices group, and status colors/semantics without
+  financial access; ordinary authorized dated records remain available. Persisted
+  date/search/calendar/attention projections use the same saved-session record
+  visibility as the all-date list; technician scope uses the session actor ID.
+  Attention matching never substitutes a demo employee for an unfamiliar ID.
+  Invoice date-activity labels, search/empty/error copy, filing controls, row
+  statuses and overdue reasons use the shared English/Spanish/French catalog;
+  original customer names and work titles remain unchanged.
+  Existing full account/action authority remains a
+  separate unfinished requirement, not implied by display controls.
+
+
 - Every workspace repeats the localized date, Technician/Admin view, and
   Company Overview/employee scope so a pushed route never loses context.
 - Broad production-capability migration from 5.7 does not begin until Work
@@ -467,8 +545,8 @@ state and opens the complete estimate, job, invoice, or payment that owns it.
   sources remain available; customer delivery includes only photos the sender
   explicitly selects.
 - Estimate actions and editor navigation follow the September 25 owner correction
-  in `work_lifecycle_blueprint.md`: visible labeled controls, a compact editor
-  footer, direct approval/signing child routes, and bounded multi-column review.
+  in `work_lifecycle_blueprint.md`: visible labeled controls, a compact scrolling
+  editor action area, direct approval/signing child routes, and bounded multi-column review.
 - Estimate detail groups Labor and Materials separately, binds approval to an
   exact revision, preserves superseded approvals in audit history, and blocks
   conversion after any customer-visible change until the revised copy is
@@ -756,6 +834,10 @@ list, not the required weekly reconciliation, correction-request, or approval
 workflow. The current workday writer still requires a manager grant, so an
 ordinary employee cannot yet start their own workday. Do not present this
 slice as completion of employee timesheets.
+The Work employee-status projection includes a saved workday that crosses
+midnight. Its whole-session elapsed time is labeled as spanning midnight,
+not represented as an exact today-only total. Exact daily and weekly splits
+remain part of the required reconciliation workflow below.
 
 - Begin Workday on the technician dashboard must start a durable time record
   associated with that employee's stable profile identity. End Workday records

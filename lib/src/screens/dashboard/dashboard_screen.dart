@@ -1,3 +1,4 @@
+import '../work/quote_detail_screen.dart';
 import 'dart:math' as math;
 import '../../shared/screen_layout_configuration.dart';
 import '../../shared/screen_layout_edit_controls.dart';

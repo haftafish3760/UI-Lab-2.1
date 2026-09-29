@@ -1,3 +1,5 @@
+import 'support/visible_control.dart';
+import 'package:ui_lab_2_1/src/data/work/models/work_line_item_models.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_drafts_screen.dart';
 import 'support/document_form_navigation.dart';
 import 'package:flutter/material.dart';
@@ -66,9 +68,9 @@ void main() {
         if (restoring) {
           await waitForNativeSave(
             tester,
-            () => find.text('Nested draft').evaluate().isNotEmpty,
+            () => find.textContaining('Nested draft').evaluate().isNotEmpty,
           );
-          await tester.tap(find.text('Nested draft'));
+          await tester.tap(find.textContaining('Nested draft'));
         } else {
           await tester.pumpAndSettle();
         }
@@ -105,6 +107,10 @@ void main() {
       await openItems();
       await tester.tap(find.text('Add line item'));
       await tester.pumpAndSettle();
+      await tester.tap(find.byType(DropdownButtonFormField<WorkLineItemType>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Labor').last);
+      await tester.pumpAndSettle();
       await tester.enterText(field('Labor name'), 'Valve replacement');
       await tester.enterText(field('Quantity'), '2.');
       await tester.binding.handlePopRoute();
@@ -117,7 +123,10 @@ void main() {
       expect(find.textContaining('Unfinished item'), findsWidgets);
       expect(find.text('Save progress'), findsOneWidget);
       await backUntilGone(WorkItemsEditor);
-      await tester.tap(find.byKey(const ValueKey('save-invoice-draft')));
+      await tapVisibleControl(
+        tester,
+        find.byKey(const ValueKey('save-invoice-draft')),
+      );
       await tester.pumpAndSettle();
       expect(
         find.text('Review and save the unfinished invoice items first.'),
@@ -125,7 +134,12 @@ void main() {
       );
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Save draft'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Save draft'),
+        ),
+      );
       await waitForNativeSave(
         tester,
         () => find.byType(InvoiceEditorScreen).evaluate().isEmpty,
@@ -173,7 +187,12 @@ void main() {
       );
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Save draft'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Save draft'),
+        ),
+      );
       await waitForNativeSave(
         tester,
         () => find.byType(InvoiceEditorScreen).evaluate().isEmpty,

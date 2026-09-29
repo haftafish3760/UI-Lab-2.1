@@ -10,6 +10,40 @@ import 'package:ui_lab_2_1/src/shared/operational_attention_panel.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
 
 void main() {
+  test('Unknown employee never inherits the first demo employee attention', () {
+    final store = PrototypeOperationsStore(
+      workRecords: [
+        WorkRecord(
+          id: 'alex-overdue',
+          kind: WorkRecordKind.invoice,
+          number: 'INV-ALEX',
+          title: 'Repair',
+          client: 'Customer',
+          detail: '',
+          pricing: WorkPricingModel.flatRate,
+          status: WorkRecordStatus.due,
+          createdByEmployeeId: 'alex',
+          total: 100,
+          dueOn: DateTime(2020),
+        ),
+      ],
+    );
+    addTearDown(store.dispose);
+    OperationalAttentionQuery query(String employeeId) =>
+        OperationalAttentionQuery(
+          panelId: 'invoice-scope-regression',
+          module: OperationalAttentionModule.work,
+          view: AppViewMode.technician,
+          selectedEmployeeId: employeeId,
+          access: const OperationalAttentionAccess.technicianDevelopment(),
+        );
+    expect(store.attentionCenter.itemsFor(query('alex')), isNotEmpty);
+    expect(
+      store.attentionCenter.itemsFor(query('unrecognized-employee')),
+      isEmpty,
+    );
+  });
+
   test('Dashboard attention is capability- and scope-filtered', () {
     final store = PrototypeOperationsStore();
     addTearDown(store.dispose);

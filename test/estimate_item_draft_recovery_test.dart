@@ -68,9 +68,9 @@ void main() {
           if (restoring) {
             await waitForNativeSave(
               tester,
-              () => find.text('Nested draft').evaluate().isNotEmpty,
+              () => find.textContaining('Nested draft').evaluate().isNotEmpty,
             );
-            await tester.tap(find.text('Nested draft'));
+            await tester.tap(find.textContaining('Nested draft'));
           } else {
             await tester.pumpAndSettle();
           }
@@ -154,6 +154,10 @@ void main() {
           tester,
           () => find.byType(EstimateItemsScreen).evaluate().isEmpty,
         );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('save-estimate-draft')),
+        );
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('save-estimate-draft')));
         await tester.pumpAndSettle();
         expect(
@@ -203,7 +207,7 @@ void main() {
           () => find.byType(WorkLineItemEditor).evaluate().isEmpty,
         );
         expect(find.textContaining('Unfinished'), findsNothing);
-        await tester.tap(find.text('Save items'));
+        await tester.tap(find.text('Save labor and materials'));
         await waitForNativeSave(
           tester,
           () => find.byType(EstimateItemsScreen).evaluate().isEmpty,

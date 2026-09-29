@@ -135,63 +135,70 @@ class LocalDraftStore
     required int expectedRevision,
     required Map<String, Object?> payload,
     required DateTime occurredAt,
-  }) => database.transaction(() async {
-    if ([
-          organizationId,
-          domain,
-          draftId,
-          ownerId,
-        ].any((id) => id.trim().isEmpty) ||
-        expectedRevision < 0) {
-      throw ArgumentError(
-        'A draft needs scoped identity and a valid revision.',
+  }) async {
+    // Serialize at submission, before SQLite or another draft can yield.
+    // A shallow map copy would still expose nested form values to mutation.
+    final submittedPayload = canonicalJson(payload);
+    return database.transaction(() async {
+      if ([
+            organizationId,
+            domain,
+            draftId,
+            ownerId,
+          ].any((id) => id.trim().isEmpty) ||
+          expectedRevision < 0) {
+        throw ArgumentError(
+          'A draft needs scoped identity and a valid revision.',
+        );
+      }
+      final current =
+          await (database.select(database.localDrafts)..where(
+                (row) =>
+                    row.organizationId.equals(organizationId) &
+                    row.domain.equals(domain) &
+                    row.draftId.equals(draftId),
+              ))
+              .getSingleOrNull();
+      if ((current?.revision ?? 0) != expectedRevision ||
+          (current != null && current.ownerId != ownerId)) {
+        throw const LocalRecordConflict(
+          'This draft changed in another editor.',
+        );
+      }
+      final counterKey = _counterKey(organizationId, domain, draftId);
+      final previousRevision = await _lastRevision(counterKey);
+      final base = previousRevision > (current?.revision ?? 0)
+          ? previousRevision
+          : (current?.revision ?? 0);
+      if (base >= 9223372036854775807) {
+        throw StateError('Draft revision capacity exhausted.');
+      }
+      final nextRevision = base + 1;
+      await _retainRevision(counterKey, nextRevision);
+      final record = LocalDraftsCompanion.insert(
+        organizationId: organizationId,
+        domain: domain,
+        draftId: draftId,
+        ownerId: ownerId,
+        revision: nextRevision,
+        payloadVersion: 1,
+        payload: submittedPayload,
+        updatedAtUs: occurredAt.toUtc().microsecondsSinceEpoch,
       );
-    }
-    final current =
-        await (database.select(database.localDrafts)..where(
+      if (current == null) {
+        await database.into(database.localDrafts).insert(record);
+      } else {
+        await (database.update(database.localDrafts)..where(
               (row) =>
                   row.organizationId.equals(organizationId) &
                   row.domain.equals(domain) &
                   row.draftId.equals(draftId),
             ))
-            .getSingleOrNull();
-    if ((current?.revision ?? 0) != expectedRevision ||
-        (current != null && current.ownerId != ownerId)) {
-      throw const LocalRecordConflict('This draft changed in another editor.');
-    }
-    final counterKey = _counterKey(organizationId, domain, draftId);
-    final previousRevision = await _lastRevision(counterKey);
-    final base = previousRevision > (current?.revision ?? 0)
-        ? previousRevision
-        : (current?.revision ?? 0);
-    if (base >= 9223372036854775807) {
-      throw StateError('Draft revision capacity exhausted.');
-    }
-    final nextRevision = base + 1;
-    await _retainRevision(counterKey, nextRevision);
-    final record = LocalDraftsCompanion.insert(
-      organizationId: organizationId,
-      domain: domain,
-      draftId: draftId,
-      ownerId: ownerId,
-      revision: nextRevision,
-      payloadVersion: 1,
-      payload: canonicalJson(payload),
-      updatedAtUs: occurredAt.toUtc().microsecondsSinceEpoch,
-    );
-    if (current == null) {
-      await database.into(database.localDrafts).insert(record);
-    } else {
-      await (database.update(database.localDrafts)..where(
-            (row) =>
-                row.organizationId.equals(organizationId) &
-                row.domain.equals(domain) &
-                row.draftId.equals(draftId),
-          ))
-          .write(record);
-    }
-    return nextRevision;
-  });
+            .write(record);
+      }
+      return nextRevision;
+    });
+  }
 
   /// Use inside the same database transaction as explicit record confirmation.
   /// Never consumes a newer draft written while confirmation was in progress.

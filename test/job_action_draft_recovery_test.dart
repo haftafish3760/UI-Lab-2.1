@@ -18,6 +18,7 @@ import 'work_draft_controller_compatibility_test.dart'
     show legacyItemsWorkspace;
 
 DraftAutosaveSession sessionOf(ResumedJobAction resumed) => switch (resumed) {
+  ResumedJobPhotos(:final controller) => controller.session,
   ResumedJobNotes(:final controller) => controller.session,
   ResumedJobSchedule(:final controller) => controller.session,
   ResumedJobAssignment(:final controller) => controller.session,

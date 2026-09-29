@@ -20,6 +20,7 @@ enum JobStatus {
 }
 
 enum JobLineKind {
+  service('Service', Icons.home_repair_service_outlined),
   material('Material', Icons.inventory_2_outlined),
   labor('Labor', Icons.engineering_outlined),
   equipment('Equipment', Icons.handyman_outlined),
@@ -75,6 +76,7 @@ class JobLineItem {
   WorkLineItem toWorkLineItem() => WorkLineItem(
     id: id,
     type: switch (kind) {
+      JobLineKind.service => WorkLineItemType.service,
       JobLineKind.material => WorkLineItemType.material,
       JobLineKind.labor => WorkLineItemType.labor,
       JobLineKind.equipment => WorkLineItemType.equipment,
@@ -102,6 +104,7 @@ class JobLineItem {
   }) => JobLineItem(
     id: item.id,
     kind: switch (item.type) {
+      WorkLineItemType.service => JobLineKind.service,
       WorkLineItemType.material => JobLineKind.material,
       WorkLineItemType.labor => JobLineKind.labor,
       WorkLineItemType.equipment => JobLineKind.equipment,
@@ -247,6 +250,7 @@ ActiveJobRecord activeJobForRecord(
   WorkCustomerProfile? customer,
   List<ExpenseRecord> linkedExpenses = const [],
 }) {
+  final recordedCustomer = record.customerSnapshot ?? customer;
   return ActiveJobRecord(
     id: record.number,
     title: record.title,
@@ -260,8 +264,8 @@ ActiveJobRecord activeJobForRecord(
       _ => JobStatus.scheduled,
     },
     customerName: record.client,
-    customerPhone: _recordedOrUnavailable(customer?.phone),
-    customerEmail: _recordedOrUnavailable(customer?.email),
+    customerPhone: _recordedOrUnavailable(recordedCustomer?.phone),
+    customerEmail: _recordedOrUnavailable(recordedCustomer?.email),
     serviceAddress: record.serviceLocation.isNotEmpty
         ? record.serviceLocation
         : 'Service address not assigned',

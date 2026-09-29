@@ -56,36 +56,20 @@ class _InvoiceIdentitySection extends StatelessWidget {
     required this.number,
     required this.canEditNumber,
     required this.onNumberChanged,
-    this.customerOnly = false,
     required this.title,
     required this.purchaseOrder,
     required this.summary,
-    required this.customers,
-    required this.selectedClient,
-    required this.locations,
-    required this.selectedLocation,
     required this.pricing,
-    required this.onClientChanged,
-    required this.onLocationChanged,
-    required this.onAddClient,
     required this.onPricingChanged,
   });
 
   final String number;
   final bool canEditNumber;
   final ValueChanged<String> onNumberChanged;
-  final bool customerOnly;
   final TextEditingController title;
   final TextEditingController purchaseOrder;
   final TextEditingController summary;
-  final List<WorkCustomerProfile> customers;
-  final String? selectedClient;
-  final List<WorkServiceLocation> locations;
-  final String? selectedLocation;
   final WorkPricingModel pricing;
-  final ValueChanged<String?> onClientChanged;
-  final ValueChanged<String?> onLocationChanged;
-  final VoidCallback onAddClient;
   final ValueChanged<WorkPricingModel> onPricingChanged;
 
   @override
@@ -94,82 +78,18 @@ class _InvoiceIdentitySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          customerOnly ? 'Client information' : 'Invoice information',
+          'Invoice information',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 4),
         Text('$number · Saved as a draft until it is issued to the customer.'),
         const SizedBox(height: 10),
-        if (customerOnly) ...[
-          DropdownButtonFormField<String>(
-            key: ValueKey('invoice-client-${selectedClient ?? 'none'}'),
-            initialValue: selectedClient,
-            isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Customer'),
-            items: [
-              // Preserve a recovered name even if its customer directory entry
-              // is currently unavailable; recovery must not invalidate raw input.
-              if (selectedClient != null &&
-                  !customers.any((customer) => customer.name == selectedClient))
-                DropdownMenuItem(
-                  value: selectedClient!,
-                  child: Text(selectedClient!),
-                ),
-              for (final customer in customers)
-                DropdownMenuItem(
-                  value: customer.name,
-                  child: Text(customer.name),
-                ),
-            ],
-            onChanged: onClientChanged,
-          ),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: TextButton.icon(
-              key: const ValueKey('invoice-add-client'),
-              onPressed: onAddClient,
-              icon: const Icon(Icons.person_add_alt_1_outlined),
-              label: const Text('Add new customer'),
-            ),
-          ),
-          if (locations.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            DropdownButtonFormField<String>(
-              key: ValueKey('invoice-location-${selectedLocation ?? 'none'}'),
-              initialValue:
-                  locations.any(
-                    (location) => location.address == selectedLocation,
-                  )
-                  ? selectedLocation
-                  : null,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Service location'),
-              items: [
-                for (final location in locations)
-                  DropdownMenuItem(
-                    value: location.address,
-                    child: Text(location.label),
-                  ),
-              ],
-              onChanged: onLocationChanged,
-            ),
-            if (selectedLocation?.isNotEmpty == true) ...[
-              const SizedBox(height: 4),
-              Text(
-                selectedLocation!,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ],
-          const SizedBox(height: 10),
-        ],
-        if (!customerOnly) ...[
+        ...[
           TextFormField(
             key: const ValueKey('invoice-document-number'),
             initialValue: number,
             readOnly: !canEditNumber,
+            textInputAction: TextInputAction.next,
             onChanged: canEditNumber ? onNumberChanged : null,
             decoration: InputDecoration(
               labelText: 'Document number',
@@ -181,6 +101,7 @@ class _InvoiceIdentitySection extends StatelessWidget {
           const SizedBox(height: 10),
           TextField(
             controller: purchaseOrder,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: 'Purchase order number (optional)',
             ),
@@ -190,6 +111,7 @@ class _InvoiceIdentitySection extends StatelessWidget {
           TextField(
             key: const ValueKey('invoice-title'),
             controller: title,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: 'Invoice title',
               hintText: 'Example: Replace kitchen faucet',
@@ -250,7 +172,9 @@ class _InvoiceItemsSection extends StatelessWidget {
       key: const ValueKey('invoice-items'),
       minTileHeight: 60,
       leading: const Icon(Icons.format_list_bulleted_rounded),
-      title: const Text('Invoice items'),
+      title: Text(
+        itemCount == 0 ? context.l10n.workOptionalItems : 'Invoice items',
+      ),
       subtitle: Text(
         itemCount == 0
             ? 'Add labor, materials, equipment, or other charges'

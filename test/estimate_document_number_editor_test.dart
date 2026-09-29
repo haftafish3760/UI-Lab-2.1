@@ -43,6 +43,10 @@ void main() {
     expect(tester.widget<TextFormField>(number).initialValue, 'Estimate 1');
     await tester.enterText(number, '777');
     await closeDocumentSection(tester);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('save-estimate-draft')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('save-estimate-draft')));
     await waitForNativeSave(
       tester,

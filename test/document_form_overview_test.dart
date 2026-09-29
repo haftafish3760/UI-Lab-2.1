@@ -80,7 +80,15 @@ void main() {
           );
           await closeDocumentSection(tester);
           await openDocumentSection(tester, '$kind-customer');
-          expect(find.byType(DropdownButtonFormField<String>), findsWidgets);
+          if (invoice) {
+            expect(find.byType(DropdownButtonFormField<String>), findsWidgets);
+          } else {
+            expect(
+              find.byKey(const ValueKey('estimate-saved-clients')),
+              findsOneWidget,
+            );
+            expect(find.byType(DropdownButtonFormField<String>), findsNothing);
+          }
           expect(tester.takeException(), isNull);
           await closeDocumentSection(tester);
           expect(tester.takeException(), isNull);

@@ -11,6 +11,8 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
     'discount': _discount,
     'tax': _tax,
     'terms': _terms,
+    'depositAmount': _deposit,
+    'servicePrice': _servicePrice,
   };
   void _changeEstimateInput(VoidCallback change) {
     _refresh(change);
@@ -26,12 +28,20 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
     discount: _discount.text,
     tax: _tax.text,
     terms: _terms.text,
+    requiresDeposit: _requiresDeposit,
+    depositAmount: _deposit.text,
     client: _client,
     customerSnapshot: _customerSnapshot,
     pricing: _pricing,
+    documentPresentation:
+        canUseEstimateServicePrice(_estimateId, _items) &&
+            _servicePrice.text.trim().isNotEmpty
+        ? WorkDocumentPresentation.summary
+        : _documentPresentation,
     template: _template,
     createdOn: _createdOn,
     items: _items,
+    servicePrice: _servicePrice.text,
     baseRecord: _baseRecord,
     estimateId: _estimateId,
     scope: _scope.text,
@@ -133,6 +143,10 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
     _discount.text = record.discount.toStringAsFixed(2);
     _tax.text = record.tax.toStringAsFixed(2);
     _terms.text = record.terms;
+    _requiresDeposit = record.requiredDepositCents > 0;
+    _deposit.text = _requiresDeposit
+        ? (record.requiredDepositCents / 100).toStringAsFixed(2)
+        : '';
     _customerSnapshot = record.customerSnapshot;
     _createdOn =
         record.estimateDates?.createdOn ??
@@ -145,8 +159,14 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
     _proposedServiceOn = record.estimateDates?.proposedServiceOn;
     _client = record.client;
     _pricing = record.pricing;
+    _documentPresentation = record.documentPresentation;
     _template = record.template;
     _items = [...record.items];
+    _servicePrice.text =
+        record.items.isNotEmpty &&
+            canUseEstimateServicePrice(record.id, record.items)
+        ? record.items.single.customerPrice.toStringAsFixed(2)
+        : '';
     _sitePhotos = [...record.sitePhotos];
   }
 
@@ -159,16 +179,20 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
     _discount.text = input.discount;
     _tax.text = input.tax;
     _terms.text = input.terms;
+    _requiresDeposit = input.requiresDeposit;
+    _deposit.text = input.depositAmount;
     _customerSnapshot = input.customerSnapshot;
     _client = input.client;
     _pricing = input.pricing;
+    _documentPresentation = input.documentPresentation;
     _template = input.template;
     _createdOn = input.createdOn;
     _items = input.items;
+    _servicePrice.text = input.servicePrice;
     _baseRecord = input.baseRecord;
     _estimateId = input.estimateId;
     _scope.text = input.scope;
-    _expiresOn = input.expiresOn;
+    _expiresOn = input.expiresOn ?? _createdOn.add(const Duration(days: 30));
     _followUpOn = input.followUpOn;
     _proposedServiceOn = input.proposedServiceOn;
     _itemDraftInputs = input.pendingLineItems;

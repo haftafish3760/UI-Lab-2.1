@@ -195,7 +195,8 @@ Dashboard, combined Work, Expenses, and Materials may route to dated screens.
 Work-owned day rows
 open the exact Job, Estimate, Invoice, or payment owner rather than routing to a
 general workspace and making the operator locate the record again. Job,
-Estimate, and Invoice dated routes retain previous/next-day review. Their
+Estimate, Invoice, and Payments dated workspaces retain previous/next-day
+review. Their
 owning detail screens remain responsible for permission-gated edits and state
 changes. Work-record archival/correction history is not considered complete
 until the Work domain has a recoverable audited lifecycle equivalent to the

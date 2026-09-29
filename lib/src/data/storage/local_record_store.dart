@@ -42,19 +42,25 @@ class LocalRecordStore {
     required List<LocalRecordWrite> writes,
     required DateTime occurredAt,
   }) async {
+    // Capture the command before the first asynchronous boundary. Callers may
+    // reuse their list while SQLite is busy; the fingerprint and actual writes
+    // must continue to describe the same immutable request.
+    final submittedWrites = List<LocalRecordWrite>.unmodifiable(writes);
     if (organizationId.trim().isEmpty ||
         commandId.trim().isEmpty ||
-        writes.isEmpty) {
+        submittedWrites.isEmpty) {
       throw ArgumentError(
         'A command needs an organization, identity and writes.',
       );
     }
-    final keys = writes.map((write) => (write.domain, write.recordId)).toSet();
-    if (keys.length != writes.length) {
+    final keys = submittedWrites
+        .map((write) => (write.domain, write.recordId))
+        .toSet();
+    if (keys.length != submittedWrites.length) {
       throw ArgumentError('A command cannot write the same record twice.');
     }
     final hash = payloadDigest(
-      canonicalJson(writes.map((w) => w.toJson()).toList()),
+      canonicalJson(submittedWrites.map((w) => w.toJson()).toList()),
     );
     final time = occurredAt.toUtc().microsecondsSinceEpoch;
     await database.transaction(() async {
@@ -83,7 +89,7 @@ class LocalRecordStore {
               committedAtUs: time,
             ),
           );
-      for (final write in writes) {
+      for (final write in submittedWrites) {
         final current =
             await (database.select(database.localRecords)..where(
                   (row) =>

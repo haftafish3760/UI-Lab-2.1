@@ -14,6 +14,8 @@ class InvoiceDraftInput {
     required this.creatorId,
     required this.number,
     this.purchaseOrderNumber = '',
+    this.servicePrice = '',
+    this.itemized = false,
     required this.baseStorageRevision,
     required this.title,
     required this.discount,
@@ -39,6 +41,8 @@ class InvoiceDraftInput {
   final String creatorId;
   final String number;
   final String purchaseOrderNumber;
+  final String servicePrice;
+  final bool itemized;
   final int baseStorageRevision;
   final String title;
   final String discount;
@@ -64,6 +68,8 @@ class InvoiceDraftInput {
     'creatorId': creatorId,
     'number': number,
     'purchaseOrderNumber': purchaseOrderNumber,
+    'servicePrice': servicePrice,
+    'itemized': itemized,
     'baseStorageRevision': baseStorageRevision,
     'title': title,
     'discount': discount,
@@ -93,6 +99,8 @@ class InvoiceDraftInput {
         creatorId: input['creatorId'] as String,
         number: input['number'] as String,
         purchaseOrderNumber: input['purchaseOrderNumber'] as String? ?? '',
+        servicePrice: input['servicePrice'] as String? ?? '',
+        itemized: input['itemized'] as bool? ?? false,
         baseStorageRevision: input['baseStorageRevision'] as int,
         title: input['title'] as String,
         discount: input['discount'] as String,

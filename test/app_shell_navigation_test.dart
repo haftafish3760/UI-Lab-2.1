@@ -49,8 +49,18 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         find.byKey(const ValueKey('work-estimate-workspace')),
-        findsOneWidget,
+        findsNothing,
       );
+      expect(find.byKey(const ValueKey('work-module-screen')), findsOneWidget);
+      await tester.tap(find.text('Estimates').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('app-destination-work')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('work-estimate-workspace')),
+        findsNothing,
+      );
+      expect(find.byKey(const ValueKey('work-module-screen')), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -91,8 +101,6 @@ void main() {
     expect(find.text('Employees'), findsOneWidget);
     expect(find.text('Vehicle profiles'), findsOneWidget);
     expect(find.text('Reports and recap'), findsOneWidget);
-    expect(find.text('Invite employees'), findsOneWidget);
-    expect(find.text('System settings'), findsOneWidget);
 
     final reports = find.byKey(const ValueKey('menu-reports'));
     for (final id in ['menu-customers', 'menu-vehicles', 'menu-reports']) {
@@ -119,7 +127,16 @@ void main() {
     await tester.tap(find.byTooltip('Open navigation menu'));
     await tester.pumpAndSettle();
     final systemSettings = find.byKey(const ValueKey('menu-system-settings'));
-    await tester.ensureVisible(systemSettings);
+    await tester.scrollUntilVisible(
+      systemSettings,
+      250,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('operations-menu-screen')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.pumpAndSettle();
     await tester.tap(systemSettings);
     await tester.pumpAndSettle();

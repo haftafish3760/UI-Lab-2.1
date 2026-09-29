@@ -6,14 +6,22 @@ OperationsWorkspaceLayout _calculateWorkLanding(
 ) {
   final width = math.max(0.0, availableWidth);
   const gap = 24.0;
-  final minimum = 350 + AppLayoutEngine._layoutScalePenalty(scaler) * 100;
-  final columns = width >= minimum * 2 + gap ? 2 : 1;
-  final lane = math.min(400.0, (width - gap * (columns - 1)) / columns);
+  final penalty = AppLayoutEngine._layoutScalePenalty(scaler);
+  final primaryMinimum = 520 + penalty * 160;
+  final supportingMinimum = 340 + penalty * 100;
+  final columns = width >= primaryMinimum + supportingMinimum + gap ? 2 : 1;
+  final supporting = columns == 2
+      ? math.min(400.0, math.max(supportingMinimum, width * .32))
+      : null;
+  final lane = columns == 2
+      ? math.min(760.0, width - supporting! - gap)
+      : math.min(760.0, width);
   return OperationsWorkspaceLayout(
     columns: columns,
     laneWidth: lane,
     gap: gap,
-    workspaceWidth: lane * columns + gap * (columns - 1),
+    supportingLaneWidth: supporting,
+    workspaceWidth: lane + (supporting == null ? 0 : supporting + gap),
   );
 }
 

@@ -1,4 +1,7 @@
+import 'support/visible_control.dart';
+import 'support/load_material_test_font.dart';
 import 'package:flutter/material.dart';
+import 'package:ui_lab_2_1/src/shared/operational_summary_strip.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/layout/app_layout_engine.dart';
@@ -17,13 +20,14 @@ Future<void> _pumpWork(
   Size size, {
   double textScale = 1,
   AppViewMode view = AppViewMode.technician,
+  List<WorkRecord>? records,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   final scope = OperationalScopeController(view: view);
-  final store = PrototypeOperationsStore();
+  final store = PrototypeOperationsStore(workRecords: records);
   addTearDown(scope.dispose);
   addTearDown(store.dispose);
   await tester.pumpWidget(
@@ -64,6 +68,7 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
 }
 
 void main() {
+  setUpAll(loadMaterialTestFont);
   registerWorkCalendarRoutingTests();
 
   testWidgets('Work exposes its six destinations above dated records', (
@@ -98,7 +103,40 @@ void main() {
       }
       expect(find.text('Plan'), findsOneWidget);
       expect(find.text('Entries'), findsOneWidget);
-      expect(find.text('Drafts'), findsOneWidget);
+      expect(find.text('Drafts'), findsNothing);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      final action = find.byKey(
+        ValueKey(size.width < 884 ? 'work-add-button' : 'work-actions-inline'),
+      );
+      expect(action, findsOneWidget);
+      expect(tester.getTopLeft(action).dy, greaterThan(size.height / 2));
+      final viewport = find
+          .descendant(
+            of: find.byKey(const ValueKey('work-module-screen')),
+            matching: find.byType(ListView),
+          )
+          .first;
+      final scaffold = tester.widget<Scaffold>(
+        find.byKey(const ValueKey('work-module-screen')),
+      );
+      expect(scaffold.bottomSheet, isNull);
+      expect(scaffold.bottomNavigationBar, isNull);
+      final actionBounds = tester.getRect(action);
+      final scrolling = tester.state<ScrollableState>(
+        find.descendant(of: viewport, matching: find.byType(Scrollable)).first,
+      );
+      final offset = scrolling.position.pixels;
+      await tester.dragFrom(
+        tester.getRect(viewport).bottomLeft + const Offset(8, -160),
+        const Offset(0, -240),
+      );
+      await tester.pumpAndSettle();
+      if (scrolling.position.maxScrollExtent > 0) {
+        expect(scrolling.position.pixels, greaterThan(offset));
+      }
+      expect(tester.getRect(action), actionBounds);
+      // Invoice money cards belong to Invoices, not Work.
+      expect(find.byType(OperationalSummaryStrip), findsNothing);
       expect(tester.takeException(), isNull);
     }
   });
@@ -111,6 +149,7 @@ void main() {
       'quick-jobs': 'job',
       'quick-estimates': 'estimate',
       'quick-invoices': 'invoice',
+      'quick-quotes': 'quote',
     };
     for (final actionKey in workspaceKeys.keys) {
       await _tapVisible(tester, find.byKey(ValueKey(actionKey)));
@@ -155,7 +194,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await _tapVisible(tester, find.byKey(const ValueKey('menu-customers')));
-    expect(find.text('Saved Clients'), findsWidgets);
+    expect(find.text('Saved clients'), findsWidgets);
     expect(find.text('Elena Garcia'), findsOneWidget);
     expect(find.text('Jordan Miller'), findsOneWidget);
     expect(find.text('Maya Thompson'), findsOneWidget);
@@ -200,7 +239,7 @@ void main() {
     expect(find.byKey(const ValueKey('employee-jordan')), findsOneWidget);
     expect(find.byKey(const ValueKey('work-scope-heading')), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('employee-jordan')));
+    await _tapVisible(tester, find.byKey(const ValueKey('employee-jordan')));
     await tester.pumpAndSettle();
     expect(
       find.descendant(
@@ -278,32 +317,34 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('accepted estimate explicitly creates a linked planned job', (
-    tester,
-  ) async {
-    await _pumpWork(tester, const Size(390, 844), view: AppViewMode.admin);
-    await _tapVisible(tester, find.byKey(const ValueKey('quick-estimates')));
+  testWidgets(
+    'accepted estimate opens linked job creation with carried-over details',
+    (tester) async {
+      await _pumpWork(tester, const Size(390, 844), view: AppViewMode.admin);
+      await _tapVisible(tester, find.byKey(const ValueKey('quick-estimates')));
 
-    expect(
-      find.byKey(const ValueKey('work-estimate-workspace')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('estimate-selected-date')),
-      findsOneWidget,
-    );
-    final estimate = find.byKey(const ValueKey('estimate-row-est-1042'));
-    await tester.tap(estimate);
-    await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('work-estimate-workspace')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('estimate-selected-date')),
+        findsOneWidget,
+      );
+      final estimate = find.byKey(const ValueKey('estimate-row-est-1042'));
+      await tester.tap(estimate);
+      await tester.pumpAndSettle();
 
-    final plan = find.byKey(const ValueKey('estimate-primary-job'));
-    await tester.tap(plan);
-    await tester.pumpAndSettle();
-    expect(find.text('Create Job'), findsWidgets);
-    expect(find.text('Create Linked Job'), findsOneWidget);
-    expect(find.text('Replace kitchen faucet'), findsWidgets);
-    expect(tester.takeException(), isNull);
-  });
+      final plan = find.byKey(const ValueKey('estimate-primary-job'));
+      await _tapVisible(tester, plan);
+      await tester.pumpAndSettle();
+      expect(find.text('Create Job'), findsWidgets);
+      await revealControl(tester, find.byKey(const ValueKey('save-job')));
+      expect(find.text('Create Linked Job'), findsOneWidget);
+      expect(find.text('Replace kitchen faucet'), findsWidgets);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('estimate opens a customer preview with retained line items', (
     tester,
@@ -328,7 +369,10 @@ void main() {
     expect(find.text('Customer approval is current'), findsOneWidget);
 
     expect(find.byKey(const ValueKey('estimate-primary-job')), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('estimate-primary-send')));
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('estimate-primary-send')),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Email PDF to customer'), findsOneWidget);
     expect(find.text('Share from this device'), findsOneWidget);
@@ -351,7 +395,7 @@ void main() {
     await tester.tap(items);
     await tester.pumpAndSettle();
 
-    expect(find.text('Estimate items'), findsWidgets);
+    expect(find.text('Labor and materials'), findsWidgets);
     expect(find.byKey(const ValueKey('add-estimate-material')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('estimate-more-item-options')));
     await tester.pumpAndSettle();
@@ -362,6 +406,30 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('add-estimate-material')));
     await tester.pumpAndSettle();
     expect(find.text('Material name'), findsOneWidget);
+    final nameField = tester.widget<TextField>(
+      find.widgetWithText(TextField, 'Material name'),
+    );
+    expect(nameField.textInputAction, TextInputAction.next);
+    final description = find.widgetWithText(TextField, 'Description');
+    expect(
+      tester.widget<TextField>(description).decoration?.hintText,
+      contains('½-inch elbow'),
+    );
+    await tester.tap(find.widgetWithText(TextField, 'Material name'));
+    await tester.testTextInput.receiveAction(TextInputAction.next);
+    await tester.pump();
+    expect(
+      tester
+          .widget<EditableText>(
+            find.descendant(
+              of: description,
+              matching: find.byType(EditableText),
+            ),
+          )
+          .focusNode
+          .hasFocus,
+      isTrue,
+    );
     expect(find.text('Quantity'), findsOneWidget);
     expect(find.text('Unit of measure'), findsOneWidget);
     expect(find.text('Price per item'), findsOneWidget);
@@ -459,7 +527,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('estimate-information')));
       await tester.pumpAndSettle();
 
-      final number = tester.getTopLeft(find.text('Document number'));
+      final number = tester.getTopLeft(find.text('Estimate number'));
       final purchaseOrder = tester.getTopLeft(
         find.text('Purchase order number (optional)'),
       );
@@ -468,15 +536,34 @@ void main() {
       } else {
         expect(purchaseOrder.dy, number.dy);
       }
-      final workField = tester.widget<TextField>(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is TextField &&
-              widget.keyboardType == TextInputType.multiline,
-        ),
+      final workFinder = find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField &&
+            widget.keyboardType == TextInputType.multiline,
       );
+      final workField = tester.widget<TextField>(workFinder);
       expect(workField.maxLines, isNull);
       expect(workField.minLines, 4);
+      final titleField = find.byKey(const ValueKey('estimate-title'));
+      expect(
+        tester.widget<TextField>(titleField).textInputAction,
+        TextInputAction.next,
+      );
+      await tester.tap(titleField);
+      await tester.testTextInput.receiveAction(TextInputAction.next);
+      await tester.pump();
+      expect(
+        tester
+            .widget<EditableText>(
+              find.descendant(
+                of: find.byKey(const ValueKey('estimate-document-number')),
+                matching: find.byType(EditableText),
+              ),
+            )
+            .focusNode
+            .hasFocus,
+        isTrue,
+      );
       expect(tester.takeException(), isNull);
     });
   }
@@ -492,13 +579,56 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'wide Work rows separate identity from timing and narrow rows stack',
+    (tester) async {
+      final now = DateTime.now();
+      final record = WorkRecord(
+        id: 'wide-row',
+        kind: WorkRecordKind.job,
+        number: 'J-WIDE',
+        title: 'Replace damaged kitchen fittings',
+        client: 'Customer identity',
+        detail: '',
+        pricing: WorkPricingModel.flatRate,
+        status: WorkRecordStatus.scheduled,
+        scheduledStart: DateTime(now.year, now.month, now.day, 9),
+        scheduledEnd: DateTime(now.year, now.month, now.day, 11),
+      );
+      for (final width in [390.0, 1440.0]) {
+        await _pumpWork(tester, Size(width, 1000), records: [record]);
+        final row = find.byKey(const ValueKey('work-plan-row-wide-row'));
+        final title = find.descendant(
+          of: row,
+          matching: find.text(record.title),
+        );
+        final metadata = find.descendant(
+          of: row,
+          matching: find.textContaining('J-WIDE ·'),
+        );
+        if (width > 1000) {
+          expect(
+            tester.getTopLeft(metadata).dx,
+            greaterThan(tester.getTopRight(title).dx),
+          );
+        } else {
+          expect(
+            tester.getTopLeft(metadata).dy,
+            greaterThan(tester.getTopLeft(title).dy),
+          );
+        }
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
   test('shared Work layouts keep lanes and shortcuts bounded', () {
     expect(AppLayoutEngine.workFor(390).columns, 1);
     expect(AppLayoutEngine.workFor(800).columns, 2);
     expect(AppLayoutEngine.workFor(1200).columns, 3);
     expect(
       AppLayoutEngine.workLandingFor(1800).laneWidth,
-      lessThanOrEqualTo(400),
+      lessThanOrEqualTo(760),
     );
     expect(AppLayoutEngine.workShortcutsFor(304).columns, 3);
     expect(AppLayoutEngine.workShortcutsFor(900).columns, 6);

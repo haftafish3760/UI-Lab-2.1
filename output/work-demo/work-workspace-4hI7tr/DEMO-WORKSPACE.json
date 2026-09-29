@@ -1,0 +1,139 @@
+{
+  "purpose": "Isolated editable demonstration. Not production or customer data.",
+  "workspaceId": "work-workspace-4hi7tr",
+  "createdAt": "2026-09-29T11:09:36.235972Z",
+  "clients": 3,
+  "records": [
+    {
+      "id": "demo-estimate-4",
+      "kind": "estimate",
+      "status": "ready",
+      "title": "[Demo] Product photography session",
+      "creator": "alex",
+      "total": 360.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-quote-1",
+      "kind": "quote",
+      "status": "ready",
+      "title": "[Demo] Quarterly window cleaning",
+      "creator": "alex",
+      "total": 180.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-estimate-1",
+      "kind": "estimate",
+      "status": "accepted",
+      "title": "[Demo] Replace kitchen faucet",
+      "creator": "alex",
+      "total": 285.0,
+      "approved": true,
+      "signed": false
+    },
+    {
+      "id": "demo-job-1",
+      "kind": "job",
+      "status": "scheduled",
+      "title": "[Demo] Replace kitchen faucet",
+      "creator": "alex",
+      "total": 285.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-quote-2",
+      "kind": "quote",
+      "status": "accepted",
+      "title": "[Demo] Office network setup",
+      "creator": "alex",
+      "total": 525.0,
+      "approved": true,
+      "signed": false
+    },
+    {
+      "id": "demo-job-2",
+      "kind": "job",
+      "status": "scheduled",
+      "title": "[Demo] Office network setup",
+      "creator": "alex",
+      "total": 525.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-estimate-3",
+      "kind": "estimate",
+      "status": "accepted",
+      "title": "[Demo] Garden gravel delivery",
+      "creator": "alex",
+      "total": 420.0,
+      "approved": true,
+      "signed": true
+    },
+    {
+      "id": "invoice-98f2592bffa44f1bc3abf1ac0472e69a",
+      "kind": "invoice",
+      "status": "draft",
+      "title": "[Demo] Garden gravel delivery",
+      "creator": "alex",
+      "total": 420.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-invoice-1",
+      "kind": "invoice",
+      "status": "due",
+      "title": "[Demo] Equipment inspection",
+      "creator": "alex",
+      "total": 150.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-invoice-2",
+      "kind": "invoice",
+      "status": "due",
+      "title": "[Demo] Office cleaning visit",
+      "creator": "alex",
+      "total": 240.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-invoice-3",
+      "kind": "invoice",
+      "status": "paid",
+      "title": "[Demo] Garden waste collection",
+      "creator": "alex",
+      "total": 320.0,
+      "approved": false,
+      "signed": false
+    },
+    {
+      "id": "demo-estimate-2",
+      "kind": "estimate",
+      "status": "ready",
+      "title": "[Demo] Monthly office cleaning",
+      "creator": "jordan",
+      "total": 640.0,
+      "approved": false,
+      "signed": false
+    }
+  ],
+  "verified": [
+    "durable reopen",
+    "employee cannot approve or sign",
+    "approval without signature",
+    "fictional signature"
+  ],
+  "notVerified": [
+    "device rendering",
+    "phone installation",
+    "production account permissions"
+  ]
+}

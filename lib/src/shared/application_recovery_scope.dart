@@ -7,6 +7,7 @@ import '../data/work/work_primary_draft_recovery.dart';
 import '../data/work/estimate_action_draft_recovery.dart';
 import '../data/work/job_action_draft_recovery.dart';
 import '../data/work/invoice_payment_draft_recovery.dart';
+import '../data/work/direct_payment_draft_recovery.dart';
 import '../data/work/directory_draft_recovery.dart';
 import '../data/work/models/estimate_models.dart';
 import '../data/work/job_material_permissions.dart';
@@ -95,6 +96,7 @@ class _ApplicationRecoveryHostState extends State<ApplicationRecoveryHost> {
         materialPermissions: () => const JobWorkspacePermissions.development(),
       ),
       invoicePayments: InvoicePaymentDraftRecovery(work),
+      directPayments: DirectPaymentDraftRecovery(work),
       directory: DirectoryDraftRecovery(directory),
       workday: WorkdayDraftRecovery(workday),
       dayNotes: DayNoteDraftRecovery(notes),

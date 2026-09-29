@@ -48,7 +48,7 @@ void main() {
       await expectLater(workflow.confirm(), throwsStateError);
       workflow.updateName('  Morgan Customer  ');
       final points = <(double, double)>[(0.1, 0.2), (0.8, 0.7)];
-      workflow.updateInk(SignatureInk([points]));
+      workflow.updateInk(SignatureInk([points], strokeWidth: 4));
       points.clear();
       workflow.setAccepted(true);
       await db.customStatement(
@@ -70,6 +70,7 @@ void main() {
       addTearDown(work.dispose);
       workflow = await work.openEstimateSignatureDraft(base.id);
       expect(workflow.session.input, raw);
+      expect(workflow.input.ink.strokeWidth, 4);
       expect(workflow.input.ink.strokes.single, [(0.1, 0.2), (0.8, 0.7)]);
       await db.customStatement('DROP TRIGGER fail_signature');
       final saved = (await workflow.confirm())!;

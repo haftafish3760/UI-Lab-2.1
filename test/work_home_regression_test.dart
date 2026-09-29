@@ -31,7 +31,7 @@ Future<void> _pumpWorkHome(WidgetTester tester, Size size) async {
 }
 
 void main() {
-  testWidgets('Work home puts destinations before date and scoped records', (
+  testWidgets('Work home keeps date above destinations and scoped records', (
     tester,
   ) async {
     await _pumpWorkHome(tester, const Size(390, 844));
@@ -50,8 +50,8 @@ void main() {
       lessThan(tester.getTopLeft(employees).dy),
     );
     expect(
-      tester.getTopLeft(firstAction).dy,
-      lessThan(tester.getTopLeft(date).dy),
+      tester.getTopLeft(date).dy,
+      lessThan(tester.getTopLeft(firstAction).dy),
     );
     expect(
       find.text(
@@ -87,7 +87,7 @@ void main() {
         reason: '$key must remain a readable phone record',
       );
     }
-    expect(find.byKey(const ValueKey('open-work-drafts')), findsOneWidget);
+    expect(find.byKey(const ValueKey('open-work-drafts')), findsNothing);
     expect(find.byKey(const ValueKey('work-entry-row-est-1040')), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -98,6 +98,8 @@ void main() {
     await _pumpWorkHome(tester, const Size(390, 844));
 
     final attention = find.byKey(const ValueKey('work-attention-est-1039'));
+    await tester.ensureVisible(attention);
+    await tester.pumpAndSettle();
     await tester.tap(attention);
     await tester.pumpAndSettle();
     expect(
@@ -197,7 +199,7 @@ void main() {
       find.byKey(const ValueKey('work-2-column-attention')),
       findsOneWidget,
     );
-    expect(tester.getSize(attention).width, lessThanOrEqualTo(480));
+    expect(tester.getSize(attention).width, tester.getSize(plan).width);
     expect(tester.getTopLeft(attention).dx, tester.getTopLeft(plan).dx);
     final jobsX = tester.getTopLeft(plan).dx;
     expect(jobsX, tester.getTopLeft(entries).dx);

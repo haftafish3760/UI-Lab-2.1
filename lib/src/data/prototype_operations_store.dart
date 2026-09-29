@@ -74,6 +74,7 @@ class PrototypeOperationsStore extends ChangeNotifier {
        _customers = [...(customers ?? demoWorkCustomers)] {
     attentionCenter = PrototypeAttentionCenter(
       workRecords: () => this.workRecords,
+      workPermissions: () => workSession?.permissions,
       expenses: () => this.expenses,
       inventoryStock: () => _inventoryStock,
       onChanged: notifyListeners,
@@ -378,6 +379,7 @@ class PrototypeOperationsStore extends ChangeNotifier {
     if (invoice.kind != WorkRecordKind.invoice ||
         invoice.status == WorkRecordStatus.draft ||
         entry.kind != PrototypeFinancialKind.paymentReceived ||
+        entry.paymentLinkKind != PaymentLinkKind.invoice ||
         (entry.sourceId != invoice.id && entry.sourceId != invoice.number) ||
         entry.amountCents <= 0) {
       return Future.value(false);
@@ -386,7 +388,9 @@ class PrototypeOperationsStore extends ChangeNotifier {
         financialEntries
             .where(
               (item) =>
-                  item.kind == PrototypeFinancialKind.paymentReceived &&
+                  (item.kind == PrototypeFinancialKind.paymentReceived ||
+                      item.kind == PrototypeFinancialKind.paymentApplied) &&
+                  item.paymentLinkKind == PaymentLinkKind.invoice &&
                   (item.sourceId == invoice.id ||
                       item.sourceId == invoice.number) &&
                   item.id != entry.id,

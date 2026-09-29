@@ -235,35 +235,36 @@ class _InvoicePaymentEntryScreenState extends State<InvoicePaymentEntryScreen>
                     ),
                   ),
                 ),
+                SafeArea(
+                  minimum: const EdgeInsets.all(12),
+                  child: Center(
+                    heightFactor: 1,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 620),
+                      child: FilledButton.icon(
+                        key: const ValueKey('save-invoice-payment'),
+                        onPressed: _draftReady && !_saving ? _save : null,
+                        icon: const Icon(Icons.payments_outlined),
+                        label: const Text('Save payment'),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             );
           },
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(12),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: FilledButton.icon(
-              key: const ValueKey('save-invoice-payment'),
-              onPressed: _draftReady && !_saving ? _save : null,
-              icon: const Icon(Icons.payments_outlined),
-              label: const Text('Save payment'),
-            ),
-          ),
         ),
       ),
     ),
   );
 
   Future<void> _pickDate() async {
+    final today = DateUtils.dateOnly(DateTime.now());
     final picked = await showDatePicker(
       context: context,
-      initialDate: _receivedOn,
+      initialDate: _receivedOn.isAfter(today) ? today : _receivedOn,
       firstDate: DateTime(2000),
-      lastDate: DateTime(2100, 12, 31),
+      lastDate: today,
       helpText: 'Choose payment date',
     );
     if (mounted && picked != null) {

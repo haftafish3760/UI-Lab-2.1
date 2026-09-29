@@ -23,7 +23,7 @@ WorkRecord buildConfirmedJob(
       (source.resolvedEstimateStage != EstimateStage.approved ||
           !source.hasCurrentCustomerApproval)) {
     throw const JobInputValidation(
-      'This estimate revision is not currently customer-approved.',
+      'This estimate or quote revision is not currently customer-approved.',
     );
   }
   if (input.title.trim().isEmpty ||
@@ -45,8 +45,11 @@ WorkRecord buildConfirmedJob(
     title: input.title.trim(),
     client: input.client!,
     customerSnapshot: source?.customerSnapshot,
+    sitePhotos: List.unmodifiable(source?.sitePhotos ?? const []),
     detail: input.scope.trim(),
     pricing: input.pricing,
+    documentPresentation:
+        source?.documentPresentation ?? WorkDocumentPresentation.detailed,
     template: source?.template ?? 'Service standard',
     terms: source?.terms ?? '',
     discount: source?.discount ?? 0,

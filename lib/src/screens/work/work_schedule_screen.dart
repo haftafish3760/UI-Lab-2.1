@@ -4,6 +4,7 @@ import '../../data/work/directory_persistence_session.dart';
 import '../../layout/app_layout_engine.dart';
 import '../../shared/section_card.dart';
 import '../../shared/operations_workspace.dart';
+import '../../shared/operational_summary_strip.dart';
 import '../../theme/operational_card_palette.dart';
 import 'work_models.dart';
 import 'work_selected_date_bar.dart';
@@ -11,6 +12,8 @@ import 'work_month_calendar.dart';
 import 'work_job_editor.dart';
 import 'job_workspace_screen.dart';
 import 'work_record_settings_screen.dart';
+import 'work_detail_header.dart';
+import 'work_overview_scope.dart';
 
 /// Scheduling projects authorized Job records; it never creates a second diary.
 class WorkScheduleScreen extends StatefulWidget {
@@ -23,6 +26,8 @@ class WorkScheduleScreen extends StatefulWidget {
 class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
   late DateTime _day = DateUtils.dateOnly(widget.initialDay);
   String? _employee;
+  bool _showAllScheduled = false;
+  bool _showWaiting = false;
   var _fixturePreferences = const WorkRecordDisplayPreferences();
   WorkRecordDisplayPreferences get _preferences =>
       readWorkRecordDisplayPreferences(
@@ -68,7 +73,7 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
       MaterialPageRoute(builder: (_) => WorkJobEditor(initialDay: _day)),
     );
     if (job != null && mounted) {
-      final saved = await store.addWorkRecord(job);
+      final saved = store.workSession != null || await store.addWorkRecord(job);
       if (!saved && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -102,7 +107,7 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     final store = PrototypeOperationsScope.of(context);
-    final jobs = store.workRecords
+    final jobs = visibleWorkOverviewRecords(context)
         .where(
           (r) =>
               r.kind == WorkRecordKind.job &&
@@ -111,8 +116,12 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
               (_employee == null || r.assignedEmployeeIds.contains(_employee)),
         )
         .toList();
-    final booked = jobs.where((r) => _onDay(r, _day)).toList()
-      ..sort((a, b) => a.scheduledStart!.compareTo(b.scheduledStart!));
+    final booked =
+        jobs
+            .where((r) => r.scheduledStart != null)
+            .where((r) => _showAllScheduled || _onDay(r, _day))
+            .toList()
+          ..sort((a, b) => a.scheduledStart!.compareTo(b.scheduledStart!));
     final waiting = jobs
         .where(
           (r) =>
@@ -122,108 +131,164 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
         .toList();
     final employees = store.directorySession?.employees ?? [];
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Scheduling'),
-        actions: [
-          IconButton(
-            tooltip: 'Scheduling settings',
-            onPressed: _settings,
-            icon: const Icon(Icons.settings_outlined),
-          ),
-        ],
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
-          final layout = AppLayoutEngine.workFor(
-            constraints.maxWidth - insets.horizontal,
-            textScaler: MediaQuery.textScalerOf(context),
-          );
-          return SingleChildScrollView(
-            padding: insets.copyWith(top: 12, bottom: 24),
-            child: Center(
-              child: SizedBox(
-                width: layout.workspaceWidth,
-                child: OperationsLaneGrid(
-                  layout: layout,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        WorkSelectedDateBar(
-                          selectedDay: _day,
-                          onPrevious: () => setState(
-                            () => _day = _day.subtract(const Duration(days: 1)),
+      floatingActionButton:
+          store.workSession?.permissions.editableKinds.contains(
+                WorkRecordKind.job,
+              ) ==
+              true
+          ? FloatingActionButton.extended(
+              onPressed: _newJob,
+              icon: const Icon(Icons.add),
+              label: const Text('New job'),
+            )
+          : null,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final insets = AppLayoutEngine.pageInsetsFor(constraints.maxWidth);
+            final layout = AppLayoutEngine.workFor(
+              constraints.maxWidth - insets.horizontal,
+              textScaler: MediaQuery.textScalerOf(context),
+            );
+            return SingleChildScrollView(
+              padding: insets.copyWith(top: 12, bottom: 96),
+              child: Center(
+                child: SizedBox(
+                  width: layout.workspaceWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      WorkDetailHeader(
+                        label: 'Scheduling',
+                        selectedDay: _day,
+                        onBack: () => Navigator.of(context).maybePop(),
+                        onSettings: _settings,
+                      ),
+                      const SizedBox(height: 12),
+                      OperationalSummaryStrip(
+                        items: [
+                          _summary(
+                            'scheduled',
+                            'Scheduled jobs',
+                            booked.length,
+                            !_showWaiting,
+                            () => setState(() => _showWaiting = false),
                           ),
-                          onNext: () => setState(
-                            () => _day = _day.add(const Duration(days: 1)),
+                          _summary(
+                            'waiting',
+                            'Needs scheduling',
+                            waiting.length,
+                            _showWaiting,
+                            () => setState(() => _showWaiting = true),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          initialValue: _employee,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Assigned employee',
-                          ),
-                          items: [
-                            const DropdownMenuItem<String>(
-                              value: null,
-                              child: Text('All employees'),
-                            ),
-                            for (final employee in employees)
-                              DropdownMenuItem(
-                                value: employee.id,
-                                child: Text(employee.name),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      OperationsLaneGrid(
+                        layout: layout,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              WorkSelectedDateBar(
+                                selectedDay: _day,
+                                onPrevious: () => setState(() {
+                                  _day = _day.subtract(const Duration(days: 1));
+                                  _showAllScheduled = false;
+                                  _showWaiting = false;
+                                }),
+                                onNext: () => setState(() {
+                                  _day = _day.add(const Duration(days: 1));
+                                  _showAllScheduled = false;
+                                  _showWaiting = false;
+                                }),
                               ),
-                          ],
-                          onChanged: (value) =>
-                              setState(() => _employee = value),
-                        ),
-                        const SizedBox(height: 12),
-                        if (store.workSession?.permissions.editableKinds
-                                .contains(WorkRecordKind.job) ??
-                            false)
-                          FilledButton.icon(
-                            onPressed: _newJob,
-                            icon: const Icon(Icons.add),
-                            label: const Text('New job'),
+                              const SizedBox(height: 12),
+                              if (!_showWaiting)
+                                Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    ChoiceChip(
+                                      key: const ValueKey(
+                                        'schedule-selected-day',
+                                      ),
+                                      label: const Text('Selected day'),
+                                      selected: !_showAllScheduled,
+                                      onSelected: (_) => setState(
+                                        () => _showAllScheduled = false,
+                                      ),
+                                    ),
+                                    ChoiceChip(
+                                      key: const ValueKey('schedule-all-jobs'),
+                                      label: const Text('All scheduled'),
+                                      selected: _showAllScheduled,
+                                      onSelected: (_) => setState(
+                                        () => _showAllScheduled = true,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              const SizedBox(height: 12),
+                              DropdownButtonFormField<String>(
+                                initialValue: _employee,
+                                isExpanded: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'Assigned employee',
+                                ),
+                                items: [
+                                  const DropdownMenuItem<String>(
+                                    value: null,
+                                    child: Text('All employees'),
+                                  ),
+                                  for (final employee in employees)
+                                    DropdownMenuItem(
+                                      value: employee.id,
+                                      child: Text(employee.name),
+                                    ),
+                                ],
+                                onChanged: (value) =>
+                                    setState(() => _employee = value),
+                              ),
+                              const SizedBox(height: 12),
+                              if (!_showWaiting)
+                                _group(
+                                  _showAllScheduled
+                                      ? 'Scheduled jobs · all dates'
+                                      : 'Scheduled jobs · selected day',
+                                  booked,
+                                ),
+                              if (_showWaiting)
+                                _group('Needs scheduling · all dates', waiting),
+                            ],
                           ),
-                        const SizedBox(height: 12),
-                        _group(
-                          'Scheduled jobs',
-                          booked,
-                          'No jobs scheduled for this day.',
-                        ),
-                        const SizedBox(height: 12),
-                        _group(
-                          'Needs scheduling',
-                          waiting,
-                          'No jobs waiting to be scheduled.',
-                        ),
-                      ],
-                    ),
-                    WorkMonthCalendar(
-                      maximumWidth: AppLayoutEngine.calendarMaximum,
-                      selectedDay: _day,
-                      onDaySelected: (day) =>
-                          setState(() => _day = DateUtils.dateOnly(day)),
-                      entryCountForDay: (day) =>
-                          jobs.where((r) => _onDay(r, day)).length,
-                      recordKind: CalendarRecordKind.job,
-                      needsApprovalForDay: (_) => false,
-                    ),
-                  ],
+                          WorkMonthCalendar(
+                            maximumWidth: AppLayoutEngine.calendarMaximum,
+                            selectedDay: _day,
+                            onDaySelected: (day) => setState(() {
+                              _day = DateUtils.dateOnly(day);
+                              _showAllScheduled = false;
+                              _showWaiting = false;
+                            }),
+                            entryCountForDay: (day) =>
+                                jobs.where((r) => _onDay(r, day)).length,
+                            recordKind: CalendarRecordKind.job,
+                            needsApprovalForDay: (_) => false,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _group(String title, List<WorkRecord> records, String empty) {
+  Widget _group(String title, List<WorkRecord> records) {
+    if (records.isEmpty) return const SizedBox.shrink();
     final tone = OperationalCardPalette.plan;
     return SectionCard(
       padding: const EdgeInsets.all(8),
@@ -240,11 +305,6 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
               ).textTheme.titleLarge?.copyWith(color: tone.foreground),
             ),
           ),
-          if (records.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Text(empty, style: TextStyle(color: tone.foreground)),
-            ),
           for (final job in records)
             Padding(
               padding: const EdgeInsets.only(top: 8),
@@ -265,9 +325,7 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
                       if (job.scheduledStart == null)
                         'Choose a date and employees'
                       else
-                        MaterialLocalizations.of(context).formatTimeOfDay(
-                          TimeOfDay.fromDateTime(job.scheduledStart!),
-                        ),
+                        '${_showAllScheduled ? '${MaterialLocalizations.of(context).formatMediumDate(job.scheduledStart!)} · ' : ''}${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(job.scheduledStart!))}',
                       if (_preferences.showAssignments)
                         job.assignee ?? 'Unassigned',
                     ].join('\n'),
@@ -285,4 +343,24 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
       ),
     );
   }
+
+  OperationalSummaryItem _summary(
+    String id,
+    String label,
+    int count,
+    bool selected,
+    VoidCallback onTap,
+  ) => OperationalSummaryItem(
+    id: 'schedule-$id',
+    label: label,
+    value: '$count',
+    selected: selected,
+    color: OperationalCardPalette.plan.start,
+    endColor: OperationalCardPalette.plan.end,
+    foreground: OperationalCardPalette.plan.foreground,
+    icon: id == 'scheduled'
+        ? Icons.event_available_outlined
+        : Icons.event_note_outlined,
+    onTap: onTap,
+  );
 }

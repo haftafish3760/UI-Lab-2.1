@@ -43,7 +43,8 @@ class _WorkDocumentPreviewScreenState extends State<WorkDocumentPreviewScreen> {
       document: workCustomerDocument(
         _record,
         store.companyProfile,
-        store.customers.where((c) => c.name == _record.client).firstOrNull,
+        resolveWorkDocumentCustomer(_record, store.customers),
+        financialEntries: store.financialEntries,
       ),
       actions: [
         PopupMenuButton<String>(
