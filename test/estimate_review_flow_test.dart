@@ -88,7 +88,7 @@ void main() {
         .load();
   });
   testWidgets(
-    'review uses edited input without saving; returning preserves form',
+    'single document shows edits before save and preserves them across terms editing',
     (tester) async {
       tester.view.physicalSize = const Size(430, 932);
       tester.view.devicePixelRatio = 1;
@@ -129,90 +129,21 @@ void main() {
       );
       await tester.enterText(depositField, '75.00');
       await closeDocumentSection(tester);
-      await tester.tap(find.byKey(const ValueKey('estimate-review')));
-      await tester.pumpAndSettle();
-      expect(find.text('Review estimate'), findsWidgets);
-      expect(find.text('Updated faucet work'), findsWidgets);
+      expect(find.byKey(const ValueKey('estimate-review')), findsNothing);
+      expect(find.text('Updated faucet work'), findsOneWidget);
       expect(find.textContaining('75.00'), findsWidgets);
-      expect(find.byKey(const ValueKey('estimate-primary-send')), findsNothing);
-      expect(find.byKey(const ValueKey('estimate-primary-job')), findsNothing);
       expect(store.workRecords.map((r) => r.id).toList(), before);
-      // Direct editing keeps the review route and its scroll position alive.
-      final workEdit = find.byKey(const ValueKey('estimate-primary-edit'));
-      await tester.ensureVisible(workEdit);
-      await tester.pumpAndSettle();
-      final reviewState = tester.state(find.byType(EstimateDetailScreen));
-      final position = Scrollable.of(tester.element(workEdit)).position;
-      final offset = position.pixels;
-      await tester.tap(workEdit);
-      await tester.pumpAndSettle();
-      expect(find.text('Editing work details'), findsOneWidget);
-      await tester.enterText(
-        find.byKey(const ValueKey('estimate-title')),
-        'Revised from review',
-      );
-      await tester.tap(find.text('Save changes'));
-      await tester.pumpAndSettle();
-      expect(
-        tester.state(find.byType(EstimateDetailScreen)),
-        same(reviewState),
-      );
-      expect(position.pixels, closeTo(offset, 1));
-      expect(find.text('Revised from review'), findsOneWidget);
-      expect(find.text('Proposed service date: Not set'), findsOneWidget);
-      await tester.ensureVisible(
-        find.byKey(const ValueKey('review-proposed-date')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('review-proposed-date')));
-      await tester.pumpAndSettle();
-      expect(find.text('Editing estimate dates'), findsOneWidget);
-      await tester.tap(find.text('Save changes'));
-      await tester.pumpAndSettle();
-      expect(find.text('Review estimate'), findsOneWidget);
-      final termsEdit = find.byKey(const ValueKey('review-edit-terms'));
-      await tester.ensureVisible(termsEdit);
-      await tester.pumpAndSettle();
-      await tester.tap(termsEdit);
-      await tester.pumpAndSettle();
-      expect(find.text('Editing service terms and deposit'), findsOneWidget);
-      await tester.enterText(depositField, '999');
-      await tester.tap(find.text('Save changes'));
-      await tester.pumpAndSettle();
-      expect(find.text('Editing service terms and deposit'), findsOneWidget);
-      expect(
-        find.text(
-          'Enter a deposit greater than zero and no more than the estimate total.',
-        ),
-        findsOneWidget,
-      );
-      await tester.enterText(depositField, '60');
-      await tester.tap(find.text('Save changes'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('60.00'), findsWidgets);
-      expect(store.workRecords.map((r) => r.id).toList(), before);
-
-      // Allow the temporary draft-save message to leave the bottom edge.
-      await tester.pump(const Duration(seconds: 5));
-      await tester.pumpAndSettle();
-      final continueEditing = find.byKey(
-        const ValueKey('continue-editing-bottom'),
-      );
-      await Scrollable.ensureVisible(
-        tester.element(continueEditing),
-        alignment: 0.5,
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(continueEditing);
-      await tester.pumpAndSettle();
       await openDocumentSection(tester, 'estimate-information');
-      expect(
-        tester
-            .widget<TextField>(find.byKey(const ValueKey('estimate-title')))
-            .controller!
-            .text,
-        'Revised from review',
-      );
+      final title = find.byKey(const ValueKey('estimate-title'));
+      await tester.ensureVisible(title);
+      await tester.pumpAndSettle();
+      await tester.enterText(title, 'Revised on the same form');
+      await openDocumentSection(tester, 'estimate-terms');
+      await tester.enterText(depositField, '60');
+      await closeDocumentSection(tester);
+      expect(find.textContaining('60.00'), findsWidgets);
+      expect(find.text('Revised on the same form'), findsOneWidget);
+      expect(store.workRecords.map((r) => r.id).toList(), before);
       expect(tester.takeException(), isNull);
     },
   );

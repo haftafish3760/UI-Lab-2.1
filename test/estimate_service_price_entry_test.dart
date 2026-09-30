@@ -1,3 +1,4 @@
+import 'support/document_form_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
@@ -67,11 +68,10 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    await tapVisible(find.byKey(const ValueKey('estimate-service-price')));
-    await tester.enterText(
-      find.byKey(const ValueKey('estimate-service-price')),
-      '245.50',
-    );
+    await openDocumentSection(tester, 'estimate-price-summary');
+    final priceField = find.byKey(const ValueKey('estimate-service-price'));
+    await tapVisible(priceField);
+    await tester.enterText(priceField, '245.50');
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('estimate-document-presentation')),
@@ -80,21 +80,23 @@ void main() {
     FocusManager.instance.primaryFocus?.unfocus();
     tester.testTextInput.hide();
     await tester.pumpAndSettle();
-    await tapVisible(find.byKey(const ValueKey('estimate-items')));
+    await closeDocumentSection(tester);
+    await tapVisible(
+      find
+          .descendant(
+            of: find.byKey(const ValueKey('estimate-items')),
+            matching: find.byType(TextButton),
+          )
+          .first,
+    );
     final itemsEditor = tester.widget<EstimateItemsScreen>(
       find.byType(EstimateItemsScreen),
     );
     expect(itemsEditor.initialItems.single.total, 245.50);
     await tapVisible(find.byKey(const ValueKey('save-estimate-items')));
-    expect(
-      tester
-          .widget<TextField>(
-            find.byKey(const ValueKey('estimate-service-price')),
-          )
-          .controller!
-          .text,
-      '245.50',
-    );
+    await openDocumentSection(tester, 'estimate-price-summary');
+    expect(tester.widget<TextField>(priceField).controller!.text, '245.50');
+    await closeDocumentSection(tester);
     await tapVisible(find.byKey(const ValueKey('save-estimate-changes')));
     expect(saved, isNotNull);
     expect(saved!.documentPresentation, WorkDocumentPresentation.summary);

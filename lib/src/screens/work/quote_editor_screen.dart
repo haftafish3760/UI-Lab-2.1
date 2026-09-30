@@ -196,8 +196,13 @@ class _QuoteEditorScreenState extends State<QuoteEditorScreen>
     estimateId: _id,
     scope: _description.text,
     expiresOn: _expires,
+    validityDays: _base?.estimateDates?.validityDays,
+    finishedOn: _base?.estimateDates?.finishedOn,
+    sentOn: _base?.estimateDates?.sentOn,
     followUpOn: _base?.estimateDates?.followUpOn,
     proposedServiceOn: _base?.estimateDates?.proposedServiceOn,
+    proposedServiceDates:
+        _base?.estimateDates?.proposedServiceDates ?? const [],
     purchaseOrderNumber: _base?.purchaseOrderNumber ?? '',
     requiresDeposit: (_base?.requiredDepositCents ?? 0) > 0,
     depositAmount: ((_base?.requiredDepositCents ?? 0) / 100).toStringAsFixed(

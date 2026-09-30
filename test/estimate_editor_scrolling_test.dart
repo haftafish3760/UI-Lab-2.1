@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_editor_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_price_summary.dart';
-import 'package:ui_lab_2_1/src/shared/document_form_section.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
 
@@ -54,7 +53,7 @@ void main() {
                 .bottomNavigationBar,
             isNull,
           );
-          expect(tester.widget<DocumentFormSection>(photo).title, 'Photos');
+          expect(tester.widget<TextButton>(photo).onPressed, isNotNull);
           expect(find.byType(EstimatePriceSummary), findsOneWidget);
           final originalY = tester.getTopLeft(actions).dy;
           await tester.ensureVisible(save);
@@ -70,33 +69,15 @@ void main() {
           expect(tester.takeException(), isNull);
 
           await openDocumentSection(tester, 'estimate-information');
-          final section = find.byType(DocumentSectionEditor);
-          final sectionScaffold = find.descendant(
-            of: section,
-            matching: find.byType(Scaffold),
-          );
-          expect(
-            tester.widget<Scaffold>(sectionScaffold).bottomNavigationBar,
-            isNull,
-          );
-          final done = find.byKey(const ValueKey('document-section-done'));
-          final sectionScroll = Scrollable.of(tester.element(done)).position;
-          final actionY = tester.getTopLeft(done).dy;
-          await tester.ensureVisible(done);
-          await tester.pumpAndSettle();
-          expect(done.hitTestable(), findsOneWidget);
-          if (sectionScroll.maxScrollExtent > 0) {
-            expect(tester.getTopLeft(done).dy, lessThan(actionY));
-          }
-          sectionScroll.jumpTo(0);
-          await tester.pumpAndSettle();
           final title = find.byKey(const ValueKey('estimate-title'));
           final number = find.byKey(const ValueKey('estimate-document-number'));
           expect(
             tester.getTopLeft(title).dy,
             lessThan(tester.getTopLeft(number).dy),
           );
-          expect(find.text('Estimate number'), findsOneWidget);
+          expect(find.text('Document number'), findsOneWidget);
+          await closeDocumentSection(tester);
+          await openDocumentSection(tester, 'estimate-work');
           final description = find.byKey(
             const ValueKey('estimate-work-description'),
           );
@@ -113,7 +94,7 @@ void main() {
             'Replace the damaged outdoor fitting.',
           );
           await closeDocumentSection(tester);
-          await openDocumentSection(tester, 'estimate-information');
+          await openDocumentSection(tester, 'estimate-work');
           expect(
             tester.widget<TextField>(description).controller!.text,
             'Replace the damaged outdoor fitting.',

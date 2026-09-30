@@ -19,7 +19,7 @@ extension _EstimateDocumentPreview on _EstimateEditorScreenState {
           : workCustomerDocument(
               confirmed!,
               store.companyProfile,
-              resolveWorkDocumentCustomer(confirmed!, store.customers),
+              resolveWorkDocumentCustomer(confirmed, store.customers),
             );
       final selected = await Navigator.of(context).push<String>(
         MaterialPageRoute(
@@ -38,10 +38,11 @@ extension _EstimateDocumentPreview on _EstimateEditorScreenState {
     } on EstimateInputValidation catch (error) {
       if (mounted) _message(error.message);
     } on Object {
-      if (mounted)
+      if (mounted) {
         _message(
           'The PDF preview could not open. Your form is still here; try again.',
         );
+      }
     }
   }
 }

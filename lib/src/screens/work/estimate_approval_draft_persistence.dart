@@ -1,7 +1,7 @@
 // ignore_for_file: invalid_use_of_protected_member
 part of 'estimate_approval_screen.dart';
 
-extension _ApprovalDraftPersistence on _EstimateApprovalScreenState {
+extension _ApprovalDraftPersistence on EstimateApprovalScreenState {
   Future<void> _openApproval() async {
     try {
       final work = PrototypeOperationsScope.of(context).workSession;

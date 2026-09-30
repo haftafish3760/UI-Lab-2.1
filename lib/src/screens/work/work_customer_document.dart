@@ -49,6 +49,8 @@ CustomerDocument workCustomerDocument(
     dueOn: record.dueOn,
     paymentMethod: record.paymentMethod,
     proposedServiceOn: record.estimateDates?.proposedServiceOn,
+    proposedServiceDates:
+        record.estimateDates?.proposedServiceDates ?? const [],
     company: company.companyName,
     companyDetails: [
       company.address,
@@ -76,6 +78,8 @@ CustomerDocument workCustomerDocument(
         ? record.resolvedEstimateStage == EstimateStage.draft
         : record.status == WorkRecordStatus.draft,
     terms: [
+      if (record.estimateDates?.validityDays case final days?)
+        'Price guaranteed for $days days from the date sent to the customer.',
       record.terms,
       if (record.requiredDepositCents > 0)
         'Required deposit: \$${(record.requiredDepositCents / 100).toStringAsFixed(2)}',

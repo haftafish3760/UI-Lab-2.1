@@ -5,7 +5,6 @@ import 'package:ui_lab_2_1/src/data/work/work_ui_lab_bootstrap.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_editor_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_approval_screen.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_signature_screen.dart';
-import 'package:ui_lab_2_1/src/shared/document_form_section.dart';
 import 'package:ui_lab_2_1/src/screens/work/work_models.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
 import 'package:ui_lab_2_1/src/theme/app_theme.dart';
@@ -84,52 +83,28 @@ void main() {
           tester,
           () =>
               approval.evaluate().isNotEmpty &&
-              tester.widget<DocumentFormSection>(approval).onTap != null,
+              tester.widget<OutlinedButton>(approval).onPressed != null,
         );
         expect(find.byKey(const ValueKey('estimate-close')), findsOneWidget);
-        expect(find.text('Sign in person or record approval'), findsOneWidget);
-        if (signInPerson) {
-          final review = find.byKey(const ValueKey('estimate-review'));
-          await tester.ensureVisible(review);
-          await tester.pumpAndSettle();
-          await tester.tap(review);
-          await tester.pumpAndSettle();
-          final reviewApproval = find.byKey(
-            const ValueKey('review-customer-approval'),
-          );
-          await waitForNativeSave(
-            tester,
-            () => reviewApproval.evaluate().isNotEmpty,
-          );
-          await tester.ensureVisible(reviewApproval);
-          await tester.pumpAndSettle();
-          await tester.tap(reviewApproval);
-        } else {
-          await tester.ensureVisible(approval);
-          await tester.pumpAndSettle();
-          await tester.tap(approval);
-        }
+        expect(find.text('Get customer approval'), findsOneWidget);
+        expect(find.byKey(const ValueKey('estimate-review')), findsNothing);
+        await tester.ensureVisible(approval);
+        await tester.pumpAndSettle();
+        await tester.tap(approval);
         await waitForNativeSave(
           tester,
           () => find.byType(EstimateApprovalScreen).evaluate().isNotEmpty,
         );
-        await tester.pageBack();
-        if (signInPerson) {
-          await waitForNativeSave(
-            tester,
-            () => find.byType(EstimateApprovalScreen).evaluate().isEmpty,
-          );
-          final editing = find.byKey(const ValueKey('continue-editing-top'));
-          await tester.ensureVisible(editing);
-          await tester.pumpAndSettle();
-          await tester.tap(editing);
-        }
+        final backToEditing = find.text('Back to editing');
+        await tester.ensureVisible(backToEditing);
+        await tester.pumpAndSettle();
+        await tester.tap(backToEditing);
         await waitForNativeSave(
           tester,
           () =>
               find.byType(EstimateApprovalScreen).evaluate().isEmpty &&
               approval.evaluate().isNotEmpty &&
-              tester.widget<DocumentFormSection>(approval).onTap != null,
+              tester.widget<OutlinedButton>(approval).onPressed != null,
         );
         expect(find.byType(EstimateEditorScreen), findsOneWidget);
         expect(find.text('Kitchen faucet replacement'), findsNothing);
@@ -154,6 +129,10 @@ void main() {
         expect(tester.widget<FilledButton>(signAction).onPressed, isNull);
         final acceptTerms = find.byKey(
           const ValueKey('approval-terms-accepted'),
+        );
+        await waitForNativeSave(
+          tester,
+          () => tester.widget<CheckboxListTile>(acceptTerms).onChanged != null,
         );
         await tester.ensureVisible(acceptTerms);
         await tester.pumpAndSettle();
@@ -191,14 +170,16 @@ void main() {
             () =>
                 find.byType(EstimateApprovalScreen).evaluate().isEmpty &&
                 approval.evaluate().isNotEmpty &&
-                tester.widget<DocumentFormSection>(approval).onTap != null,
+                tester.widget<OutlinedButton>(approval).onPressed != null,
           );
           await tester.ensureVisible(approval);
           await tester.pumpAndSettle();
           await tester.tap(approval);
           await waitForNativeSave(
             tester,
-            () => acceptTerms.evaluate().isNotEmpty,
+            () =>
+                acceptTerms.evaluate().isNotEmpty &&
+                tester.widget<CheckboxListTile>(acceptTerms).onChanged != null,
           );
           await tester.ensureVisible(acceptTerms);
           await tester.pumpAndSettle();
@@ -245,7 +226,7 @@ void main() {
             () =>
                 find.byType(EstimateApprovalScreen).evaluate().isEmpty &&
                 approval.evaluate().isNotEmpty &&
-                tester.widget<DocumentFormSection>(approval).onTap != null,
+                tester.widget<OutlinedButton>(approval).onPressed != null,
           );
           expect(
             work.records
@@ -285,19 +266,11 @@ void main() {
           () =>
               find.byType(EstimateApprovalScreen).evaluate().isEmpty &&
               approval.evaluate().isNotEmpty &&
-              tester.widget<DocumentFormSection>(approval).onTap != null,
+              tester.widget<OutlinedButton>(approval).onPressed != null,
         );
         expect(find.byType(EstimateEditorScreen), findsOneWidget);
-        expect(find.text('Approved — View approval'), findsOneWidget);
-        // The editor must own a new usable recovery session after approval.
-        await tester.ensureVisible(
-          find.byKey(const ValueKey('estimate-information')),
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('estimate-information')));
-        await tester.pumpAndSettle();
-        await tester.pageBack();
-        await tester.pumpAndSettle();
+        expect(find.text('View approval'), findsOneWidget);
+        // Approval remains durable after returning to the editable form.
         final reopened = (await tester.runAsync(
           () => openUiLabWorkSession(database),
         ))!;

@@ -25,9 +25,18 @@ String quoteApprovalFingerprint(WorkRecord record) {
   ]) {
     content.remove(key);
   }
-  content['expiresOn'] = record.estimateDates?.expiresOn?.toIso8601String();
+  final validityDays = record.estimateDates?.validityDays;
+  content['expiresOn'] = validityDays == null
+      ? record.estimateDates?.expiresOn?.toIso8601String()
+      : null;
+  if (validityDays != null) content['validityDays'] = validityDays;
   content['proposedServiceOn'] = record.estimateDates?.proposedServiceOn
       ?.toIso8601String();
+  if (record.estimateDates?.proposedServiceDates.isNotEmpty == true) {
+    content['proposedServiceDates'] = record.estimateDates!.proposedServiceDates
+        .map((d) => d.toIso8601String())
+        .toList();
+  }
   return sha256.convert(utf8.encode(canonicalJson(content))).toString();
 }
 

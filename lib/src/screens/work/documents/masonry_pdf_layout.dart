@@ -156,10 +156,10 @@ class MasonryPdfLayout {
         block('CUSTOMER DETAILS — CONTINUED', part),
       for (final part in chunks('${data.title}\n${data.description}', 600))
         block('PROPOSED WORK', part),
-      if (data.proposedServiceOn != null)
+      for (final proposed in data.serviceOptions)
         block(
           'PROPOSED SCHEDULE',
-          '${date(data.proposedServiceOn!)} — subject to scheduling confirmation',
+          '${date(proposed)} at ${proposed.hour.toString().padLeft(2, '0')}:${proposed.minute.toString().padLeft(2, '0')} — subject to scheduling confirmation',
         ),
       pw.SizedBox(height: 7),
       if (!data.isSummary)

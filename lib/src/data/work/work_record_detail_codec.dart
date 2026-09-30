@@ -67,7 +67,14 @@ Map<String, Object?> encodeEstimateDates(EstimateDates value) => {
   'viewedOn': value.viewedOn?.toIso8601String(),
   'followUpOn': value.followUpOn?.toIso8601String(),
   'expiresOn': value.expiresOn?.toIso8601String(),
+  if (value.validityDays != null) 'validityDays': value.validityDays,
+  if (value.finishedOn != null)
+    'finishedOn': value.finishedOn!.toIso8601String(),
   'proposedServiceOn': value.proposedServiceOn?.toIso8601String(),
+  if (value.proposedServiceDates.isNotEmpty)
+    'proposedServiceDates': value.proposedServiceDates
+        .map((d) => d.toIso8601String())
+        .toList(),
   'decidedOn': value.decidedOn?.toIso8601String(),
   'convertedOn': value.convertedOn?.toIso8601String(),
 };
@@ -84,12 +91,17 @@ EstimateDates decodeEstimateDates(Map<String, Object?> json) => EstimateDates(
   followUpOn: json['followUpOn'] == null
       ? null
       : DateTime.parse(json['followUpOn'] as String),
+  validityDays: json['validityDays'] as int?,
+  finishedOn: DateTime.tryParse(json['finishedOn'] as String? ?? ''),
   expiresOn: json['expiresOn'] == null
       ? null
       : DateTime.parse(json['expiresOn'] as String),
   proposedServiceOn: json['proposedServiceOn'] == null
       ? null
       : DateTime.parse(json['proposedServiceOn'] as String),
+  proposedServiceDates: (json['proposedServiceDates'] as List? ?? const [])
+      .map((d) => DateTime.parse(d as String))
+      .toList(),
   decidedOn: json['decidedOn'] == null
       ? null
       : DateTime.parse(json['decidedOn'] as String),

@@ -2,6 +2,9 @@ import 'estimate_client_information.dart';
 import '../../data/work/estimate_service_price.dart';
 import '../../../l10n/app_localizations_extension.dart';
 import 'estimate_price_summary.dart';
+import 'estimate_delivery_screen.dart';
+import 'work_activity_screen.dart';
+import 'estimate_form_section.dart';
 import 'estimate_review_section.dart';
 import 'estimate_approval_screen.dart';
 import 'estimate_detail_screen.dart';
@@ -9,7 +12,6 @@ import '../../data/storage/local_record_command.dart';
 import 'estimate_template_document.dart';
 import 'estimate_terms_editor.dart';
 import 'documents/customer_pdf_screen.dart';
-import 'documents/document_template.dart';
 import 'document_template_screen.dart';
 import 'work_customer_document.dart';
 import '../../shared/utility_form_section.dart';
@@ -46,6 +48,9 @@ part 'estimate_editor_overview.dart';
 part 'estimate_editor_document_preview.dart';
 part 'estimate_editor_persistence.dart';
 part 'estimate_editor_confirmation.dart';
+part 'estimate_editor_inline_approval.dart';
+part 'estimate_editor_validity.dart';
+part 'estimate_editor_exit.dart';
 
 class EstimateEditorScreen extends StatefulWidget {
   const EstimateEditorScreen({
@@ -56,10 +61,14 @@ class EstimateEditorScreen extends StatefulWidget {
     this.initialRecord,
     this.recoveredWorkflow,
     this.initialSection,
+    this.onCreateJob,
+    this.openApprovalOnEntry = false,
     super.key,
   });
 
   final DateTime initialDay;
+  final bool openApprovalOnEntry;
+  final ValueChanged<WorkRecord>? onCreateJob;
   final EstimateReviewSection? initialSection;
   final String? initialClient;
   final WorkCustomerProfile? initialCustomer;
@@ -84,6 +93,9 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
   bool _initialized = false;
   bool _draftReady = false;
   bool _saving = false;
+  bool _exitPromptOpen = false;
+  bool _approving = false;
+  final _inlineApproval = GlobalKey<EstimateApprovalScreenState>();
   String? _entryInput;
   @override
   bool get confirmDraftExit =>
@@ -99,7 +111,12 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
   @override
   DraftAutosaveSession? get navigationDraft => _draft;
   @override
-  bool get blockDraftNavigation => _saving;
+  bool get blockDraftNavigation =>
+      _saving || (_inlineApproval.currentState?.isSaving ?? false);
+
+  @override
+  Future<void> leaveDraftRoute([Object? result]) => _leaveEstimate(result);
+
   final _clientInformation = GlobalKey<EstimateClientInformationState>();
   final _sectionChanges = ValueNotifier<int>(0);
   final _scrollController = ScrollController();
@@ -141,9 +158,12 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
   late final TextEditingController _servicePrice;
   bool _requiresDeposit = false;
   late DateTime _createdOn;
-  late DateTime _expiresOn;
+  DateTime? _expiresOn, _finishedOn, _sentOn;
+  int? _validityDays;
+  int _validityPickerVersion = 0;
   DateTime? _followUpOn;
   DateTime? _proposedServiceOn;
+  var _proposedServiceDates = <DateTime>[];
   String? _client;
   WorkCustomerProfile? _customerSnapshot;
   var _pricing = WorkPricingModel.timeAndMaterials;
@@ -202,16 +222,18 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
     _terms = TextEditingController(
       text:
           existing?.terms ??
-          'This estimate is valid for 30 days. The final price may increase or decrease if the agreed work, quantities, or conditions change. Changes to the agreed work or price require customer approval before the extra work begins. Work starts after approval and scheduling. Payment is due at completion unless agreed otherwise.',
+          'The final price may increase or decrease if the agreed work, quantities, or conditions change. Changes to the agreed work or price require customer approval before the extra work begins. Work starts after approval and scheduling. Payment is due at completion unless agreed otherwise.',
     );
     _createdOn = DateUtils.dateOnly(
       existing?.estimateDates?.createdOn ?? widget.initialDay,
     );
-    _expiresOn =
-        existing?.estimateDates?.expiresOn ??
-        _createdOn.add(const Duration(days: 30));
+    _expiresOn = existing?.estimateDates?.expiresOn;
+    _validityDays = existing?.estimateDates?.validityDays;
+    _finishedOn = existing?.estimateDates?.finishedOn;
+    _sentOn = existing?.estimateDates?.sentOn;
     _followUpOn = existing?.estimateDates?.followUpOn;
     _proposedServiceOn = existing?.estimateDates?.proposedServiceOn;
+    _proposedServiceDates = [...?existing?.estimateDates?.serviceOptions];
     _client =
         existing?.client ??
         widget.initialCustomer?.name ??
@@ -252,34 +274,52 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
               final insets = AppLayoutEngine.pageInsetsFor(
                 constraints.maxWidth,
               );
-              final layout = AppLayoutEngine.workFor(
-                constraints.maxWidth - insets.horizontal,
-                textScaler: MediaQuery.textScalerOf(context),
-              );
               return Center(
                 child: SizedBox(
-                  width: layout.workspaceWidth,
+                  width: AppLayoutEngine.formWorkspaceWidthFor(
+                    constraints.maxWidth - insets.horizontal,
+                  ),
                   child: ListView(
                     controller: _scrollController,
-                    padding: const EdgeInsets.fromLTRB(0, 10, 0, 20),
+                    padding: EdgeInsets.fromLTRB(
+                      insets.left,
+                      10,
+                      insets.right,
+                      24,
+                    ),
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           WorkDetailHeader(
-                            label: widget.initialRecord == null
+                            label: _baseRecord == null
                                 ? 'New estimate'
                                 : 'Edit estimate',
                             selectedDay: _createdOn,
                             onBack: () => leaveDraftRoute(),
-                            showDateContext: true,
+                            showDateContext: false,
                           ),
+                          if (_baseRecord != null)
+                            Align(
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: TextButton.icon(
+                                icon: const Icon(Icons.history),
+                                label: const Text('Revision history'),
+                                onPressed: () =>
+                                    Navigator.of(context).push<void>(
+                                      MaterialPageRoute(
+                                        builder: (_) => WorkActivityScreen(
+                                          record: _baseRecord!,
+                                        ),
+                                      ),
+                                    ),
+                              ),
+                            ),
                           if (_draft != null)
                             EditorDraftStatus(
                               showRoutineStatus: false,
                               state: _draft!.state,
                               onRetry: _draft!.retry,
-                              onDiscard: _discardEstimateDraft,
                             ),
                           if (_saveError != null) Text(_saveError!),
                           if (!_draftReady && _saveError == null)

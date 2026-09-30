@@ -33,16 +33,17 @@ class _DocumentTemplateBrowserState extends State<DocumentTemplateBrowser> {
       appBar: AppBar(title: Text(template.label)),
       body: SafeArea(
         child: LayoutBuilder(
-          builder: (context, constraints) => ListView(
+          builder: (context, constraints) => Column(
             children: [
-              SizedBox(
-                height: constraints.maxHeight,
+              Expanded(
                 child: PdfDocumentView(
+                  generated: true,
                   key: ValueKey(template.id),
                   open: () async => PdfDocument.openData(
                     await generateCustomerPdf(
                       widget.document,
                       templateId: template.id,
+                      previewOnly: true,
                       logoLoader: loader,
                     ),
                   ),

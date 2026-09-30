@@ -29,6 +29,11 @@ WorkRecord buildConfirmedEstimate(
   final label = input.documentKind == WorkRecordKind.quote
       ? 'quote'
       : 'estimate';
+  if (input.validityDays != null && input.validityDays! <= 0) {
+    throw const EstimateInputValidation(
+      'Enter a validity period greater than zero days.',
+    );
+  }
   if (input.number.trim().isEmpty) {
     throw EstimateInputValidation('Enter a $label number.');
   }
@@ -99,11 +104,14 @@ WorkRecord buildConfirmedEstimate(
   final dates = EstimateDates(
     createdOn: input.createdOn,
     lastEditedOn: now,
-    sentOn: existing?.estimateDates?.sentOn,
+    sentOn: input.sentOn ?? existing?.estimateDates?.sentOn,
     viewedOn: existing?.estimateDates?.viewedOn,
     followUpOn: input.followUpOn,
     expiresOn: input.expiresOn,
+    validityDays: input.validityDays,
+    finishedOn: input.finishedOn,
     proposedServiceOn: input.proposedServiceOn,
+    proposedServiceDates: List.unmodifiable(input.proposedServiceDates),
     decidedOn: existing?.estimateDates?.decidedOn,
     convertedOn: existing?.estimateDates?.convertedOn,
   );

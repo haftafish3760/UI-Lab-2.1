@@ -45,6 +45,7 @@ void main() {
         Navigator.of(tester.element(find.byType(DashboardScreen))).push(
           MaterialPageRoute<void>(
             builder: (_) => EstimateDetailScreen(
+              showRecordActions: true,
               initialRecord: record,
               onUpdated: (_) {},
               onCreateJob: (_) {},

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ui_lab_2_1/src/data/work/work_record_codec.dart';
 import 'package:ui_lab_2_1/src/data/work/estimate_approval_draft_workflow.dart';
 import 'package:ui_lab_2_1/src/data/work/work_approval_media_adoption.dart';
 import 'package:ui_lab_2_1/src/data/work/models/work_models.dart';
@@ -99,10 +100,11 @@ void main() {
               expect(
                 await work.save(
                   records: [
-                    base.copyWith(
-                      title: 'Changed scope',
-                      revision: base.revision + 1,
-                    ),
+                    decodeWorkRecord({
+                      ...encodeWorkRecord(base),
+                      'title': 'Changed scope',
+                      'revision': base.revision + 1,
+                    }),
                   ],
                 ),
                 isTrue,

@@ -91,12 +91,12 @@ void main() {
 
     await openDocumentSection(tester, 'estimate-terms');
     final helper = find.text(
-      'These are the terms for this document. Review them before sharing.',
+      'Add one or more terms below, or write your own. Your selections appear together on the estimate.',
     );
     await tester.ensureVisible(helper);
     await tester.pumpAndSettle();
     expect(helper, findsOneWidget);
-    expect(tester.widget<Text>(helper).maxLines, 4);
+    expect(tester.widget<Text>(helper).maxLines, isNull);
     expect(tester.takeException(), isNull);
   });
 

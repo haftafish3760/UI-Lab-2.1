@@ -53,6 +53,13 @@ class _DocumentTemplateScreenState extends State<DocumentTemplateScreen> {
         return ListView(
           padding: const EdgeInsets.all(12),
           children: [
+            if (widget.document.company.trim().isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Text(
+                  'You can preview templates now. Add your business name in Company information before sending a document.',
+                ),
+              ),
             Wrap(
               spacing: 8,
               runSpacing: 4,
@@ -114,6 +121,7 @@ class _DocumentTemplateScreenState extends State<DocumentTemplateScreen> {
                   build: (_) => generateCustomerPdf(
                     widget.document,
                     templateId: template.id,
+                    previewOnly: true,
                     logoLoader: DocumentImageScope.maybeOf(context),
                   ),
                   padding: EdgeInsets.zero,
@@ -124,8 +132,11 @@ class _DocumentTemplateScreenState extends State<DocumentTemplateScreen> {
                   canDebug: false,
                   allowPrinting: false,
                   allowSharing: false,
-                  onError: (_, _) =>
-                      const Center(child: Text('Tap to open preview')),
+                  onError: (_, _) => const Center(
+                    child: Text(
+                      'Preview unavailable. Tap to retry in full screen.',
+                    ),
+                  ),
                 ),
               ),
             ),

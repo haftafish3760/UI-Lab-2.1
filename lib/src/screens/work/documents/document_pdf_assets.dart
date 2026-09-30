@@ -9,6 +9,7 @@ import 'document_template.dart';
 Future<Uint8List> generateCustomerPdf(
   CustomerDocument document, {
   String? templateId,
+  bool previewOnly = false,
   DocumentImageLoader? logoLoader,
 }) async {
   final template = DocumentTemplate.resolve(templateId ?? document.templateId);
@@ -30,6 +31,7 @@ Future<Uint8List> generateCustomerPdf(
 
   return const CustomerPdfGenerator().generate(
     document,
+    previewOnly: previewOnly,
     regularFont: fonts.regular,
     boldFont: fonts.bold,
     logo: logo,

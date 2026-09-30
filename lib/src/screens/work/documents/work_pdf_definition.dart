@@ -15,11 +15,13 @@ class WorkPdfDefinition extends PdfDocumentDefinition {
   WorkPdfDefinition(
     this.data, {
     this.artwork,
+    this.previewOnly = false,
     this.panelArtwork,
     this.pageArtwork,
     this.layout = DocumentLayout.standard,
   });
   final DocumentLayout layout;
+  final bool previewOnly;
   final CustomerDocument data;
   final Uint8List? artwork, panelArtwork, pageArtwork;
   @override
@@ -50,8 +52,13 @@ class WorkPdfDefinition extends PdfDocumentDefinition {
   DateTime get createdAt => data.date;
   @override
   void validate() {
+    if (!previewOnly && data.company.trim().isEmpty) {
+      throw const FormatException(
+        'Add your business name in Company information before sending this document.',
+      );
+    }
     if (data.number.trim().isEmpty ||
-        data.company.trim().isEmpty ||
+        (!previewOnly && data.company.trim().isEmpty) ||
         (!data.draft &&
             (data.customer.trim().isEmpty ||
                 data.title.trim().isEmpty ||
@@ -124,7 +131,7 @@ class WorkPdfDefinition extends PdfDocumentDefinition {
           if (layout != DocumentLayout.project &&
               layout != DocumentLayout.garden)
             pw.Text(data.title, style: c.theme.heading),
-          if (data.proposedServiceOn case final proposed?)
+          for (final proposed in data.serviceOptions)
             ...PdfPrimitives.paragraph(
               'Proposed service: ${day(proposed)}${proposed.hour == 0 && proposed.minute == 0 ? '' : ' at ${proposed.hour.toString().padLeft(2, '0')}:${proposed.minute.toString().padLeft(2, '0')}'} (subject to scheduling confirmation)',
             ),

@@ -22,6 +22,7 @@ class CustomerDocument {
     this.description = '',
     this.validUntil,
     this.proposedServiceOn,
+    this.proposedServiceDates = const [],
     this.reference = '',
     this.currency = 'USD',
     this.discountCents = 0,
@@ -41,6 +42,10 @@ class CustomerDocument {
   final String description;
   final DateTime? validUntil, dueOn;
   final DateTime? proposedServiceOn;
+  final List<DateTime> proposedServiceDates;
+  List<DateTime> get serviceOptions => proposedServiceDates.isNotEmpty
+      ? proposedServiceDates
+      : [?proposedServiceOn];
   final String paymentMethod;
   final String customerDetails, reference, currency, terms, templateId;
   final DateTime date;
@@ -72,6 +77,10 @@ class CustomerDocument {
     'date': date.toIso8601String(),
     'validUntil': validUntil?.toIso8601String(),
     'proposedServiceOn': proposedServiceOn?.toIso8601String(),
+    if (proposedServiceDates.isNotEmpty)
+      'proposedServiceDates': proposedServiceDates
+          .map((d) => d.toIso8601String())
+          .toList(),
     'dueOn': dueOn?.toIso8601String(),
     'paymentMethod': paymentMethod,
     'reference': reference,

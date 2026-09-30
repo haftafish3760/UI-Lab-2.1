@@ -68,6 +68,7 @@ void main() {
             child: MaterialApp(
               theme: AppTheme.light,
               home: EstimateDetailScreen(
+                showRecordActions: true,
                 initialRecord: original,
                 onUpdated: (_) {},
                 onCreateJob: (_) {},

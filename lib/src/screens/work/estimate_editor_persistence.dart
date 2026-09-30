@@ -46,8 +46,12 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
     estimateId: _estimateId,
     scope: _scope.text,
     expiresOn: _expiresOn,
+    validityDays: _validityDays,
+    finishedOn: _finishedOn,
+    sentOn: _sentOn,
     followUpOn: _followUpOn,
     proposedServiceOn: _proposedServiceOn,
+    proposedServiceDates: _proposedServiceDates,
     pendingLineItems: _itemDraftInputs,
     pendingPhotos: _photoDraftInput,
     sitePhotos: _sitePhotos,
@@ -152,11 +156,13 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
         record.estimateDates?.createdOn ??
         record.createdOn ??
         widget.initialDay;
-    _expiresOn =
-        record.estimateDates?.expiresOn ??
-        _createdOn.add(const Duration(days: 30));
+    _expiresOn = record.estimateDates?.expiresOn;
+    _validityDays = record.estimateDates?.validityDays;
+    _finishedOn = record.estimateDates?.finishedOn;
+    _sentOn = record.estimateDates?.sentOn;
     _followUpOn = record.estimateDates?.followUpOn;
     _proposedServiceOn = record.estimateDates?.proposedServiceOn;
+    _proposedServiceDates = [...?record.estimateDates?.serviceOptions];
     _client = record.client;
     _pricing = record.pricing;
     _documentPresentation = record.documentPresentation;
@@ -192,15 +198,26 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
     _baseRecord = input.baseRecord;
     _estimateId = input.estimateId;
     _scope.text = input.scope;
-    _expiresOn = input.expiresOn ?? _createdOn.add(const Duration(days: 30));
+    _expiresOn = input.expiresOn;
+    _validityDays = input.validityDays;
+    _finishedOn = input.finishedOn;
+    _sentOn = input.sentOn ?? input.baseRecord?.estimateDates?.sentOn;
     _followUpOn = input.followUpOn;
     _proposedServiceOn = input.proposedServiceOn;
+    _proposedServiceDates = [...input.proposedServiceDates];
+    if (_proposedServiceDates.isEmpty && input.proposedServiceOn != null) {
+      _proposedServiceDates.add(input.proposedServiceOn!);
+    }
     _itemDraftInputs = input.pendingLineItems;
     _photoDraftInput = input.pendingPhotos;
     _sitePhotos = input.sitePhotos;
   }
 
-  Future<void> _confirmEstimate({bool recordApproval = false}) async {
+  Future<bool> _confirmEstimate({
+    bool recordApproval = false,
+    bool keepOpen = false,
+  }) async {
+    FocusManager.instance.primaryFocus?.unfocus();
     final returnOffset = _scrollController.hasClients
         ? _scrollController.offset
         : 0.0;
@@ -218,55 +235,26 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
         estimate = await workflow.confirm();
       }
       if (estimate == null) throw StateError('Estimate was not saved.');
-      if (mounted && recordApproval) {
-        await _draftSubscription?.cancel();
-        await _draft?.close();
-        if (!mounted) return;
-        final approved = await Navigator.of(context).push<WorkRecord>(
-          MaterialPageRoute(
-            builder: (_) => EstimateApprovalScreen(record: estimate!),
-          ),
-        );
-        if (!mounted) return;
+      if (mounted && (recordApproval || keepOpen)) {
         final latest = _work?.records
             .where((record) => record.id == estimate!.id)
             .firstOrNull;
-        final current = latest ?? approved ?? estimate;
-        _applyCurrentEstimate(current);
-        _baseStorageRevision = _work?.storageRevisionFor(current.id) ?? 0;
-        if (_work != null) {
-          _workflow = await _work!.openEstimateDraft(
-            creatorId: _creatorId,
-            existingRecordId: current.id,
-          );
-          if (!mounted) {
-            await _draft?.close();
-            return;
-          }
-          _workflow!.updateInput(_estimateInput);
-          await _draft!.flush();
-          _draftSubscription = _draft!.changes.listen((_) {
-            if (mounted) _refresh(() {});
-          });
-        }
-        _entryInput = canonicalJson(_estimateInput.toPayload());
-        _refresh(() {
-          _saving = false;
-          _saveError = null;
-        });
+        await _reopenSavedEstimate(latest ?? estimate);
+        if (mounted && recordApproval) _refresh(() => _approving = true);
         await WidgetsBinding.instance.endOfFrame;
         if (mounted && _scrollController.hasClients) {
           _scrollController.jumpTo(
             returnOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
           );
         }
-        return;
+        return true;
       }
       final savedId = estimate.id;
       final latest = _work?.records
           .where((record) => record.id == savedId)
           .firstOrNull;
       if (mounted) await finishDraftRoute(latest ?? estimate);
+      return true;
     } on EstimateInputValidation catch (error) {
       if (mounted) {
         _refresh(() => _saving = false);
@@ -282,13 +270,16 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
         });
       }
     }
+    return false;
   }
 
   Future<void> _discardEstimateDraft() async {
     final discard = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Discard unfinished estimate input?'),
+        title: Text(
+          _baseRecord == null ? 'Delete draft?' : 'Delete draft changes?',
+        ),
         content: const Text(
           'Previously saved estimates and their approvals stay unchanged.',
         ),
@@ -299,7 +290,7 @@ extension _EstimateEditorPersistence on _EstimateEditorScreenState {
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Discard input'),
+            child: const Text('Delete draft'),
           ),
         ],
       ),

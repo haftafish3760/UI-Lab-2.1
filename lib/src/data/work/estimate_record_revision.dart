@@ -46,12 +46,19 @@ extension EstimateRecordEditing on WorkRecord {
             requiredDepositCents != this.requiredDepositCents) ||
         discount != this.discount ||
         tax != this.tax ||
-        !_sameDate(dates.expiresOn, estimateDates?.expiresOn) ||
-        !_sameDate(dates.proposedServiceOn, estimateDates?.proposedServiceOn);
-    final internalDateChange = !_sameDate(
-      dates.followUpOn,
-      estimateDates?.followUpOn,
-    );
+        dates.createdOn !=
+            (estimateDates?.createdOn ?? createdOn ?? dates.createdOn) ||
+        dates.validityDays != estimateDates?.validityDays ||
+        (dates.validityDays == null &&
+            !_sameDate(dates.expiresOn, estimateDates?.expiresOn)) ||
+        !_sameServiceOptions(
+          dates.serviceOptions,
+          estimateDates?.serviceOptions ?? const [],
+        );
+    final internalDateChange =
+        dates.sentOn != estimateDates?.sentOn ||
+        dates.finishedOn != estimateDates?.finishedOn ||
+        !_sameDate(dates.followUpOn, estimateDates?.followUpOn);
     final resolvedSitePhotos = sitePhotos ?? this.sitePhotos;
     final internalPhotoChange = !_sameSitePhotos(
       resolvedSitePhotos,
@@ -93,7 +100,7 @@ extension EstimateRecordEditing on WorkRecord {
       dueOn: dueOn,
       completedOn: completedOn,
       linkedExpenseIds: linkedExpenseIds,
-      createdOn: createdOn,
+      createdOn: dates.createdOn,
       scheduledStart: scheduledStart,
       scheduledEnd: scheduledEnd,
       scheduleBufferMinutes: scheduleBufferMinutes,
@@ -190,6 +197,14 @@ bool _sameSitePhotos(List<WorkSitePhoto> left, List<WorkSitePhoto> right) {
         a.note != b.note) {
       return false;
     }
+  }
+  return true;
+}
+
+bool _sameServiceOptions(List<DateTime> a, List<DateTime> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
   }
   return true;
 }

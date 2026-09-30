@@ -147,12 +147,10 @@ void main() {
               'Interrupted site estimate',
             );
             await closeDocumentSection(tester);
-            final discount = find.byWidgetPredicate(
-              (widget) =>
-                  widget is TextField &&
-                  widget.decoration?.labelText == 'Discount',
+            final discount = find.byKey(
+              const ValueKey('estimate-discount-input'),
             );
-            await openDocumentSection(tester, 'estimate-discount');
+            await openDocumentSection(tester, 'estimate-price-summary');
             await tester.enterText(discount, '7.');
             await closeDocumentSection(tester);
           }

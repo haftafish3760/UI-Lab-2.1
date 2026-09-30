@@ -113,18 +113,10 @@ void main() {
         'Repair completed',
       );
       await closeDocumentSection(tester);
-      await tester.ensureVisible(find.byKey(const ValueKey('estimate-review')));
+      final save = find.byKey(const ValueKey('save-estimate-changes'));
+      await tester.ensureVisible(save);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('estimate-review')));
-      await waitForNativeSave(
-        tester,
-        () => find.text('Continue editing').evaluate().isNotEmpty,
-      );
-      await tester.ensureVisible(
-        find.byKey(const ValueKey('confirm-estimate-review')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('confirm-estimate-review')));
+      await tester.tap(save);
 
       await waitForNativeSave(tester, () => work.failureMessage != null);
       expect(
@@ -154,6 +146,10 @@ void main() {
       await tester.runAsync(
         () => database.customStatement('DROP TRIGGER fail_editor_confirmation'),
       );
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('save-estimate-changes')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('save-estimate-changes')));
       await waitForNativeSave(
         tester,

@@ -1,159 +1,396 @@
 part of 'estimate_editor_screen.dart';
 
 extension _EstimateEditorOverview on _EstimateEditorScreenState {
-  Widget _buildOverview() => DocumentFormOverview(
-    groups: [
-      [
-        _section(
-          'estimate-customer',
-          'Client information',
-          _client ?? 'Select or add a client',
-          Icons.person_outline,
-          () => _identity(customerOnly: true),
+  Widget _buildOverview() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      if (_approving)
+        const Text(
+          'Customer approval — review the estimate below before accepting.',
         ),
-        _section(
-          'estimate-information',
-          'Estimate information',
-          _title.text.trim().isEmpty
-              ? 'Add the description of work'
-              : _title.text,
-          Icons.description_outlined,
-          () => _identity(customerOnly: false),
+      if (!_approving)
+        Text(
+          'Estimate status: ${_baseRecord?.resolvedEstimateStage.label ?? 'Draft'}',
+          style: Theme.of(context).textTheme.titleMedium,
         ),
-        DocumentFormSection(
-          borderColor: Theme.of(context).colorScheme.onSurfaceVariant,
-          key: const ValueKey('estimate-template'),
-          title: 'Select a template',
-          summary: DocumentTemplate.resolve(_template).label,
-          icon: Icons.dashboard_customize_outlined,
-          onTap: _chooseTemplate,
-        ),
-        _section(
-          'estimate-dates',
-          'Proposed schedule and dates',
-          _proposedServiceOn == null
-              ? 'When could this work be done?'
-              : 'Proposed ${_date(context, _proposedServiceOn!)}',
-          Icons.calendar_month_outlined,
-          _timingEditor,
-        ),
-      ],
-      [
-        if (canUseEstimateServicePrice(_estimateId, _items))
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(context.l10n.workOverallPriceHint),
-                const SizedBox(height: 12),
-                TextField(
-                  key: const ValueKey('estimate-service-price'),
-                  controller: _servicePrice,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+      AbsorbPointer(
+        absorbing: _approving,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            EstimateFormSection(
+              key: const ValueKey('estimate-information'),
+              title: _title.text.trim().isEmpty
+                  ? 'Estimate details'
+                  : _title.text,
+              onEdit: () => _openSectionEditor(
+                'Estimate details',
+                () => _identity(customerOnly: false),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Document number: $_number'),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Purchase order number: ${_purchaseOrder.text.trim().isEmpty ? 'Not provided' : _purchaseOrder.text}',
                   ),
-                  onChanged: (_) => _captureEstimateInput(),
-                  decoration: InputDecoration(
-                    labelText: context.l10n.workPriceBeforeAdjustments,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        DocumentFormSection(
-          borderColor: Theme.of(context).colorScheme.onSurfaceVariant,
-          key: const ValueKey('estimate-items'),
-          title: context.l10n.workOptionalItems,
-          summary:
-              '${_items.length} ${_items.length == 1 ? 'item' : 'items'} · ${_currency(_subtotal)}',
-          icon: Icons.list_alt_outlined,
-          onTap: () => _editItemCategory(EstimateItemCategory.all, _items),
+            EstimateFormSection(
+              key: const ValueKey('estimate-customer'),
+              title: 'Client information',
+              onEdit: () => _openSectionEditor(
+                'Client information',
+                () => _identity(customerOnly: true),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    _client == null || _client == 'Client not selected'
+                        ? 'No client selected. Use Edit to select or add a client.'
+                        : _client!,
+                  ),
+                  if (_customerSnapshot case final customer?)
+                    for (final detail in [
+                      customer.companyName,
+                      customer.phone,
+                      customer.email,
+                      customer.billingAddress,
+                    ])
+                      if (detail.trim().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(detail),
+                        ),
+                ],
+              ),
+            ),
+            EstimateFormSection(
+              key: const ValueKey('estimate-dates'),
+              title: 'Dates and validity',
+              onEdit: () =>
+                  _openSectionEditor('Dates and validity', _timingEditor),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _DateRow(label: 'Created', value: _date(context, _createdOn)),
+                  _DateRow(
+                    label: 'Date finished',
+                    value: _finishedOn == null
+                        ? 'Not finished'
+                        : _date(context, _finishedOn!),
+                  ),
+                  _DateRow(
+                    label: 'Sent to customer',
+                    value: _sentOn == null
+                        ? 'Not recorded'
+                        : _date(context, _sentOn!),
+                  ),
+                  _DateRow(
+                    label: 'Price validity',
+                    value: _validityDescription,
+                  ),
+                  _DateRow(
+                    label: 'Follow up',
+                    value: _followUpOn == null
+                        ? 'Not set'
+                        : _date(context, _followUpOn!),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('Proposed service dates and times'),
+                  if (_proposedServiceDates.isEmpty)
+                    const Text('No dates proposed.'),
+                  for (final date in _proposedServiceDates)
+                    Text(
+                      '${_date(context, date)} at ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(date))}',
+                    ),
+                ],
+              ),
+            ),
+            EstimateFormSection(
+              key: const ValueKey('estimate-work'),
+              title: 'Description of work and photos',
+              onEdit: () => _openSectionEditor(
+                'Work description',
+                () => EstimateFormField(
+                  inputKey: const ValueKey('estimate-work-description'),
+                  label: 'Work to be completed',
+                  controller: _scope,
+                  multiline: true,
+                  hint: 'Describe the work to be completed.',
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    _scope.text.trim().isEmpty
+                        ? 'No work description added.'
+                        : _scope.text,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _sitePhotos.isEmpty
+                        ? 'No photos attached.'
+                        : '${_sitePhotos.length} photos attached',
+                  ),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton(
+                      key: const ValueKey('estimate-site-photos'),
+                      onPressed: _editSitePhotos,
+                      child: const Text('Add or view photos'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            EstimateFormSection(
+              key: const ValueKey('estimate-items'),
+              title: 'Labor, materials and pricing',
+              onEdit: () => _editItemCategory(EstimateItemCategory.all, _items),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_items.isEmpty ||
+                      canUseEstimateServicePrice(_estimateId, _items))
+                    const Text(
+                      'Individual items are optional. You can enter one price below.',
+                    )
+                  else
+                    for (final item in _items)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          '${item.name} — ${item.quantity} ${item.unit} · ${_currency(item.total)}',
+                        ),
+                      ),
+                  EstimatePriceSummary(
+                    key: const ValueKey('estimate-price-summary'),
+                    grouped: true,
+                    subtotal: _currency(_subtotal),
+                    discount: _currency(_money(_discount)),
+                    tax: _currency(_money(_tax)),
+                    total: _currency(_total),
+                    onEdit: () => _openSectionEditor(
+                      'Price summary',
+                      () => Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (canUseEstimateServicePrice(_estimateId, _items))
+                            EstimateFormField(
+                              inputKey: const ValueKey(
+                                'estimate-service-price',
+                              ),
+                              label: context.l10n.workPriceBeforeAdjustments,
+                              controller: _servicePrice,
+                              money: true,
+                            ),
+                          EstimateFormField(
+                            inputKey: const ValueKey('estimate-discount-input'),
+                            label: 'Discount',
+                            controller: _discount,
+                            money: true,
+                          ),
+                          EstimateFormField(
+                            label: 'Tax',
+                            controller: _tax,
+                            money: true,
+                          ),
+                          Text('Estimate total: ${_currency(_total)}'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            EstimateFormSection(
+              key: const ValueKey('estimate-terms'),
+              title: 'Terms and conditions',
+              onEdit: () =>
+                  _openSectionEditor('Terms and conditions', _termsEditor),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    _terms.text.trim().isEmpty
+                        ? 'No terms selected. Use Edit to add terms.'
+                        : _terms.text,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _requiresDeposit
+                        ? 'Required deposit: ${_currency(_money(_deposit))}'
+                        : 'No deposit required',
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        EstimatePriceSummary(
-          subtotal: _currency(_subtotal),
-          discount: _currency(_money(_discount)),
-          tax: _currency(_money(_tax)),
-          total: _currency(_total),
-          onDiscount: () => _openSectionEditor(
-            'Discount',
-            () => DocumentAmountField(label: 'Discount', controller: _discount),
-          ),
-          onTax: () => _openSectionEditor(
-            'Tax',
-            () => DocumentAmountField(label: 'Tax', controller: _tax),
-          ),
-        ),
-      ],
-      [
-        _section(
-          'estimate-terms',
-          'Service terms and deposit',
-          _terms.text.trim().isEmpty
-              ? 'Add terms'
-              : 'Terms added - Tap to review',
-          Icons.rule_outlined,
-          _termsEditor,
-        ),
-        _EstimateSitePhotosSection(
-          photoCount: _sitePhotos.length,
-          onOpen: _editSitePhotos,
-        ),
-        if (_work?.permissions.canRecordCustomerApproval == true ||
-            _work?.permissions.canCollectSignature == true)
-          DocumentFormSection(
-            borderColor: Theme.of(context).colorScheme.onSurfaceVariant,
-            key: const ValueKey('estimate-customer-approval'),
-            title: 'Customer signature and approval',
-            summary: _hasCurrentApproval
-                ? 'Approved — View approval'
-                : 'Sign in person or record approval',
-            icon: Icons.check_circle_outline,
-            onTap: _draftReady && !_saving
-                ? () => _confirmEstimate(recordApproval: true)
-                : null,
-          ),
-      ],
+      ),
+      _buildInlineApproval(),
     ],
   );
 
-  Widget _timingEditor() => _EstimateTimingSection(
-    createdOn: _createdOn,
-    expiresOn: _expiresOn,
-    followUpOn: _followUpOn,
-    proposedServiceOn: _proposedServiceOn,
-    onProposedTime: () async {
-      final day = _proposedServiceOn ?? _createdOn;
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(day),
-      );
-      if (time != null && mounted) {
-        _changeEstimateInput(
-          () => _proposedServiceOn = DateTime(
-            day.year,
-            day.month,
-            day.day,
-            time.hour,
-            time.minute,
-          ),
-        );
-      }
-    },
-    onExpires: () => _pickDate(_expiresOn, (value) => _expiresOn = value),
-    onFollowUp: () =>
-        _pickDate(_followUpOn ?? _createdOn, (value) => _followUpOn = value),
-    onProposedService: () => _pickDate(
-      _proposedServiceOn ?? _createdOn,
-      (value) => _proposedServiceOn = DateTime(
-        value.year,
-        value.month,
-        value.day,
-        _proposedServiceOn?.hour ?? 0,
-        _proposedServiceOn?.minute ?? 0,
+  Widget _timingEditor() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      _DateRow(
+        label: 'Created',
+        value: _date(context, _createdOn),
+        onTap: () => _pickDate(_createdOn, (value) => _createdOn = value),
       ),
-    ),
+      _DateRow(
+        label: 'Date finished',
+        value: _finishedOn == null
+            ? 'Not finished'
+            : _date(context, _finishedOn!),
+        onTap: () => _pickDate(
+          _finishedOn ?? DateTime.now(),
+          (value) => _finishedOn = value,
+        ),
+      ),
+      const SizedBox(height: 16),
+      _DateRow(
+        label: 'Date sent to customer',
+        value: _sentOn == null ? 'Not recorded' : _date(context, _sentOn!),
+        onTap: () =>
+            _pickDate(_sentOn ?? DateTime.now(), (value) => _sentOn = value),
+      ),
+      const Text(
+        'Record the date you actually sent this estimate. This does not confirm customer receipt or approval. Price validity starts on this date.',
+      ),
+      const SizedBox(height: 12),
+      DropdownButtonFormField<int>(
+        key: ValueKey(
+          'estimate-validity-$_validityDays-$_validityPickerVersion',
+        ),
+        initialValue: [7, 30, 90, 365].contains(_validityDays)
+            ? _validityDays
+            : _validityDays == null
+            ? null
+            : -1,
+        decoration: const InputDecoration(labelText: 'Choose validity period'),
+        items: const [
+          DropdownMenuItem(value: 7, child: Text('7 days')),
+          DropdownMenuItem(value: 30, child: Text('30 days')),
+          DropdownMenuItem(value: 90, child: Text('90 days')),
+          DropdownMenuItem(value: 365, child: Text('One year (365 days)')),
+          DropdownMenuItem(value: -1, child: Text('Custom')),
+        ],
+        onChanged: (days) async {
+          if (days == -1) {
+            await _chooseCustomValidity();
+            if (mounted) _refresh(() => _validityPickerVersion++);
+            return;
+          }
+          _changeEstimateInput(() {
+            _validityDays = days;
+            _expiresOn = null;
+          });
+        },
+      ),
+      const SizedBox(height: 12),
+      Text(_validityDescription),
+      _DateRow(
+        label: 'Follow up',
+        value: _followUpOn == null ? 'Not set' : _date(context, _followUpOn!),
+        onTap: () => _pickDate(
+          _followUpOn ?? _createdOn,
+          (value) => _followUpOn = value,
+        ),
+      ),
+      const SizedBox(height: 12),
+      Text(
+        'Proposed service dates and times',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      const SizedBox(height: 8),
+      const Text(
+        'Offer the customer available options. These do not book a job.',
+      ),
+      if (_proposedServiceDates.isEmpty)
+        const Padding(
+          padding: EdgeInsets.only(top: 8),
+          child: Text('No dates proposed.'),
+        ),
+      for (var i = 0; i < _proposedServiceDates.length; i++)
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          children: [
+            Text(
+              '${_date(context, _proposedServiceDates[i])} at ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(_proposedServiceDates[i]))}',
+            ),
+            TextButton(
+              onPressed: () => _editServiceOption(i),
+              child: const Text('Edit'),
+            ),
+            TextButton(
+              onPressed: () => _changeEstimateInput(() {
+                _proposedServiceDates.removeAt(i);
+                _proposedServiceOn = _proposedServiceDates.firstOrNull;
+              }),
+              child: const Text('Remove'),
+            ),
+          ],
+        ),
+      Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: OutlinedButton(
+          onPressed: () => _editServiceOption(null),
+          child: const Text('Add proposed date and time'),
+        ),
+      ),
+    ],
   );
+
+  Future<void> _editServiceOption(int? index) async {
+    final initial = index == null
+        ? DateTime.now()
+        : _proposedServiceDates[index];
+    final day = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: _createdOn.subtract(const Duration(days: 365)),
+      lastDate: _createdOn.add(const Duration(days: 3650)),
+    );
+    if (!mounted || day == null) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: index == null
+          ? const TimeOfDay(hour: 9, minute: 0)
+          : TimeOfDay.fromDateTime(initial),
+    );
+    if (!mounted || time == null) return;
+    final chosen = DateTime(
+      day.year,
+      day.month,
+      day.day,
+      time.hour,
+      time.minute,
+    );
+    if (_proposedServiceDates.indexed.any(
+      (entry) => entry.$1 != index && entry.$2 == chosen,
+    )) {
+      _message('That date and time is already listed.');
+      return;
+    }
+    _changeEstimateInput(() {
+      if (index == null) {
+        _proposedServiceDates.add(chosen);
+      } else {
+        _proposedServiceDates[index] = chosen;
+      }
+      _proposedServiceDates.sort();
+      _proposedServiceOn = _proposedServiceDates.firstOrNull;
+    });
+  }
 
   Widget _termsEditor() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -186,7 +423,6 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
         onNumberChanged: (value) => _changeEstimateInput(() => _number = value),
         title: _title,
         purchaseOrder: _purchaseOrder,
-        scope: _scope,
       );
     }
     return EstimateClientInformation(
@@ -199,21 +435,6 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
       }),
     );
   }
-
-  Widget _section(
-    String id,
-    String title,
-    String summary,
-    IconData icon,
-    Widget Function() content,
-  ) => DocumentFormSection(
-    borderColor: Theme.of(context).colorScheme.onSurfaceVariant,
-    key: ValueKey(id),
-    title: title,
-    summary: summary,
-    icon: icon,
-    onTap: () => _openSectionEditor(title, content),
-  );
 
   Future<bool> _openSectionEditor(
     String title,

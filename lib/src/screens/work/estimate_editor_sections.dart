@@ -1,27 +1,5 @@
 part of 'estimate_editor_screen.dart';
 
-class _EstimateSitePhotosSection extends StatelessWidget {
-  const _EstimateSitePhotosSection({
-    required this.photoCount,
-    required this.onOpen,
-  });
-
-  final int photoCount;
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) => DocumentFormSection(
-    borderColor: Theme.of(context).colorScheme.onSurfaceVariant,
-    key: const ValueKey('estimate-site-photos'),
-    title: 'Photos',
-    summary: photoCount == 0
-        ? 'Add photos'
-        : '$photoCount ${photoCount == 1 ? 'photo' : 'photos'} · Add or review',
-    icon: Icons.add_a_photo_outlined,
-    onTap: onOpen,
-  );
-}
-
 class _EstimateIdentitySection extends StatelessWidget {
   const _EstimateIdentitySection({
     required this.number,
@@ -29,7 +7,6 @@ class _EstimateIdentitySection extends StatelessWidget {
     required this.onNumberChanged,
     required this.title,
     required this.purchaseOrder,
-    required this.scope,
   });
 
   final String number;
@@ -37,7 +14,6 @@ class _EstimateIdentitySection extends StatelessWidget {
   final ValueChanged<String> onNumberChanged;
   final TextEditingController title;
   final TextEditingController purchaseOrder;
-  final TextEditingController scope;
 
   @override
   Widget build(BuildContext context) => UtilityFormSection(
@@ -67,7 +43,7 @@ class _EstimateIdentitySection extends StatelessWidget {
             builder: (context, constraints) {
               final numberField = _labeledField(
                 context,
-                'Estimate number',
+                'Document number',
                 TextFormField(
                   key: const ValueKey('estimate-document-number'),
                   initialValue: number,
@@ -113,19 +89,6 @@ class _EstimateIdentitySection extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 14),
-          _fieldLabel(context, 'Description of work'),
-          const SizedBox(height: 4),
-          TextField(
-            key: const ValueKey('estimate-work-description'),
-            controller: scope,
-            keyboardType: TextInputType.multiline,
-            minLines: 4,
-            maxLines: null,
-            decoration: _lineDecoration(
-              hintText: 'Describe the work to be completed.',
-            ),
-          ),
         ],
       ],
     ),
@@ -157,80 +120,11 @@ class _EstimateIdentitySection extends StatelessWidget {
     helperText: helperText,
     helperMaxLines: helperMaxLines,
     isDense: true,
+    filled: false,
+    contentPadding: const EdgeInsets.symmetric(vertical: 12),
     border: const UnderlineInputBorder(),
     enabledBorder: const UnderlineInputBorder(),
     focusedBorder: const UnderlineInputBorder(),
-  );
-}
-
-class _EstimateTimingSection extends StatelessWidget {
-  const _EstimateTimingSection({
-    required this.createdOn,
-    required this.expiresOn,
-    required this.followUpOn,
-    required this.proposedServiceOn,
-    required this.onExpires,
-    required this.onFollowUp,
-    required this.onProposedService,
-    this.onProposedTime,
-  });
-
-  final DateTime createdOn;
-  final DateTime expiresOn;
-  final DateTime? followUpOn;
-  final DateTime? proposedServiceOn;
-  final VoidCallback onExpires;
-  final VoidCallback onFollowUp;
-  final VoidCallback onProposedService;
-  final VoidCallback? onProposedTime;
-
-  @override
-  Widget build(BuildContext context) => UtilityFormSection(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Proposed schedule and dates',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'A proposed service date is not a booked job. Scheduling happens only after approval and job creation.',
-        ),
-        const SizedBox(height: 10),
-        _DateRow(label: 'Created', value: _date(context, createdOn)),
-        _DateRow(
-          label: 'Estimate valid through',
-          value: _date(context, expiresOn),
-          onTap: onExpires,
-        ),
-        _DateRow(
-          label: 'Follow up',
-          value: followUpOn == null ? 'Not set' : _date(context, followUpOn!),
-          onTap: onFollowUp,
-        ),
-        _DateRow(
-          label: 'Proposed service date',
-          value: proposedServiceOn == null
-              ? 'Not proposed'
-              : _date(context, proposedServiceOn!),
-          onTap: onProposedService,
-        ),
-        if (onProposedTime != null)
-          _DateRow(
-            label: 'Proposed start time',
-            value:
-                proposedServiceOn == null ||
-                    (proposedServiceOn!.hour == 0 &&
-                        proposedServiceOn!.minute == 0)
-                ? 'Not proposed'
-                : MaterialLocalizations.of(
-                    context,
-                  ).formatTimeOfDay(TimeOfDay.fromDateTime(proposedServiceOn!)),
-            onTap: onProposedTime,
-          ),
-      ],
-    ),
   );
 }
 
@@ -241,16 +135,48 @@ class _DateRow extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    title: Text(label),
-    subtitle: Text(value),
-    trailing: onTap == null ? null : const Icon(Icons.edit_calendar_outlined),
-    onTap: onTap,
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final labelWidget = Text(
+          label,
+          style: Theme.of(context).textTheme.titleSmall,
+        );
+        final valueWidget = Text(value);
+        if (MediaQuery.textScalerOf(context).scale(16) > 24) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              labelWidget,
+              const SizedBox(height: 4),
+              valueWidget,
+              if (onTap != null)
+                TextButton(onPressed: onTap, child: const Text('Edit')),
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: labelWidget),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: valueWidget,
+              ),
+            ),
+            if (onTap != null)
+              TextButton(onPressed: onTap, child: const Text('Edit')),
+          ],
+        );
+      },
+    ),
   );
 }
 
 String _date(BuildContext context, DateTime date) =>
-    MaterialLocalizations.of(context).formatMediumDate(date);
+    '${MaterialLocalizations.of(context).formatMediumDate(date)}, ${date.year}';
 
 String _currency(double value) => '\$${value.toStringAsFixed(2)}';

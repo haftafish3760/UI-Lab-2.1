@@ -31,6 +31,7 @@ void main() {
         Navigator.of(tester.element(find.byType(DashboardScreen))).push(
           MaterialPageRoute<void>(
             builder: (_) => EstimateDetailScreen(
+              showRecordActions: true,
               initialRecord: original,
               onUpdated: (_) => callbacks++,
               onCreateJob: (_) {},
@@ -93,6 +94,7 @@ void main() {
         Navigator.of(tester.element(find.byType(DashboardScreen))).push(
           MaterialPageRoute<void>(
             builder: (_) => EstimateDetailScreen(
+              showRecordActions: true,
               initialRecord: original,
               onUpdated: (_) => callbacks++,
               onCreateJob: (_) {},

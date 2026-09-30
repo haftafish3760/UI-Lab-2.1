@@ -46,10 +46,12 @@ class EstimateDetailScreen extends StatefulWidget {
     this.reviewBeforeSave = false,
     this.onEditSection,
     this.onCustomerApproval,
+    this.showRecordActions = false,
     super.key,
   });
 
   final WorkRecord initialRecord;
+  final bool showRecordActions;
   final ValueChanged<WorkRecord> onUpdated, onCreateJob;
   final EstimatePermissions permissions;
   final Future<WorkRecord?> Function()? onCustomerApproval;
@@ -79,7 +81,9 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
     final current = work?.records
         .where((record) => record.id == _record.id)
         .firstOrNull;
-    if (widget.openApprovalOnEntry) {
+    if (widget.openApprovalOnEntry &&
+        (widget.showRecordActions ||
+            work?.permissions.canEdit(_record) != true)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _recordCustomerApproval();
       });
@@ -92,6 +96,20 @@ class _EstimateDetailScreenState extends State<EstimateDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final work = PrototypeOperationsScope.maybeOf(context)?.workSession;
+    if (!widget.reviewBeforeSave &&
+        !widget.showRecordActions &&
+        widget.permissions.canEditItems &&
+        work?.permissions.canEdit(_record) == true &&
+        _record.resolvedEstimateStage != EstimateStage.converted &&
+        _record.resolvedEstimateStage != EstimateStage.archived) {
+      return EstimateEditorScreen(
+        initialDay: _record.createdOn ?? DateTime.now(),
+        initialRecord: _record,
+        openApprovalOnEntry: widget.openApprovalOnEntry,
+        onCreateJob: widget.onCreateJob,
+      );
+    }
     return EditorInputLock(
       locked: _saving || _editingSection,
       child: LayoutBuilder(

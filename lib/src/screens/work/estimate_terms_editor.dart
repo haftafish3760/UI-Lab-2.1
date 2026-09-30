@@ -96,7 +96,7 @@ class _EstimateTermsEditorState extends State<EstimateTermsEditor> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Text(
-          'Choose a starting point, then edit the terms for this estimate.',
+          'Add one or more terms below, or write your own. Your selections appear together on the estimate.',
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -107,33 +107,20 @@ class _EstimateTermsEditorState extends State<EstimateTermsEditor> {
               OutlinedButton(
                 onPressed: _saving
                     ? null
-                    : () async {
-                        if (widget.controller.text.trim().isNotEmpty &&
-                            widget.controller.text != entry.value) {
-                          final replace = await showDialog<bool>(
-                            context: context,
-                            builder: (dialog) => AlertDialog(
-                              title: const Text('Replace these terms?'),
-                              content: const Text(
-                                'This replaces the terms currently entered for this estimate.',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(dialog, false),
-                                  child: const Text('Keep current'),
-                                ),
-                                FilledButton(
-                                  onPressed: () => Navigator.pop(dialog, true),
-                                  child: const Text('Replace'),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (replace != true || !mounted) return;
+                    : () {
+                        final existing = widget.controller.text.trim();
+                        if (!existing.contains(entry.value)) {
+                          widget.controller.text = existing.isEmpty
+                              ? entry.value
+                              : '$existing\n\n${entry.value}';
                         }
-                        widget.controller.text = entry.value;
+                        setState(() {});
                       },
-                child: Text(entry.key),
+                child: Text(
+                  widget.controller.text.contains(entry.value)
+                      ? '${entry.key} · Added'
+                      : entry.key,
+                ),
               ),
           ],
         ),

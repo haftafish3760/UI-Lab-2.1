@@ -46,6 +46,7 @@ CustomerDocument estimateTemplateDocument(
     date: input.createdOn,
     validUntil: input.expiresOn,
     proposedServiceOn: input.proposedServiceOn,
+    proposedServiceDates: input.proposedServiceDates,
     reference: input.purchaseOrderNumber,
     templateId: input.template,
     currency:
@@ -66,6 +67,8 @@ CustomerDocument estimateTemplateDocument(
                 tax)
             .clamp(0, 1 << 53),
     terms: [
+      if (input.validityDays case final days?)
+        'Price guaranteed for $days days from the date sent to the customer.',
       input.terms,
       if (input.requiresDeposit && cents(input.depositAmount) > 0)
         'Required deposit: \$${(cents(input.depositAmount) / 100).toStringAsFixed(2)}',

@@ -20,7 +20,9 @@ void main() {
         tester.view.devicePixelRatio = 1;
         final harness = (await tester.runAsync(DatabaseHarness.create))!;
         var db = (await tester.runAsync(harness.open))!;
-        var work = (await tester.runAsync(() => openSeededTestWorkSession(db)))!;
+        var work = (await tester.runAsync(
+          () => openSeededTestWorkSession(db),
+        ))!;
         final original = work.records.singleWhere(
           (record) => record.id == 'est-1040',
         );
@@ -45,6 +47,7 @@ void main() {
           Navigator.of(tester.element(find.byType(DashboardScreen))).push(
             MaterialPageRoute<void>(
               builder: (_) => EstimateDetailScreen(
+                showRecordActions: true,
                 initialRecord: record,
                 onUpdated: (_) {},
                 onCreateJob: (_) {},

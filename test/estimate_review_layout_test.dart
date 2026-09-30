@@ -69,8 +69,8 @@ void main() {
         final close = find.byKey(const ValueKey('estimate-close'));
         final preview = find.byKey(const ValueKey('estimate-live-pdf-preview'));
         final save = find.byKey(const ValueKey('save-estimate-draft'));
-        final review = find.byKey(const ValueKey('estimate-review'));
-        for (final button in [close, preview, review, save]) {
+        expect(find.byKey(const ValueKey('estimate-review')), findsNothing);
+        for (final button in [close, preview, save]) {
           expect(button, findsOneWidget);
           expect(
             find.descendant(of: button, matching: find.byType(Text)),
@@ -81,7 +81,7 @@ void main() {
         if (width == 1440 && scale == 1) {
           expect(
             find.byKey(const ValueKey('operations-3-lane-grid')),
-            findsOneWidget,
+            findsNothing,
           );
         }
         expect(tester.takeException(), isNull);

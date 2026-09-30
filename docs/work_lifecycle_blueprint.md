@@ -469,24 +469,55 @@ remains a link on a converted job/invoice; the invoice uses its own number.
   received belongs beside those terms and uses the existing payment workflow.
 - Terms and delivery: payment terms, acceptance method, signature, delivery history.
 
-Estimate information uses persistent labels above line-style fields. The estimate
-title comes first, followed by Estimate number and optional purchase order number.
-Description of work uses the in-field hint "Describe the work to be completed."
-that disappears when typing; there is no included/excluded/expected helper below.
-The New/Edit estimate form groups subtotal, editable discount and tax, and total
-in one Price summary. Photos uses the same bordered section grammar as other
-entries. Preview PDF, Review estimate, Save estimate and Close sit after the form
-in its scrollable content, never in a fixed footer. The shared estimate/invoice
-section editor likewise places Done or Save changes after its fields, inside the
-same scroll and bounded form width; closing still flushes the existing draft and
-preserves failed input. The Photos and Labor/materials Save actions and Customer approval Close action likewise follow their content inside the same scroll, preserving existing save, approval, and draft guards. Secondary actions use consistent
-tinted buttons; Save estimate is the primary action. Existing review composition
-and durable draft/photo/signature commands are preserved.
+The September 29 owner correction makes the estimate one readable document,
+with related information nested in tinted, bordered section boxes. The document
+itself shows text, not entry underlines. Each section has a visible Edit action
+opening its appropriate form. Document title, Document number and purchase order
+come first, followed by client information and dates/validity. Work description
+and photos, labor/materials, price summary, terms/deposit, and customer signature
+and approval each have their own section. Internal revision history is available
+near the top and records who changed the document and when.
 
-Estimate information uses persistent labels above line-style fields. The two
-short number fields may share a row when local width and text scale allow; the
-title and proposed-work text use the full form width. Proposed work grows with
-the text and the page scrolls, so the input does not impose a six-line limit.
+Created date is editable; Date finished is explicit and separate from Date sent
+to customer. Dates Edit allows the user to record the actual sent date; this is
+user-reported metadata, not proof of receipt, a sending action, or customer
+approval. It does not silently advance the document lifecycle. Validity choices are 7 days, 30 days, 90 days, one year (365 days),
+and custom days, with no default selected on new estimates. Owner confirmed that
+the selected period starts on Date sent to customer. Until sending is recorded,
+there is no computed expiry; the customer copy states the selected period.
+Legacy explicit expiration dates remain intact until deliberately changed.
+Multiple proposed service dates/times remain suggestions, not booked visits.
+
+Labor/materials retain their separate entry screen. Their complete item list and
+subtotal, discount, tax and estimate total share a single document section.
+Edit pricing within that section includes
+a flat price when there are no individual items, plus discount and tax. Terms
+allow multiple saved selections or custom text and display the resulting text.
+Customer approval remains embedded below those terms; saved approval belongs to
+the exact saved revision, and changing customer content requires fresh approval.
+
+PDF previews and template browsing permit an incomplete company profile with a
+visible preview-only notice. Outgoing PDFs still require the business name and
+report that missing information accurately; no fake company record is inserted.
+September 29 native verification: all ten catalog PDFs generated, opened through
+pdfx, and rendered a page on the Galaxy S25 Ultra in the isolated STORAGE_QA
+application, with no company record and no outgoing messages. This proves native
+PDF rendering, not owner visual acceptance of the main document layout.
+PDF template selection, Preview PDF and Send estimate are grouped in a Customer
+document section with visible action boundaries. Save estimate and Cancel follow
+in scrolling content. Back/Cancel with changed input offers Save changes,
+Discard changes, and Keep editing. Discarding changes must preserve the existing
+saved estimate. Delete draft removes only the recovery draft after confirmation;
+for an existing record the label is Delete draft changes. Opening delivery or a
+composer does not establish that anything was sent.
+
+The earlier flat form passed 166 regression tests and an Android build and was
+installed on the S25 Ultra, but the owner rejected its grouping and action layout.
+That evidence does not validate this corrected layout. Current grouped layout and
+validity changes require renewed regression and rendered verification. The owner
+has requested finishing these changes without launching on a device at present.
+Existing UI-Lab draft, signature and approval systems are reused; 5.7 remains
+read-only and no source was copied from it for this correction.
 
 An estimate supports Draft, Ready, Sent, Viewed, Accepted, Rejected, Revision
 requested, Expired, Cancelled, and Converted states. Editing after acceptance

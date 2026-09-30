@@ -80,11 +80,8 @@ void main() {
         'Interrupted pump repair',
       );
       await closeDocumentSection(tester);
-      final discount = find.byWidgetPredicate(
-        (widget) =>
-            widget is TextField && widget.decoration?.labelText == 'Discount',
-      );
-      await openDocumentSection(tester, 'estimate-discount');
+      final discount = find.byKey(const ValueKey('estimate-discount-input'));
+      await openDocumentSection(tester, 'estimate-price-summary');
       await tester.enterText(discount, '12.');
       await closeDocumentSection(tester);
       await waitForNativeSave(
@@ -116,19 +113,15 @@ void main() {
       );
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      expect(find.text('Keep your changes?'), findsOneWidget);
+      expect(find.text('Save changes to this estimate?'), findsOneWidget);
       await tester.tap(find.text('Keep editing'));
       await tester.pumpAndSettle();
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Save draft'));
-      await waitForNativeSave(
-        tester,
-        () => find
-            .byKey(const ValueKey('estimate-editor-screen'))
-            .evaluate()
-            .isEmpty,
-      );
+      await tester.tap(find.text('Keep editing'));
+      await tester.pumpAndSettle();
+      // Simulate interruption: autosaved raw input must survive without
+      // confirming a business record or choosing Discard changes.
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(milliseconds: 16));
       store.dispose();
@@ -180,15 +173,20 @@ void main() {
             .text,
         'Interrupted pump repair',
       );
-      await openDocumentSection(tester, 'estimate-discount');
+      await openDocumentSection(tester, 'estimate-price-summary');
       expect(tester.widget<TextField>(discount).controller!.text, '12.');
       await closeDocumentSection(tester);
       // Discard is a separate explicit decision; route disposal above retained it.
-      await tester.ensureVisible(find.text('Discard unfinished input'));
+      await tester.ensureVisible(find.text('Delete draft'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Discard unfinished input'));
+      await tester.tap(find.text('Delete draft'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Discard input'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Delete draft'),
+        ),
+      );
       await waitForNativeSave(
         tester,
         () => find

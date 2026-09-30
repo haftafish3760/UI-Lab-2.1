@@ -33,6 +33,7 @@ void main() {
         Navigator.of(tester.element(find.byType(DashboardScreen))).push(
           MaterialPageRoute<void>(
             builder: (_) => EstimateDetailScreen(
+              showRecordActions: true,
               initialRecord: work.records.singleWhere(
                 (record) => record.id == original.id,
               ),

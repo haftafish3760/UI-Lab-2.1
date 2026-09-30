@@ -149,29 +149,46 @@ class EstimateDates {
     this.sentOn,
     this.viewedOn,
     this.followUpOn,
-    this.expiresOn,
+    DateTime? expiresOn,
+    this.validityDays,
+    this.finishedOn,
     this.proposedServiceOn,
+    this.proposedServiceDates = const [],
     this.decidedOn,
     this.convertedOn,
-  });
+  }) : _expiresOn = expiresOn;
 
   final DateTime createdOn;
   final DateTime lastEditedOn;
   final DateTime? sentOn;
   final DateTime? viewedOn;
   final DateTime? followUpOn;
-  final DateTime? expiresOn;
+  final DateTime? _expiresOn;
+  final int? validityDays;
+  final DateTime? finishedOn;
+  DateTime? get expiresOn => validityDays == null
+      ? _expiresOn
+      : sentOn == null
+      ? null
+      : DateTime(sentOn!.year, sentOn!.month, sentOn!.day + validityDays!);
   final DateTime? proposedServiceOn;
+  final List<DateTime> proposedServiceDates;
+  List<DateTime> get serviceOptions => proposedServiceDates.isNotEmpty
+      ? List.unmodifiable(proposedServiceDates)
+      : [?proposedServiceOn];
   final DateTime? decidedOn;
   final DateTime? convertedOn;
 
   EstimateDates copyWith({
+    DateTime? finishedOn,
+    int? validityDays,
     DateTime? lastEditedOn,
     DateTime? sentOn,
     DateTime? viewedOn,
     DateTime? followUpOn,
     DateTime? expiresOn,
     DateTime? proposedServiceOn,
+    List<DateTime>? proposedServiceDates,
     DateTime? decidedOn,
     DateTime? convertedOn,
   }) => EstimateDates(
@@ -180,8 +197,11 @@ class EstimateDates {
     sentOn: sentOn ?? this.sentOn,
     viewedOn: viewedOn ?? this.viewedOn,
     followUpOn: followUpOn ?? this.followUpOn,
-    expiresOn: expiresOn ?? this.expiresOn,
+    expiresOn: expiresOn ?? _expiresOn,
+    validityDays: validityDays ?? this.validityDays,
+    finishedOn: finishedOn ?? this.finishedOn,
     proposedServiceOn: proposedServiceOn ?? this.proposedServiceOn,
+    proposedServiceDates: proposedServiceDates ?? this.proposedServiceDates,
     decidedOn: decidedOn ?? this.decidedOn,
     convertedOn: convertedOn ?? this.convertedOn,
   );
@@ -189,11 +209,12 @@ class EstimateDates {
   bool hasActivityOn(DateTime day) => [
     createdOn,
     lastEditedOn,
+    finishedOn,
     sentOn,
     viewedOn,
     followUpOn,
     expiresOn,
-    proposedServiceOn,
+    ...serviceOptions,
     decidedOn,
     convertedOn,
   ].whereType<DateTime>().any((date) => _sameDay(date, day));

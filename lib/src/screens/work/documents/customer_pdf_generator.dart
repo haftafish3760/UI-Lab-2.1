@@ -18,12 +18,14 @@ class CustomerPdfGenerator {
     Uint8List? panelArtwork,
     Uint8List? pageArtwork,
     String? templateId,
+    bool previewOnly = false,
     PdfImageResult? logo,
   }) async {
     final template = DocumentTemplate.resolve(templateId ?? data.templateId);
     return (await const PdfEngine().render(
       WorkPdfDefinition(
         data,
+        previewOnly: previewOnly,
         artwork: artwork,
         layout: template.layout,
         panelArtwork: panelArtwork,

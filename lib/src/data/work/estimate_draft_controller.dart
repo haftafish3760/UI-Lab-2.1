@@ -36,8 +36,12 @@ class EstimateDraftInput {
     required this.estimateId,
     required this.scope,
     required this.expiresOn,
+    this.validityDays,
+    this.finishedOn,
+    this.sentOn,
     required this.followUpOn,
     required this.proposedServiceOn,
+    this.proposedServiceDates = const [],
     required this.pendingLineItems,
     required this.pendingPhotos,
     required this.sitePhotos,
@@ -66,8 +70,12 @@ class EstimateDraftInput {
   final String estimateId;
   final String scope;
   final DateTime? expiresOn;
+  final int? validityDays;
+  final DateTime? finishedOn;
+  final DateTime? sentOn;
   final DateTime? followUpOn;
   final DateTime? proposedServiceOn;
+  final List<DateTime> proposedServiceDates;
   final Map<String, WorkItemsDraftInput> pendingLineItems;
   final EstimatePhotosDraftInput? pendingPhotos;
   final List<WorkSitePhoto> sitePhotos;
@@ -98,8 +106,14 @@ class EstimateDraftInput {
     'estimateId': estimateId,
     'scope': scope,
     'expiresOn': expiresOn?.toIso8601String(),
+    'validityDays': validityDays,
+    'finishedOn': finishedOn?.toIso8601String(),
+    'sentOn': sentOn?.toIso8601String(),
     'followUpOn': followUpOn?.toIso8601String(),
     'proposedServiceOn': proposedServiceOn?.toIso8601String(),
+    'proposedServiceDates': proposedServiceDates
+        .map((d) => d.toIso8601String())
+        .toList(),
     'itemEditors': pendingLineItems.map(
       (key, value) => MapEntry(key, value.toPayload()),
     ),
@@ -107,72 +121,75 @@ class EstimateDraftInput {
     'sitePhotos': sitePhotos.map(encodeWorkSitePhoto).toList(),
   };
 
-  factory EstimateDraftInput.fromPayload(Map<String, Object?> input) =>
-      EstimateDraftInput(
-        documentKind: WorkRecordKind.values.byName(
-          input['documentKind'] as String? ?? 'estimate',
-        ),
-        creatorId: input['creatorId'] as String,
-        number: input['number'] as String,
-        purchaseOrderNumber: input['purchaseOrderNumber'] as String? ?? '',
-        baseStorageRevision: input['baseStorageRevision'] as int,
-        title: input['title'] as String,
-        discount: input['discount'] as String,
-        tax: input['tax'] as String,
-        terms: input['terms'] as String,
-        requiresDeposit: input['requiresDeposit'] as bool? ?? false,
-        depositAmount: input['depositAmount'] as String? ?? '',
-        client: input['client'] as String?,
-        customerSnapshot: input['customerSnapshot'] == null
-            ? null
-            : decodeWorkCustomerProfile(
-                (input['customerSnapshot'] as Map).cast<String, Object?>(),
-              ),
-        pricing: WorkPricingModel.values.byName(input['pricing'] as String),
-        documentPresentation: WorkDocumentPresentation.values.byName(
-          input['documentPresentation'] as String? ?? 'detailed',
-        ),
-        template: input['template'] as String,
-        createdOn: DateTime.parse(input['createdOn'] as String),
-        servicePrice: input['servicePrice'] as String? ?? '',
-        items: (input['items'] as List)
-            .map(
-              (item) =>
-                  decodeWorkLineItem((item as Map).cast<String, Object?>()),
-            )
-            .toList(),
-        baseRecord: input['baseRecord'] == null
-            ? null
-            : decodeWorkRecord(
-                (input['baseRecord'] as Map).cast<String, Object?>(),
-              ),
-        estimateId: input['estimateId'] as String,
-        scope: input['scope'] as String,
-        expiresOn: DateTime.tryParse(input['expiresOn'] as String? ?? ''),
-        followUpOn: DateTime.tryParse(input['followUpOn'] as String? ?? ''),
-        proposedServiceOn: DateTime.tryParse(
-          input['proposedServiceOn'] as String? ?? '',
-        ),
-        pendingLineItems: (input['itemEditors'] as Map? ?? {}).map(
-          (key, value) => MapEntry(
-            key as String,
-            WorkItemsDraftInput.fromPayload(
-              (value as Map).cast<String, Object?>(),
-            ),
+  factory EstimateDraftInput.fromPayload(
+    Map<String, Object?> input,
+  ) => EstimateDraftInput(
+    documentKind: WorkRecordKind.values.byName(
+      input['documentKind'] as String? ?? 'estimate',
+    ),
+    creatorId: input['creatorId'] as String,
+    number: input['number'] as String,
+    purchaseOrderNumber: input['purchaseOrderNumber'] as String? ?? '',
+    baseStorageRevision: input['baseStorageRevision'] as int,
+    title: input['title'] as String,
+    discount: input['discount'] as String,
+    tax: input['tax'] as String,
+    terms: input['terms'] as String,
+    requiresDeposit: input['requiresDeposit'] as bool? ?? false,
+    depositAmount: input['depositAmount'] as String? ?? '',
+    client: input['client'] as String?,
+    customerSnapshot: input['customerSnapshot'] == null
+        ? null
+        : decodeWorkCustomerProfile(
+            (input['customerSnapshot'] as Map).cast<String, Object?>(),
           ),
-        ),
-        pendingPhotos: input['photoEditor'] == null
-            ? null
-            : EstimatePhotosDraftInput.fromPayload(
-                (input['photoEditor'] as Map).cast<String, Object?>(),
-              ),
-        sitePhotos: (input['sitePhotos'] as List)
-            .map(
-              (item) =>
-                  decodeWorkSitePhoto((item as Map).cast<String, Object?>()),
-            )
-            .toList(),
-      );
+    pricing: WorkPricingModel.values.byName(input['pricing'] as String),
+    documentPresentation: WorkDocumentPresentation.values.byName(
+      input['documentPresentation'] as String? ?? 'detailed',
+    ),
+    template: input['template'] as String,
+    createdOn: DateTime.parse(input['createdOn'] as String),
+    servicePrice: input['servicePrice'] as String? ?? '',
+    items: (input['items'] as List)
+        .map(
+          (item) => decodeWorkLineItem((item as Map).cast<String, Object?>()),
+        )
+        .toList(),
+    baseRecord: input['baseRecord'] == null
+        ? null
+        : decodeWorkRecord(
+            (input['baseRecord'] as Map).cast<String, Object?>(),
+          ),
+    estimateId: input['estimateId'] as String,
+    scope: input['scope'] as String,
+    expiresOn: DateTime.tryParse(input['expiresOn'] as String? ?? ''),
+    validityDays: input['validityDays'] as int?,
+    finishedOn: DateTime.tryParse(input['finishedOn'] as String? ?? ''),
+    sentOn: DateTime.tryParse(input['sentOn'] as String? ?? ''),
+    followUpOn: DateTime.tryParse(input['followUpOn'] as String? ?? ''),
+    proposedServiceOn: DateTime.tryParse(
+      input['proposedServiceOn'] as String? ?? '',
+    ),
+    proposedServiceDates: (input['proposedServiceDates'] as List? ?? const [])
+        .map((d) => DateTime.parse(d as String))
+        .toList(),
+    pendingLineItems: (input['itemEditors'] as Map? ?? {}).map(
+      (key, value) => MapEntry(
+        key as String,
+        WorkItemsDraftInput.fromPayload((value as Map).cast<String, Object?>()),
+      ),
+    ),
+    pendingPhotos: input['photoEditor'] == null
+        ? null
+        : EstimatePhotosDraftInput.fromPayload(
+            (input['photoEditor'] as Map).cast<String, Object?>(),
+          ),
+    sitePhotos: (input['sitePhotos'] as List)
+        .map(
+          (item) => decodeWorkSitePhoto((item as Map).cast<String, Object?>()),
+        )
+        .toList(),
+  );
 }
 
 class EstimateDraftController

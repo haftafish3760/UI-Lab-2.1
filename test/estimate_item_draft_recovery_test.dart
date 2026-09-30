@@ -79,8 +79,15 @@ void main() {
         Future<void> openItems() async {
           FocusManager.instance.primaryFocus?.unfocus();
           await tester.pumpAndSettle();
-          final items = find.byKey(const ValueKey('estimate-items'));
-          await waitForNativeSave(tester, () => items.evaluate().isNotEmpty);
+          final itemActions = find.descendant(
+            of: find.byKey(const ValueKey('estimate-items')),
+            matching: find.byType(TextButton),
+          );
+          await waitForNativeSave(
+            tester,
+            () => itemActions.evaluate().isNotEmpty,
+          );
+          final items = itemActions.first;
           await tester.ensureVisible(items);
           await tester.pumpAndSettle();
           await tester.tap(items);
@@ -96,18 +103,6 @@ void main() {
                 .isNotEmpty,
           );
           await tester.pumpAndSettle();
-        }
-
-        Future<void> backUntilGone(Type type) async {
-          await tester.binding.handlePopRoute();
-          await tester.pumpAndSettle();
-          if (find.text('Save draft').evaluate().isNotEmpty) {
-            await tester.tap(find.text('Save draft'));
-          }
-          await waitForNativeSave(
-            tester,
-            () => find.byType(type).evaluate().isEmpty,
-          );
         }
 
         await openEstimate();
@@ -164,7 +159,10 @@ void main() {
           find.text('Review and save the unfinished estimate items first.'),
           findsOneWidget,
         );
-        await backUntilGone(EstimateEditorScreen);
+        // Interruption preserves unfinished input; Save changes must not
+        // promote an unfinished item to the saved estimate.
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
         await tester.pumpWidget(const SizedBox.shrink());
         store.dispose();
         work.dispose();
@@ -212,7 +210,10 @@ void main() {
           tester,
           () => find.byType(EstimateItemsScreen).evaluate().isEmpty,
         );
-        await backUntilGone(EstimateEditorScreen);
+        // Interruption preserves unfinished input; Save changes must not
+        // promote an unfinished item to the saved estimate.
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
         final drafts = LocalDraftStore(database);
         final saved = (await tester.runAsync(
           () => drafts.list(
