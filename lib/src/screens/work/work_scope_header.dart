@@ -23,6 +23,7 @@ class WorkScopeHeader extends StatelessWidget {
     this.showDateContext = true,
     this.showDateDescription = true,
     this.showEmployeeStrip = true,
+    this.documentPresentation = false,
     super.key,
   });
 
@@ -36,6 +37,7 @@ class WorkScopeHeader extends StatelessWidget {
   final VoidCallback? onBack;
   final VoidCallback? onSettings;
   final bool showDateContext;
+  final bool documentPresentation;
   final bool showDateDescription;
   final bool showEmployeeStrip;
 
@@ -51,6 +53,7 @@ class WorkScopeHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         OperationalHeader(
+          documentPresentation: documentPresentation,
           view: view,
           onViewChanged: onViewChanged,
           selectedContext: selected,

@@ -79,6 +79,9 @@ class _AmountRow extends StatelessWidget {
     final style = emphasized
         ? Theme.of(context).textTheme.titleMedium
         : Theme.of(context).textTheme.bodyLarge;
+    final amountStyle = style?.copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
     return Semantics(
       button: false,
       child: InkWell(
@@ -99,7 +102,14 @@ class _AmountRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     name,
-                    Text(amount, style: style),
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: Text(
+                        amount,
+                        style: amountStyle,
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
                   ],
                 );
               }
@@ -112,7 +122,7 @@ class _AmountRow extends StatelessWidget {
                       alignment: AlignmentDirectional.centerEnd,
                       child: Text(
                         amount,
-                        style: style,
+                        style: amountStyle,
                         textAlign: TextAlign.end,
                       ),
                     ),

@@ -10,6 +10,7 @@ import 'app_view_mode.dart';
 part 'operational_header_controls.dart';
 part 'operational_owner_header.dart';
 part 'operational_dashboard_header.dart';
+part 'operational_document_header.dart';
 part 'operational_context_picker.dart';
 
 enum OperationalContextKind { employee, vehicle, activeVehicle }
@@ -76,6 +77,7 @@ class OperationalHeader extends StatelessWidget {
     this.headerTitle,
     this.ownerPresentation = false,
     this.dashboardWide = false,
+    this.documentPresentation = false,
     this.contextReading,
     super.key,
   });
@@ -102,6 +104,7 @@ class OperationalHeader extends StatelessWidget {
   final String? headerTitle;
   final bool ownerPresentation;
   final bool dashboardWide;
+  final bool documentPresentation;
   final Widget? contextReading;
 
   @override
@@ -116,6 +119,9 @@ class OperationalHeader extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
+          if (documentPresentation) {
+            return _DocumentHeaderContents(header: this);
+          }
           if (dashboardWide) return _DashboardHeaderContents(header: this);
           if (ownerPresentation) {
             return Align(

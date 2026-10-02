@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../shared/section_card.dart';
-import '../../theme/operational_card_palette.dart';
 
 /// Related document information grouped in one visible, editable section.
 class EstimateFormSection extends StatelessWidget {
@@ -17,44 +15,38 @@ class EstimateFormSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 16),
-    child: SectionCard(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? Theme.of(context).colorScheme.surfaceContainerHigh
-          : OperationalCardPalette.plan.row,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Semantics(
-                    header: true,
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              if (onEdit != null) ...[
-                const SizedBox(width: 12),
-                TextButton.icon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  label: Text(actionLabel),
-                ),
-              ],
+            ),
+            if (onEdit != null) ...[
+              const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: Text(actionLabel),
+              ),
             ],
-          ),
-          const SizedBox(height: 16),
-          child,
-        ],
-      ),
+          ],
+        ),
+        const Divider(height: 1),
+        const SizedBox(height: 12),
+        child,
+      ],
     ),
   );
 }
@@ -87,6 +79,7 @@ class EstimateFormField extends StatelessWidget {
         TextField(
           key: inputKey,
           controller: controller,
+          textAlign: money ? TextAlign.end : TextAlign.start,
           keyboardType: money
               ? const TextInputType.numberWithOptions(decimal: true)
               : multiline

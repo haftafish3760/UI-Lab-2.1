@@ -8,11 +8,19 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
         const Text(
           'Customer approval — review the estimate below before accepting.',
         ),
-      if (!_approving)
-        Text(
-          'Estimate status: ${_baseRecord?.resolvedEstimateStage.label ?? 'Draft'}',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+      EstimateDocumentHeading(
+        number: _number,
+        onEditCompany:
+            _approving ||
+                PrototypeOperationsScope.of(
+                      context,
+                    ).directorySession?.permissions.canManageCompany !=
+                    true
+            ? null
+            : _editDocumentCompany,
+        status:
+            'Estimate status: ${_baseRecord?.resolvedEstimateStage.label ?? 'Draft'}',
+      ),
       AbsorbPointer(
         absorbing: _approving,
         child: Column(
@@ -20,9 +28,7 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
           children: [
             EstimateFormSection(
               key: const ValueKey('estimate-information'),
-              title: _title.text.trim().isEmpty
-                  ? 'Estimate details'
-                  : _title.text,
+              title: 'Estimate details',
               onEdit: () => _openSectionEditor(
                 'Estimate details',
                 () => _identity(customerOnly: false),
@@ -30,6 +36,12 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (_title.text.trim().isNotEmpty &&
+                      _title.text != 'Untitled estimate')
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(_title.text),
+                    ),
                   Text('Document number: $_number'),
                   const SizedBox(height: 10),
                   Text(
@@ -40,7 +52,10 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
             ),
             EstimateFormSection(
               key: const ValueKey('estimate-customer'),
-              title: 'Client information',
+              title: 'Prepared for',
+              actionLabel: _client == null || _client == 'Client not selected'
+                  ? 'Add customer'
+                  : 'Edit',
               onEdit: () => _openSectionEditor(
                 'Client information',
                 () => _identity(customerOnly: true),
@@ -50,7 +65,7 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
                 children: [
                   Text(
                     _client == null || _client == 'Client not selected'
-                        ? 'No client selected. Use Edit to select or add a client.'
+                        ? 'Add the customer who will receive this estimate.'
                         : _client!,
                   ),
                   if (_customerSnapshot case final customer?)
@@ -112,7 +127,7 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
             ),
             EstimateFormSection(
               key: const ValueKey('estimate-work'),
-              title: 'Description of work and photos',
+              title: 'Description of work',
               onEdit: () => _openSectionEditor(
                 'Work description',
                 () => EstimateFormField(
@@ -160,14 +175,25 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
                     const Text(
                       'Individual items are optional. You can enter one price below.',
                     )
-                  else
-                    for (final item in _items)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Text(
-                          '${item.name} — ${item.quantity} ${item.unit} · ${_currency(item.total)}',
-                        ),
-                      ),
+                  else ...[
+                    EstimateDocumentItems(
+                      items: _items
+                          .where(
+                            (item) => item.type != WorkLineItemType.material,
+                          )
+                          .toList(),
+                    ),
+                    EstimateMaterialsPanel(
+                      items: _items
+                          .where(
+                            (item) => item.type == WorkLineItemType.material,
+                          )
+                          .toList(),
+                      onEdit: () =>
+                          _editItemCategory(EstimateItemCategory.all, _items),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
                   EstimatePriceSummary(
                     key: const ValueKey('estimate-price-summary'),
                     grouped: true,
@@ -236,6 +262,21 @@ extension _EstimateEditorOverview on _EstimateEditorScreenState {
       _buildInlineApproval(),
     ],
   );
+
+  Future<void> _editDocumentCompany() async {
+    final store = PrototypeOperationsScope.of(context);
+    final directory = store.directorySession;
+    if (directory == null || !directory.permissions.canManageCompany) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => CompanyProfileEditScreen(
+          initialProfile: directory.company,
+          selectedDay: _createdOn,
+        ),
+      ),
+    );
+    if (mounted) _refresh(() {});
+  }
 
   Widget _timingEditor() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,

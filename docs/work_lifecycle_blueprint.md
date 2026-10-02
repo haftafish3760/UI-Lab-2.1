@@ -469,14 +469,22 @@ remains a link on a converted job/invoice; the invoice uses its own number.
   received belongs beside those terms and uses the existing payment workflow.
 - Terms and delivery: payment terms, acceptance method, signature, delivery history.
 
-The September 29 owner correction makes the estimate one readable document,
-with related information nested in tinted, bordered section boxes. The document
-itself shows text, not entry underlines. Each section has a visible Edit action
-opening its appropriate form. Document title, Document number and purchase order
-come first, followed by client information and dates/validity. Work description
-and photos, labor/materials, price summary, terms/deposit, and customer signature
-and approval each have their own section. Internal revision history is available
-near the top and records who changed the document and when.
+The October 1 owner direction supersedes the separate estimate section cards:
+the working estimate resembles a business document on one tinted surface.
+Company identity, estimate identity, customer, scope, prices, terms and approval
+are separated by headings and rules, not individual boxed cards. Add/Edit
+controls open the existing owned forms and return to the document. Company
+information links to the permission-guarded saved company editor. Display values
+remain projections of durable records; document appearance does not introduce a
+second financial store. Narrow estimate pages use 5-LP outer gutters; readable
+internal document margins remain. PDF output omits application editing controls.
+Material rows now occupy a separately scrollable bordered area capped at half
+the usable viewport, with a visible scrollbar, item count, fixed subtotal and
+Add or edit materials action opening the existing items screen. Labor and other
+charges remain outside that scrolling area. Inventory selection remains future
+work and is not simulated.
+This is a first visual implementation, not owner acceptance or a completed
+portal/approval redesign.
 
 Created date is editable; Date finished is explicit and separate from Date sent
 to customer. Dates Edit allows the user to record the actual sent date; this is
@@ -697,6 +705,17 @@ controls and recovery paths. Saved records commit explicitly; pre-save review
 retains changes in its existing draft until Save estimate. The proposed service
 date remains visible near the customer, including **Not set** when empty. Use
 **Continue adding the work details and prices** instead of developer-oriented wording.
+September 30 estimate refinement: retain the existing section editors and recovery
+workflow. The editor begins with the authorized saved company identity and estimate
+reference/status, then its existing document sections. Missing company access or
+storage is shown honestly. Use compact shared document navigation with Dashboard's
+76-LP minimum height, expanding for accessibility. Tighten section spacing without
+removing grouping; detailed item quantities, unit prices and amounts use aligned
+columns, reflowing to labeled rows on narrow screens. Amounts and totals align at
+the end edge with tabular digits, including at enlarged text sizes. PDF templates
+and generation remain unchanged. This supersedes the status-card placement below
+for the editor only; saved detail and review routes retain their existing behavior.
+
 The estimate status card sits directly below the header. Its label and value
 share the existing heading size and weight. Work details, labor and materials,
 service terms/deposit, and date edit controls are inside their respective cards

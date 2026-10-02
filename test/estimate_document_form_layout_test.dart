@@ -9,6 +9,7 @@ import 'package:ui_lab_2_1/src/data/prototype_operations_store.dart';
 import 'package:ui_lab_2_1/src/data/work/estimate_confirmation.dart';
 import 'package:ui_lab_2_1/src/screens/work/estimate_editor_screen.dart';
 import 'package:ui_lab_2_1/src/shared/operational_scope.dart';
+import 'package:ui_lab_2_1/src/shared/operational_header.dart';
 import 'estimate_service_price_test.dart' as fixtures;
 import 'estimate_review_flow_test.dart' show reviewTheme;
 
@@ -78,7 +79,18 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.text('Client information'), findsOneWidget);
+        expect(find.text('Prepared for'), findsOneWidget);
+        expect(find.text('Company information unavailable'), findsOneWidget);
+        if (scale == 1) {
+          expect(tester.getSize(find.byType(OperationalHeader)).height, 76);
+        }
+        await tester.tap(find.byKey(const ValueKey('work-view-selector')));
+        await tester.pumpAndSettle();
+        expect(find.text('Admin'), findsOneWidget);
+        await tester.tap(find.text('Admin'));
+        await tester.pumpAndSettle();
+        expect(scope.view.name, 'admin');
+
         expect(find.text('Dates and validity'), findsOneWidget);
         expect(find.byType(TextField), findsNothing);
         expect(

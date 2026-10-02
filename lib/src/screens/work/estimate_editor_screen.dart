@@ -1,4 +1,9 @@
+import 'estimate_document_heading.dart';
+import 'estimate_document_items.dart';
 import 'estimate_client_information.dart';
+import 'estimate_materials_panel.dart';
+import 'company_profile_editor.dart';
+import '../../shared/section_card.dart';
 import '../../data/work/estimate_service_price.dart';
 import '../../../l10n/app_localizations_extension.dart';
 import 'estimate_price_summary.dart';
@@ -271,13 +276,11 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final insets = AppLayoutEngine.pageInsetsFor(
-                constraints.maxWidth,
-              );
+              const insets = EdgeInsets.symmetric(horizontal: 5);
               return Center(
                 child: SizedBox(
                   width: AppLayoutEngine.formWorkspaceWidthFor(
-                    constraints.maxWidth - insets.horizontal,
+                    constraints.maxWidth,
                   ),
                   child: ListView(
                     controller: _scrollController,
@@ -292,6 +295,7 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           WorkDetailHeader(
+                            documentPresentation: true,
                             label: _baseRecord == null
                                 ? 'New estimate'
                                 : 'Edit estimate',
@@ -328,7 +332,13 @@ class _EstimateEditorScreenState extends State<EstimateEditorScreen>
                             const SizedBox(height: 12),
                             AnimatedBuilder(
                               animation: _formChanges,
-                              builder: (context, _) => _buildOverview(),
+                              builder: (context, _) => SectionCard(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                child: _buildOverview(),
+                              ),
                             ),
                           ],
                           const SizedBox(height: 16),

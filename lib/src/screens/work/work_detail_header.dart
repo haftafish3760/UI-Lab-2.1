@@ -10,6 +10,7 @@ class WorkDetailHeader extends StatelessWidget {
     required this.onBack,
     this.onSettings,
     this.showDateContext = false,
+    this.documentPresentation = false,
     super.key,
   });
 
@@ -18,11 +19,13 @@ class WorkDetailHeader extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback? onSettings;
   final bool showDateContext;
+  final bool documentPresentation;
 
   @override
   Widget build(BuildContext context) {
     final scope = OperationalScope.of(context);
     return WorkScopeHeader(
+      documentPresentation: documentPresentation,
       view: scope.view,
       selectedDay: selectedDay,
       selectedEmployeeId: scope.selectedEmployeeId,
